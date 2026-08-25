@@ -283,7 +283,7 @@ What this implementation deliberately does not reproduce: Hodson et al. fit by f
 # Uncertainty: the bootstrap
 
 ```{r bootstrap, fig.alt = "Rating curve with a shaded bootstrap prediction interval"}
-fit_boot <- rate_optimise(discharge_cms, stage_m, n_boot = 200L, boot_seed = 11L)
+fit_boot <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2), n_boot = 200L, boot_seed = 11L)
 fit_boot@limbs[, .(limb, C, C_se, n, n_se)]
 plot_rating_interval(fit_boot)
 ```
