@@ -23,6 +23,7 @@ Collate:
     'compare_ratings.R'
     'cross_section_rating_dual_plot.R'
     'gap_check.R'
+    'plot_rating_curves.R'
     'rate_optimise.R'
     'rate_optimise_segmented.R'
     'rating_curve_demo.R'
