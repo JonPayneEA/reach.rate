@@ -4,15 +4,38 @@
 \alias{align_limb_equations}
 \title{Align rating-curve limb equations so junctions match exactly}
 \usage{
-align_limb_equations(rating_dt, anchor_limb = 1L)
+align_limb_equations(
+  rating_dt,
+  anchor_limb = 1L,
+  on_align_failure = c("error", "skip")
+)
 }
 \arguments{
 \item{rating_dt}{A \link{FlodeRatingTable}, or a plain data.frame/
-data.table with the required columns (for a legacy rating with no
-prior \code{FlodeRatingTable} identity of its own).}
+data.table with columns \code{lower_level}, \code{upper_level}, \code{C}, \code{A}, \code{B}
+(the same shape expected by \code{\link[=expand_rating_table]{expand_rating_table()}}; for a legacy
+rating with no prior \code{FlodeRatingTable} identity of its own). Limbs
+must be contiguous: \code{upper_level[i]} must equal \code{lower_level[i + 1]}.}
 
 \item{anchor_limb}{Integer. Row index of the limb held fixed; every
-other limb is corrected relative to it. Default \code{1L}.}
+other limb is corrected relative to it, propagating outward in both
+directions along the chain. Default \code{1L} (the lowest limb, typically
+the best-gauged one).}
+
+\item{on_align_failure}{Character. What to do when a limb's own fixed
+\code{A} (zero-flow datum) sits at or beyond the junction stage it would
+need to align to -- \code{depth = junction_stage - A} non-positive, so
+no real-valued \code{C} solves \code{C * depth^B = target} -- or the solved
+\code{C} comes out non-finite or non-positive. This is a real
+possibility whenever gaugings (and so \code{A}) can be negative, not a
+sign of malformed input: independently-fitted limbs can end up with
+a datum that just doesn't reach a neighbour's junction. \code{"error"}
+(default) stops immediately, as before. \code{"skip"} warns, leaves that
+limb's \code{C} at its original (unaligned) value, flags it in the new
+\code{align_failed} column, and continues aligning the rest of the chain
+from there -- the same "keep what worked, don't discard everything
+over one bad limb" fallback \code{rate_optimise_constrained()} already
+uses for its own refit failures.}
 }
 \value{
 A \link{FlodeRatingTable} with \verb{@status} \code{"post_fit_aligned"} and
@@ -21,12 +44,15 @@ built from (\code{NULL} if \code{rating_dt} was a plain table with no prior
 \code{FlodeRatingTable} identity) -- a genuine audit chain, not an
 attribute someone has to remember to check. \verb{@table} gains columns:
 \code{C_original} (the input \code{C}, unchanged), \code{aligned} (logical; \code{TRUE}
-for every limb except \code{anchor_limb}), \code{scale_factor}
+only for a limb that was actually rescaled -- \code{FALSE} for
+\code{anchor_limb} and, under \code{on_align_failure = "skip"}, for any limb
+that failed to align), \code{align_failed} (logical; \code{TRUE} for a
+skipped limb, always \code{FALSE} under the default \code{on_align_failure = "error"} since that stops instead), \code{scale_factor}
 (\code{C / C_original}), \code{pct_change} (percentage change in \code{C}),
 \code{alignment_stage} (the junction stage this limb was aligned at),
 and \code{target_discharge} (the discharge it was aligned to match). The
-last four are \code{NA} for \code{anchor_limb}, which is never aligned. \code{C}
-itself is replaced by the aligned value for every non-anchor limb;
+last four are \code{NA} wherever \code{aligned} is \code{FALSE}. \code{C} itself is
+replaced by the aligned value for every successfully-aligned limb;
 \code{A} and \code{B} are always unchanged. Neither the input nor the output
 is ever mutated in place.
 }
