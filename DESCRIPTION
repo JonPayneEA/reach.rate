@@ -1,0 +1,53 @@
+Package: reach.rate
+Title: Fit, Diagnose, and Apply Hydrometric Rating Curves
+Version: 0.1.0
+Authors@R:
+    person("Jonathan", "Payne", , "jonathan.payne1988@gmail.com", role = c("aut", "cre"))
+Description: Tools for fitting multi-limb power-law stage-discharge rating
+    curves by nonlinear least squares, diagnosing fit quality, detecting and
+    resolving discontinuities ("junction gaps") between independently-fitted
+    limbs, converting a fitted rating into a discharge time series, and
+    documenting rating amendments. Includes a segmented joint-model
+    parameterisation after Hodson et al. (2024), bootstrap coefficient
+    uncertainty, and versioned ratings for stations that have been re-rated
+    over time. Fitted ratings are represented as 'S7' classes that carry
+    their own gaugings, fitting bookkeeping, and provenance, so a rating is
+    never separated from the data and assumptions that produced it.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Collate:
+    'flode_classes.R'
+    'apply_rating.R'
+    'compare_ratings.R'
+    'cross_section_rating_dual_plot.R'
+    'gap_check.R'
+    'rate_optimise.R'
+    'rate_optimise_segmented.R'
+    'rating_curve_demo.R'
+    'rating_curve_explorer_app.R'
+    'reach.rate-package.R'
+    'zzz.R'
+Depends:
+    R (>= 4.1)
+Imports:
+    data.table,
+    ggplot2,
+    graphics,
+    gridExtra,
+    grid,
+    logger,
+    minpack.lm,
+    S7,
+    scales,
+    stats
+Suggests:
+    knitr,
+    rmarkdown,
+    shiny,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+URL: https://github.com/JonPayneEA/reach.rate
+BugReports: https://github.com/JonPayneEA/reach.rate/issues
