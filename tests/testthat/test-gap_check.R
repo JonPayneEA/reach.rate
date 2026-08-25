@@ -304,3 +304,41 @@ test_that("align_limb_equations rejects an invalid depth at the junction", {
   )
   expect_error(align_limb_equations(bad_rating_dt), "invalid depth")
 })
+
+test_that("align_limb_equations(on_align_failure = 'skip') warns and flags the failing limb instead of erroring", {
+  # A three-limb table where limb 2's zero-flow datum sits above the
+  # junction stage it shares with limb 1 -- the same invalid-depth
+  # situation as above, but with a third limb downstream of it so we can
+  # confirm the alignment chain keeps going past the skipped limb.
+  bad_rating_dt <- data.table::data.table(
+    lower_level = c(0.0, 1.2, 3.0), upper_level = c(1.2, 3.0, 5.0),
+    C = c(2.5, 4.1, 1.8), A = c(0, 2.9343028, 0), B = c(1.5, 1.7, 1.3)
+  )
+
+  expect_warning(
+    aligned_result <- align_limb_equations(bad_rating_dt, on_align_failure = "skip"),
+    "invalid depth"
+  )
+  aligned_dt <- aligned_result@table
+
+  expect_false(aligned_dt$align_failed[1]) # anchor: never attempted
+  expect_true(aligned_dt$align_failed[2]) # failed and skipped
+  expect_false(aligned_dt$aligned[2])
+  expect_equal(aligned_dt$C[2], aligned_dt$C_original[2]) # left unaligned
+
+  # The chain continues past the skipped limb: limb 3 is aligned against
+  # limb 2's original (unaligned) equation as its reference point.
+  expect_false(aligned_dt$align_failed[3])
+  expect_true(aligned_dt$aligned[3])
+
+  eval_q <- function(stage, C, A, B) C * (stage - A)^B
+  q_from_limb2 <- eval_q(aligned_dt$upper_level[2], aligned_dt$C[2], aligned_dt$A[2], aligned_dt$B[2])
+  q_from_limb3 <- eval_q(aligned_dt$lower_level[3], aligned_dt$C[3], aligned_dt$A[3], aligned_dt$B[3])
+  expect_equal(q_from_limb2, q_from_limb3, tolerance = 1e-10)
+})
+
+test_that("align_limb_equations(on_align_failure = 'skip') has no effect when nothing fails", {
+  rating_dt <- build_three_limb_rating_dt()
+  aligned_dt <- align_limb_equations(rating_dt, on_align_failure = "skip")@table
+  expect_false(any(aligned_dt$align_failed))
+})

@@ -294,20 +294,29 @@ expand_rating_table <- function(rating_dt,
 #' corrected value, and an `aligned` flag marks which limbs were changed,
 #' so the amendment is auditable rather than a silent overwrite.
 #'
-#' @param rating_dt A data.frame or data.table with one row per limb, in
-#'   stage order, with columns `lower_level`, `upper_level`, `C`, `A`,
-#'   `B` (the same shape expected by [expand_rating_table()]). Limbs must
-#'   be contiguous: `upper_level[i]` must equal `lower_level[i + 1]`.
+#' @param rating_dt A [FlodeRatingTable], or a plain data.frame/
+#'   data.table with columns `lower_level`, `upper_level`, `C`, `A`, `B`
+#'   (the same shape expected by [expand_rating_table()]; for a legacy
+#'   rating with no prior `FlodeRatingTable` identity of its own). Limbs
+#'   must be contiguous: `upper_level[i]` must equal `lower_level[i + 1]`.
 #' @param anchor_limb Integer. Row index of the limb held fixed; every
 #'   other limb is corrected relative to it, propagating outward in both
 #'   directions along the chain. Default `1L` (the lowest limb, typically
 #'   the best-gauged one).
-#'
-#' @param rating_dt A [FlodeRatingTable], or a plain data.frame/
-#'   data.table with the required columns (for a legacy rating with no
-#'   prior `FlodeRatingTable` identity of its own).
-#' @param anchor_limb Integer. Row index of the limb held fixed; every
-#'   other limb is corrected relative to it. Default `1L`.
+#' @param on_align_failure Character. What to do when a limb's own fixed
+#'   `A` (zero-flow datum) sits at or beyond the junction stage it would
+#'   need to align to -- `depth = junction_stage - A` non-positive, so
+#'   no real-valued `C` solves `C * depth^B = target` -- or the solved
+#'   `C` comes out non-finite or non-positive. This is a real
+#'   possibility whenever gaugings (and so `A`) can be negative, not a
+#'   sign of malformed input: independently-fitted limbs can end up with
+#'   a datum that just doesn't reach a neighbour's junction. `"error"`
+#'   (default) stops immediately, as before. `"skip"` warns, leaves that
+#'   limb's `C` at its original (unaligned) value, flags it in the new
+#'   `align_failed` column, and continues aligning the rest of the chain
+#'   from there -- the same "keep what worked, don't discard everything
+#'   over one bad limb" fallback `rate_optimise_constrained()` already
+#'   uses for its own refit failures.
 #'
 #' @return A [FlodeRatingTable] with `@status` `"post_fit_aligned"` and
 #'   `@previous` referencing the exact pre-alignment object this was
@@ -315,12 +324,16 @@ expand_rating_table <- function(rating_dt,
 #'   `FlodeRatingTable` identity) -- a genuine audit chain, not an
 #'   attribute someone has to remember to check. `@table` gains columns:
 #'   `C_original` (the input `C`, unchanged), `aligned` (logical; `TRUE`
-#'   for every limb except `anchor_limb`), `scale_factor`
+#'   only for a limb that was actually rescaled -- `FALSE` for
+#'   `anchor_limb` and, under `on_align_failure = "skip"`, for any limb
+#'   that failed to align), `align_failed` (logical; `TRUE` for a
+#'   skipped limb, always `FALSE` under the default `on_align_failure =
+#'   "error"` since that stops instead), `scale_factor`
 #'   (`C / C_original`), `pct_change` (percentage change in `C`),
 #'   `alignment_stage` (the junction stage this limb was aligned at),
 #'   and `target_discharge` (the discharge it was aligned to match). The
-#'   last four are `NA` for `anchor_limb`, which is never aligned. `C`
-#'   itself is replaced by the aligned value for every non-anchor limb;
+#'   last four are `NA` wherever `aligned` is `FALSE`. `C` itself is
+#'   replaced by the aligned value for every successfully-aligned limb;
 #'   `A` and `B` are always unchanged. Neither the input nor the output
 #'   is ever mutated in place.
 #'
@@ -351,7 +364,9 @@ expand_rating_table <- function(rating_dt,
 #' any(gaps_dt$gap_flagged)
 #'
 #' @export
-align_limb_equations <- function(rating_dt, anchor_limb = 1L) {
+align_limb_equations <- function(rating_dt, anchor_limb = 1L,
+                                  on_align_failure = c("error", "skip")) {
+  on_align_failure <- match.arg(on_align_failure)
   input_was_flode_table <- S7_inherits(rating_dt, FlodeRatingTable)
   previous_table <- if (input_was_flode_table) rating_dt else NULL
   if (input_was_flode_table) rating_dt <- rating_dt@table
@@ -381,6 +396,7 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L) {
   out_dt[, `:=`(
     C_original = C,
     aligned = FALSE,
+    align_failed = FALSE,
     scale_factor = NA_real_,
     pct_change = NA_real_,
     alignment_stage = NA_real_,
@@ -389,21 +405,37 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L) {
 
   eval_q <- function(stage, C, A, B) C * (stage - A)^B
 
+  # On failure, either stop() (on_align_failure = "error", the default --
+  # unchanged behaviour) or warn() and leave this limb's C at its
+  # original, unaligned value (on_align_failure = "skip"). Either way the
+  # *next* limb in the chain is unaffected: it reads out_dt$C[i] fresh
+  # when its own turn comes, so a skipped limb just means the chain
+  # continues from that limb's original equation instead of a rescaled
+  # one -- the same "keep what worked" fallback
+  # rate_optimise_constrained() uses for a refit that fails to converge.
+  fail_or_skip <- function(i, msg) {
+    if (on_align_failure == "error") stop(msg)
+    warning(msg, ' Leaving this limb\'s original C unaligned (on_align_failure = "skip").')
+    set(out_dt, i = i, j = "align_failed", value = TRUE)
+  }
+
   align_one <- function(i, s_brk, q_target) {
     depth <- s_brk - out_dt$A[i]
     if (!is.finite(depth) || depth <= 0) {
-      stop(sprintf(
+      fail_or_skip(i, sprintf(
         "align_limb_equations(): limb at row %d has an invalid depth (stage - A = %.6g) at the junction stage %.6g; cannot align.",
         i, depth, s_brk
       ))
+      return(invisible(NULL))
     }
     c_original <- out_dt$C[i]
     c_new <- q_target / depth^out_dt$B[i]
     if (!is.finite(c_new) || c_new <= 0) {
-      stop(sprintf(
+      fail_or_skip(i, sprintf(
         "align_limb_equations(): limb at row %d produced a non-finite or non-positive aligned C; cannot align.",
         i
       ))
+      return(invisible(NULL))
     }
     set(out_dt, i = i, j = "C", value = c_new)
     set(out_dt, i = i, j = "aligned", value = TRUE)
