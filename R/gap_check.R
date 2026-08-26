@@ -678,7 +678,8 @@ detect_rc_gaps <- function(rc_dt,
 #'
 #' @description
 #' Closes discharge discontinuities at limb junctions identified by
-#' \code{\link{detect_rc_gaps}} using one of three strategies:
+#' \code{\link{detect_rc_gaps}} using one of five strategies (plus two
+#' deprecated aliases for backward compatibility):
 #'
 #' \describe{
 #'   \item{\code{"midpoint"} (default)}{
@@ -692,14 +693,37 @@ detect_rc_gaps <- function(rc_dt,
 #'     never anything other than the average of the two original
 #'     endpoints; it was not using any interior point from either limb,
 #'     despite the name. Renamed to describe what it actually computes.}
-#'   \item{\code{"snap_to_lower"}}{
-#'     The upper limb's first discharge is set equal to the lower limb's
-#'     last discharge. Use when the lower (typically gauged) limb is
-#'     authoritative.}
-#'   \item{\code{"snap_to_upper"}}{
-#'     The lower limb's last discharge is set equal to the upper limb's
-#'     first discharge. Use when the upper limb anchor (e.g. a flood-
-#'     frequency estimate) is authoritative.}
+#'   \item{\code{"match_upper_to_lower"}}{
+#'     Only the upper limb's *first row* is changed: its discharge is set
+#'     equal to the lower limb's last discharge. Use when the lower
+#'     (typically gauged) limb is authoritative and you only need the
+#'     single junction point to agree, not the whole upper curve reshaped.}
+#'   \item{\code{"match_lower_to_upper"}}{
+#'     Only the lower limb's *last row* is changed: its discharge is set
+#'     equal to the upper limb's first discharge. Use when the upper limb
+#'     (e.g. a flood-frequency estimate) is authoritative and only the
+#'     junction point needs to agree.}
+#'   \item{\code{"extend_lower_to_upper"}}{
+#'     The lower limb's discharge is rescaled by a single constant factor
+#'     across *every* one of its rows, chosen so its last value exactly
+#'     matches the upper limb's first discharge -- since
+#'     \eqn{Q = C(H+a)^n} is linear in \eqn{C}, this is equivalent to
+#'     rescaling the lower limb's \eqn{C} and preserves its curve shape.
+#'     The upper limb is untouched, and (being unchanged) is what the
+#'     lower limb's rescaled curve now "starts from" at the junction. Use
+#'     when the upper limb is authoritative and the whole lower curve,
+#'     not just its endpoint, should reflect that.}
+#'   \item{\code{"extend_upper_to_lower"}}{
+#'     The mirror image of \code{"extend_lower_to_upper"}: the upper
+#'     limb's discharge is rescaled across every row so its first value
+#'     matches the lower limb's last discharge; the lower limb is
+#'     untouched.}
+#'   \item{\code{"snap_to_lower"}, \code{"snap_to_upper"} (deprecated)}{
+#'     Old names for \code{"match_upper_to_lower"} and
+#'     \code{"match_lower_to_upper"} respectively -- kept working via a
+#'     deprecation warning, but the names read backwards from what they
+#'     do (\code{"snap_to_lower"} moves the \emph{upper} limb, not the
+#'     lower one) and new code should use the replacements.}
 #' }
 #'
 #' Only junctions flagged by \code{detect_rc_gaps} (i.e. those exceeding
@@ -707,6 +731,18 @@ detect_rc_gaps <- function(rc_dt,
 #' used, this amends the discretised \strong{table} at the junction rows
 #' only -- it does not touch the equations that produced them (see
 #' \code{\link{align_limb_equations}} for that).
+#'
+#' On a rating with 3 or more limbs (2 or more junctions), each junction
+#' reads the \emph{current} discharge at its own endpoints rather than a
+#' value captured before any junction was resolved, and -- for the
+#' \code{"extend_*"} methods specifically -- junctions are resolved in
+#' whichever order keeps each limb settling exactly once: top-down for
+#' \code{"extend_lower_to_upper"} (a limb is only rescaled as a "lower"
+#' limb after it has already settled as an "upper" one), bottom-up for
+#' \code{"extend_upper_to_lower"}. This mirrors
+#' \code{\link{align_limb_equations}}'s outward propagation from an
+#' anchor limb; without it, a middle limb rescaled to close the junction
+#' above it could silently reopen the junction below.
 #'
 #' @param rc_dt A data.frame or data.table containing the rating curve.
 #' @param stage_col Character. Name of the stage column. Default
@@ -716,7 +752,9 @@ detect_rc_gaps <- function(rc_dt,
 #' @param limb_col Character or \code{NULL}. Name of the limb-ID column.
 #'   Auto-detected if absent. Default \code{"limb"}.
 #' @param method Character. Resolution strategy: \code{"midpoint"},
-#'   \code{"snap_to_lower"}, or \code{"snap_to_upper"}.
+#'   \code{"match_lower_to_upper"}, \code{"match_upper_to_lower"},
+#'   \code{"extend_lower_to_upper"}, \code{"extend_upper_to_lower"}, or
+#'   the deprecated \code{"snap_to_lower"}/\code{"snap_to_upper"} aliases.
 #'   Default \code{"midpoint"}.
 #' @param tol_abs Numeric. Absolute discharge tolerance passed to
 #'   \code{\link{detect_rc_gaps}}. Default \code{0.5}.
@@ -746,17 +784,35 @@ detect_rc_gaps <- function(rc_dt,
 #' )
 #' rc_raw_dt <- data.table::rbindlist(list(limb1_dt, limb2_dt))
 #' rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "midpoint")
-#' rc_snapped_dt <- resolve_rc_gaps(rc_raw_dt, method = "snap_to_lower")
+#' rc_matched_dt <- resolve_rc_gaps(rc_raw_dt, method = "match_upper_to_lower")
+#' rc_extended_dt <- resolve_rc_gaps(rc_raw_dt, method = "extend_lower_to_upper")
 #'
 #' @export
 resolve_rc_gaps <- function(rc_dt,
                              stage_col = "stage",
                              discharge_col = "discharge",
                              limb_col = "limb",
-                             method = c("midpoint", "snap_to_lower", "snap_to_upper"),
+                             method = c(
+                               "midpoint", "match_lower_to_upper", "match_upper_to_lower",
+                               "extend_lower_to_upper", "extend_upper_to_lower",
+                               "snap_to_lower", "snap_to_upper"
+                             ),
                              tol_abs = 0.5,
                              tol_rel = 0.02) {
   method <- match.arg(method)
+  if (method %in% c("snap_to_lower", "snap_to_upper")) {
+    new_method <- if (method == "snap_to_lower") "match_upper_to_lower" else "match_lower_to_upper"
+    warning(sprintf(
+      paste0(
+        "resolve_rc_gaps(): method = \"%s\" is deprecated -- its name reads backwards ",
+        "from what it does (it moves the %s limb, not the %s one). Use \"%s\" instead, ",
+        "which does exactly the same thing."
+      ),
+      method, if (method == "snap_to_lower") "upper" else "lower",
+      if (method == "snap_to_lower") "lower" else "upper", new_method
+    ), call. = FALSE)
+    method <- new_method
+  }
   if (!is.data.frame(rc_dt)) stop("rc_dt must be a data.frame or data.table")
 
   rc_out_dt <- copy(as.data.table(rc_dt))
@@ -782,8 +838,25 @@ resolve_rc_gaps <- function(rc_dt,
   }
 
   flagged_dt <- gaps_dt[gap_flagged == TRUE]
+  setorder(flagged_dt, junction)
 
-  for (i in seq_len(nrow(flagged_dt))) {
+  # Processing order matters for the "extend_*" methods on a 3+ limb
+  # chain, even with the fresh-read fix below: "extend_lower_to_upper"
+  # only ever rescales the *lower* limb of the junction it's resolving, so
+  # a middle limb must be fully settled as an "upper" neighbour (junction
+  # below it) before it is itself rescaled as a "lower" limb (junction
+  # above it) -- otherwise that later rescale silently reopens the
+  # junction below. Resolving top-down (highest junction first) makes
+  # each limb settle exactly once, propagating from the topmost limb
+  # downward -- the same anchor-and-propagate shape as
+  # align_limb_equations(anchor_limb = n). "extend_upper_to_lower" is the
+  # mirror image and needs the opposite (bottom-up, the default) order,
+  # propagating from the lowest limb upward. Order doesn't matter for
+  # "midpoint"/"match_*", which only ever touch one row per limb.
+  junction_order <- seq_len(nrow(flagged_dt))
+  if (method == "extend_lower_to_upper") junction_order <- rev(junction_order)
+
+  for (i in junction_order) {
     jct <- flagged_dt[i]
 
     if (!is.null(jct$junction_type) && jct$junction_type != "shared_stage") {
@@ -805,14 +878,19 @@ resolve_rc_gaps <- function(rc_dt,
     lower_id <- jct$limb_lower
     upper_id <- jct$limb_upper
     s_brk <- jct$stage_break
-    q_low_end <- jct$q_lower_end
-    q_up_start <- jct$q_upper_start
 
     lower_idx <- which(rc_out_dt[[limb_col]] == lower_id)
     upper_idx <- which(rc_out_dt[[limb_col]] == upper_id)
 
     last_lower_pos <- lower_idx[which.max(rc_out_dt[[stage_col]][lower_idx])]
     first_upper_pos <- upper_idx[which.min(rc_out_dt[[stage_col]][upper_idx])]
+
+    # Read current values, not the upfront detect_rc_gaps() snapshot: an
+    # earlier junction's "extend_*" resolution can have already rescaled a
+    # middle limb shared with this junction, and that update must be seen
+    # here for a 3+ limb chain to resolve correctly in sequence.
+    q_low_end <- rc_out_dt[[discharge_col]][last_lower_pos]
+    q_up_start <- rc_out_dt[[discharge_col]][first_upper_pos]
 
     if (method == "midpoint") {
       q_agreed <- (q_low_end + q_up_start) / 2.0
@@ -824,18 +902,54 @@ resolve_rc_gaps <- function(rc_dt,
 
       set(rc_out_dt, i = last_lower_pos, j = discharge_col, value = q_agreed)
       set(rc_out_dt, i = first_upper_pos, j = discharge_col, value = q_agreed)
-    } else if (method == "snap_to_lower") {
+    } else if (method == "match_upper_to_lower") {
       log_info(
         "Junction {jct$junction} (limbs {lower_id}/{upper_id}, stage {round(s_brk, 3)}): ",
-        "snapping upper start {round(q_up_start, 4)} -> {round(q_low_end, 4)}"
+        "matching upper start {round(q_up_start, 4)} -> {round(q_low_end, 4)}"
       )
       set(rc_out_dt, i = first_upper_pos, j = discharge_col, value = q_low_end)
-    } else {
+    } else if (method == "match_lower_to_upper") {
       log_info(
         "Junction {jct$junction} (limbs {lower_id}/{upper_id}, stage {round(s_brk, 3)}): ",
-        "snapping lower end {round(q_low_end, 4)} -> {round(q_up_start, 4)}"
+        "matching lower end {round(q_low_end, 4)} -> {round(q_up_start, 4)}"
       )
       set(rc_out_dt, i = last_lower_pos, j = discharge_col, value = q_up_start)
+    } else if (method == "extend_lower_to_upper") {
+      if (!is.finite(q_low_end) || abs(q_low_end) < 1e-9) {
+        warning(sprintf(
+          paste(
+            "resolve_rc_gaps(): junction %d (limbs %s/%s) -- the lower limb's",
+            "discharge at the junction (%.6g) is too close to zero to rescale",
+            "by; skipping this junction."
+          ),
+          jct$junction, lower_id, upper_id, q_low_end
+        ), call. = FALSE)
+        next
+      }
+      scale_factor <- q_up_start / q_low_end
+      log_info(
+        "Junction {jct$junction} (limbs {lower_id}/{upper_id}, stage {round(s_brk, 3)}): ",
+        "extending lower limb by a factor of {round(scale_factor, 6)} to reach {round(q_up_start, 4)}"
+      )
+      rc_out_dt[lower_idx, (discharge_col) := get(discharge_col) * scale_factor]
+    } else if (method == "extend_upper_to_lower") {
+      if (!is.finite(q_up_start) || abs(q_up_start) < 1e-9) {
+        warning(sprintf(
+          paste(
+            "resolve_rc_gaps(): junction %d (limbs %s/%s) -- the upper limb's",
+            "discharge at the junction (%.6g) is too close to zero to rescale",
+            "by; skipping this junction."
+          ),
+          jct$junction, lower_id, upper_id, q_up_start
+        ), call. = FALSE)
+        next
+      }
+      scale_factor <- q_low_end / q_up_start
+      log_info(
+        "Junction {jct$junction} (limbs {lower_id}/{upper_id}, stage {round(s_brk, 3)}): ",
+        "extending upper limb by a factor of {round(scale_factor, 6)} to reach {round(q_low_end, 4)}"
+      )
+      rc_out_dt[upper_idx, (discharge_col) := get(discharge_col) * scale_factor]
     }
   }
 

@@ -87,24 +87,122 @@ test_that("resolve_rc_gaps midpoint closes the gap at the junction", {
   expect_equal(q_end_lower, q_start_upper, tolerance = 1e-8)
 })
 
-test_that("resolve_rc_gaps snap_to_lower matches the upper start to the lower end", {
+test_that("resolve_rc_gaps match_upper_to_lower matches the upper start to the lower end", {
   rc_raw_dt <- build_two_limb_rc_dt()
   q_lower_end <- rc_raw_dt[limb == 1][stage == max(stage), discharge]
 
-  rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "snap_to_lower")
+  rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "match_upper_to_lower")
   q_upper_start <- rc_fixed_dt[limb == 2][stage == min(stage), discharge]
 
   expect_equal(q_upper_start, q_lower_end, tolerance = 1e-8)
+  # Only the single junction row changes -- the rest of the upper limb is untouched.
+  expect_equal(
+    rc_fixed_dt[limb == 2][stage != min(stage), discharge],
+    rc_raw_dt[limb == 2][stage != min(stage), discharge]
+  )
 })
 
-test_that("resolve_rc_gaps snap_to_upper matches the lower end to the upper start", {
+test_that("resolve_rc_gaps match_lower_to_upper matches the lower end to the upper start", {
   rc_raw_dt <- build_two_limb_rc_dt()
   q_upper_start <- rc_raw_dt[limb == 2][stage == min(stage), discharge]
 
-  rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "snap_to_upper")
+  rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "match_lower_to_upper")
   q_lower_end <- rc_fixed_dt[limb == 1][stage == max(stage), discharge]
 
   expect_equal(q_lower_end, q_upper_start, tolerance = 1e-8)
+  expect_equal(
+    rc_fixed_dt[limb == 1][stage != max(stage), discharge],
+    rc_raw_dt[limb == 1][stage != max(stage), discharge]
+  )
+})
+
+test_that("resolve_rc_gaps snap_to_lower/snap_to_upper are deprecated aliases with identical output", {
+  rc_raw_dt <- build_two_limb_rc_dt()
+
+  expect_warning(
+    old_result <- resolve_rc_gaps(rc_raw_dt, method = "snap_to_lower"),
+    "deprecated.*match_upper_to_lower"
+  )
+  new_result <- resolve_rc_gaps(rc_raw_dt, method = "match_upper_to_lower")
+  expect_identical(old_result, new_result)
+
+  expect_warning(
+    old_result2 <- resolve_rc_gaps(rc_raw_dt, method = "snap_to_upper"),
+    "deprecated.*match_lower_to_upper"
+  )
+  new_result2 <- resolve_rc_gaps(rc_raw_dt, method = "match_lower_to_upper")
+  expect_identical(old_result2, new_result2)
+})
+
+test_that("resolve_rc_gaps extend_lower_to_upper rescales every row of the lower limb, not just the endpoint", {
+  rc_raw_dt <- build_two_limb_rc_dt()
+  rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "extend_lower_to_upper")
+
+  q_lower_end <- rc_fixed_dt[limb == 1][stage == max(stage), discharge]
+  q_upper_start <- rc_fixed_dt[limb == 2][stage == min(stage), discharge]
+  expect_equal(q_lower_end, q_upper_start, tolerance = 1e-8)
+
+  # Upper limb completely untouched.
+  expect_identical(rc_fixed_dt[limb == 2], rc_raw_dt[limb == 2])
+
+  # Every row of the lower limb was rescaled by the same constant factor
+  # (a real curve reshape, not a single-endpoint patch) -- check on rows
+  # away from the zero-flow stage to avoid a 0/0 division.
+  orig_lower <- rc_raw_dt[limb == 1][stage > min(stage)]
+  new_lower <- rc_fixed_dt[limb == 1][stage > min(stage)]
+  scale_factors <- new_lower$discharge / orig_lower$discharge
+  expect_true(all(abs(scale_factors - scale_factors[1]) < 1e-8))
+  expect_false(isTRUE(all.equal(scale_factors[1], 1))) # an actual rescale happened
+})
+
+test_that("resolve_rc_gaps extend_upper_to_lower rescales every row of the upper limb, not just the endpoint", {
+  rc_raw_dt <- build_two_limb_rc_dt()
+  rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "extend_upper_to_lower")
+
+  q_lower_end <- rc_fixed_dt[limb == 1][stage == max(stage), discharge]
+  q_upper_start <- rc_fixed_dt[limb == 2][stage == min(stage), discharge]
+  expect_equal(q_lower_end, q_upper_start, tolerance = 1e-8)
+
+  expect_identical(rc_fixed_dt[limb == 1], rc_raw_dt[limb == 1])
+
+  scale_factors <- rc_fixed_dt[limb == 2]$discharge / rc_raw_dt[limb == 2]$discharge
+  expect_true(all(abs(scale_factors - scale_factors[1]) < 1e-8))
+  expect_false(isTRUE(all.equal(scale_factors[1], 1)))
+})
+
+test_that("resolve_rc_gaps extend_* methods warn and skip a junction when the divisor is near zero", {
+  stage1 <- c(8.0, 8.5, 9.0, 9.5, 10.0)
+  limb_a <- data.table::data.table(stage = stage1, discharge = c(0, 1, 5, 15, 1e-12), limb = 1L)
+  limb_b <- data.table::data.table(stage = c(10.0, 10.5, 11.0), discharge = c(50, 60, 70), limb = 2L)
+  rc_dt <- data.table::rbindlist(list(limb_a, limb_b))
+
+  expect_warning(
+    result <- resolve_rc_gaps(rc_dt, method = "extend_lower_to_upper"),
+    "too close to zero"
+  )
+  expect_identical(result[limb == 1], limb_a)
+  expect_identical(result[limb == 2], limb_b)
+})
+
+test_that("resolve_rc_gaps extend methods resolve a 3-limb chain correctly, propagating from the anchor", {
+  s1 <- seq(0, 2, by = 0.2); s2 <- seq(2, 4, by = 0.2); s3 <- seq(4, 6, by = 0.2)
+  l1 <- data.table::data.table(stage = s1, discharge = 5 * (s1 + 0.1)^1.5, limb = 1L)
+  l2 <- data.table::data.table(stage = s2, discharge = 8 * s2^1.6, limb = 2L)
+  l3 <- data.table::data.table(stage = s3, discharge = 3 * (s3 - 1)^1.9, limb = 3L)
+  rc_dt <- data.table::rbindlist(list(l1, l2, l3))
+
+  # extend_lower_to_upper propagates top-down: limb 3 (the topmost) is the
+  # anchor and must be completely untouched; both junctions must close.
+  res_down <- resolve_rc_gaps(rc_dt, method = "extend_lower_to_upper")
+  expect_identical(res_down[limb == 3], l3)
+  expect_equal(max(res_down[limb == 1]$discharge), res_down[limb == 2]$discharge[1], tolerance = 1e-8)
+  expect_equal(max(res_down[limb == 2]$discharge), res_down[limb == 3]$discharge[1], tolerance = 1e-8)
+
+  # extend_upper_to_lower propagates bottom-up: limb 1 is the anchor.
+  res_up <- resolve_rc_gaps(rc_dt, method = "extend_upper_to_lower")
+  expect_identical(res_up[limb == 1], l1)
+  expect_equal(max(res_up[limb == 1]$discharge), res_up[limb == 2]$discharge[1], tolerance = 1e-8)
+  expect_equal(max(res_up[limb == 2]$discharge), res_up[limb == 3]$discharge[1], tolerance = 1e-8)
 })
 
 test_that("resolve_rc_gaps returns input unchanged when no gap is flagged", {

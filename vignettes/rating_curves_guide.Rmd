@@ -200,7 +200,7 @@ The toolkit offers three closure strategies because they make different trade-of
 
 ## `resolve_rc_gaps()`: patch the table
 
-Adjusts the discretised table rows either side of each flagged junction. `method = "midpoint"` moves both sides to the midpoint of their estimates; `snap_to_lower` and `snap_to_upper` defer entirely to one limb, for when one side is clearly better gauged than the other.
+Adjusts the discretised table rows either side of each flagged junction. `method = "midpoint"` moves both sides to the midpoint of their estimates; `"match_lower_to_upper"`/`"match_upper_to_lower"` move only the single junction row to defer entirely to one limb, for when one side is clearly better gauged than the other; `"extend_lower_to_upper"`/`"extend_upper_to_lower"` go further and rescale the *whole* deferring limb's curve, not just its junction row, so the reshaping is visible across the limb rather than only at its boundary.
 
 ```{r resolve-gaps}
 rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "midpoint")
