@@ -70,6 +70,182 @@ test_that("rate_optimise errors when a limb has too few gaugings", {
   expect_error(rate_optimise(discharge_cms, stage_m, control = 1.0), "at least 3 gaugings")
 })
 
+test_that("rate_optimise stores gauging_datetime on @gaugings when supplied", {
+  discharge_cms <- c(177.685, 240.898, 221.954, 205.55, 383.051, 154.061, 216.582)
+  stage_m <- c(1.855, 2.109, 2.037, 1.972, 2.574, 1.748, 2.016)
+  gauging_datetime <- as.Date("2020-01-01") + 0:6
+
+  fit <- rate_optimise(discharge_cms, stage_m, gauging_datetime = gauging_datetime)
+
+  expect_true("gauging_datetime" %in% names(fit@gaugings))
+  expect_equal(fit@gaugings$gauging_datetime, gauging_datetime)
+})
+
+test_that("rate_optimise accepts POSIXct as well as Date for gauging_datetime", {
+  discharge_cms <- c(177.685, 240.898, 221.954, 205.55, 383.051, 154.061, 216.582)
+  stage_m <- c(1.855, 2.109, 2.037, 1.972, 2.574, 1.748, 2.016)
+  gauging_datetime <- as.POSIXct("2020-01-01", tz = "UTC") + (0:6) * 3600
+
+  fit <- rate_optimise(discharge_cms, stage_m, gauging_datetime = gauging_datetime)
+
+  expect_equal(fit@gaugings$gauging_datetime, gauging_datetime)
+})
+
+test_that("rate_optimise omitting gauging_datetime behaves exactly as before", {
+  discharge_cms <- c(177.685, 240.898, 221.954, 205.55, 383.051, 154.061, 216.582)
+  stage_m <- c(1.855, 2.109, 2.037, 1.972, 2.574, 1.748, 2.016)
+
+  fit <- rate_optimise(discharge_cms, stage_m)
+
+  expect_false("gauging_datetime" %in% names(fit@gaugings))
+})
+
+test_that("rate_optimise validates gauging_datetime", {
+  discharge_cms <- c(177.685, 240.898, 221.954, 205.55, 383.051, 154.061, 216.582)
+  stage_m <- c(1.855, 2.109, 2.037, 1.972, 2.574, 1.748, 2.016)
+
+  expect_error(
+    rate_optimise(discharge_cms, stage_m, gauging_datetime = seq_along(stage_m)),
+    "Date or POSIXct"
+  )
+  expect_error(
+    rate_optimise(discharge_cms, stage_m, gauging_datetime = as.Date("2020-01-01") + 0:5),
+    "same length"
+  )
+})
+
+test_that("rate_optimise n_bounds = NULL (default) is unchanged", {
+  set.seed(1)
+  stage_m <- seq(0.5, 3.5, by = 0.1)
+  discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.05)
+
+  fit_default <- rate_optimise(discharge_cms, stage_m, control = c(1.5, 2.5))
+  fit_explicit_null <- rate_optimise(discharge_cms, stage_m, control = c(1.5, 2.5), n_bounds = NULL)
+  expect_equal(fit_default@limbs$n, fit_explicit_null@limbs$n)
+})
+
+test_that("rate_optimise n_bounds constrains every limb's exponent to the supplied range", {
+  set.seed(1)
+  stage_m <- seq(0.5, 3.5, by = 0.1)
+  discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.05)
+
+  fit_bounded <- rate_optimise(discharge_cms, stage_m, control = c(1.5, 2.5), n_bounds = c(1.55, 1.65))
+  expect_true(all(fit_bounded@limbs$n >= 1.55 - 1e-6))
+  expect_true(all(fit_bounded@limbs$n <= 1.65 + 1e-6))
+})
+
+test_that("rate_optimise n_bounds with lower == upper fixes n outright", {
+  set.seed(1)
+  stage_m <- seq(0.5, 3.5, by = 0.1)
+  discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.05)
+
+  fit_fixed <- rate_optimise(discharge_cms, stage_m, control = c(1.5, 2.5), n_bounds = c(1.6, 1.6))
+  expect_equal(fit_fixed@limbs$n, rep(1.6, 3), tolerance = 1e-6)
+})
+
+test_that("rate_optimise validates n_bounds", {
+  discharge_cms <- c(177.685, 240.898, 221.954, 205.55, 383.051, 154.061, 216.582)
+  stage_m <- c(1.855, 2.109, 2.037, 1.972, 2.574, 1.748, 2.016)
+
+  expect_error(rate_optimise(discharge_cms, stage_m, n_bounds = c(2, 1)), "must not exceed")
+  expect_error(rate_optimise(discharge_cms, stage_m, n_bounds = c(-1, 2)), "must be positive")
+  expect_error(rate_optimise(discharge_cms, stage_m, n_bounds = c(1, 2, 3)), "c\\(lower, upper\\)")
+  expect_error(rate_optimise(discharge_cms, stage_m, n_bounds = "x"), "c\\(lower, upper\\)")
+})
+
+test_that("rate_optimise_constrained applies n_bounds to the constrained refit too", {
+  set.seed(1)
+  stage_m <- seq(0.5, 3.5, by = 0.1)
+  discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.05)
+
+  fit_c <- rate_optimise_constrained(
+    discharge_cms, stage_m,
+    control = c(1.5, 2.5), n_bounds = c(1.55, 1.65)
+  )
+  expect_true(all(fit_c@limbs$n >= 1.55 - 1e-6))
+  expect_true(all(fit_c@limbs$n <= 1.65 + 1e-6))
+})
+
+test_that("rate_optimise objective = 'absolute' (default) is unchanged", {
+  set.seed(1)
+  stage_m <- seq(0.5, 3.5, by = 0.1)
+  discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.05)
+
+  fit_default <- rate_optimise(discharge_cms, stage_m, control = c(1.5, 2.5))
+  fit_explicit <- rate_optimise(discharge_cms, stage_m, control = c(1.5, 2.5), objective = "absolute")
+
+  expect_equal(fit_default@limbs$C, fit_explicit@limbs$C)
+  expect_equal(fit_default@limbs$a, fit_explicit@limbs$a)
+  expect_equal(fit_default@limbs$n, fit_explicit@limbs$n)
+})
+
+test_that("rate_optimise objective = 'relative' fits and reports cms-scale diagnostics", {
+  set.seed(1)
+  stage_m <- seq(0.5, 3.5, by = 0.1)
+  discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.05)
+
+  fit_rel <- rate_optimise(discharge_cms, stage_m, control = c(1.5, 2.5), objective = "relative")
+
+  expect_true(all(fit_rel@limbs$C > 0))
+  expect_true(all(fit_rel@limbs$n > 0))
+  expect_true(all(fit_rel@limbs$r_squared > 0.99))
+  # rmse_cms must be recomputed on the natural scale -- it should be the
+  # same order of magnitude as the absolute fit's, not a tiny log-residual
+  # RMSE (which would be < 0.05 in these units).
+  fit_abs <- rate_optimise(discharge_cms, stage_m, control = c(1.5, 2.5))
+  expect_equal(fit_rel@limbs$rmse_cms, fit_abs@limbs$rmse_cms, tolerance = 0.5)
+
+  # residuals recomputed from C/a/n reproduce rmse_cms exactly
+  gaugings_dt <- fit_rel@gaugings
+  gaugings_dt[fit_rel@limbs, on = "limb", fitted_cms := i.C * (stage_m + i.a)^i.n]
+  manual_rmse <- gaugings_dt[, sqrt(mean((discharge_cms - fitted_cms)^2)), by = limb]$V1
+  expect_equal(fit_rel@limbs$rmse_cms, manual_rmse, tolerance = 1e-8)
+})
+
+test_that("rate_optimise objective = 'relative' requires strictly positive discharge_cms", {
+  expect_error(
+    rate_optimise(c(0, 5, 10, 20), c(1, 2, 3, 4), objective = "relative"),
+    "strictly positive"
+  )
+  # zero discharge is fine under the default objective
+  expect_no_error(rate_optimise(c(0, 5, 10, 20), c(1, 2, 3, 4)))
+})
+
+test_that("rate_optimise validates objective", {
+  expect_error(
+    rate_optimise(c(1, 5, 10, 20), c(1, 2, 3, 4), objective = "not_a_real_option"),
+    "should be one of"
+  )
+})
+
+test_that("rate_optimise_constrained forwards gauging_datetime through ...", {
+  set.seed(1)
+  stage_m <- seq(0.5, 3.5, by = 0.1)
+  discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.01)
+  gauging_datetime <- as.Date("2020-01-01") + seq_along(stage_m)
+
+  fit <- rate_optimise_constrained(
+    discharge_cms, stage_m,
+    control = c(1.5, 2.5), gauging_datetime = gauging_datetime
+  )
+
+  expect_equal(fit@gaugings$gauging_datetime, gauging_datetime)
+})
+
+test_that("FlodeRatingBase's validator rejects a malformed gauging_datetime column", {
+  gaugings_dt <- data.table::data.table(
+    discharge_cms = c(1, 2, 3), stage_m = c(1, 2, 3),
+    gauging_datetime = c("2020-01-01", "2020-01-02", "2020-01-03")
+  )
+  limbs_dt <- data.table::data.table(
+    limb = 1L, lower_stage_m = 1, upper_stage_m = 3, C = 1, a = 0, n = 1.5
+  )
+  expect_error(
+    FlodeRating(gaugings = gaugings_dt, limbs = limbs_dt),
+    "gauging_datetime.*Date or POSIXct"
+  )
+})
+
 test_that("rating_plot runs without error for single- and multi-limb fits", {
   discharge_cms <- c(177.685, 240.898, 221.954, 205.55, 383.051, 154.061, 216.582)
   stage_m <- c(1.855, 2.109, 2.037, 1.972, 2.574, 1.748, 2.016)

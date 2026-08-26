@@ -7,14 +7,19 @@
 rate_optimise_segmented(
   discharge_cms,
   stage_m,
+  gauging_datetime = NULL,
   control = NULL,
   estimate_breakpoints = FALSE,
   multi_start = TRUE,
+  objective = c("absolute", "relative"),
   ...
 )
 }
 \arguments{
 \item{discharge_cms, stage_m}{Numeric vectors, as in \code{\link[=rate_optimise]{rate_optimise()}}.}
+
+\item{gauging_datetime}{\code{Date}/\code{POSIXct} vector or \code{NULL}, as in
+\code{\link[=rate_optimise]{rate_optimise()}}. Default \code{NULL}.}
 
 \item{control}{Numeric vector or \code{NULL}. Interior segment breakpoints.}
 
@@ -27,13 +32,22 @@ result. This matters more here than for \code{rate_optimise()}'s
 independent-limb fits: this model's loss surface is genuinely
 non-convex.}
 
+\item{objective}{Character. \code{"absolute"} (default) minimises absolute
+discharge error, as before. \code{"relative"} fits \code{log(discharge_cms)}
+residuals instead -- see \code{\link[=rate_optimise]{rate_optimise()}} for the rationale.
+Requires \code{discharge_cms} to be strictly positive. Reported
+diagnostics (\code{rmse_cms}, \code{r_squared}) are always recomputed on the
+natural discharge scale regardless of \code{objective}. Not a default --
+existing callers see no change in behaviour.}
+
 \item{...}{Passed to \code{minpack.lm::nls.lm.control()}.}
 }
 \value{
 A \link{FlodeSegmentedRating} instance. \verb{@coefficients} is a
 one-row data.table: \code{C}, \code{bp1..bpk}, \code{n1..nk}, \code{rmse_cms},
 \code{r_squared}, \code{n_obs}, \code{n_starts_attempted}, \code{n_starts_converged},
-\code{selected_start_id}. \verb{@gaugings} holds the input data. \verb{@fit_starts}
+\code{selected_start_id}. \verb{@gaugings} holds the input data (and
+\code{gauging_datetime} if supplied). \verb{@fit_starts}
 holds every multi-start attempt when \code{multi_start = TRUE}.
 }
 \description{

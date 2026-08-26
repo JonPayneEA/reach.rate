@@ -7,11 +7,14 @@
 rate_optimise(
   discharge_cms,
   stage_m,
+  gauging_datetime = NULL,
   control = NULL,
   n_boot = 0L,
   boot_seed = NULL,
   min_boot_success = 0.8,
   multi_start = TRUE,
+  n_bounds = NULL,
+  objective = c("absolute", "relative"),
   ...
 )
 }
@@ -20,6 +23,13 @@ rate_optimise(
 
 \item{stage_m}{Numeric vector. Gauged stage, m. Same length as
 \code{discharge_cms}.}
+
+\item{gauging_datetime}{\code{Date}/\code{POSIXct} vector or \code{NULL}. When each
+gauging in \code{discharge_cms}/\code{stage_m} was taken, same length as
+\code{discharge_cms} if supplied. Not used by the fit itself -- stored on
+the returned rating's \verb{@gaugings} for future age-aware fitting (see
+issue #9). Default \code{NULL}: no dates recorded, matching today's
+behaviour.}
 
 \item{control}{Numeric vector or \code{NULL}. Stage breakpoints separating
 rating limbs, e.g. \code{c(1.6, 2.2)} for three limbs. \code{NULL} (default)
@@ -40,6 +50,28 @@ from several starting-value combinations and the best converged,
 domain-valid result is kept. Set \code{FALSE} for the original
 single-start behaviour.}
 
+\item{n_bounds}{Numeric vector \code{c(lower, upper)}, or \code{NULL} (default).
+Box-constrains the exponent \code{n} for every limb, e.g. to a
+theoretical range implied by known channel-control hydraulics
+(roughly 1.5 for a rectangular control, 2.5 for triangular/V-notch).
+The top of a rating is usually the least-gauged part of the record,
+so this lets known geometry keep the fit realistic there without
+more data. Set \code{lower == upper} to fix \code{n} outright. \code{NULL}
+(default) keeps today's effectively unconstrained \code{n > 0}. Not a
+default constraint -- most callers don't know their channel-control
+type, and an unconstrained fit remains the default behaviour.}
+
+\item{objective}{Character. \code{"absolute"} (default) minimises absolute
+discharge error, as before. \code{"relative"} fits \code{log(discharge_cms)}
+residuals instead -- gauging error is typically proportional (a
+percentage of the reading) rather than a fixed absolute amount, so
+this can better balance low- and high-flow structure than absolute
+error does. Requires \code{discharge_cms} to be strictly positive.
+Reported diagnostics (\code{rmse_cms}, \code{r_squared}, and the error columns)
+are always recomputed on the natural discharge scale regardless of
+\code{objective}, so they stay comparable between the two.  Not a
+default -- existing callers see no change in behaviour.}
+
 \item{...}{Passed to \code{minpack.lm::nlsLM()} itself for the primary fit
 only, not the bootstrap refits.}
 }
@@ -48,7 +80,8 @@ A \link{FlodeRating} instance. \verb{@limbs} has one row per limb with
 bounds, coefficients \code{C}/\code{a}/\code{n}, fit diagnostics, and multi-start
 bookkeeping. When \code{n_boot > 0}, \verb{@bootstrap} holds every draw and
 \verb{@limbs} gains SE/percentile/success-count columns. \verb{@gaugings}
-holds the input data with a \code{limb} column. \verb{@fit_starts} holds every
+holds the input data with a \code{limb} column (and \code{gauging_datetime} if
+supplied). \verb{@fit_starts} holds every
 multi-start attempt when \code{multi_start = TRUE}. \verb{@status} is
 \code{"independently_fitted"}.
 }

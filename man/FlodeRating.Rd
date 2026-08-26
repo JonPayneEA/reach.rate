@@ -21,7 +21,11 @@ FlodeRating(
 }
 \arguments{
 \item{gaugings}{Data.table with \code{discharge_cms} and \code{stage_m}
-columns -- the gaugings the fit was built from.}
+columns -- the gaugings the fit was built from. May optionally
+include a \code{gauging_datetime} column (\code{Date} or \code{POSIXct}) recording
+when each spot gauging was taken. Nothing in the package currently
+reads this column -- it's groundwork for a future age-aware fitting
+option (see issue #9).}
 
 \item{fit_starts}{Data.table of multi-start fitting attempts, or
 \code{NULL} if the fit wasn't produced with \code{multi_start = TRUE}.}

@@ -117,13 +117,19 @@ NULL
 #'
 #' @param limb_dt data.table with `stage_m`, `discharge_cms` for one limb.
 #' @param fit_lower,fit_upper Named numeric vectors (`C`, `a`, `n`).
+#' @param formula The model formula to fit -- `discharge_cms ~ C * (stage_m
+#'   + a)^n` for the default absolute-residual objective, or an
+#'   equivalent log-space formula when fitting on relative error. Either
+#'   way it must estimate parameters named `C`, `a`, `n`.
 #' @param maxiter Integer, passed to `nls.lm.control()`.
 #' @param ... Passed to `nlsLM()`.
 #' @return A list: `model`, `attempts` (data.table), `n_starts_attempted`,
 #'   `n_starts_converged`, `selected_start_id`.
 #' @keywords internal
 #' @noRd
-.fit_limb_multi_start <- function(limb_dt, fit_lower, fit_upper, maxiter = 100L, ...) {
+.fit_limb_multi_start <- function(limb_dt, fit_lower, fit_upper,
+                                   formula = discharge_cms ~ C * (stage_m + a)^n,
+                                   maxiter = 100L, ...) {
   starts <- .generate_starts(limb_dt, fit_lower, fit_upper)
 
   attempts <- vector("list", length(starts))
@@ -135,7 +141,7 @@ NULL
     st <- starts[[s]]
     fit_attempt <- tryCatch(
       suppressWarnings(nlsLM(
-        formula = discharge_cms ~ C * (stage_m + a)^n,
+        formula = formula,
         data = limb_dt,
         start = st,
         lower = fit_lower,
@@ -201,6 +207,12 @@ NULL
 #' @param discharge_cms Numeric vector. Gauged discharge, m\eqn{^3}/s.
 #' @param stage_m Numeric vector. Gauged stage, m. Same length as
 #'   `discharge_cms`.
+#' @param gauging_datetime `Date`/`POSIXct` vector or `NULL`. When each
+#'   gauging in `discharge_cms`/`stage_m` was taken, same length as
+#'   `discharge_cms` if supplied. Not used by the fit itself -- stored on
+#'   the returned rating's `@gaugings` for future age-aware fitting (see
+#'   issue #9). Default `NULL`: no dates recorded, matching today's
+#'   behaviour.
 #' @param control Numeric vector or `NULL`. Stage breakpoints separating
 #'   rating limbs, e.g. `c(1.6, 2.2)` for three limbs. `NULL` (default)
 #'   fits a single limb across the full range.
@@ -215,6 +227,26 @@ NULL
 #'   from several starting-value combinations and the best converged,
 #'   domain-valid result is kept. Set `FALSE` for the original
 #'   single-start behaviour.
+#' @param n_bounds Numeric vector `c(lower, upper)`, or `NULL` (default).
+#'   Box-constrains the exponent `n` for every limb, e.g. to a
+#'   theoretical range implied by known channel-control hydraulics
+#'   (roughly 1.5 for a rectangular control, 2.5 for triangular/V-notch).
+#'   The top of a rating is usually the least-gauged part of the record,
+#'   so this lets known geometry keep the fit realistic there without
+#'   more data. Set `lower == upper` to fix `n` outright. `NULL`
+#'   (default) keeps today's effectively unconstrained `n > 0`. Not a
+#'   default constraint -- most callers don't know their channel-control
+#'   type, and an unconstrained fit remains the default behaviour.
+#' @param objective Character. `"absolute"` (default) minimises absolute
+#'   discharge error, as before. `"relative"` fits `log(discharge_cms)`
+#'   residuals instead -- gauging error is typically proportional (a
+#'   percentage of the reading) rather than a fixed absolute amount, so
+#'   this can better balance low- and high-flow structure than absolute
+#'   error does. Requires `discharge_cms` to be strictly positive.
+#'   Reported diagnostics (`rmse_cms`, `r_squared`, and the error columns)
+#'   are always recomputed on the natural discharge scale regardless of
+#'   `objective`, so they stay comparable between the two.  Not a
+#'   default -- existing callers see no change in behaviour.
 #' @param ... Passed to `minpack.lm::nlsLM()` itself for the primary fit
 #'   only, not the bootstrap refits.
 #'
@@ -222,7 +254,8 @@ NULL
 #'   bounds, coefficients `C`/`a`/`n`, fit diagnostics, and multi-start
 #'   bookkeeping. When `n_boot > 0`, `@bootstrap` holds every draw and
 #'   `@limbs` gains SE/percentile/success-count columns. `@gaugings`
-#'   holds the input data with a `limb` column. `@fit_starts` holds every
+#'   holds the input data with a `limb` column (and `gauging_datetime` if
+#'   supplied). `@fit_starts` holds every
 #'   multi-start attempt when `multi_start = TRUE`. `@status` is
 #'   `"independently_fitted"`.
 #'
@@ -237,8 +270,17 @@ NULL
 #' fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared)]
 #'
 #' @export
-rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, boot_seed = NULL,
-                           min_boot_success = 0.8, multi_start = TRUE, ...) {
+rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, control = NULL,
+                           n_boot = 0L, boot_seed = NULL, min_boot_success = 0.8, multi_start = TRUE,
+                           n_bounds = NULL, objective = c("absolute", "relative"), ...) {
+  objective <- match.arg(objective)
+  if (!is.null(n_bounds)) {
+    if (!is.numeric(n_bounds) || length(n_bounds) != 2L || any(!is.finite(n_bounds))) {
+      stop("n_bounds must be NULL or a finite numeric vector c(lower, upper)")
+    }
+    if (n_bounds[1] <= 0) stop("n_bounds[1] (the lower bound) must be positive")
+    if (n_bounds[1] > n_bounds[2]) stop("n_bounds[1] must not exceed n_bounds[2]")
+  }
   if (!is.numeric(discharge_cms)) stop("discharge_cms must be numeric")
   if (!is.numeric(stage_m)) stop("stage_m must be numeric")
   if (length(discharge_cms) != length(stage_m)) {
@@ -248,7 +290,18 @@ rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, b
   if (any(!is.finite(discharge_cms))) stop("discharge_cms must not contain NA, NaN, or infinite values")
   if (any(!is.finite(stage_m))) stop("stage_m must not contain NA, NaN, or infinite values")
   if (any(discharge_cms < 0)) stop("discharge_cms must be non-negative")
+  if (objective == "relative" && any(discharge_cms <= 0)) {
+    stop("discharge_cms must be strictly positive when objective = \"relative\" (log(0) is undefined)")
+  }
   if (diff(range(stage_m)) <= 0) stop("stage_m must span a non-zero range")
+  if (!is.null(gauging_datetime)) {
+    if (!inherits(gauging_datetime, c("Date", "POSIXct"))) {
+      stop("gauging_datetime must be a Date or POSIXct vector, or NULL")
+    }
+    if (length(gauging_datetime) != length(discharge_cms)) {
+      stop("gauging_datetime must be the same length as discharge_cms")
+    }
+  }
   if (!is.null(control) && !is.numeric(control)) stop("control must be numeric or NULL")
   if (!is.null(control) && any(!is.finite(control))) stop("control must not contain NA, NaN, or infinite values")
   if (!is.null(control) && anyDuplicated(control)) stop("control breakpoints must be unique")
@@ -270,6 +323,14 @@ rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, b
   }
 
   gaugings_dt <- data.table(discharge_cms = discharge_cms, stage_m = stage_m)
+  if (!is.null(gauging_datetime)) gaugings_dt[, gauging_datetime := gauging_datetime]
+
+  fit_formula <- if (objective == "relative") {
+    log(discharge_cms) ~ log(C) + n * log(stage_m + a)
+  } else {
+    discharge_cms ~ C * (stage_m + a)^n
+  }
+
   breaks <- c(min(stage_m), sort(control), max(stage_m))
   n_limbs_declared <- length(breaks) - 1L
 
@@ -366,12 +427,14 @@ rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, b
     limb_dt <- gaugings_dt[limb == lb]
 
     limb_stage_min <- min(limb_dt$stage_m)
-    fit_lower <- c(C = 1e-6, a = -limb_stage_min + 1e-6, n = 1e-6)
-    fit_upper <- c(C = Inf, a = Inf, n = Inf)
+    n_lower <- if (is.null(n_bounds)) 1e-6 else n_bounds[1]
+    n_upper <- if (is.null(n_bounds)) Inf else n_bounds[2]
+    fit_lower <- c(C = 1e-6, a = -limb_stage_min + 1e-6, n = n_lower)
+    fit_upper <- c(C = Inf, a = Inf, n = n_upper)
     start_a <- if (fit_lower[["a"]] > 0) fit_lower[["a"]] + 0.01 else 0
 
     if (multi_start) {
-      fit_result <- .fit_limb_multi_start(limb_dt, fit_lower, fit_upper, maxiter = 100L, ...)
+      fit_result <- .fit_limb_multi_start(limb_dt, fit_lower, fit_upper, formula = fit_formula, maxiter = 100L, ...)
       if (is.null(fit_result$model)) {
         stop(sprintf(
           "rate_optimise(): limb %s -- no starting combination converged to a valid, monotonic equation across %d attempts.",
@@ -384,10 +447,11 @@ rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, b
       selected_start_id_vec[i] <- fit_result$selected_start_id
       fit_starts_list[[i]] <- data.table(limb = lb, fit_result$attempts)
     } else {
+      start_n <- min(max(1, n_lower), if (is.finite(n_upper)) n_upper else Inf)
       model <- nlsLM(
-        formula = discharge_cms ~ C * (stage_m + a)^n,
+        formula = fit_formula,
         data = limb_dt,
-        start = list(C = 1, a = start_a, n = 1),
+        start = list(C = 1, a = start_a, n = start_n),
         lower = fit_lower,
         upper = fit_upper,
         control = nls.lm.control(maxiter = 100),
@@ -400,11 +464,19 @@ rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, b
     }
 
     coefs <- coef(model)
-    resid_vals <- residuals(model)
+    # Diagnostics are always computed on the natural discharge (cms) scale,
+    # recomputed from the fitted coefficients rather than taken from
+    # residuals(model) -- the latter would be log-scale residuals under
+    # objective = "relative", not comparable to the absolute-objective
+    # case. For objective = "absolute" this reproduces residuals(model)
+    # exactly, since that's literally what was optimised.
+    predicted_cms <- coefs[["C"]] * (limb_dt$stage_m + coefs[["a"]])^coefs[["n"]]
+    resid_vals <- limb_dt$discharge_cms - predicted_cms
     ss_res <- sum(resid_vals^2)
     ss_tot <- sum((limb_dt$discharge_cms - mean(limb_dt$discharge_cms))^2)
     limb_width_for_bound_check <- max(limb_dt$stage_m) - min(limb_dt$stage_m)
     near_bound_vec[i] <- (coefs[["n"]] - fit_lower[["n"]]) < 0.01 ||
+      (is.finite(fit_upper[["n"]]) && (fit_upper[["n"]] - coefs[["n"]]) < 0.01) ||
       (coefs[["a"]] - fit_lower[["a"]]) < 0.01 * max(limb_width_for_bound_check, 1e-6)
 
     C_vec[i] <- coefs[["C"]]
@@ -448,7 +520,7 @@ rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, b
 
         boot_fit <- tryCatch(
           suppressWarnings(nlsLM(
-            formula = discharge_cms ~ C * (stage_m + a)^n,
+            formula = fit_formula,
             data = limb_boot_dt,
             start = list(C = coefs[["C"]], a = coefs[["a"]], n = coefs[["n"]]),
             lower = fit_lower,
@@ -548,8 +620,14 @@ rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, b
     fit_starts = fit_starts_out,
     status = "independently_fitted",
     provenance = list(
-      fitting_equation = "Q = C(H + a)^n",
+      fitting_equation = if (objective == "relative") {
+        "log(Q) = log(C) + n*log(H + a)"
+      } else {
+        "Q = C(H + a)^n"
+      },
       fitting_method = if (multi_start) "multi-start nlsLM (minpack.lm)" else "single-start nlsLM (minpack.lm)",
+      objective = objective,
+      n_bounds = n_bounds,
       control = control,
       n_boot = n_boot,
       multi_start = multi_start,
@@ -576,10 +654,20 @@ rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, b
 #' `H = brk` for any `a`/`n`, so `nlsLM` is free to optimise both over
 #' the limb's own gaugings while continuity holds automatically.
 #'
-#' @param discharge_cms,stage_m,control As in [rate_optimise()].
+#' @param discharge_cms,stage_m,control,n_bounds As in [rate_optimise()].
+#'   Unlike `objective`, `n_bounds` is honoured by *both* the initial fit
+#'   and this function's own constrained refit, since a hydraulic bound
+#'   on `n` should hold for every limb, not just the anchor.
 #' @param anchor_limb Integer. Row index of the limb left unconstrained.
 #'   Default `1L`.
-#' @param ... Passed to `rate_optimise()`'s initial (unconstrained) fit.
+#' @param ... Passed to `rate_optimise()`'s initial (unconstrained) fit --
+#'   this includes `gauging_datetime`, which needs no special handling
+#'   here since it's simply stored on `@gaugings`, not used by either
+#'   function's fitting itself. It also includes `objective`, which
+#'   applies to the initial fit (and so to `anchor_limb`, which is never
+#'   refit) -- the constrained refit this function performs for every
+#'   other limb uses its own reparameterised, absolute-residual-only
+#'   formula regardless of `objective`.
 #'   `n_boot` is accepted but the resulting bootstrap draws describe the
 #'   *unconstrained* fit and are dropped with a warning rather than
 #'   presented alongside updated point estimates; `fit_starts` is
@@ -599,8 +687,9 @@ rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, b
 #'   `gap_check` module) for the closed-form, no-refit alternative
 #'
 #' @export
-rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, anchor_limb = 1L, ...) {
-  fit <- rate_optimise(discharge_cms, stage_m, control = control, ...)
+rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, anchor_limb = 1L,
+                                       n_bounds = NULL, ...) {
+  fit <- rate_optimise(discharge_cms, stage_m, control = control, n_bounds = n_bounds, ...)
   limbs_dt <- copy(fit@limbs)
   gaugings_dt <- fit@gaugings
   n_limbs <- nrow(limbs_dt)
@@ -647,15 +736,18 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
     # sit below this limb's own minimum gauged stage (an extrapolation
     # gap), so the binding constraint is whichever of the two is smaller.
     a_lower <- -min(brk, min(limb_dt$stage_m)) + 1e-6
-    fit_lower <- c(a = a_lower, n = 1e-6)
-    fit_upper <- c(a = Inf, n = Inf)
+    n_lower <- if (is.null(n_bounds)) 1e-6 else n_bounds[1]
+    n_upper <- if (is.null(n_bounds)) Inf else n_bounds[2]
+    fit_lower <- c(a = a_lower, n = n_lower)
+    fit_upper <- c(a = Inf, n = n_upper)
     start_a_clipped <- max(start_a, a_lower + 0.01)
+    start_n_clipped <- min(max(start_n, n_lower), if (is.finite(n_upper)) n_upper else start_n)
 
     model <- tryCatch(
       suppressWarnings(nlsLM(
         formula = discharge_cms ~ target_q * ((stage_m + a) / (brk + a))^n,
         data = limb_dt,
-        start = list(a = start_a_clipped, n = start_n),
+        start = list(a = start_a_clipped, n = start_n_clipped),
         lower = fit_lower,
         upper = fit_upper,
         control = nls.lm.control(maxiter = 200)
@@ -701,7 +793,9 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
       C = C_new, a = a_new, n = n_new,
       rmse_cms = sqrt(mean(resid_vals^2)),
       r_squared = if (ss_tot > 1e-12) 1 - ss_res / ss_tot else NA_real_,
-      near_bound = (n_new - fit_lower[["n"]]) < 0.01 || (a_new - fit_lower[["a"]]) < 0.01 * max(limb_width, 1e-6)
+      near_bound = (n_new - fit_lower[["n"]]) < 0.01 ||
+        (is.finite(fit_upper[["n"]]) && (fit_upper[["n"]] - n_new) < 0.01) ||
+        (a_new - fit_lower[["a"]]) < 0.01 * max(limb_width, 1e-6)
     )
   }
 

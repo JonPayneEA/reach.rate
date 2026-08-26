@@ -84,6 +84,33 @@ NULL
 #' result on a numerical domain/monotonicity grid via `predict()`, and
 #' keep the valid result with the smallest RSS.
 #'
+#' Reconstruct natural-scale (cms) discharge from segmented coefficients
+#'
+#' @description
+#' Shared by [rate_optimise_segmented()]'s post-fit diagnostics and the
+#' `apply_rating` method registered for [FlodeSegmentedRating] -- both
+#' need the same "evaluate \eqn{Q = C \cdot \max(H-bp_1,0)^{n_1} \cdot
+#' \prod_{j \ge 2}(\max(H-bp_j,0)+1)^{n_j}}" reconstruction from a set of
+#' coefficients, regardless of which scale the model was actually fitted
+#' on (`objective` in `rate_optimise_segmented()`).
+#'
+#' @param coefs A named list/vector (or one-row data.table) with `C`,
+#'   `bp1`, `n1`, and `bp2`/`n2` .. `bpk`/`nk` for `k > 1`.
+#' @param k Integer. Number of segments.
+#' @param stage_m Numeric vector of stages to evaluate at.
+#' @return Numeric vector of predicted discharge, same length as `stage_m`.
+#' @keywords internal
+#' @noRd
+.segmented_predict_cms <- function(coefs, k, stage_m) {
+  q <- coefs[["C"]] * pmax(stage_m - coefs[["bp1"]], 0)^coefs[["n1"]]
+  for (j in seq_len(k)[-1]) {
+    bp_j <- coefs[[sprintf("bp%d", j)]]
+    n_j <- coefs[[sprintf("n%d", j)]]
+    q <- q * (pmax(stage_m - bp_j, 0) + 1)^n_j
+  }
+  q
+}
+
 #' @keywords internal
 #' @noRd
 .fit_segmented_multi_start <- function(model_formula, gaugings_dt, starts, maxiter = 300L, ...) {
@@ -172,6 +199,8 @@ NULL
 #' non-convexity their paper warns about.
 #'
 #' @param discharge_cms,stage_m Numeric vectors, as in [rate_optimise()].
+#' @param gauging_datetime `Date`/`POSIXct` vector or `NULL`, as in
+#'   [rate_optimise()]. Default `NULL`.
 #' @param control Numeric vector or `NULL`. Interior segment breakpoints.
 #' @param estimate_breakpoints Logical. If `TRUE`, interior breakpoints
 #'   are refit as free parameters. Default `FALSE`.
@@ -180,12 +209,20 @@ NULL
 #'   result. This matters more here than for `rate_optimise()`'s
 #'   independent-limb fits: this model's loss surface is genuinely
 #'   non-convex.
+#' @param objective Character. `"absolute"` (default) minimises absolute
+#'   discharge error, as before. `"relative"` fits `log(discharge_cms)`
+#'   residuals instead -- see [rate_optimise()] for the rationale.
+#'   Requires `discharge_cms` to be strictly positive. Reported
+#'   diagnostics (`rmse_cms`, `r_squared`) are always recomputed on the
+#'   natural discharge scale regardless of `objective`. Not a default --
+#'   existing callers see no change in behaviour.
 #' @param ... Passed to `minpack.lm::nls.lm.control()`.
 #'
 #' @return A [FlodeSegmentedRating] instance. `@coefficients` is a
 #'   one-row data.table: `C`, `bp1..bpk`, `n1..nk`, `rmse_cms`,
 #'   `r_squared`, `n_obs`, `n_starts_attempted`, `n_starts_converged`,
-#'   `selected_start_id`. `@gaugings` holds the input data. `@fit_starts`
+#'   `selected_start_id`. `@gaugings` holds the input data (and
+#'   `gauging_datetime` if supplied). `@fit_starts`
 #'   holds every multi-start attempt when `multi_start = TRUE`.
 #'
 #' @seealso [rate_optimise()] for this toolkit's usual independent-limb
@@ -204,8 +241,10 @@ NULL
 #' fit_seg@coefficients
 #'
 #' @export
-rate_optimise_segmented <- function(discharge_cms, stage_m, control = NULL,
-                                     estimate_breakpoints = FALSE, multi_start = TRUE, ...) {
+rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = NULL, control = NULL,
+                                     estimate_breakpoints = FALSE, multi_start = TRUE,
+                                     objective = c("absolute", "relative"), ...) {
+  objective <- match.arg(objective)
   if (!is.numeric(discharge_cms)) stop("discharge_cms must be numeric")
   if (!is.numeric(stage_m)) stop("stage_m must be numeric")
   if (length(discharge_cms) != length(stage_m)) {
@@ -215,7 +254,18 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, control = NULL,
   if (any(!is.finite(discharge_cms))) stop("discharge_cms must not contain NA, NaN, or infinite values")
   if (any(!is.finite(stage_m))) stop("stage_m must not contain NA, NaN, or infinite values")
   if (any(discharge_cms < 0)) stop("discharge_cms must be non-negative")
+  if (objective == "relative" && any(discharge_cms <= 0)) {
+    stop("discharge_cms must be strictly positive when objective = \"relative\" (log(0) is undefined)")
+  }
   if (diff(range(stage_m)) <= 0) stop("stage_m must span a non-zero range")
+  if (!is.null(gauging_datetime)) {
+    if (!inherits(gauging_datetime, c("Date", "POSIXct"))) {
+      stop("gauging_datetime must be a Date or POSIXct vector, or NULL")
+    }
+    if (length(gauging_datetime) != length(discharge_cms)) {
+      stop("gauging_datetime must be the same length as discharge_cms")
+    }
+  }
   if (!is.null(control) && !is.numeric(control)) stop("control must be numeric or NULL")
   if (!is.null(control) && any(!is.finite(control))) stop("control must not contain NA, NaN, or infinite values")
   if (!is.null(control) && anyDuplicated(control)) stop("control breakpoints must be unique")
@@ -241,17 +291,35 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, control = NULL,
   }
 
   gaugings_dt <- data.table(discharge_cms = discharge_cms, stage_m = stage_m)
+  if (!is.null(gauging_datetime)) gaugings_dt[, gauging_datetime := gauging_datetime]
 
-  rhs_terms <- "pmax(stage_m - bp1, 0)^n1"
-  for (j in seq_len(k)[-1]) {
-    bp_term <- if (estimate_breakpoints) {
-      sprintf("bp%d", j)
-    } else {
-      sprintf("%.10g", interior_bp[j - 1L])
+  if (objective == "relative") {
+    # log(Q) = log(C) + n1*log(max(H-bp1,0)) + sum_{j>=2} nj*log(max(H-bpj,0)+1).
+    # The j >= 2 terms are always >= 1 by construction (never zero), but
+    # the base n1 term is exactly 0 at/below bp1 -- add a tiny floor so
+    # log() never sees a literal zero there.
+    log_terms <- "n1 * log(pmax(stage_m - bp1, 0) + 1e-6)"
+    for (j in seq_len(k)[-1]) {
+      bp_term <- if (estimate_breakpoints) {
+        sprintf("bp%d", j)
+      } else {
+        sprintf("%.10g", interior_bp[j - 1L])
+      }
+      log_terms <- c(log_terms, sprintf("n%d * log(pmax(stage_m - %s, 0) + 1)", j, bp_term))
     }
-    rhs_terms <- c(rhs_terms, sprintf("(pmax(stage_m - %s, 0) + 1)^n%d", bp_term, j))
+    model_formula <- as.formula(paste("log(discharge_cms) ~ log(C) +", paste(log_terms, collapse = " + ")))
+  } else {
+    rhs_terms <- "pmax(stage_m - bp1, 0)^n1"
+    for (j in seq_len(k)[-1]) {
+      bp_term <- if (estimate_breakpoints) {
+        sprintf("bp%d", j)
+      } else {
+        sprintf("%.10g", interior_bp[j - 1L])
+      }
+      rhs_terms <- c(rhs_terms, sprintf("(pmax(stage_m - %s, 0) + 1)^n%d", bp_term, j))
+    }
+    model_formula <- as.formula(paste("discharge_cms ~ C *", paste(rhs_terms, collapse = " * ")))
   }
-  model_formula <- as.formula(paste("discharge_cms ~ C *", paste(rhs_terms, collapse = " * ")))
 
   start_list <- list(
     C = 1,
@@ -292,10 +360,6 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, control = NULL,
   }
 
   coefs <- coef(model)
-  resid_vals <- residuals(model)
-  ss_res <- sum(resid_vals^2)
-  ss_tot <- sum((discharge_cms - mean(discharge_cms))^2)
-
   coefficients_dt <- as.data.table(as.list(coefs))
 
   # When breakpoints were held fixed, they were baked into the formula as
@@ -307,6 +371,15 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, control = NULL,
       coefficients_dt[, (sprintf("bp%d", j)) := interior_bp[j - 1L]]
     }
   }
+
+  # Diagnostics are always computed on the natural discharge (cms) scale,
+  # recomputed from the fitted coefficients rather than taken from
+  # residuals(model) -- the latter would be log-scale residuals under
+  # objective = "relative", not comparable to the absolute-objective case.
+  predicted_cms <- .segmented_predict_cms(as.list(coefficients_dt), k, stage_m)
+  resid_vals <- discharge_cms - predicted_cms
+  ss_res <- sum(resid_vals^2)
+  ss_tot <- sum((discharge_cms - mean(discharge_cms))^2)
 
   coefficients_dt[, `:=`(
     rmse_cms = sqrt(mean(resid_vals^2)),
@@ -327,6 +400,7 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, control = NULL,
     provenance = list(
       fitting_equation = "Hodson et al. (2024) log-additive segmented power law",
       fitting_method = if (multi_start) "multi-start nlsLM (minpack.lm)" else "single-start nlsLM (minpack.lm)",
+      objective = objective,
       control = control,
       estimate_breakpoints = estimate_breakpoints,
       multi_start = multi_start,
@@ -364,12 +438,7 @@ method(apply_rating, FlodeSegmentedRating) <- function(fit, stage_dt, stage_col 
   out_dt <- copy(as.data.table(stage_dt))
   H <- out_dt[[stage_col]]
 
-  q <- coefs$C * pmax(H - coefs$bp1, 0)^coefs$n1
-  for (j in seq_len(k)[-1]) {
-    bp_j <- coefs[[sprintf("bp%d", j)]]
-    n_j <- coefs[[sprintf("n%d", j)]]
-    q <- q * (pmax(H - bp_j, 0) + 1)^n_j
-  }
+  q <- .segmented_predict_cms(coefs, k, H)
 
   set(out_dt, j = out_col, value = q)
   set(out_dt, j = "extrapolated", value = H > max(gaugings_dt$stage_m))

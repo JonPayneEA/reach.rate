@@ -61,7 +61,11 @@
 #' [FlodeSegmentedRating].
 #'
 #' @param gaugings Data.table with `discharge_cms` and `stage_m`
-#'   columns -- the gaugings the fit was built from.
+#'   columns -- the gaugings the fit was built from. May optionally
+#'   include a `gauging_datetime` column (`Date` or `POSIXct`) recording
+#'   when each spot gauging was taken. Nothing in the package currently
+#'   reads this column -- it's groundwork for a future age-aware fitting
+#'   option (see issue #9).
 #' @param fit_starts Data.table of multi-start fitting attempts, or
 #'   `NULL` if the fit wasn't produced with `multi_start = TRUE`.
 #' @param status Character. One of `"independently_fitted"`,
@@ -88,6 +92,10 @@ FlodeRatingBase <- new_class(
       return("gaugings must have discharge_cms and stage_m columns")
     }
     if (nrow(self@gaugings) == 0) return("gaugings must have at least one row")
+    if ("gauging_datetime" %in% names(self@gaugings) &&
+        !inherits(self@gaugings$gauging_datetime, c("Date", "POSIXct"))) {
+      return("gaugings$gauging_datetime, if present, must be a Date or POSIXct vector")
+    }
     if (!self@status %in% c("independently_fitted", "post_fit_aligned", "constrained_refit")) {
       return("status must be one of: independently_fitted, post_fit_aligned, constrained_refit")
     }
@@ -110,7 +118,11 @@ FlodeRatingBase <- new_class(
 #' was used.
 #'
 #' @param gaugings Data.table with `discharge_cms` and `stage_m`
-#'   columns -- the gaugings the fit was built from.
+#'   columns -- the gaugings the fit was built from. May optionally
+#'   include a `gauging_datetime` column (`Date` or `POSIXct`) recording
+#'   when each spot gauging was taken. Nothing in the package currently
+#'   reads this column -- it's groundwork for a future age-aware fitting
+#'   option (see issue #9).
 #' @param fit_starts Data.table of multi-start fitting attempts, or
 #'   `NULL` if the fit wasn't produced with `multi_start = TRUE`.
 #' @param status Character. One of `"independently_fitted"`,
@@ -180,7 +192,11 @@ method(print, FlodeRating) <- function(x, ...) {
 #' `bp1..bpk`, `n1..nk`, diagnostics), not one row per segment.
 #'
 #' @param gaugings Data.table with `discharge_cms` and `stage_m`
-#'   columns -- the gaugings the fit was built from.
+#'   columns -- the gaugings the fit was built from. May optionally
+#'   include a `gauging_datetime` column (`Date` or `POSIXct`) recording
+#'   when each spot gauging was taken. Nothing in the package currently
+#'   reads this column -- it's groundwork for a future age-aware fitting
+#'   option (see issue #9).
 #' @param fit_starts Data.table of multi-start fitting attempts, or
 #'   `NULL` if the fit wasn't produced with `multi_start = TRUE`.
 #' @param status Character. One of `"independently_fitted"`,
