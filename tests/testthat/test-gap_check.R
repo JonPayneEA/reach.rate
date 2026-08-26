@@ -424,6 +424,23 @@ test_that("align_limb_equations from a plain table has no previous (nothing to c
   expect_null(aligned_result@previous)
 })
 
+test_that("align_limb_equations accepts a FlodeRating directly, matching as_rating_table(fit) first", {
+  set.seed(10)
+  stage_seq <- seq(0.5, 3.5, by = 0.03)
+  true_limb <- cut(stage_seq, breaks = c(0.5, 1.6, 2.2, 3.5), labels = FALSE, include.lowest = TRUE)
+  coefs_by_limb <- data.frame(C = c(3, 6, 10), a = c(0, 0.1, 0.2), n = c(1.4, 1.6, 1.8))
+  discharge_seq <- coefs_by_limb$C[true_limb] *
+    (stage_seq - coefs_by_limb$a[true_limb])^coefs_by_limb$n[true_limb] +
+    rnorm(length(stage_seq), sd = 0.03)
+  fit <- rate_optimise(discharge_seq, stage_seq, control = c(1.6, 2.2))
+
+  from_fit <- align_limb_equations(fit, anchor_limb = 1L)
+  from_table <- align_limb_equations(as_rating_table(fit), anchor_limb = 1L)
+
+  expect_equal(from_fit@table, from_table@table)
+  expect_s3_class(from_fit@previous, "reach.rate::FlodeRatingTable")
+})
+
 test_that("expand_rating_table accepts a FlodeRatingTable directly", {
   rating_table <- FlodeRatingTable(table = build_three_limb_rating_dt())
   rc_from_object_dt <- expand_rating_table(rating_table, step = 0.05)
@@ -565,4 +582,21 @@ test_that("align_limb_boundaries builds a genuine audit chain from a FlodeRating
 test_that("align_limb_boundaries from a plain table has no previous", {
   result <- align_limb_boundaries(build_three_limb_rating_dt())
   expect_null(result@previous)
+})
+
+test_that("align_limb_boundaries accepts a FlodeRating directly, matching as_rating_table(fit) first", {
+  set.seed(10)
+  stage_seq <- seq(0.5, 3.5, by = 0.03)
+  true_limb <- cut(stage_seq, breaks = c(0.5, 1.6, 2.2, 3.5), labels = FALSE, include.lowest = TRUE)
+  coefs_by_limb <- data.frame(C = c(3, 6, 10), a = c(0, 0.1, 0.2), n = c(1.4, 1.6, 1.8))
+  discharge_seq <- coefs_by_limb$C[true_limb] *
+    (stage_seq - coefs_by_limb$a[true_limb])^coefs_by_limb$n[true_limb] +
+    rnorm(length(stage_seq), sd = 0.03)
+  fit <- rate_optimise(discharge_seq, stage_seq, control = c(1.6, 2.2))
+
+  from_fit <- suppressWarnings(align_limb_boundaries(fit))
+  from_table <- suppressWarnings(align_limb_boundaries(as_rating_table(fit)))
+
+  expect_equal(from_fit@table, from_table@table)
+  expect_s3_class(from_fit@previous, "reach.rate::FlodeRatingTable")
 })

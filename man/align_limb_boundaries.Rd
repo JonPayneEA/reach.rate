@@ -7,11 +7,13 @@
 align_limb_boundaries(rating_dt)
 }
 \arguments{
-\item{rating_dt}{A \link{FlodeRatingTable}, or a plain data.frame/
-data.table with columns \code{lower_level}, \code{upper_level}, \code{C}, \code{a}, \code{n}
-(the same shape expected by \code{\link[=expand_rating_table]{expand_rating_table()}} and
-\code{\link[=align_limb_equations]{align_limb_equations()}}). Limbs must be contiguous: \code{upper_level[i]}
-must equal \code{lower_level[i + 1]}.}
+\item{rating_dt}{A \link{FlodeRating} (converted via \code{\link[=as_rating_table]{as_rating_table()}}
+before relocating -- \verb{@previous} then references the freshly-built
+\code{FlodeRatingTable}, not the \code{FlodeRating} itself), a \link{FlodeRatingTable},
+or a plain data.frame/data.table with columns \code{lower_level},
+\code{upper_level}, \code{C}, \code{a}, \code{n} (the same shape expected by
+\code{\link[=expand_rating_table]{expand_rating_table()}} and \code{\link[=align_limb_equations]{align_limb_equations()}}). Limbs must be
+contiguous: \code{upper_level[i]} must equal \code{lower_level[i + 1]}.}
 }
 \value{
 A \link{FlodeRatingTable} with \verb{@status} \code{"post_fit_aligned"} and
