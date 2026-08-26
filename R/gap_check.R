@@ -16,7 +16,7 @@
 #               not survive re-expansion or direct equation evaluation.
 #               align_limb_equations() corrects the C coefficient itself,
 #               propagating outward from an anchor limb so every junction
-#               matches exactly; A and B are untouched and the original C
+#               matches exactly; a and n are untouched and the original C
 #               is kept alongside the corrected value for audit purposes.
 # Modified:     2026-08-19 - JP: expand_rating_table() used tail(h, 1L)
 #               to get the last element of a numeric vector -- tail() is
@@ -143,7 +143,7 @@ log_threshold(INFO)
 #' \code{\link{resolve_rc_gaps}}, and \code{\link{plot_rc_gaps}}.
 #'
 #' Each limb is defined by a row in \code{rating_dt} containing a lower and
-#' upper stage bound, the three equation parameters (C, A, B), and an
+#' upper stage bound, the three equation parameters (C, a, n), and an
 #' optional \emph{doubtful} flag (commonly set for upper limbs derived from
 #' flood-frequency estimates rather than direct gauging).
 #'
@@ -165,8 +165,8 @@ log_threshold(INFO)
 #'   upper stage limits of each limb (defaults \code{"lower_level"} and
 #'   \code{"upper_level"}).
 #' @param c_col,a_col,b_col Character. Column names for the equation
-#'   parameters C (multiplier), A (offset / zero-flow level), and B
-#'   (exponent). Defaults \code{"C"}, \code{"A"}, \code{"B"}.
+#'   parameters C (multiplier), a (offset / zero-flow level), and n
+#'   (exponent). Defaults \code{"C"}, \code{"a"}, \code{"n"}.
 #' @param doubtful_col Character. Column name for the doubtful flag
 #'   (default \code{"doubtful"}). Ignored if the column is absent from
 #'   \code{rating_dt}.
@@ -175,7 +175,7 @@ log_threshold(INFO)
 #'   \describe{
 #'     \item{stage}{Stage values at which Q was evaluated.}
 #'     \item{discharge}{Computed discharge (m\eqn{^3}/s). Stages at or
-#'       below the zero-flow offset \code{A} are returned as \code{0}.}
+#'       below the zero-flow offset \code{a} are returned as \code{0}.}
 #'     \item{limb}{Integer limb ID (row index of \code{rating_dt}).}
 #'     \item{doubtful}{Logical flag carried from \code{rating_dt} (only
 #'       present when \code{doubtful_col} exists in \code{rating_dt}).}
@@ -197,13 +197,13 @@ log_threshold(INFO)
 #'   \code{\link{plot_rc_gaps}}
 #'
 #' @examples
-#' # Three-limb rating with independent C/A/B parameters.
+#' # Three-limb rating with independent C/a/n parameters.
 #' rating_dt <- data.table::data.table(
 #'   lower_level = c(0.0, 1.2, 2.5),
 #'   upper_level = c(1.2, 2.5, 4.0),
 #'   C = c(2.5, 4.1, 7.8),
-#'   A = c(0.0, 0.0, 0.0),
-#'   B = c(1.50, 1.70, 2.00),
+#'   a = c(0.0, 0.0, 0.0),
+#'   n = c(1.50, 1.70, 2.00),
 #'   doubtful = c(FALSE, FALSE, TRUE)
 #' )
 #' rc_dt <- expand_rating_table(rating_dt)
@@ -217,8 +217,8 @@ expand_rating_table <- function(rating_dt,
                                  lower_col = "lower_level",
                                  upper_col = "upper_level",
                                  c_col = "C",
-                                 a_col = "A",
-                                 b_col = "B",
+                                 a_col = "a",
+                                 b_col = "n",
                                  doubtful_col = "doubtful") {
   # Accepts either a FlodeRatingTable (unwrapped here) or a plain
   # data.frame/data.table directly, so this still works for a legacy
@@ -276,13 +276,13 @@ expand_rating_table <- function(rating_dt,
 #' `resolve_rc_gaps()` only patches the discretised stage-discharge table
 #' produced by [expand_rating_table()]. That fix does not survive
 #' re-expanding the same rating equations, or evaluating them directly --
-#' the underlying `C`/`A`/`B` triples are untouched, so the gap reappears.
+#' the underlying `C`/`a`/`n` triples are untouched, so the gap reappears.
 #'
 #' `align_limb_equations()` corrects the equations themselves instead. It
 #' rescales the `C` coefficient of every limb except one fixed anchor,
 #' propagating outward limb by limb: each limb's `C` is set so that its
 #' discharge at the junction with its \emph{already-corrected} neighbour
-#' matches exactly. `A` and `B` are left untouched, so each limb keeps its
+#' matches exactly. `a` and `n` are left untouched, so each limb keeps its
 #' fitted shape and zero-flow datum; only the scale changes.
 #'
 #' Because each limb is anchored on one junction and its other junction is
@@ -295,7 +295,7 @@ expand_rating_table <- function(rating_dt,
 #' so the amendment is auditable rather than a silent overwrite.
 #'
 #' @param rating_dt A [FlodeRatingTable], or a plain data.frame/
-#'   data.table with columns `lower_level`, `upper_level`, `C`, `A`, `B`
+#'   data.table with columns `lower_level`, `upper_level`, `C`, `a`, `n`
 #'   (the same shape expected by [expand_rating_table()]; for a legacy
 #'   rating with no prior `FlodeRatingTable` identity of its own). Limbs
 #'   must be contiguous: `upper_level[i]` must equal `lower_level[i + 1]`.
@@ -304,11 +304,11 @@ expand_rating_table <- function(rating_dt,
 #'   directions along the chain. Default `1L` (the lowest limb, typically
 #'   the best-gauged one).
 #' @param on_align_failure Character. What to do when a limb's own fixed
-#'   `A` (zero-flow datum) sits at or beyond the junction stage it would
-#'   need to align to -- `depth = junction_stage - A` non-positive, so
-#'   no real-valued `C` solves `C * depth^B = target` -- or the solved
+#'   `a` (zero-flow datum) sits at or beyond the junction stage it would
+#'   need to align to -- `depth = junction_stage - a` non-positive, so
+#'   no real-valued `C` solves `C * depth^n = target` -- or the solved
 #'   `C` comes out non-finite or non-positive. This is a real
-#'   possibility whenever gaugings (and so `A`) can be negative, not a
+#'   possibility whenever gaugings (and so `a`) can be negative, not a
 #'   sign of malformed input: independently-fitted limbs can end up with
 #'   a datum that just doesn't reach a neighbour's junction. `"error"`
 #'   (default) stops immediately, as before. `"skip"` warns, leaves that
@@ -334,7 +334,7 @@ expand_rating_table <- function(rating_dt,
 #'   and `target_discharge` (the discharge it was aligned to match). The
 #'   last four are `NA` wherever `aligned` is `FALSE`. `C` itself is
 #'   replaced by the aligned value for every successfully-aligned limb;
-#'   `A` and `B` are always unchanged. Neither the input nor the output
+#'   `a` and `n` are always unchanged. Neither the input nor the output
 #'   is ever mutated in place.
 #'
 #' @seealso [expand_rating_table()], [resolve_rc_gaps()],
@@ -350,8 +350,8 @@ expand_rating_table <- function(rating_dt,
 #'   lower_level = c(0.0, 1.2, 2.5),
 #'   upper_level = c(1.2, 2.5, 4.0),
 #'   C = c(2.5, 4.1, 7.8),
-#'   A = c(0.0, 0.0, 0.0),
-#'   B = c(1.50, 1.70, 2.00)
+#'   a = c(0.0, 0.0, 0.0),
+#'   n = c(1.50, 1.70, 2.00)
 #' )
 #' aligned_result <- align_limb_equations(rating_dt)
 #' aligned_result
@@ -377,7 +377,7 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
     stop("anchor_limb must be a valid row index of rating_dt")
   }
 
-  required <- c("lower_level", "upper_level", "C", "A", "B")
+  required <- c("lower_level", "upper_level", "C", "a", "n")
   missing <- setdiff(required, names(rating_dt))
   if (length(missing)) {
     stop("align_limb_equations(): missing column(s): ", paste(missing, collapse = ", "))
@@ -403,7 +403,7 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
     target_discharge = NA_real_
   )]
 
-  eval_q <- function(stage, C, A, B) C * (stage - A)^B
+  eval_q <- function(stage, C, a, n) C * (stage - a)^n
 
   # On failure, either stop() (on_align_failure = "error", the default --
   # unchanged behaviour) or warn() and leave this limb's C at its
@@ -420,16 +420,16 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
   }
 
   align_one <- function(i, s_brk, q_target) {
-    depth <- s_brk - out_dt$A[i]
+    depth <- s_brk - out_dt$a[i]
     if (!is.finite(depth) || depth <= 0) {
       fail_or_skip(i, sprintf(
-        "align_limb_equations(): limb at row %d has an invalid depth (stage - A = %.6g) at the junction stage %.6g; cannot align.",
+        "align_limb_equations(): limb at row %d has an invalid depth (stage - a = %.6g) at the junction stage %.6g; cannot align.",
         i, depth, s_brk
       ))
       return(invisible(NULL))
     }
     c_original <- out_dt$C[i]
-    c_new <- q_target / depth^out_dt$B[i]
+    c_new <- q_target / depth^out_dt$n[i]
     if (!is.finite(c_new) || c_new <= 0) {
       fail_or_skip(i, sprintf(
         "align_limb_equations(): limb at row %d produced a non-finite or non-positive aligned C; cannot align.",
@@ -450,7 +450,7 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
   if (anchor_limb < n) {
     for (i in seq(anchor_limb + 1L, n)) {
       s_brk <- out_dt$lower_level[i]
-      q_target <- eval_q(s_brk, out_dt$C[i - 1L], out_dt$A[i - 1L], out_dt$B[i - 1L])
+      q_target <- eval_q(s_brk, out_dt$C[i - 1L], out_dt$a[i - 1L], out_dt$n[i - 1L])
       align_one(i, s_brk, q_target)
     }
   }
@@ -460,7 +460,7 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
   if (anchor_limb > 1L) {
     for (i in seq(anchor_limb - 1L, 1L)) {
       s_brk <- out_dt$upper_level[i]
-      q_target <- eval_q(s_brk, out_dt$C[i + 1L], out_dt$A[i + 1L], out_dt$B[i + 1L])
+      q_target <- eval_q(s_brk, out_dt$C[i + 1L], out_dt$a[i + 1L], out_dt$n[i + 1L])
       align_one(i, s_brk, q_target)
     }
   }
@@ -483,13 +483,13 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 # align_limb_boundaries()
 # ---------------------------------------------------------------------------
 
-# Solve C1*(H-A1)^B1 = C2*(H-A2)^B2 for H within [search_lo, search_hi],
+# Solve C1*(H-a1)^n1 = C2*(H-a2)^n2 for H within [search_lo, search_hi],
 # or NA_real_ if no crossing is found there (curves don't cross in range,
 # or the interval doesn't bracket a sign change of the difference).
 #' @keywords internal
 #' @noRd
-.find_intersection_stage <- function(C1, A1, B1, C2, A2, B2, search_lo, search_hi) {
-  f <- function(H) C1 * (H - A1)^B1 - C2 * (H - A2)^B2
+.find_intersection_stage <- function(C1, a1, n1, C2, a2, n2, search_lo, search_hi) {
+  f <- function(H) C1 * (H - a1)^n1 - C2 * (H - a2)^n2
   f_lo <- tryCatch(f(search_lo), error = function(e) NA_real_)
   f_hi <- tryCatch(f(search_hi), error = function(e) NA_real_)
   if (!is.finite(f_lo) || !is.finite(f_hi) || sign(f_lo) == sign(f_hi)) {
@@ -510,10 +510,10 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #' `align_limb_equations()` and `resolve_rc_gaps()` both close a junction
 #' gap by changing a \emph{value} (a rescaled `C`, or a patched discharge)
 #' at a \emph{fixed} junction stage. `align_limb_boundaries()` does the
-#' opposite: it leaves every limb's `C`/`A`/`B` completely untouched, and
+#' opposite: it leaves every limb's `C`/`a`/`n` completely untouched, and
 #' instead moves the junction stage itself to wherever the two limbs'
-#' curves genuinely cross -- the stage `H` solving `C_lower*(H-A_lower)^
-#' B_lower = C_upper*(H-A_upper)^B_upper`. At that stage the two unchanged
+#' curves genuinely cross -- the stage `H` solving `C_lower*(H-a_lower)^
+#' n_lower = C_upper*(H-a_upper)^n_upper`. At that stage the two unchanged
 #' curves already agree, so nothing about either equation needs to change.
 #'
 #' Unlike `align_limb_equations()`'s rescale (which needs a fixed anchor
@@ -527,13 +527,13 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #' The search for a crossing is bounded to the union of the two limbs'
 #' own existing stage ranges (never extrapolated further than either limb
 #' was actually fitted over), and above both limbs' zero-flow stage so
-#' `(H - A)^B` stays real-valued. When no crossing exists in that range --
+#' `(H - a)^n` stays real-valued. When no crossing exists in that range --
 #' the curves may not cross at all, or only outside where either was
 #' fitted -- that junction is left unchanged and a warning is issued
 #' rather than the whole call failing.
 #'
 #' @param rating_dt A [FlodeRatingTable], or a plain data.frame/
-#'   data.table with columns `lower_level`, `upper_level`, `C`, `A`, `B`
+#'   data.table with columns `lower_level`, `upper_level`, `C`, `a`, `n`
 #'   (the same shape expected by [expand_rating_table()] and
 #'   [align_limb_equations()]). Limbs must be contiguous: `upper_level[i]`
 #'   must equal `lower_level[i + 1]`.
@@ -544,7 +544,7 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #'   `FlodeRatingTable` identity). `@table` gains columns:
 #'   `lower_level_original`/`upper_level_original` (the input boundaries,
 #'   unchanged) and `boundary_adjusted` (logical; `TRUE` for a limb whose
-#'   `lower_level` and/or `upper_level` actually moved). `C`, `A`, and `B`
+#'   `lower_level` and/or `upper_level` actually moved). `C`, `a`, and `n`
 #'   are always unchanged -- only `lower_level`/`upper_level` are ever
 #'   modified. Neither the input nor the output is ever mutated in place.
 #'
@@ -558,8 +558,8 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #'   lower_level = c(0.0, 1.2),
 #'   upper_level = c(1.2, 4.0),
 #'   C = c(2.5, 2.554),
-#'   A = c(0.0, 0.0),
-#'   B = c(1.50, 1.65)
+#'   a = c(0.0, 0.0),
+#'   n = c(1.50, 1.65)
 #' )
 #' relocated_result <- align_limb_boundaries(rating_dt)
 #' relocated_result@table[, .(lower_level, upper_level, boundary_adjusted)]
@@ -573,7 +573,7 @@ align_limb_boundaries <- function(rating_dt) {
   if (!is.data.frame(rating_dt)) stop("rating_dt must be a FlodeRatingTable, data.frame, or data.table")
   if (nrow(rating_dt) == 0) stop("rating_dt must have at least one row")
 
-  required <- c("lower_level", "upper_level", "C", "A", "B")
+  required <- c("lower_level", "upper_level", "C", "a", "n")
   missing <- setdiff(required, names(rating_dt))
   if (length(missing)) {
     stop("align_limb_boundaries(): missing column(s): ", paste(missing, collapse = ", "))
@@ -604,7 +604,7 @@ align_limb_boundaries <- function(rating_dt) {
       # the lower/upper limb's own bound is already the extreme in each
       # direction -- no min()/max() needed across the pair for the range
       # itself, only for the zero-flow floor.
-      search_lo <- max(out_dt$A[i], out_dt$A[j], out_dt$lower_level[i]) + 1e-6
+      search_lo <- max(out_dt$a[i], out_dt$a[j], out_dt$lower_level[i]) + 1e-6
       search_hi <- out_dt$upper_level[j]
 
       if (!is.finite(search_lo) || !is.finite(search_hi) || search_lo >= search_hi) {
@@ -621,8 +621,8 @@ align_limb_boundaries <- function(rating_dt) {
       }
 
       h_star <- .find_intersection_stage(
-        out_dt$C[i], out_dt$A[i], out_dt$B[i],
-        out_dt$C[j], out_dt$A[j], out_dt$B[j],
+        out_dt$C[i], out_dt$a[i], out_dt$n[i],
+        out_dt$C[j], out_dt$a[j], out_dt$n[j],
         search_lo, search_hi
       )
 
@@ -1364,8 +1364,8 @@ method(rating_plot, FlodeRatingTable) <- function(fit, n_points = 200L) {
   curve_list <- lapply(seq_len(n_limbs), function(i) {
     stage_seq <- seq(table_dt$lower_level[i], table_dt$upper_level[i], length.out = n_points)
     # Same formula and zero-flow clamp as method(apply_rating, FlodeRatingTable).
-    discharge_seq <- table_dt$C[i] * (stage_seq - table_dt$A[i])^table_dt$B[i]
-    discharge_seq[stage_seq <= table_dt$A[i]] <- 0
+    discharge_seq <- table_dt$C[i] * (stage_seq - table_dt$a[i])^table_dt$n[i]
+    discharge_seq[stage_seq <= table_dt$a[i]] <- 0
     data.table(stage = stage_seq, discharge = discharge_seq, limb = factor(i))
   })
   curve_dt <- rbindlist(curve_list)

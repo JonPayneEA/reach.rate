@@ -29,11 +29,11 @@ different from one that shifts the whole curve evenly.
 \examples{
 rating_old_dt <- data.table::data.table(
   lower_level = c(0.0, 1.2), upper_level = c(1.2, 3.0),
-  C = c(2.5, 4.1), A = c(0, 0), B = c(1.5, 1.7)
+  C = c(2.5, 4.1), a = c(0, 0), n = c(1.5, 1.7)
 )
 rating_new_dt <- data.table::data.table(
   lower_level = c(0.0, 1.2), upper_level = c(1.2, 3.0),
-  C = c(2.6, 4.0), A = c(0, 0), B = c(1.5, 1.7)
+  C = c(2.6, 4.0), a = c(0, 0), n = c(1.5, 1.7)
 )
 cmp <- compare_ratings(rating_old_dt, rating_new_dt)
 plot_rating_comparison(cmp)

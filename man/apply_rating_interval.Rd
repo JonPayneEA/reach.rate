@@ -16,7 +16,7 @@ apply_rating_interval(
 
 \item{rating_boot_dt}{Data.table of per-draw coefficients, one row per
 (limb, draw): columns \code{limb}, \code{draw}, \code{lower_level}, \code{upper_level},
-\code{C}, \code{A}, \code{B}. See \code{\link[=bootstrap_to_table]{bootstrap_to_table()}} (in \code{rating_curve_demo})
+\code{C}, \code{a}, \code{n}. See \code{\link[=bootstrap_to_table]{bootstrap_to_table()}} (in \code{rating_curve_demo})
 for building this from a \code{rate_optimise(..., n_boot = )} fit.}
 
 \item{stage_col}{Character. Default \code{"stage"}.}
@@ -35,7 +35,7 @@ draws (from \code{rate_optimise(..., n_boot = )}, bridged through
 \code{bootstrap_to_table()}) to a discharge \emph{prediction interval} at each
 stage, rather than a single point value. For each stage row, discharge
 is computed once per bootstrap draw using that draw's limb assignment
-and \code{C}/\code{A}/\code{B}, and the draws are summarised into a mean, median, and
+and \code{C}/\code{a}/\code{n}, and the draws are summarised into a mean, median, and
 geometric standard error -- the same summary Hodson et al. (2024)'s
 \code{ratingcurve} package reports -- plus a lower/upper interval at
 \code{conf_level}. This is a bootstrap approximation, not a Bayesian
@@ -44,7 +44,7 @@ coefficient uncertainty, not a complete uncertainty budget (it doesn't
 include stage measurement error, or uncertainty in the equation form
 itself).
 
-Limb bounds are assumed fixed across draws (only \code{C}/\code{A}/\code{B} vary),
+Limb bounds are assumed fixed across draws (only \code{C}/\code{a}/\code{n} vary),
 which matches how \code{rate_optimise(..., n_boot = )} bootstraps: it
 resamples gaugings and refits within each limb's fixed stage range,
 not the breakpoints themselves.
@@ -53,7 +53,7 @@ not the breakpoints themselves.
 rating_boot_dt <- data.table::data.table(
   limb = rep(1L, 20), draw = 1:20,
   lower_level = 0.0, upper_level = 3.0,
-  C = rnorm(20, 3, 0.1), A = 0, B = rnorm(20, 1.6, 0.02)
+  C = rnorm(20, 3, 0.1), a = 0, n = rnorm(20, 1.6, 0.02)
 )
 stage_dt <- data.table::data.table(stage = c(0.5, 1.5, 2.5))
 apply_rating_interval(stage_dt, rating_boot_dt)

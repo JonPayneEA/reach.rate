@@ -9,11 +9,11 @@ test_that("as_rating_table flips the sign of the offset correctly", {
   expect_s3_class(rating_table, "reach.rate::FlodeRatingTable")
   rating_dt <- rating_table@table
   expect_true(is.data.table(rating_dt))
-  expect_true(all(c("lower_level", "upper_level", "C", "A", "B") %in% names(rating_dt)))
-  # A = -a: rate_optimise fit an 'a' close to +0.3, so A should be close to -0.3
-  expect_equal(rating_dt$A[1], -fit@limbs$a[1])
+  expect_true(all(c("lower_level", "upper_level", "C", "a", "n") %in% names(rating_dt)))
+  # table a = -a: rate_optimise fit an 'a' close to +0.3, so the table's a should be close to -0.3
+  expect_equal(rating_dt$a[1], -fit@limbs$a[1])
   expect_equal(rating_dt$C[1], fit@limbs$C[1])
-  expect_equal(rating_dt$B[1], fit@limbs$n[1])
+  expect_equal(rating_dt$n[1], fit@limbs$n[1])
 })
 
 test_that("as_rating_table carries the doubtful column through when present", {
@@ -79,13 +79,13 @@ test_that("bootstrap_to_table flips the sign of the offset per draw", {
   boot_ok_dt <- fit@bootstrap[fit@bootstrap$success == TRUE]
 
   expect_true(is.data.table(boot_table_dt))
-  expect_true(all(c("limb", "draw", "lower_level", "upper_level", "C", "A", "B") %in% names(boot_table_dt)))
+  expect_true(all(c("limb", "draw", "lower_level", "upper_level", "C", "a", "n") %in% names(boot_table_dt)))
   # bootstrap_to_table() only includes successful draws; boot_ok_dt above
   # is filtered the same way for a fair comparison
   expect_equal(nrow(boot_table_dt), nrow(boot_ok_dt))
   data.table::setorder(boot_ok_dt, limb, draw)
-  expect_equal(boot_table_dt$A, -boot_ok_dt$a)
-  expect_equal(boot_table_dt$B, boot_ok_dt$n)
+  expect_equal(boot_table_dt$a, -boot_ok_dt$a)
+  expect_equal(boot_table_dt$n, boot_ok_dt$n)
   expect_true(all(boot_table_dt$lower_level == fit@limbs$lower_stage_m[1]))
 })
 

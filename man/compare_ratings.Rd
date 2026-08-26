@@ -9,7 +9,7 @@ compare_ratings(rating_old_dt, rating_new_dt, step = 0.01)
 \arguments{
 \item{rating_old_dt, rating_new_dt}{A \link{FlodeRatingTable}, or a plain
 data.frame/data.table with columns \code{lower_level}, \code{upper_level},
-\code{C}, \code{A}, \code{B} -- one row per limb. Need not have the same number of
+\code{C}, \code{a}, \code{n} -- one row per limb. Need not have the same number of
 limbs.}
 
 \item{step}{Numeric. Stage increment for the discharge comparison.
@@ -18,7 +18,7 @@ Default \code{0.01}.}
 \value{
 A list with elements:
 \describe{
-\item{coefficients}{A \code{data.table} comparing limb-by-limb C/A/B,
+\item{coefficients}{A \code{data.table} comparing limb-by-limb C/a/n,
 or \code{NULL} if the limb counts differ.}
 \item{discharge}{A \code{data.table} with \code{stage}, \code{discharge_old},
 \code{discharge_new}, \code{discharge_diff}, \code{discharge_pct_diff}, and the
@@ -31,7 +31,7 @@ Diffs two rating tables (e.g. before/after a limb-alignment or a
 gauging review) two ways:
 
 \describe{
-\item{coefficients}{A limb-by-limb comparison of \code{C}/\code{A}/\code{B},
+\item{coefficients}{A limb-by-limb comparison of \code{C}/\code{a}/\code{n},
 produced only when both tables have the same number of limbs in
 the same order.}
 \item{discharge}{The actual discharge difference across a common
@@ -45,11 +45,11 @@ coefficients move".}
 \examples{
 rating_old_dt <- data.table::data.table(
   lower_level = c(0.0, 1.2), upper_level = c(1.2, 3.0),
-  C = c(2.5, 4.1), A = c(0, 0), B = c(1.5, 1.7)
+  C = c(2.5, 4.1), a = c(0, 0), n = c(1.5, 1.7)
 )
 rating_new_dt <- data.table::data.table(
   lower_level = c(0.0, 1.2), upper_level = c(1.2, 3.0),
-  C = c(2.6, 4.0), A = c(0, 0), B = c(1.5, 1.7)
+  C = c(2.6, 4.0), a = c(0, 0), n = c(1.5, 1.7)
 )
 cmp <- compare_ratings(rating_old_dt, rating_new_dt)
 cmp$coefficients

@@ -14,8 +14,9 @@ FlodeRatingTable(
 )
 }
 \arguments{
-\item{table}{Data.table with \code{lower_level}, \code{upper_level}, \code{C}, \code{A},
-\code{B} columns, one row per limb, contiguous.}
+\item{table}{Data.table with \code{lower_level}, \code{upper_level}, \code{C}, \code{a},
+\code{n} columns, one row per limb, contiguous. Same names and sign
+convention as \link{FlodeRating}'s \verb{@limbs} (\code{Q = C(H - a)^n}).}
 
 \item{status}{Character. One of \code{"independently_fitted"},
 \code{"post_fit_aligned"}.}
@@ -24,7 +25,7 @@ FlodeRatingTable(
 was built from, or \code{NULL} if it has no such prior identity.}
 }
 \description{
-Wraps the \code{lower_level}/\code{upper_level}/\code{C}/\code{A}/\code{B} equation table used
+Wraps the \code{lower_level}/\code{upper_level}/\code{C}/\code{a}/\code{n} equation table used
 throughout the \code{gap_check} module. Unlike \link{FlodeRating}, this carries
 its own audit chain directly: \verb{@status} and \verb{@previous} let
 \code{align_limb_equations()} return a new object referencing the exact

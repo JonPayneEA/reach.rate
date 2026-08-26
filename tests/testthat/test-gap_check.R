@@ -15,13 +15,13 @@ build_two_limb_rc_dt <- function() {
   data.table::rbindlist(list(limb1_dt, limb2_dt))
 }
 
-test_that("expand_rating_table evaluates Q = C(h-A)^B per limb", {
+test_that("expand_rating_table evaluates Q = C(h-a)^n per limb", {
   rating_dt <- data.table::data.table(
     lower_level = c(0.0, 1.2),
     upper_level = c(1.2, 2.5),
     C = c(2.5, 4.1),
-    A = c(0.0, 0.0),
-    B = c(1.50, 1.70)
+    a = c(0.0, 0.0),
+    n = c(1.50, 1.70)
   )
 
   rc_dt <- expand_rating_table(rating_dt, step = 0.1)
@@ -44,7 +44,7 @@ test_that("expand_rating_table errors on missing required columns", {
 
 test_that("expand_rating_table caps an open-ended sentinel upper level", {
   rating_dt <- data.table::data.table(
-    lower_level = 2.0, upper_level = 999, C = 5, A = 0, B = 1.5
+    lower_level = 2.0, upper_level = 999, C = 5, a = 0, n = 1.5
   )
   expect_warning(
     rc_dt <- expand_rating_table(rating_dt, step = 0.5, max_stage = 6.0),
@@ -280,7 +280,7 @@ test_that("rating_plot(FlodeRatingTable) returns a ggplot with per-limb curve da
   rating_dt <- data.table::data.table(
     lower_level = c(0.0, 1.2, 3.0),
     upper_level = c(1.2, 3.0, 5.0),
-    C = c(2.5, 4.1, 1.8), A = c(0, 0, 0), B = c(1.5, 1.7, 1.3)
+    C = c(2.5, 4.1, 1.8), a = c(0, 0, 0), n = c(1.5, 1.7, 1.3)
   )
   aligned <- align_limb_equations(rating_dt)
 
@@ -294,9 +294,9 @@ test_that("rating_plot(FlodeRatingTable) returns a ggplot with per-limb curve da
   expect_equal(nlevels(p$data$limb), 3L)
 })
 
-test_that("rating_plot(FlodeRatingTable) curve matches Q = C(H-A)^B exactly", {
+test_that("rating_plot(FlodeRatingTable) curve matches Q = C(H-a)^n exactly", {
   rating_dt <- data.table::data.table(
-    lower_level = 0.0, upper_level = 5.0, C = 3, A = 0, B = 1.5
+    lower_level = 0.0, upper_level = 5.0, C = 3, a = 0, n = 1.5
   )
   table_obj <- align_limb_equations(rating_dt)
 
@@ -310,7 +310,7 @@ test_that("rating_plot(FlodeRatingTable) curve matches Q = C(H-A)^B exactly", {
 })
 
 test_that("rating_plot(FlodeRatingTable) validates n_points", {
-  rating_dt <- data.table::data.table(lower_level = 0, upper_level = 5, C = 3, A = 0, B = 1.5)
+  rating_dt <- data.table::data.table(lower_level = 0, upper_level = 5, C = 3, a = 0, n = 1.5)
   table_obj <- align_limb_equations(rating_dt)
   expect_error(rating_plot(table_obj, n_points = -1), "positive integer")
   expect_error(rating_plot(table_obj, n_points = c(10, 20)), "positive integer")
@@ -321,8 +321,8 @@ build_three_limb_rating_dt <- function() {
     lower_level = c(0.0, 1.2, 2.5),
     upper_level = c(1.2, 2.5, 4.0),
     C = c(2.5, 4.1, 7.8),
-    A = c(0.0, 0.0, 0.0),
-    B = c(1.50, 1.70, 2.00)
+    a = c(0.0, 0.0, 0.0),
+    n = c(1.50, 1.70, 2.00)
   )
 }
 
@@ -342,14 +342,14 @@ test_that("align_limb_equations closes every junction exactly", {
   rating_dt <- build_three_limb_rating_dt()
   aligned_dt <- align_limb_equations(rating_dt)@table
 
-  eval_q <- function(stage, C, A, B) C * (stage - A)^B
+  eval_q <- function(stage, C, a, n) C * (stage - a)^n
 
-  q_limb1_top <- eval_q(aligned_dt$upper_level[1], aligned_dt$C[1], aligned_dt$A[1], aligned_dt$B[1])
-  q_limb2_bottom <- eval_q(aligned_dt$lower_level[2], aligned_dt$C[2], aligned_dt$A[2], aligned_dt$B[2])
+  q_limb1_top <- eval_q(aligned_dt$upper_level[1], aligned_dt$C[1], aligned_dt$a[1], aligned_dt$n[1])
+  q_limb2_bottom <- eval_q(aligned_dt$lower_level[2], aligned_dt$C[2], aligned_dt$a[2], aligned_dt$n[2])
   expect_equal(q_limb1_top, q_limb2_bottom, tolerance = 1e-10)
 
-  q_limb2_top <- eval_q(aligned_dt$upper_level[2], aligned_dt$C[2], aligned_dt$A[2], aligned_dt$B[2])
-  q_limb3_bottom <- eval_q(aligned_dt$lower_level[3], aligned_dt$C[3], aligned_dt$A[3], aligned_dt$B[3])
+  q_limb2_top <- eval_q(aligned_dt$upper_level[2], aligned_dt$C[2], aligned_dt$a[2], aligned_dt$n[2])
+  q_limb3_bottom <- eval_q(aligned_dt$lower_level[3], aligned_dt$C[3], aligned_dt$a[3], aligned_dt$n[3])
   expect_equal(q_limb2_top, q_limb3_bottom, tolerance = 1e-10)
 })
 
@@ -379,7 +379,7 @@ test_that("align_limb_equations errors on non-contiguous limbs", {
   bad_rating_dt <- data.table::data.table(
     lower_level = c(0.0, 1.5), # gap: limb 1 ends at 1.2, limb 2 starts at 1.5
     upper_level = c(1.2, 2.5),
-    C = c(2.5, 4.1), A = c(0, 0), B = c(1.5, 1.7)
+    C = c(2.5, 4.1), a = c(0, 0), n = c(1.5, 1.7)
   )
   expect_error(align_limb_equations(bad_rating_dt), "contiguous")
 })
@@ -432,13 +432,13 @@ test_that("expand_rating_table accepts a FlodeRatingTable directly", {
 })
 
 test_that("align_limb_equations rejects an invalid depth at the junction", {
-  # A = 5 is above the shared junction stage (1.2), so stage - A is
+  # a = 5 is above the shared junction stage (1.2), so stage - a is
   # negative for limb 2 at the point it needs to be evaluated -- an
   # invalid depth for a fractional exponent, not just a numerically
   # awkward one.
   bad_rating_dt <- data.table::data.table(
     lower_level = c(0.0, 1.2), upper_level = c(1.2, 3.0),
-    C = c(2.5, 4.1), A = c(0, 5), B = c(1.5, 1.7)
+    C = c(2.5, 4.1), a = c(0, 5), n = c(1.5, 1.7)
   )
   expect_error(align_limb_equations(bad_rating_dt), "invalid depth")
 })
@@ -450,7 +450,7 @@ test_that("align_limb_equations(on_align_failure = 'skip') warns and flags the f
   # confirm the alignment chain keeps going past the skipped limb.
   bad_rating_dt <- data.table::data.table(
     lower_level = c(0.0, 1.2, 3.0), upper_level = c(1.2, 3.0, 5.0),
-    C = c(2.5, 4.1, 1.8), A = c(0, 2.9343028, 0), B = c(1.5, 1.7, 1.3)
+    C = c(2.5, 4.1, 1.8), a = c(0, 2.9343028, 0), n = c(1.5, 1.7, 1.3)
   )
 
   expect_warning(
@@ -469,9 +469,9 @@ test_that("align_limb_equations(on_align_failure = 'skip') warns and flags the f
   expect_false(aligned_dt$align_failed[3])
   expect_true(aligned_dt$aligned[3])
 
-  eval_q <- function(stage, C, A, B) C * (stage - A)^B
-  q_from_limb2 <- eval_q(aligned_dt$upper_level[2], aligned_dt$C[2], aligned_dt$A[2], aligned_dt$B[2])
-  q_from_limb3 <- eval_q(aligned_dt$lower_level[3], aligned_dt$C[3], aligned_dt$A[3], aligned_dt$B[3])
+  eval_q <- function(stage, C, a, n) C * (stage - a)^n
+  q_from_limb2 <- eval_q(aligned_dt$upper_level[2], aligned_dt$C[2], aligned_dt$a[2], aligned_dt$n[2])
+  q_from_limb3 <- eval_q(aligned_dt$lower_level[3], aligned_dt$C[3], aligned_dt$a[3], aligned_dt$n[3])
   expect_equal(q_from_limb2, q_from_limb3, tolerance = 1e-10)
 })
 
@@ -485,33 +485,33 @@ test_that("align_limb_boundaries relocates the junction to where the curves actu
   # C1*H^B1 = C2*H^B2 => H = (C1/C2)^(1/(B2-B1)) = (5/1)^(1/1) = 5
   rating_dt <- data.table::data.table(
     lower_level = c(0.0, 2.0), upper_level = c(2.0, 6.0),
-    C = c(5, 1), A = c(0, 0), B = c(1.2, 2.2)
+    C = c(5, 1), a = c(0, 0), n = c(1.2, 2.2)
   )
   result <- align_limb_boundaries(rating_dt)
 
   expect_s3_class(result, "reach.rate::FlodeRatingTable")
   out_dt <- result@table
-  # C/A/B are never touched
+  # C/a/n are never touched
   expect_equal(out_dt$C, rating_dt$C)
-  expect_equal(out_dt$A, rating_dt$A)
-  expect_equal(out_dt$B, rating_dt$B)
+  expect_equal(out_dt$a, rating_dt$a)
+  expect_equal(out_dt$n, rating_dt$n)
   # Boundary actually moved, and both sides moved together
   expect_false(isTRUE(all.equal(out_dt$upper_level[1], rating_dt$upper_level[1])))
   expect_equal(out_dt$upper_level[1], out_dt$lower_level[2])
   expect_true(all(out_dt$boundary_adjusted))
   # The two curves genuinely agree at the new boundary
   h_star <- out_dt$upper_level[1]
-  q1 <- out_dt$C[1] * (h_star - out_dt$A[1])^out_dt$B[1]
-  q2 <- out_dt$C[2] * (h_star - out_dt$A[2])^out_dt$B[2]
+  q1 <- out_dt$C[1] * (h_star - out_dt$a[1])^out_dt$n[1]
+  q2 <- out_dt$C[2] * (h_star - out_dt$a[2])^out_dt$n[2]
   expect_equal(q1, q2, tolerance = 1e-6)
   expect_equal(h_star, 5, tolerance = 1e-4)
 })
 
 test_that("align_limb_boundaries warns and leaves the junction unchanged when curves don't cross", {
-  # Same B (parallel-ish) with limb 2 always above limb 1 in range -- no crossing.
+  # Same n (parallel-ish) with limb 2 always above limb 1 in range -- no crossing.
   rating_dt <- data.table::data.table(
     lower_level = c(0.0, 2.0), upper_level = c(2.0, 4.0),
-    C = c(1, 5), A = c(0, 0), B = c(1.0, 1.0)
+    C = c(1, 5), a = c(0, 0), n = c(1.0, 1.0)
   )
   expect_warning(result <- align_limb_boundaries(rating_dt), "do not cross")
 
@@ -530,11 +530,11 @@ test_that("align_limb_boundaries resolves a 3-limb chain's two junctions indepen
   expect_equal(out_dt$upper_level[2], out_dt$lower_level[3])
   expect_equal(out_dt$C, rating_dt$C)
 
-  eval_q <- function(H, C, A, B) C * (H - A)^B
+  eval_q <- function(H, C, a, n) C * (H - a)^n
   h1 <- out_dt$upper_level[1]
-  expect_equal(eval_q(h1, out_dt$C[1], out_dt$A[1], out_dt$B[1]), eval_q(h1, out_dt$C[2], out_dt$A[2], out_dt$B[2]), tolerance = 1e-6)
+  expect_equal(eval_q(h1, out_dt$C[1], out_dt$a[1], out_dt$n[1]), eval_q(h1, out_dt$C[2], out_dt$a[2], out_dt$n[2]), tolerance = 1e-6)
   h2 <- out_dt$upper_level[2]
-  expect_equal(eval_q(h2, out_dt$C[2], out_dt$A[2], out_dt$B[2]), eval_q(h2, out_dt$C[3], out_dt$A[3], out_dt$B[3]), tolerance = 1e-6)
+  expect_equal(eval_q(h2, out_dt$C[2], out_dt$a[2], out_dt$n[2]), eval_q(h2, out_dt$C[3], out_dt$a[3], out_dt$n[3]), tolerance = 1e-6)
 })
 
 test_that("align_limb_boundaries validates its inputs", {
@@ -544,13 +544,13 @@ test_that("align_limb_boundaries validates its inputs", {
     "missing column"
   )
   bad_dt <- data.table::data.table(
-    lower_level = c(0, 1.5), upper_level = c(1.2, 2.5), C = c(1, 1), A = c(0, 0), B = c(1, 1)
+    lower_level = c(0, 1.5), upper_level = c(1.2, 2.5), C = c(1, 1), a = c(0, 0), n = c(1, 1)
   )
   expect_error(align_limb_boundaries(bad_dt), "contiguous")
 })
 
 test_that("align_limb_boundaries is a no-op for a single limb", {
-  single_dt <- data.table::data.table(lower_level = 0, upper_level = 5, C = 3, A = 0, B = 1.5)
+  single_dt <- data.table::data.table(lower_level = 0, upper_level = 5, C = 3, a = 0, n = 1.5)
   result <- align_limb_boundaries(single_dt)
   expect_false(result@table$boundary_adjusted)
   expect_equal(result@table$upper_level, single_dt$upper_level)

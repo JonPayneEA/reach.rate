@@ -11,14 +11,14 @@ bootstrap_to_table(fit)
 }
 \value{
 A \code{data.table} with columns \code{limb}, \code{draw}, \code{lower_level},
-\code{upper_level}, \code{C}, \code{A}, \code{B} -- one row per successful bootstrap
+\code{upper_level}, \code{C}, \code{a}, \code{n} -- one row per successful bootstrap
 draw. Errors if no draws succeeded.
 }
 \description{
 Bridges \code{rate_optimise(..., n_boot = )}'s per-draw coefficient samples
 (\code{fit@bootstrap}, which records every requested draw including failed
 or rejected ones) to the shape \code{apply_rating_interval()} expects: one
-row per successful (limb, draw), with the same \code{A = -a}, \code{B = n} sign
+row per successful (limb, draw), with the same \code{a = -a}, \code{n = n} sign
 flip the \code{as_rating_table} method applies to the point-estimate
 coefficients, applied here to every draw. Failed or rejected draws
 (\code{success == FALSE}) are dropped -- they have no coefficients to

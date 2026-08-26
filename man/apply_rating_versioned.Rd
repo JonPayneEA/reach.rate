@@ -19,8 +19,8 @@ datetime column.}
 \item{rating_history_dt}{Data.table with one row per (version, limb):
 \code{version}, \code{effective_from}, \code{effective_to} (both POSIXct or Date;
 \code{effective_to = NA} means "still current", and only the most recent
-version may have \code{NA} here), \code{lower_level}, \code{upper_level}, \code{C}, \code{A},
-\code{B}. Version date ranges must not overlap.}
+version may have \code{NA} here), \code{lower_level}, \code{upper_level}, \code{C}, \code{a},
+\code{n}. Version date ranges must not overlap.}
 
 \item{stage_col, datetime_col}{Character. Column names in \code{stage_dt}.
 Defaults \code{"stage"}, \code{"datetime"}.}
@@ -50,7 +50,7 @@ rating_history_dt <- data.table::data.table(
   effective_from = as.POSIXct(c("2024-01-01", "2025-06-01"), tz = "UTC"),
   effective_to = as.POSIXct(c("2025-06-01", NA), tz = "UTC"),
   lower_level = c(0.0, 0.0), upper_level = c(3.0, 3.0),
-  C = c(3.0, 3.4), A = c(0, 0), B = c(1.6, 1.6)
+  C = c(3.0, 3.4), a = c(0, 0), n = c(1.6, 1.6)
 )
 stage_dt <- data.table::data.table(
   datetime = as.POSIXct(c("2024-06-01", "2025-12-01"), tz = "UTC"),

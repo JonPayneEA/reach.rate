@@ -254,15 +254,16 @@ method(print, FlodeSegmentedRating) <- function(x, ...) {
 #' A rating equation table (S7), gap_check's native representation
 #'
 #' @description
-#' Wraps the `lower_level`/`upper_level`/`C`/`A`/`B` equation table used
+#' Wraps the `lower_level`/`upper_level`/`C`/`a`/`n` equation table used
 #' throughout the `gap_check` module. Unlike [FlodeRating], this carries
 #' its own audit chain directly: `@status` and `@previous` let
 #' `align_limb_equations()` return a new object referencing the exact
 #' pre-alignment table it was built from, rather than mutating a table
 #' in place and relying on a column someone has to remember to check.
 #'
-#' @param table Data.table with `lower_level`, `upper_level`, `C`, `A`,
-#'   `B` columns, one row per limb, contiguous.
+#' @param table Data.table with `lower_level`, `upper_level`, `C`, `a`,
+#'   `n` columns, one row per limb, contiguous. Same names and sign
+#'   convention as [FlodeRating]'s `@limbs` (`Q = C(H - a)^n`).
 #' @param status Character. One of `"independently_fitted"`,
 #'   `"post_fit_aligned"`.
 #' @param previous The exact pre-amendment [FlodeRatingTable] this one
@@ -276,7 +277,7 @@ FlodeRatingTable <- new_class(
     previous = new_property(class_any, default = NULL)
   ),
   validator = function(self) {
-    required <- c("lower_level", "upper_level", "C", "A", "B")
+    required <- c("lower_level", "upper_level", "C", "a", "n")
     missing_cols <- setdiff(required, names(self@table))
     if (length(missing_cols)) {
       return(paste("table is missing required column(s):", paste(missing_cols, collapse = ", ")))
