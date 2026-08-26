@@ -13,6 +13,8 @@ rate_optimise(
   boot_seed = NULL,
   min_boot_success = 0.8,
   multi_start = TRUE,
+  n_bounds = NULL,
+  objective = c("absolute", "relative"),
   ...
 )
 }
@@ -47,6 +49,28 @@ fraction for a limb falls below this. Default \code{0.8}.}
 from several starting-value combinations and the best converged,
 domain-valid result is kept. Set \code{FALSE} for the original
 single-start behaviour.}
+
+\item{n_bounds}{Numeric vector \code{c(lower, upper)}, or \code{NULL} (default).
+Box-constrains the exponent \code{n} for every limb, e.g. to a
+theoretical range implied by known channel-control hydraulics
+(roughly 1.5 for a rectangular control, 2.5 for triangular/V-notch).
+The top of a rating is usually the least-gauged part of the record,
+so this lets known geometry keep the fit realistic there without
+more data. Set \code{lower == upper} to fix \code{n} outright. \code{NULL}
+(default) keeps today's effectively unconstrained \code{n > 0}. Not a
+default constraint -- most callers don't know their channel-control
+type, and an unconstrained fit remains the default behaviour.}
+
+\item{objective}{Character. \code{"absolute"} (default) minimises absolute
+discharge error, as before. \code{"relative"} fits \code{log(discharge_cms)}
+residuals instead -- gauging error is typically proportional (a
+percentage of the reading) rather than a fixed absolute amount, so
+this can better balance low- and high-flow structure than absolute
+error does. Requires \code{discharge_cms} to be strictly positive.
+Reported diagnostics (\code{rmse_cms}, \code{r_squared}, and the error columns)
+are always recomputed on the natural discharge scale regardless of
+\code{objective}, so they stay comparable between the two.  Not a
+default -- existing callers see no change in behaviour.}
 
 \item{...}{Passed to \code{minpack.lm::nlsLM()} itself for the primary fit
 only, not the bootstrap refits.}

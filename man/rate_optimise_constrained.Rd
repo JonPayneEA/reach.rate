@@ -9,11 +9,15 @@ rate_optimise_constrained(
   stage_m,
   control = NULL,
   anchor_limb = 1L,
+  n_bounds = NULL,
   ...
 )
 }
 \arguments{
-\item{discharge_cms, stage_m, control}{As in \code{\link[=rate_optimise]{rate_optimise()}}.}
+\item{discharge_cms, stage_m, control, n_bounds}{As in \code{\link[=rate_optimise]{rate_optimise()}}.
+Unlike \code{objective}, \code{n_bounds} is honoured by \emph{both} the initial fit
+and this function's own constrained refit, since a hydraulic bound
+on \code{n} should hold for every limb, not just the anchor.}
 
 \item{anchor_limb}{Integer. Row index of the limb left unconstrained.
 Default \code{1L}.}
@@ -21,7 +25,11 @@ Default \code{1L}.}
 \item{...}{Passed to \code{rate_optimise()}'s initial (unconstrained) fit --
 this includes \code{gauging_datetime}, which needs no special handling
 here since it's simply stored on \verb{@gaugings}, not used by either
-function's fitting itself.
+function's fitting itself. It also includes \code{objective}, which
+applies to the initial fit (and so to \code{anchor_limb}, which is never
+refit) -- the constrained refit this function performs for every
+other limb uses its own reparameterised, absolute-residual-only
+formula regardless of \code{objective}.
 \code{n_boot} is accepted but the resulting bootstrap draws describe the
 \emph{unconstrained} fit and are dropped with a warning rather than
 presented alongside updated point estimates; \code{fit_starts} is

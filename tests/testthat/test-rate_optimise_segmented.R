@@ -60,6 +60,36 @@ test_that("rate_optimise_segmented validates gauging_datetime", {
   )
 })
 
+test_that("rate_optimise_segmented objective = 'absolute' (default) is unchanged", {
+  g <- build_single_segment_gaugings()
+  fit_default <- rate_optimise_segmented(g$discharge, g$stage)
+  fit_explicit <- rate_optimise_segmented(g$discharge, g$stage, objective = "absolute")
+  expect_equal(fit_default@coefficients$C, fit_explicit@coefficients$C)
+  expect_equal(fit_default@coefficients$bp1, fit_explicit@coefficients$bp1)
+  expect_equal(fit_default@coefficients$n1, fit_explicit@coefficients$n1)
+})
+
+test_that("rate_optimise_segmented objective = 'relative' fits and reports cms-scale diagnostics", {
+  g <- build_three_segment_gaugings()
+  fit_rel <- rate_optimise_segmented(g$discharge, g$stage, control = c(1.6, 2.4), objective = "relative")
+
+  expect_equal(fit_rel@n_segments, 3L)
+  expect_true(fit_rel@coefficients$r_squared > 0.9)
+
+  # rmse_cms must match a manual natural-scale recomputation from the
+  # fitted coefficients, not a tiny log-residual RMSE.
+  manual_pred <- reach.rate:::.segmented_predict_cms(as.list(fit_rel@coefficients), 3L, g$stage)
+  manual_rmse <- sqrt(mean((g$discharge - manual_pred)^2))
+  expect_equal(fit_rel@coefficients$rmse_cms, manual_rmse, tolerance = 1e-8)
+})
+
+test_that("rate_optimise_segmented objective = 'relative' requires strictly positive discharge_cms", {
+  expect_error(
+    rate_optimise_segmented(c(0, 5, 10, 20), c(1, 2, 3, 4), objective = "relative"),
+    "strictly positive"
+  )
+})
+
 test_that("rate_optimise_segmented fits three segments with fixed breakpoints", {
   g <- build_three_segment_gaugings()
   fit_seg <- rate_optimise_segmented(g$discharge, g$stage, control = c(1.6, 2.4))

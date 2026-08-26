@@ -11,6 +11,7 @@ rate_optimise_segmented(
   control = NULL,
   estimate_breakpoints = FALSE,
   multi_start = TRUE,
+  objective = c("absolute", "relative"),
   ...
 )
 }
@@ -30,6 +31,14 @@ starting-value profiles and keeps the best converged, domain-valid
 result. This matters more here than for \code{rate_optimise()}'s
 independent-limb fits: this model's loss surface is genuinely
 non-convex.}
+
+\item{objective}{Character. \code{"absolute"} (default) minimises absolute
+discharge error, as before. \code{"relative"} fits \code{log(discharge_cms)}
+residuals instead -- see \code{\link[=rate_optimise]{rate_optimise()}} for the rationale.
+Requires \code{discharge_cms} to be strictly positive. Reported
+diagnostics (\code{rmse_cms}, \code{r_squared}) are always recomputed on the
+natural discharge scale regardless of \code{objective}. Not a default --
+existing callers see no change in behaviour.}
 
 \item{...}{Passed to \code{minpack.lm::nls.lm.control()}.}
 }
