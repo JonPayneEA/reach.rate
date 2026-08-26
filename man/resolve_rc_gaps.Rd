@@ -9,7 +9,8 @@ resolve_rc_gaps(
   stage_col = "stage",
   discharge_col = "discharge",
   limb_col = "limb",
-  method = c("midpoint", "snap_to_lower", "snap_to_upper"),
+  method = c("midpoint", "match_lower_to_upper", "match_upper_to_lower",
+    "extend_lower_to_upper", "extend_upper_to_lower", "snap_to_lower", "snap_to_upper"),
   tol_abs = 0.5,
   tol_rel = 0.02
 )
@@ -27,7 +28,9 @@ Default \code{"discharge"}.}
 Auto-detected if absent. Default \code{"limb"}.}
 
 \item{method}{Character. Resolution strategy: \code{"midpoint"},
-\code{"snap_to_lower"}, or \code{"snap_to_upper"}.
+\code{"match_lower_to_upper"}, \code{"match_upper_to_lower"},
+\code{"extend_lower_to_upper"}, \code{"extend_upper_to_lower"}, or
+the deprecated \code{"snap_to_lower"}/\code{"snap_to_upper"} aliases.
 Default \code{"midpoint"}.}
 
 \item{tol_abs}{Numeric. Absolute discharge tolerance passed to
@@ -43,7 +46,8 @@ flagged the input is returned unchanged (as a data.table).
 }
 \description{
 Closes discharge discontinuities at limb junctions identified by
-\code{\link{detect_rc_gaps}} using one of three strategies:
+\code{\link{detect_rc_gaps}} using one of five strategies (plus two
+deprecated aliases for backward compatibility):
 
 \describe{
 \item{\code{"midpoint"} (default)}{
@@ -57,14 +61,37 @@ unchanged regardless of the other point supplied. The result was
 never anything other than the average of the two original
 endpoints; it was not using any interior point from either limb,
 despite the name. Renamed to describe what it actually computes.}
-\item{\code{"snap_to_lower"}}{
-The upper limb's first discharge is set equal to the lower limb's
-last discharge. Use when the lower (typically gauged) limb is
-authoritative.}
-\item{\code{"snap_to_upper"}}{
-The lower limb's last discharge is set equal to the upper limb's
-first discharge. Use when the upper limb anchor (e.g. a flood-
-frequency estimate) is authoritative.}
+\item{\code{"match_upper_to_lower"}}{
+Only the upper limb's \emph{first row} is changed: its discharge is set
+equal to the lower limb's last discharge. Use when the lower
+(typically gauged) limb is authoritative and you only need the
+single junction point to agree, not the whole upper curve reshaped.}
+\item{\code{"match_lower_to_upper"}}{
+Only the lower limb's \emph{last row} is changed: its discharge is set
+equal to the upper limb's first discharge. Use when the upper limb
+(e.g. a flood-frequency estimate) is authoritative and only the
+junction point needs to agree.}
+\item{\code{"extend_lower_to_upper"}}{
+The lower limb's discharge is rescaled by a single constant factor
+across \emph{every} one of its rows, chosen so its last value exactly
+matches the upper limb's first discharge -- since
+\eqn{Q = C(H+a)^n} is linear in \eqn{C}, this is equivalent to
+rescaling the lower limb's \eqn{C} and preserves its curve shape.
+The upper limb is untouched, and (being unchanged) is what the
+lower limb's rescaled curve now "starts from" at the junction. Use
+when the upper limb is authoritative and the whole lower curve,
+not just its endpoint, should reflect that.}
+\item{\code{"extend_upper_to_lower"}}{
+The mirror image of \code{"extend_lower_to_upper"}: the upper
+limb's discharge is rescaled across every row so its first value
+matches the lower limb's last discharge; the lower limb is
+untouched.}
+\item{\code{"snap_to_lower"}, \code{"snap_to_upper"} (deprecated)}{
+Old names for \code{"match_upper_to_lower"} and
+\code{"match_lower_to_upper"} respectively -- kept working via a
+deprecation warning, but the names read backwards from what they
+do (\code{"snap_to_lower"} moves the \emph{upper} limb, not the
+lower one) and new code should use the replacements.}
 }
 
 Only junctions flagged by \code{detect_rc_gaps} (i.e. those exceeding
@@ -72,6 +99,18 @@ Only junctions flagged by \code{detect_rc_gaps} (i.e. those exceeding
 used, this amends the discretised \strong{table} at the junction rows
 only -- it does not touch the equations that produced them (see
 \code{\link{align_limb_equations}} for that).
+
+On a rating with 3 or more limbs (2 or more junctions), each junction
+reads the \emph{current} discharge at its own endpoints rather than a
+value captured before any junction was resolved, and -- for the
+\code{"extend_*"} methods specifically -- junctions are resolved in
+whichever order keeps each limb settling exactly once: top-down for
+\code{"extend_lower_to_upper"} (a limb is only rescaled as a "lower"
+limb after it has already settled as an "upper" one), bottom-up for
+\code{"extend_upper_to_lower"}. This mirrors
+\code{\link{align_limb_equations}}'s outward propagation from an
+anchor limb; without it, a middle limb rescaled to close the junction
+above it could silently reopen the junction below.
 }
 \examples{
 stage_seq1 <- seq(8.0, 10.0, by = 0.2)
@@ -88,7 +127,8 @@ limb2_dt <- data.table::data.table(
 )
 rc_raw_dt <- data.table::rbindlist(list(limb1_dt, limb2_dt))
 rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "midpoint")
-rc_snapped_dt <- resolve_rc_gaps(rc_raw_dt, method = "snap_to_lower")
+rc_matched_dt <- resolve_rc_gaps(rc_raw_dt, method = "match_upper_to_lower")
+rc_extended_dt <- resolve_rc_gaps(rc_raw_dt, method = "extend_lower_to_upper")
 
 }
 \seealso{
