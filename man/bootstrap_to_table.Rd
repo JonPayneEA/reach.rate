@@ -18,10 +18,10 @@ draw. Errors if no draws succeeded.
 Bridges \code{rate_optimise(..., n_boot = )}'s per-draw coefficient samples
 (\code{fit@bootstrap}, which records every requested draw including failed
 or rejected ones) to the shape \code{apply_rating_interval()} expects: one
-row per successful (limb, draw), with the same \code{a = -a}, \code{n = n} sign
-flip the \code{as_rating_table} method applies to the point-estimate
-coefficients, applied here to every draw. Failed or rejected draws
-(\code{success == FALSE}) are dropped -- they have no coefficients to
+row per successful (limb, draw), with \code{C}/\code{a}/\code{n} copied through
+unchanged -- \code{rate_optimise()} and the equation-table representation
+now share the same \code{Q = C(H - a)^n} convention. Failed or rejected
+draws (\code{success == FALSE}) are dropped -- they have no coefficients to
 bridge.
 }
 \examples{

@@ -59,7 +59,7 @@ NULL
 #' generates a small, deliberately varied set of starting combinations
 #' rather than relying on one: a handful of plausible `n` values at the
 #' baseline `a`, a data-driven log-log estimate when one can be computed,
-#' a data-scaled `C`, and an alternative `a` well away from its lower
+#' a data-scaled `C`, and an alternative `a` well away from its upper
 #' bound. Every start is clipped into `[fit_lower, fit_upper]`
 #' defensively, in case a generated value would otherwise violate the
 #' bounds `rate_optimise()` already enforces.
@@ -73,8 +73,8 @@ NULL
 .generate_starts <- function(limb_dt, fit_lower, fit_upper) {
   H <- limb_dt$stage_m
   Q <- limb_dt$discharge_cms
-  a_lb <- fit_lower[["a"]]
-  start_a_base <- if (a_lb > 0) a_lb + 0.01 else 0
+  a_ub <- fit_upper[["a"]]
+  start_a_base <- if (a_ub < 0) a_ub - 0.01 else 0
 
   log_log_start <- tryCatch(
     {
@@ -82,7 +82,7 @@ NULL
       fit_ll <- lm(log(Q) ~ log(depth))
       n_hat <- coef(fit_ll)[[2]]
       C_hat <- exp(coef(fit_ll)[[1]])
-      list(C = max(C_hat, 0.01), a = -min(H) + 0.1, n = max(n_hat, 0.1))
+      list(C = max(C_hat, 0.01), a = min(H) - 0.1, n = max(n_hat, 0.1))
     },
     error = function(e) NULL
   )
@@ -91,8 +91,8 @@ NULL
     list(C = 1, a = start_a_base, n = 1),
     list(C = 1, a = start_a_base, n = 1.5),
     list(C = 1, a = start_a_base, n = 2),
-    list(C = median(Q) / (median(H) + start_a_base)^1.5, a = start_a_base, n = 1.5),
-    list(C = 1, a = start_a_base + 0.25 * diff(range(H)), n = 1)
+    list(C = median(Q) / (median(H) - start_a_base)^1.5, a = start_a_base, n = 1.5),
+    list(C = 1, a = start_a_base - 0.25 * diff(range(H)), n = 1)
   )
   if (!is.null(log_log_start)) starts <- c(starts, list(log_log_start))
 
@@ -118,7 +118,7 @@ NULL
 #' @param limb_dt data.table with `stage_m`, `discharge_cms` for one limb.
 #' @param fit_lower,fit_upper Named numeric vectors (`C`, `a`, `n`).
 #' @param formula The model formula to fit -- `discharge_cms ~ C * (stage_m
-#'   + a)^n` for the default absolute-residual objective, or an
+#'   - a)^n` for the default absolute-residual objective, or an
 #'   equivalent log-space formula when fitting on relative error. Either
 #'   way it must estimate parameters named `C`, `a`, `n`.
 #' @param maxiter Integer, passed to `nls.lm.control()`.
@@ -128,7 +128,7 @@ NULL
 #' @keywords internal
 #' @noRd
 .fit_limb_multi_start <- function(limb_dt, fit_lower, fit_upper,
-                                   formula = discharge_cms ~ C * (stage_m + a)^n,
+                                   formula = discharge_cms ~ C * (stage_m - a)^n,
                                    maxiter = 100L, ...) {
   starts <- .generate_starts(limb_dt, fit_lower, fit_upper)
 
@@ -166,7 +166,7 @@ NULL
     rss <- sum(resid_vals^2)
 
     stage_check <- seq(min(limb_dt$stage_m), max(limb_dt$stage_m), length.out = 20)
-    q_check <- coefs[["C"]] * (stage_check + coefs[["a"]])^coefs[["n"]]
+    q_check <- coefs[["C"]] * (stage_check - coefs[["a"]])^coefs[["n"]]
     is_valid <- all(is.finite(q_check)) && all(diff(q_check) >= -1e-9)
 
     attempts[[s]] <- data.table(
@@ -196,7 +196,7 @@ NULL
 #' Fit a multi-limb power-law rating curve
 #'
 #' @description
-#' Fits the rating equation \eqn{Q = C(H + a)^n} by Levenberg-Marquardt
+#' Fits the rating equation \eqn{Q = C(H - a)^n} by Levenberg-Marquardt
 #' non-linear least squares (`minpack.lm::nlsLM`). A single limb is fitted
 #' across the full stage range when `control` is `NULL`; otherwise the
 #' gaugings are split into limbs at each stage in `control` and each limb
@@ -326,9 +326,9 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
   if (!is.null(gauging_datetime)) gaugings_dt[, gauging_datetime := gauging_datetime]
 
   fit_formula <- if (objective == "relative") {
-    log(discharge_cms) ~ log(C) + n * log(stage_m + a)
+    log(discharge_cms) ~ log(C) + n * log(stage_m - a)
   } else {
-    discharge_cms ~ C * (stage_m + a)^n
+    discharge_cms ~ C * (stage_m - a)^n
   }
 
   breaks <- c(min(stage_m), sort(control), max(stage_m))
@@ -429,9 +429,9 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
     limb_stage_min <- min(limb_dt$stage_m)
     n_lower <- if (is.null(n_bounds)) 1e-6 else n_bounds[1]
     n_upper <- if (is.null(n_bounds)) Inf else n_bounds[2]
-    fit_lower <- c(C = 1e-6, a = -limb_stage_min + 1e-6, n = n_lower)
-    fit_upper <- c(C = Inf, a = Inf, n = n_upper)
-    start_a <- if (fit_lower[["a"]] > 0) fit_lower[["a"]] + 0.01 else 0
+    fit_lower <- c(C = 1e-6, a = -Inf, n = n_lower)
+    fit_upper <- c(C = Inf, a = limb_stage_min - 1e-6, n = n_upper)
+    start_a <- if (fit_upper[["a"]] < 0) fit_upper[["a"]] - 0.01 else 0
 
     if (multi_start) {
       fit_result <- .fit_limb_multi_start(limb_dt, fit_lower, fit_upper, formula = fit_formula, maxiter = 100L, ...)
@@ -470,14 +470,14 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
     # objective = "relative", not comparable to the absolute-objective
     # case. For objective = "absolute" this reproduces residuals(model)
     # exactly, since that's literally what was optimised.
-    predicted_cms <- coefs[["C"]] * (limb_dt$stage_m + coefs[["a"]])^coefs[["n"]]
+    predicted_cms <- coefs[["C"]] * (limb_dt$stage_m - coefs[["a"]])^coefs[["n"]]
     resid_vals <- limb_dt$discharge_cms - predicted_cms
     ss_res <- sum(resid_vals^2)
     ss_tot <- sum((limb_dt$discharge_cms - mean(limb_dt$discharge_cms))^2)
     limb_width_for_bound_check <- max(limb_dt$stage_m) - min(limb_dt$stage_m)
     near_bound_vec[i] <- (coefs[["n"]] - fit_lower[["n"]]) < 0.01 ||
       (is.finite(fit_upper[["n"]]) && (fit_upper[["n"]] - coefs[["n"]]) < 0.01) ||
-      (coefs[["a"]] - fit_lower[["a"]]) < 0.01 * max(limb_width_for_bound_check, 1e-6)
+      (fit_upper[["a"]] - coefs[["a"]]) < 0.01 * max(limb_width_for_bound_check, 1e-6)
 
     C_vec[i] <- coefs[["C"]]
     a_vec[i] <- coefs[["a"]]
@@ -621,9 +621,9 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
     status = "independently_fitted",
     provenance = list(
       fitting_equation = if (objective == "relative") {
-        "log(Q) = log(C) + n*log(H + a)"
+        "log(Q) = log(C) + n*log(H - a)"
       } else {
-        "Q = C(H + a)^n"
+        "Q = C(H - a)^n"
       },
       fitting_method = if (multi_start) "multi-start nlsLM (minpack.lm)" else "single-start nlsLM (minpack.lm)",
       objective = objective,
@@ -650,7 +650,7 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
 #' neighbour's discharge exactly at their shared junction stage --
 #' propagating outward from the anchor exactly as `align_limb_equations()`
 #' does. The constraint is enforced by reparameterising the model:
-#' `Q = Q_target * ((H + a) / (brk + a))^n`, which equals `Q_target` at
+#' `Q = Q_target * ((H - a) / (brk - a))^n`, which equals `Q_target` at
 #' `H = brk` for any `a`/`n`, so `nlsLM` is free to optimise both over
 #' the limb's own gaugings while continuity holds automatically.
 #'
@@ -725,27 +725,27 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
   if (!is.null(fit_starts_out)) fit_starts_out <- NULL
 
   eval_q <- function(C, a, n, H) {
-    depth <- H + a
+    depth <- H - a
     fifelse(depth <= 0, 0, C * depth^n)
   }
 
   refit_constrained_limb <- function(lb, brk, target_q, start_a, start_n) {
     limb_dt <- gaugings_dt[limb == lb]
 
-    # a must keep both (H + a) and (brk + a) strictly positive -- brk can
+    # a must keep both (H - a) and (brk - a) strictly positive -- brk can
     # sit below this limb's own minimum gauged stage (an extrapolation
     # gap), so the binding constraint is whichever of the two is smaller.
-    a_lower <- -min(brk, min(limb_dt$stage_m)) + 1e-6
+    a_upper <- min(brk, min(limb_dt$stage_m)) - 1e-6
     n_lower <- if (is.null(n_bounds)) 1e-6 else n_bounds[1]
     n_upper <- if (is.null(n_bounds)) Inf else n_bounds[2]
-    fit_lower <- c(a = a_lower, n = n_lower)
-    fit_upper <- c(a = Inf, n = n_upper)
-    start_a_clipped <- max(start_a, a_lower + 0.01)
+    fit_lower <- c(a = -Inf, n = n_lower)
+    fit_upper <- c(a = a_upper, n = n_upper)
+    start_a_clipped <- min(start_a, a_upper - 0.01)
     start_n_clipped <- min(max(start_n, n_lower), if (is.finite(n_upper)) n_upper else start_n)
 
     model <- tryCatch(
       suppressWarnings(nlsLM(
-        formula = discharge_cms ~ target_q * ((stage_m + a) / (brk + a))^n,
+        formula = discharge_cms ~ target_q * ((stage_m - a) / (brk - a))^n,
         data = limb_dt,
         start = list(a = start_a_clipped, n = start_n_clipped),
         lower = fit_lower,
@@ -766,7 +766,7 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
     coefs <- coef(model)
     a_new <- coefs[["a"]]
     n_new <- coefs[["n"]]
-    C_new <- target_q / (brk + a_new)^n_new
+    C_new <- target_q / (brk - a_new)^n_new
 
     # nlsLM's own bounds keep (brk + a_new) and n_new inside a valid
     # domain, but that doesn't guarantee C_new comes out finite and
@@ -795,7 +795,7 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
       r_squared = if (ss_tot > 1e-12) 1 - ss_res / ss_tot else NA_real_,
       near_bound = (n_new - fit_lower[["n"]]) < 0.01 ||
         (is.finite(fit_upper[["n"]]) && (fit_upper[["n"]] - n_new) < 0.01) ||
-        (a_new - fit_lower[["a"]]) < 0.01 * max(limb_width, 1e-6)
+        (fit_upper[["a"]] - a_new) < 0.01 * max(limb_width, 1e-6)
     )
   }
 
@@ -882,7 +882,7 @@ method(rating_plot, FlodeRating) <- function(fit, colours = NULL, n_points = 200
   for (i in seq_len(n_limbs)) {
     col_i <- if (is.null(colours)) 2 else colours[i]
     stage_seq <- seq(limbs_dt$lower_stage_m[i], limbs_dt$upper_stage_m[i], length.out = n_points)
-    discharge_seq <- limbs_dt$C[i] * (stage_seq + limbs_dt$a[i])^limbs_dt$n[i]
+    discharge_seq <- limbs_dt$C[i] * (stage_seq - limbs_dt$a[i])^limbs_dt$n[i]
     lines(discharge_seq, stage_seq, col = col_i, lwd = 4)
   }
 
@@ -912,7 +912,7 @@ plot_rating_residuals <- function(fit) {
   limbs_dt <- fit@limbs
 
   gaugings_dt[limbs_dt, on = "limb", `:=`(
-    fitted_cms = i.C * (stage_m + i.a)^i.n
+    fitted_cms = i.C * (stage_m - i.a)^i.n
   )]
   gaugings_dt[, residual_cms := discharge_cms - fitted_cms]
 

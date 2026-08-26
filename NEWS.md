@@ -1,3 +1,23 @@
+# reach.rate (development)
+
+* **Breaking change**: `rate_optimise()` and `rate_optimise_constrained()`
+  now fit `Q = C(H - a)^n` instead of `Q = C(H + a)^n`. This unifies the
+  fitting engine's convention with `FlodeRatingTable`'s equation-table
+  representation (`gap_check`, `apply_rating`), which already used
+  `Q = C(H - a)^n` -- the two sides of the toolkit previously used
+  opposite-signed offsets, bridged by an explicit (and easy to get
+  backwards) sign flip inside `as_rating_table()`/`bootstrap_to_table()`.
+  That bridge is now a straight, unflipped copy.
+  - Every `a` coefficient a fit reports (`fit@limbs$a`, bootstrap draws,
+    `@fit_starts`) is the negative of what the same data would have
+    produced before this change. `C` and `n` are unaffected.
+  - If you have saved `FlodeRating` objects, re-fit them rather than
+    reusing the stored coefficients under the new convention.
+  - `FlodeRatingTable`'s own coefficients, `apply_rating()`,
+    `expand_rating_table()`, `align_limb_equations()`, and
+    `align_limb_boundaries()` are unaffected -- they already used this
+    convention.
+
 # reach.rate 0.1.0
 
 * Initial release: the `rating_curves` toolkit, converted from a set of
