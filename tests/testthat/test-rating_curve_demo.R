@@ -1,7 +1,7 @@
-test_that("as_rating_table flips the sign of the offset correctly", {
+test_that("as_rating_table copies coefficients unchanged (shared sign convention)", {
   set.seed(1)
   stage_seq <- seq(0.5, 2.5, by = 0.05)
-  discharge_seq <- 5 * (stage_seq + 0.3)^1.6 + rnorm(length(stage_seq), sd = 0.01)
+  discharge_seq <- 5 * (stage_seq - 0.3)^1.6 + rnorm(length(stage_seq), sd = 0.01)
 
   fit <- rate_optimise(discharge_seq, stage_seq)
   rating_table <- as_rating_table(fit)
@@ -10,8 +10,9 @@ test_that("as_rating_table flips the sign of the offset correctly", {
   rating_dt <- rating_table@table
   expect_true(is.data.table(rating_dt))
   expect_true(all(c("lower_level", "upper_level", "C", "a", "n") %in% names(rating_dt)))
-  # table a = -a: rate_optimise fit an 'a' close to +0.3, so the table's a should be close to -0.3
-  expect_equal(rating_dt$a[1], -fit@limbs$a[1])
+  # rate_optimise() and the table both use Q = C(H - a)^n now, so the
+  # table's coefficients are a straight copy of the fit's, not a sign flip.
+  expect_equal(rating_dt$a[1], fit@limbs$a[1])
   expect_equal(rating_dt$C[1], fit@limbs$C[1])
   expect_equal(rating_dt$n[1], fit@limbs$n[1])
 })
@@ -69,10 +70,10 @@ test_that("run_demo(plot = FALSE) does not require a graphics device", {
   expect_named(result, c("fit", "gaps", "rc_raw", "rc_fixed"))
 })
 
-test_that("bootstrap_to_table flips the sign of the offset per draw", {
+test_that("bootstrap_to_table copies coefficients unchanged per draw (shared sign convention)", {
   set.seed(1)
   stage_seq <- seq(0.5, 2.5, by = 0.05)
-  discharge_seq <- 5 * (stage_seq + 0.3)^1.6 + rnorm(length(stage_seq), sd = 0.01)
+  discharge_seq <- 5 * (stage_seq - 0.3)^1.6 + rnorm(length(stage_seq), sd = 0.01)
 
   fit <- rate_optimise(discharge_seq, stage_seq, n_boot = 20L, boot_seed = 1L)
   boot_table_dt <- bootstrap_to_table(fit)
@@ -84,7 +85,7 @@ test_that("bootstrap_to_table flips the sign of the offset per draw", {
   # is filtered the same way for a fair comparison
   expect_equal(nrow(boot_table_dt), nrow(boot_ok_dt))
   data.table::setorder(boot_ok_dt, limb, draw)
-  expect_equal(boot_table_dt$a, -boot_ok_dt$a)
+  expect_equal(boot_table_dt$a, boot_ok_dt$a)
   expect_equal(boot_table_dt$n, boot_ok_dt$n)
   expect_true(all(boot_table_dt$lower_level == fit@limbs$lower_stage_m[1]))
 })

@@ -31,17 +31,17 @@ The rating curve is the bridge between the two. It is a fitted relationship that
 
 This toolkit fits the standard hydrometric form:
 
-$$Q = C\,(H + a)^{n}$$
+$$Q = C\,(H - a)^{n}$$
 
-where $Q$ is discharge (m³/s), $H$ is stage (m), and $C$, $a$, $n$ are fitted coefficients. The offset $a$ deserves a moment. Stage is measured against an arbitrary local datum, not against the point where flow actually ceases. The quantity $H + a$ converts stage to effective head above the level of zero flow, and it is head, not raw stage, that drives flow through a control. When $H + a \le 0$ the river is below its zero-flow level and $Q = 0$ by definition.
+where $Q$ is discharge (m³/s), $H$ is stage (m), and $C$, $a$, $n$ are fitted coefficients. The offset $a$ deserves a moment. Stage is measured against an arbitrary local datum, not against the point where flow actually ceases. The quantity $H - a$ converts stage to effective head above the level of zero flow, and it is head, not raw stage, that drives flow through a control. When $H - a \le 0$ the river is below its zero-flow level and $Q = 0$ by definition.
 
 ## Why a power law
 
-The power law is not a curve-fitting convenience. It is what open-channel hydraulics predicts. Flow over a rectangular weir goes as head to the power 1.5; over a V-notch, head to the power 2.5; Manning's equation for a wide channel gives discharge roughly as depth to the power 5/3. Every common control produces discharge as head raised to some exponent between about 1.3 and 2.5, with $C$ absorbing the geometry and roughness (Herschy 2009; Rantz et al. 1982). Fitting $Q = C(H+a)^n$ is fitting the family of curves the physics says to expect.
+The power law is not a curve-fitting convenience. It is what open-channel hydraulics predicts. Flow over a rectangular weir goes as head to the power 1.5; over a V-notch, head to the power 2.5; Manning's equation for a wide channel gives discharge roughly as depth to the power 5/3. Every common control produces discharge as head raised to some exponent between about 1.3 and 2.5, with $C$ absorbing the geometry and roughness (Herschy 2009; Rantz et al. 1982). Fitting $Q = C(H-a)^n$ is fitting the family of curves the physics says to expect.
 
 A useful property follows: on log axes the power law is a straight line,
 
-$$\log Q = \log C + n \log(H + a)$$
+$$\log Q = \log C + n \log(H - a)$$
 
 with slope $n$. This is why hydrometrists have plotted ratings on log-log paper for a century, and why a change of slope on that plot signals a change of physical control.
 
@@ -63,7 +63,7 @@ The toolkit represents its results as three S7 classes rather than bare tables. 
 
 `FlodeSegmentedRating` is the result of `rate_optimise_segmented()`, a structurally different model covered in section 9.
 
-`FlodeRatingTable` is the equation-table representation used for gap checking and application: `lower_level`, `upper_level`, `C`, `A`, `B` per limb. It carries `@status` and `@previous`, so an amended table references the exact object it was amended from. This is an audit trail by construction rather than by discipline: you cannot end up holding an aligned table with no record of what it was aligned from.
+`FlodeRatingTable` is the equation-table representation used for gap checking and application: `lower_level`, `upper_level`, `C`, `a`, `n` per limb, same names and sign convention as `FlodeRating`'s `@limbs`. It carries `@status` and `@previous`, so an amended table references the exact object it was amended from. This is an audit trail by construction rather than by discipline: you cannot end up holding an aligned table with no record of what it was aligned from.
 
 Three shared generics work across the classes: `rating_plot()` draws whichever fit you hand it, `apply_rating()` converts stage to discharge with whichever representation you hold, and `as_rating_table()` converts a fit to the table form. The class system chooses the right implementation; you use one name.
 
@@ -83,7 +83,7 @@ true_limb <- cut(
 )
 true_coefs_dt <- data.table(C = c(3, 6, 10), a = c(0, 0.1, 0.2), n = c(1.4, 1.6, 1.8))
 discharge_cms <- true_coefs_dt$C[true_limb] *
-  (stage_m + true_coefs_dt$a[true_limb])^true_coefs_dt$n[true_limb] +
+  (stage_m - true_coefs_dt$a[true_limb])^true_coefs_dt$n[true_limb] +
   rnorm(length(stage_m), sd = 0.05)
 
 length(stage_m)
@@ -101,7 +101,7 @@ fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
 
 `rate_optimise()` fits each limb by nonlinear least squares: it finds the $C$, $a$, $n$ minimising the residual sum of squares
 
-$$\mathrm{RSS} = \sum_{i}\left(Q_i - C\,(H_i + a)^n\right)^2$$
+$$\mathrm{RSS} = \sum_{i}\left(Q_i - C\,(H_i - a)^n\right)^2$$
 
 over that limb's gaugings, using the Levenberg-Marquardt algorithm (Levenberg 1944; Marquardt 1963) as implemented in `minpack.lm::nlsLM`.
 
@@ -111,7 +111,7 @@ Note also that $a$ is a fitted parameter, not just log-space regression's proble
 
 ## Bounds
 
-The fit is constrained so that $C > 0$, $n > 0$, and $H + a > 0$ for every gauging in the limb. Without these, the optimiser is free to wander into regions where the equation is negative, complex, or undefined, and will occasionally converge there on awkward data. The bounds do not push the fit anywhere; they only fence off territory where no valid rating exists.
+The fit is constrained so that $C > 0$, $n > 0$, and $H - a > 0$ for every gauging in the limb. Without these, the optimiser is free to wander into regions where the equation is negative, complex, or undefined, and will occasionally converge there on awkward data. The bounds do not push the fit anywhere; they only fence off territory where no valid rating exists.
 
 ## Multiple starting points
 
@@ -219,9 +219,9 @@ identical(aligned_result@previous, rating_table)
 
 Fixes the equations themselves, using only the equations. Hold one limb fixed (the anchor, by default the lowest, usually the best gauged), then for each neighbouring limb solve for the $C$ that forces an exact match at the junction:
 
-$$C_{\text{new}} = \frac{Q_{\text{target}}}{(H_b - A)^{B}}$$
+$$C_{\text{new}} = \frac{Q_{\text{target}}}{(H_b - a)^{n}}$$
 
-where $Q_{\text{target}}$ is the already-corrected neighbour's discharge at the junction stage $H_b$. The correction propagates outward from the anchor, so every junction along the chain closes exactly, and $A$ and $B$ (the curve's datum and shape) are untouched. The original $C$ is kept alongside the scale factor and percentage change, and the result is a new `FlodeRatingTable` whose `@previous` references the exact pre-alignment object: an auditable amendment, not a silent overwrite.
+where $Q_{\text{target}}$ is the already-corrected neighbour's discharge at the junction stage $H_b$. The correction propagates outward from the anchor, so every junction along the chain closes exactly, and $a$ and $n$ (the curve's datum and shape) are untouched. The original $C$ is kept alongside the scale factor and percentage change, and the result is a new `FlodeRatingTable` whose `@previous` references the exact pre-alignment object: an auditable amendment, not a silent overwrite.
 
 The cost is honest: the rescaled $C$ is no longer the least-squares optimum for that limb's own gaugings. You have traded a small amount of within-limb fit for continuity, holding shape fixed. When only the equations survive (a legacy rating, an imported table), this is the best available move.
 
@@ -234,9 +234,9 @@ fit_constrained@limbs[, .(limb, C, a, n, rmse_cms, r_squared, aligned)]
 
 When the raw gaugings are available, the job can be done properly. Rather than adjusting an already-fitted equation, each non-anchor limb is refitted against its own gaugings subject to matching its neighbour exactly at the junction. The constraint is built into the model by reparameterisation:
 
-$$Q = Q_{\text{target}}\left(\frac{H + a}{H_b + a}\right)^{n}$$
+$$Q = Q_{\text{target}}\left(\frac{H - a}{H_b - a}\right)^{n}$$
 
-At $H = H_b$ the bracket equals 1 and $Q = Q_{\text{target}}$ identically, for any $a$ and $n$. Continuity is therefore guaranteed by construction, and the optimiser is free to choose the $a$ and $n$ that best fit the limb's gaugings within that guarantee; $C$ is recovered afterwards as $Q_{\text{target}} / (H_b + a)^n$. Two parameters compensate instead of one, so this generally fits each limb's data better than the C-only rescale. The propagation logic is the same anchor-outward chain.
+At $H = H_b$ the bracket equals 1 and $Q = Q_{\text{target}}$ identically, for any $a$ and $n$. Continuity is therefore guaranteed by construction, and the optimiser is free to choose the $a$ and $n$ that best fit the limb's gaugings within that guarantee; $C$ is recovered afterwards as $Q_{\text{target}} / (H_b - a)^n$. Two parameters compensate instead of one, so this generally fits each limb's data better than the C-only rescale. The propagation logic is the same anchor-outward chain.
 
 One honest caveat, reported rather than hidden: any bootstrap uncertainty computed during the initial unconstrained fit describes that fit, not the constrained one, so it is dropped with a warning rather than carried through as if it still applied. The same discipline applies to the multi-start bookkeeping.
 
@@ -327,11 +327,11 @@ sum(flow_dt$extrapolated) # stage values above the gauged range
 flow_dt[c(1, 10, 20, 30, 40)]
 ```
 
-The step everything else builds towards: stage record in, discharge record out. Each stage value is assigned to the limb whose band it falls in, and that limb's $Q = C(h - A)^B$ is evaluated. Stage at or below the zero-flow datum returns exactly zero. Stage outside every limb is evaluated by extrapolating the nearest limb's equation and flagged in the `extrapolated` column: a value is still returned, because for forecasting an extrapolated estimate is usually more useful than an NA, but it is never silently indistinguishable from an interpolated one. The flag is the contract; respect it downstream.
+The step everything else builds towards: stage record in, discharge record out. Each stage value is assigned to the limb whose band it falls in, and that limb's $Q = C(h - a)^n$ is evaluated. Stage at or below the zero-flow datum returns exactly zero. Stage outside every limb is evaluated by extrapolating the nearest limb's equation and flagged in the `extrapolated` column: a value is still returned, because for forecasting an extrapolated estimate is usually more useful than an NA, but it is never silently indistinguishable from an interpolated one. The flag is the contract; respect it downstream.
 
-## `as_rating_table()` and the sign flip
+## `as_rating_table()`: a straight copy
 
-The fitting side of the toolkit writes the equation $Q = C(H + a)^n$; the table side writes $Q = C(h - A)^B$. Same curve, opposite sign convention on the offset: $A = -a$, $B = n$. This conversion is trivially easy to get backwards and quietly catastrophic when you do, which is why it lives in exactly one tested function rather than as an inline flip wherever it is needed. `as_rating_table()` also carries the `doubtful` flag through, so support weakness survives the change of representation.
+`rate_optimise()` and the equation-table representation write the same equation with the same sign convention: both are $Q = C(H - a)^n$. So converting a fit to a table is a straight column-and-name copy of `C`/`a`/`n`, with no coefficient transformation -- `as_rating_table()` remains a named, tested method (rather than an inline conversion at the call site) so the two representations stay a single, deliberate seam rather than something re-derived wherever it's needed. `as_rating_table()` also carries the `doubtful` flag through, so support weakness survives the change of representation.
 
 ## Ratings change over time: `apply_rating_versioned()`
 

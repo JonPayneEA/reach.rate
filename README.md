@@ -25,11 +25,11 @@ The rating curve is the bridge between the two. It is a fitted relationship that
 
 **The equation.** This toolkit fits the standard hydrometric form:
 
-$$Q = C\,(H + a)^{n}$$
+$$Q = C\,(H - a)^{n}$$
 
-where $Q$ is discharge (m³/s), $H$ is stage (m), and $C$, $a$, $n$ are fitted coefficients. The offset $a$ deserves a moment. Stage is measured against an arbitrary local datum, not against the point where flow actually ceases. The quantity $H + a$ converts stage to effective head above the level of zero flow, and it is head, not raw stage, that drives flow through a control. When $H + a \le 0$ the river is below its zero-flow level and $Q = 0$ by definition.
+where $Q$ is discharge (m³/s), $H$ is stage (m), and $C$, $a$, $n$ are fitted coefficients. The offset $a$ deserves a moment. Stage is measured against an arbitrary local datum, not against the point where flow actually ceases. The quantity $H - a$ converts stage to effective head above the level of zero flow, and it is head, not raw stage, that drives flow through a control. When $H - a \le 0$ the river is below its zero-flow level and $Q = 0$ by definition.
 
-**Why a power law.** The power law is not a curve-fitting convenience -- it is what open-channel hydraulics predicts. Flow over a rectangular weir goes as head to the power 1.5; over a V-notch, head to the power 2.5; Manning's equation for a wide channel gives discharge roughly as depth to the power 5/3. Every common control produces discharge as head raised to some exponent between about 1.3 and 2.5, with $C$ absorbing the geometry and roughness (Herschy 2009; Rantz et al. 1982). A useful property follows: on log axes the power law is a straight line, $\log Q = \log C + n \log(H + a)$, with slope $n$ -- why a change of slope on that plot signals a change of physical control.
+**Why a power law.** The power law is not a curve-fitting convenience -- it is what open-channel hydraulics predicts. Flow over a rectangular weir goes as head to the power 1.5; over a V-notch, head to the power 2.5; Manning's equation for a wide channel gives discharge roughly as depth to the power 5/3. Every common control produces discharge as head raised to some exponent between about 1.3 and 2.5, with $C$ absorbing the geometry and roughness (Herschy 2009; Rantz et al. 1982). A useful property follows: on log axes the power law is a straight line, $\log Q = \log C + n \log(H - a)$, with slope $n$ -- why a change of slope on that plot signals a change of physical control.
 
 **A convention.** Throughout this toolkit, plots put discharge on the x axis and stage on the y axis -- the hydrometric convention, reading the rating the way the station uses it.
 
@@ -45,7 +45,7 @@ The toolkit represents its results as three [S7](https://rconsortium.github.io/S
 
 - `FlodeRating` is the result of `rate_optimise()`. `@limbs` holds one row per limb (bounds, coefficients, diagnostics), `@gaugings` holds the data it was fitted to, `@bootstrap` and `@fit_starts` hold uncertainty and fitting bookkeeping when produced, `@status` records whether the fit is as fitted or has been amended, and `@provenance` records how it was made.
 - `FlodeSegmentedRating` is the result of `rate_optimise_segmented()`, a structurally different joint model with no junction gap to reconcile (see the full guide).
-- `FlodeRatingTable` is the equation-table representation used for gap checking and application: `lower_level`, `upper_level`, `C`, `A`, `B` per limb. It carries `@status` and `@previous`, so an amended table references the exact object it was amended from -- an audit trail by construction, not by discipline.
+- `FlodeRatingTable` is the equation-table representation used for gap checking and application: `lower_level`, `upper_level`, `C`, `a`, `n` per limb, same names and sign convention as `FlodeRating`'s `@limbs`. It carries `@status` and `@previous`, so an amended table references the exact object it was amended from -- an audit trail by construction, not by discipline.
 
 Three shared generics work across the classes: `rating_plot()` draws whichever fit you hand it, `apply_rating()` converts stage to discharge with whichever representation you hold, and `as_rating_table()` converts a fit to the table form. The class system chooses the right implementation; you use one name.
 
@@ -53,11 +53,11 @@ A fit remembers its own gaugings deliberately: every diagnostic, residual plot, 
 
 ### Fitting: `rate_optimise()`
 
-`rate_optimise()` fits each limb by nonlinear least squares: it finds the $C$, $a$, $n$ minimising the residual sum of squares $\mathrm{RSS} = \sum_{i}\left(Q_i - C\,(H_i + a)^n\right)^2$ over that limb's gaugings, using the Levenberg-Marquardt algorithm (Levenberg 1944; Marquardt 1963) as implemented in `minpack.lm::nlsLM`.
+`rate_optimise()` fits each limb by nonlinear least squares: it finds the $C$, $a$, $n$ minimising the residual sum of squares $\mathrm{RSS} = \sum_{i}\left(Q_i - C\,(H_i - a)^n\right)^2$ over that limb's gaugings, using the Levenberg-Marquardt algorithm (Levenberg 1944; Marquardt 1963) as implemented in `minpack.lm::nlsLM`.
 
 Why not just take logs and fit a straight line by ordinary regression? Because the two minimise different things. Log-space regression minimises relative error, which treats a 10% miss at 2 m³/s and a 10% miss at 200 m³/s as equally bad. Least squares in real space minimises absolute error, so the high-flow gaugings dominate the fit -- for flood forecasting, where the cost of error is concentrated at high flows, real-space fitting is usually the right default, but be aware of the choice you are inheriting: your low-flow fit is being traded for your high-flow fit.
 
-The fit is constrained so that $C > 0$, $n > 0$, and $H + a > 0$ for every gauging in the limb, fencing off territory where no valid rating exists. By default (`multi_start = TRUE`) each limb is fitted from several starting combinations rather than one, since a poor guess can strand the optimiser in a local minimum; every attempt is recorded in `@fit_starts`, and the `near_bound` column flags a fit whose `n` or `a` finished pressed against its lower bound, worth a second look.
+The fit is constrained so that $C > 0$, $n > 0$, and $H - a > 0$ for every gauging in the limb, fencing off territory where no valid rating exists. By default (`multi_start = TRUE`) each limb is fitted from several starting combinations rather than one, since a poor guess can strand the optimiser in a local minimum; every attempt is recorded in `@fit_starts`, and the `near_bound` column flags a fit whose `n` or `a` finished pressed against its bound, worth a second look.
 
 ## Getting started
 
@@ -77,10 +77,10 @@ true_limb <- cut(
 )
 true_coefs <- data.frame(C = c(3, 6, 10), a = c(0, 0.1, 0.2), n = c(1.4, 1.6, 1.8))
 discharge_cms <- true_coefs$C[true_limb] *
-  (stage_m + true_coefs$a[true_limb])^true_coefs$n[true_limb] +
+  (stage_m - true_coefs$a[true_limb])^true_coefs$n[true_limb] +
   rnorm(length(stage_m), sd = 0.05)
 
-# Fit a multi-limb power-law rating curve: Q = C(H + a)^n per limb
+# Fit a multi-limb power-law rating curve: Q = C(H - a)^n per limb
 fit <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2))
 fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared)]
 

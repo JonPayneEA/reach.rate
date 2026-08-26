@@ -32,12 +32,12 @@ STAGE_MAX <- 4.0
 LIMB_COLOURS <- c("#2E7D6B", "#B5541A", "#5B3B7A")
 
 # Same equation and zero-flow convention used throughout the rest of the
-# toolkit (rate_optimise(), apply_rating()): Q = C(H + a)^n, discharge is
+# toolkit (rate_optimise(), apply_rating()): Q = C(H - a)^n, discharge is
 # zero rather than NaN/negative below the zero-flow datum.
 #' @keywords internal
 #' @noRd
 .explorer_eval_q <- function(C, a, n, H) {
-  depth <- H + a
+  depth <- H - a
   fifelse(depth <= 0, 0, C * depth^n)
 }
 
@@ -140,7 +140,7 @@ rating_curve_explorer <- function() {
       "))
     ),
 
-    shiny::tags$div(class = "rce-eyebrow", "Q = C(H + a)^n \u00b7 segmented power-law rating"),
+    shiny::tags$div(class = "rce-eyebrow", "Q = C(H - a)^n \u00b7 segmented power-law rating"),
     shiny::tags$div(class = "rce-title", "Rating curve explorer"),
     shiny::tags$p(
       class = "rce-sub",
@@ -318,7 +318,7 @@ rating_curve_explorer <- function() {
       cf <- coefs_dt()
       brk <- bd$upper[1]
       target <- eval_q(cf$C[1], cf$a[1], cf$n[1], brk)
-      depth <- brk + cf$a[2]
+      depth <- brk - cf$a[2]
       if (depth > 0) {
         new_c <- target / depth^cf$n[2]
         shiny::updateSliderInput(session, "C2", value = round(new_c, 3))
@@ -331,7 +331,7 @@ rating_curve_explorer <- function() {
       if (nrow(bd) < 3) return(invisible(NULL))
       brk <- bd$upper[2]
       target <- eval_q(cf$C[2], cf$a[2], cf$n[2], brk)
-      depth <- brk + cf$a[3]
+      depth <- brk - cf$a[3]
       if (depth > 0) {
         new_c <- target / depth^cf$n[3]
         shiny::updateSliderInput(session, "C3", value = round(new_c, 3))

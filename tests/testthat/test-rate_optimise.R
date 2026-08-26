@@ -197,7 +197,7 @@ test_that("rate_optimise objective = 'relative' fits and reports cms-scale diagn
 
   # residuals recomputed from C/a/n reproduce rmse_cms exactly
   gaugings_dt <- fit_rel@gaugings
-  gaugings_dt[fit_rel@limbs, on = "limb", fitted_cms := i.C * (stage_m + i.a)^i.n]
+  gaugings_dt[fit_rel@limbs, on = "limb", fitted_cms := i.C * (stage_m - i.a)^i.n]
   manual_rmse <- gaugings_dt[, sqrt(mean((discharge_cms - fitted_cms)^2)), by = limb]$V1
   expect_equal(fit_rel@limbs$rmse_cms, manual_rmse, tolerance = 1e-8)
 })
@@ -643,7 +643,7 @@ test_that("rate_optimise_constrained closes every junction exactly", {
   fit <- rate_optimise_constrained(g$discharge, g$stage, control = c(1.6, 2.2))
   limbs_dt <- fit@limbs
 
-  eval_q <- function(C, a, n, H) C * (H + a)^n
+  eval_q <- function(C, a, n, H) C * (H - a)^n
 
   q_limb1_top <- eval_q(limbs_dt$C[1], limbs_dt$a[1], limbs_dt$n[1], limbs_dt$upper_stage_m[1])
   q_limb2_bottom <- eval_q(limbs_dt$C[2], limbs_dt$a[2], limbs_dt$n[2], limbs_dt$lower_stage_m[2])
@@ -732,7 +732,7 @@ test_that("rate_optimise_constrained's refit stays valid when the junction stage
   # declared lower bound (an extrapolation gap), so the junction stage
   # brk is below min(limb_dt$stage_m) -- exactly the case where the
   # constrained refit's a-bound must be tied to brk, not just the
-  # limb's own stage minimum, or (brk + a) could go non-positive.
+  # limb's own stage minimum, or (brk - a) could go non-positive.
   set.seed(21)
   stage_m <- c(seq(0.5, 1.6, by = 0.05), seq(2.0, 3.5, by = 0.05))
   true_limb <- ifelse(stage_m <= 1.6, 1L, 2L)

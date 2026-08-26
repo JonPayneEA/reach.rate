@@ -44,13 +44,12 @@ NULL
 #'
 #' @description
 #' Registered against the `as_rating_table` generic (`flode_classes.R`)
-#' for [FlodeRating]. `rate_optimise()` and `gap_check` parameterise the
-#' same rating equation with opposite-signed offsets: `rate_optimise()`
-#' fits `Q = C(H + a)^n`; `expand_rating_table()` evaluates
-#' `Q = C(h - a)^n`. So the table's `a = -a` (sign flipped) and `n = n`
-#' (unchanged). That sign flip is easy to get backwards, which is exactly
-#' why it lives in a named, tested method here rather than as an inline
-#' flip at the call site.
+#' for [FlodeRating]. `rate_optimise()` and `gap_check` now share the same
+#' equation and sign convention -- both fit/evaluate `Q = C(H - a)^n` --
+#' so this is a straight column-and-name copy from `fit@limbs` into a
+#' [FlodeRatingTable], with no coefficient transformation. It remains a
+#' named, tested method (rather than an inline conversion at the call
+#' site) so the two representations stay a single, deliberate seam.
 #'
 #' If `fit@limbs` carries a `doubtful` column (see
 #' `flag_extrapolated_limbs()`), it is carried through unchanged so it
@@ -75,7 +74,7 @@ method(as_rating_table, FlodeRating) <- function(fit) {
     lower_level = limbs_dt$lower_stage_m,
     upper_level = limbs_dt$upper_stage_m,
     C = limbs_dt$C,
-    a = -limbs_dt$a,
+    a = limbs_dt$a,
     n = limbs_dt$n
   )
 
@@ -92,10 +91,10 @@ method(as_rating_table, FlodeRating) <- function(fit) {
 #' Bridges `rate_optimise(..., n_boot = )`'s per-draw coefficient samples
 #' (`fit@bootstrap`, which records every requested draw including failed
 #' or rejected ones) to the shape `apply_rating_interval()` expects: one
-#' row per successful (limb, draw), with the same `a = -a`, `n = n` sign
-#' flip the `as_rating_table` method applies to the point-estimate
-#' coefficients, applied here to every draw. Failed or rejected draws
-#' (`success == FALSE`) are dropped -- they have no coefficients to
+#' row per successful (limb, draw), with `C`/`a`/`n` copied through
+#' unchanged -- `rate_optimise()` and the equation-table representation
+#' now share the same `Q = C(H - a)^n` convention. Failed or rejected
+#' draws (`success == FALSE`) are dropped -- they have no coefficients to
 #' bridge.
 #'
 #' @param fit A [FlodeRating] instance from `rate_optimise(..., n_boot > 0)`.
@@ -132,7 +131,6 @@ bootstrap_to_table <- function(fit) {
   bounds_dt <- fit@limbs[, .(limb, lower_level = lower_stage_m, upper_level = upper_stage_m)]
 
   out_dt <- merge(boot_ok_dt, bounds_dt, by = "limb")
-  out_dt[, `:=`(a = -a, n = n)]
   out_dt[, c("success", "reason") := NULL]
   setorder(out_dt, limb, draw)
   out_dt[]
@@ -260,7 +258,7 @@ run_demo <- function(plot = TRUE) {
   )
   coefs_by_limb <- data.frame(C = c(3, 6, 10), a = c(0, 0.1, 0.2), n = c(1.4, 1.6, 1.8))
   discharge_seq <- coefs_by_limb$C[true_limb] *
-    (stage_seq + coefs_by_limb$a[true_limb])^coefs_by_limb$n[true_limb] +
+    (stage_seq - coefs_by_limb$a[true_limb])^coefs_by_limb$n[true_limb] +
     rnorm(length(stage_seq), sd = 0.05)
 
   # 2. Fit the rating curve (rate_optimise module)

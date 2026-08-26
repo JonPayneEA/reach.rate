@@ -75,7 +75,7 @@ true_limb <- cut(
 )
 true_coefs_dt <- data.table(C = c(3, 6, 10), a = c(0, 0.1, 0.2), n = c(1.4, 1.6, 1.8))
 discharge_cms <- true_coefs_dt$C[true_limb] *
-  (stage_m + true_coefs_dt$a[true_limb])^true_coefs_dt$n[true_limb] +
+  (stage_m - true_coefs_dt$a[true_limb])^true_coefs_dt$n[true_limb] +
   rnorm(length(stage_m), sd = 0.05)
 
 cat(sprintf("Simulated %d gaugings from stage %.2f to %.2f m\n", length(stage_m), min(stage_m), max(stage_m)))

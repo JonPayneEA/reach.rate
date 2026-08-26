@@ -29,7 +29,7 @@ most of the time:
 
 1. Every gauging counts equally in *absolute* discharge terms: a 1 m³/s
    miss is a 1 m³/s miss, whether the true flow is 2 m³/s or 2,000 m³/s.
-2. The exponent `n` in `Q = C(H+a)^n` is estimated purely from whatever
+2. The exponent `n` in `Q = C(H-a)^n` is estimated purely from whatever
    gaugings you have -- no outside knowledge of the channel is brought in.
 3. Every gauging counts equally regardless of *when* it was taken.
 
@@ -60,7 +60,7 @@ result.
 set.seed(11)
 stage_m <- seq(0.2, 3.5, by = 0.03)
 true_C <- 4; true_a <- 0.05; true_n <- 1.7
-discharge_true_cms <- true_C * (stage_m + true_a)^true_n
+discharge_true_cms <- true_C * (stage_m - true_a)^true_n
 # Proportional (percentage) noise, not fixed-magnitude noise -- this is
 # what "gauging accuracy is a few percent of the reading" looks like.
 discharge_cms <- discharge_true_cms * exp(rnorm(length(stage_m), sd = 0.08))
@@ -124,7 +124,7 @@ stage_sparse_m <- c(2.7, 2.9, 3.1, 3.3)
 stage_m <- c(stage_dense_m, stage_sparse_m)
 
 true_C <- 5; true_a <- 0; true_n <- 1.5
-discharge_true_cms <- true_C * (stage_m + true_a)^true_n
+discharge_true_cms <- true_C * (stage_m - true_a)^true_n
 discharge_cms <- discharge_true_cms * exp(rnorm(length(stage_m), sd = 0.1))
 ```
 

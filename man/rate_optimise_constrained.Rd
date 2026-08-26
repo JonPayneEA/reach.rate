@@ -58,7 +58,7 @@ its own gaugings, subject to matching its already-finalised
 neighbour's discharge exactly at their shared junction stage --
 propagating outward from the anchor exactly as \code{align_limb_equations()}
 does. The constraint is enforced by reparameterising the model:
-\code{Q = Q_target * ((H + a) / (brk + a))^n}, which equals \code{Q_target} at
+\code{Q = Q_target * ((H - a) / (brk - a))^n}, which equals \code{Q_target} at
 \code{H = brk} for any \code{a}/\code{n}, so \code{nlsLM} is free to optimise both over
 the limb's own gaugings while continuity holds automatically.
 }

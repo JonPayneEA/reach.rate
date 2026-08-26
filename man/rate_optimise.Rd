@@ -86,7 +86,7 @@ multi-start attempt when \code{multi_start = TRUE}. \verb{@status} is
 \code{"independently_fitted"}.
 }
 \description{
-Fits the rating equation \eqn{Q = C(H + a)^n} by Levenberg-Marquardt
+Fits the rating equation \eqn{Q = C(H - a)^n} by Levenberg-Marquardt
 non-linear least squares (\code{minpack.lm::nlsLM}). A single limb is fitted
 across the full stage range when \code{control} is \code{NULL}; otherwise the
 gaugings are split into limbs at each stage in \code{control} and each limb
