@@ -480,3 +480,89 @@ test_that("align_limb_equations(on_align_failure = 'skip') has no effect when no
   aligned_dt <- align_limb_equations(rating_dt, on_align_failure = "skip")@table
   expect_false(any(aligned_dt$align_failed))
 })
+
+test_that("align_limb_boundaries relocates the junction to where the curves actually cross", {
+  # C1*H^B1 = C2*H^B2 => H = (C1/C2)^(1/(B2-B1)) = (5/1)^(1/1) = 5
+  rating_dt <- data.table::data.table(
+    lower_level = c(0.0, 2.0), upper_level = c(2.0, 6.0),
+    C = c(5, 1), A = c(0, 0), B = c(1.2, 2.2)
+  )
+  result <- align_limb_boundaries(rating_dt)
+
+  expect_s3_class(result, "reach.rate::FlodeRatingTable")
+  out_dt <- result@table
+  # C/A/B are never touched
+  expect_equal(out_dt$C, rating_dt$C)
+  expect_equal(out_dt$A, rating_dt$A)
+  expect_equal(out_dt$B, rating_dt$B)
+  # Boundary actually moved, and both sides moved together
+  expect_false(isTRUE(all.equal(out_dt$upper_level[1], rating_dt$upper_level[1])))
+  expect_equal(out_dt$upper_level[1], out_dt$lower_level[2])
+  expect_true(all(out_dt$boundary_adjusted))
+  # The two curves genuinely agree at the new boundary
+  h_star <- out_dt$upper_level[1]
+  q1 <- out_dt$C[1] * (h_star - out_dt$A[1])^out_dt$B[1]
+  q2 <- out_dt$C[2] * (h_star - out_dt$A[2])^out_dt$B[2]
+  expect_equal(q1, q2, tolerance = 1e-6)
+  expect_equal(h_star, 5, tolerance = 1e-4)
+})
+
+test_that("align_limb_boundaries warns and leaves the junction unchanged when curves don't cross", {
+  # Same B (parallel-ish) with limb 2 always above limb 1 in range -- no crossing.
+  rating_dt <- data.table::data.table(
+    lower_level = c(0.0, 2.0), upper_level = c(2.0, 4.0),
+    C = c(1, 5), A = c(0, 0), B = c(1.0, 1.0)
+  )
+  expect_warning(result <- align_limb_boundaries(rating_dt), "do not cross")
+
+  out_dt <- result@table
+  expect_false(any(out_dt$boundary_adjusted))
+  expect_equal(out_dt$upper_level[1], rating_dt$upper_level[1])
+  expect_equal(out_dt$lower_level[2], rating_dt$lower_level[2])
+})
+
+test_that("align_limb_boundaries resolves a 3-limb chain's two junctions independently", {
+  rating_dt <- build_three_limb_rating_dt()
+  result <- align_limb_boundaries(rating_dt)
+  out_dt <- result@table
+
+  expect_equal(out_dt$upper_level[1], out_dt$lower_level[2])
+  expect_equal(out_dt$upper_level[2], out_dt$lower_level[3])
+  expect_equal(out_dt$C, rating_dt$C)
+
+  eval_q <- function(H, C, A, B) C * (H - A)^B
+  h1 <- out_dt$upper_level[1]
+  expect_equal(eval_q(h1, out_dt$C[1], out_dt$A[1], out_dt$B[1]), eval_q(h1, out_dt$C[2], out_dt$A[2], out_dt$B[2]), tolerance = 1e-6)
+  h2 <- out_dt$upper_level[2]
+  expect_equal(eval_q(h2, out_dt$C[2], out_dt$A[2], out_dt$B[2]), eval_q(h2, out_dt$C[3], out_dt$A[3], out_dt$B[3]), tolerance = 1e-6)
+})
+
+test_that("align_limb_boundaries validates its inputs", {
+  expect_error(align_limb_boundaries(data.frame()), "at least one row")
+  expect_error(
+    align_limb_boundaries(data.table::data.table(lower_level = 0, upper_level = 1)),
+    "missing column"
+  )
+  bad_dt <- data.table::data.table(
+    lower_level = c(0, 1.5), upper_level = c(1.2, 2.5), C = c(1, 1), A = c(0, 0), B = c(1, 1)
+  )
+  expect_error(align_limb_boundaries(bad_dt), "contiguous")
+})
+
+test_that("align_limb_boundaries is a no-op for a single limb", {
+  single_dt <- data.table::data.table(lower_level = 0, upper_level = 5, C = 3, A = 0, B = 1.5)
+  result <- align_limb_boundaries(single_dt)
+  expect_false(result@table$boundary_adjusted)
+  expect_equal(result@table$upper_level, single_dt$upper_level)
+})
+
+test_that("align_limb_boundaries builds a genuine audit chain from a FlodeRatingTable input", {
+  rating_table <- FlodeRatingTable(table = build_three_limb_rating_dt())
+  result <- align_limb_boundaries(rating_table)
+  expect_true(identical(result@previous, rating_table))
+})
+
+test_that("align_limb_boundaries from a plain table has no previous", {
+  result <- align_limb_boundaries(build_three_limb_rating_dt())
+  expect_null(result@previous)
+})
