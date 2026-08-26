@@ -276,6 +276,46 @@ test_that("plot_rc_gaps returns a ggplot object invisibly", {
   expect_s3_class(p, "ggplot")
 })
 
+test_that("rating_plot(FlodeRatingTable) returns a ggplot with per-limb curve data", {
+  rating_dt <- data.table::data.table(
+    lower_level = c(0.0, 1.2, 3.0),
+    upper_level = c(1.2, 3.0, 5.0),
+    C = c(2.5, 4.1, 1.8), A = c(0, 0, 0), B = c(1.5, 1.7, 1.3)
+  )
+  aligned <- align_limb_equations(rating_dt)
+
+  pdf(NULL)
+  on.exit(dev.off())
+
+  p <- rating_plot(aligned)
+
+  expect_s3_class(p, "ggplot")
+  expect_true(all(c("stage", "discharge", "limb") %in% names(p$data)))
+  expect_equal(nlevels(p$data$limb), 3L)
+})
+
+test_that("rating_plot(FlodeRatingTable) curve matches Q = C(H-A)^B exactly", {
+  rating_dt <- data.table::data.table(
+    lower_level = 0.0, upper_level = 5.0, C = 3, A = 0, B = 1.5
+  )
+  table_obj <- align_limb_equations(rating_dt)
+
+  pdf(NULL)
+  on.exit(dev.off())
+  p <- rating_plot(table_obj, n_points = 50L)
+
+  expect_equal(nrow(p$data), 50L)
+  expected_discharge <- 3 * (p$data$stage - 0)^1.5
+  expect_equal(p$data$discharge, expected_discharge, tolerance = 1e-8)
+})
+
+test_that("rating_plot(FlodeRatingTable) validates n_points", {
+  rating_dt <- data.table::data.table(lower_level = 0, upper_level = 5, C = 3, A = 0, B = 1.5)
+  table_obj <- align_limb_equations(rating_dt)
+  expect_error(rating_plot(table_obj, n_points = -1), "positive integer")
+  expect_error(rating_plot(table_obj, n_points = c(10, 20)), "positive integer")
+})
+
 build_three_limb_rating_dt <- function() {
   data.table::data.table(
     lower_level = c(0.0, 1.2, 2.5),

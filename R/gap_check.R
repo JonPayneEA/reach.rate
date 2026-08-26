@@ -1139,3 +1139,75 @@ plot_rc_gaps <- function(rc_before_dt,
   print(p)
   invisible(p)
 }
+
+# ---------------------------------------------------------------------------
+# rating_plot() method for FlodeRatingTable
+# ---------------------------------------------------------------------------
+
+#' Plot a rating table's curve, one colour per limb (S7 method)
+#'
+#' @description
+#' Registered against the `rating_plot` generic (`flode_classes.R`) for
+#' [FlodeRatingTable] -- the equation-table representation produced by
+#' `align_limb_equations()`, `as_rating_table()`, or built directly from a
+#' legacy import. Unlike `FlodeRating`/`FlodeSegmentedRating`, a
+#' `FlodeRatingTable` carries no raw gaugings, so there's no scatter to
+#' overlay -- just each limb's curve, coloured separately (rather than
+#' one continuous line as `plot_rating_curves()` draws) so a remaining
+#' kink or overlap at a junction -- exactly what `resolve_rc_gaps()` and
+#' `align_limb_equations()` exist to close -- is visible at a glance,
+#' matching `rating_plot(FlodeRating)`'s per-limb colouring.
+#'
+#' `fit` is a [FlodeRatingTable] instance. `n_points` (default `200L`) is
+#' the number of points used to draw each limb's curve.
+#'
+#' @return A `ggplot` object, invisibly.
+#' @seealso [plot_rc_gaps()] for a before/after view of a
+#'   `resolve_rc_gaps()` correction specifically; [plot_rating_curves()]
+#'   for overlaying several fitted ratings (in any mix of classes,
+#'   including this one) for comparison.
+#' @export
+method(rating_plot, FlodeRatingTable) <- function(fit, n_points = 200L) {
+  if (!is.numeric(n_points) || length(n_points) != 1L || n_points <= 0) {
+    stop("n_points must be a single positive integer")
+  }
+
+  table_dt <- copy(fit@table)
+  setorder(table_dt, lower_level)
+  n_limbs <- nrow(table_dt)
+
+  curve_list <- lapply(seq_len(n_limbs), function(i) {
+    stage_seq <- seq(table_dt$lower_level[i], table_dt$upper_level[i], length.out = n_points)
+    # Same formula and zero-flow clamp as method(apply_rating, FlodeRatingTable).
+    discharge_seq <- table_dt$C[i] * (stage_seq - table_dt$A[i])^table_dt$B[i]
+    discharge_seq[stage_seq <= table_dt$A[i]] <- 0
+    data.table(stage = stage_seq, discharge = discharge_seq, limb = factor(i))
+  })
+  curve_dt <- rbindlist(curve_list)
+
+  p <- ggplot(curve_dt, aes(x = discharge, y = stage, colour = limb)) +
+    geom_path(linewidth = 1.2) +
+    labs(
+      title = sprintf(
+        "Rating Table (%d limb%s, status: %s)",
+        n_limbs, if (n_limbs > 1L) "s" else "", fit@status
+      ),
+      x = "Discharge (m\u00b3/s)", y = "Stage (m)", colour = "Limb"
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(
+      plot.title = element_text(face = "bold", size = 13),
+      panel.grid.minor = element_blank(),
+      panel.border = element_rect(colour = "grey80", fill = NA)
+    )
+
+  if (n_limbs > 1L) {
+    p <- p + geom_hline(
+      yintercept = table_dt$upper_level[-n_limbs],
+      colour = "grey60", linetype = "dashed", linewidth = 0.5
+    )
+  }
+
+  print(p)
+  invisible(p)
+}
