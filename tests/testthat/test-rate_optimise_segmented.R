@@ -32,6 +32,34 @@ test_that("rate_optimise_segmented fits a single segment close to the true param
   expect_equal(fit_seg@coefficients$n1, 1.55, tolerance = 0.1)
 })
 
+test_that("rate_optimise_segmented stores gauging_datetime on @gaugings when supplied", {
+  g <- build_single_segment_gaugings()
+  gauging_datetime <- as.Date("2020-01-01") + seq_along(g$stage)
+
+  fit_seg <- rate_optimise_segmented(g$discharge, g$stage, gauging_datetime = gauging_datetime)
+
+  expect_true("gauging_datetime" %in% names(fit_seg@gaugings))
+  expect_equal(fit_seg@gaugings$gauging_datetime, gauging_datetime)
+})
+
+test_that("rate_optimise_segmented omitting gauging_datetime behaves exactly as before", {
+  g <- build_single_segment_gaugings()
+  fit_seg <- rate_optimise_segmented(g$discharge, g$stage)
+  expect_false("gauging_datetime" %in% names(fit_seg@gaugings))
+})
+
+test_that("rate_optimise_segmented validates gauging_datetime", {
+  g <- build_single_segment_gaugings()
+  expect_error(
+    rate_optimise_segmented(g$discharge, g$stage, gauging_datetime = seq_along(g$stage)),
+    "Date or POSIXct"
+  )
+  expect_error(
+    rate_optimise_segmented(g$discharge, g$stage, gauging_datetime = as.Date("2020-01-01") + 1:5),
+    "same length"
+  )
+})
+
 test_that("rate_optimise_segmented fits three segments with fixed breakpoints", {
   g <- build_three_segment_gaugings()
   fit_seg <- rate_optimise_segmented(g$discharge, g$stage, control = c(1.6, 2.4))

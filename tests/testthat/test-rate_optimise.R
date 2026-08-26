@@ -70,6 +70,78 @@ test_that("rate_optimise errors when a limb has too few gaugings", {
   expect_error(rate_optimise(discharge_cms, stage_m, control = 1.0), "at least 3 gaugings")
 })
 
+test_that("rate_optimise stores gauging_datetime on @gaugings when supplied", {
+  discharge_cms <- c(177.685, 240.898, 221.954, 205.55, 383.051, 154.061, 216.582)
+  stage_m <- c(1.855, 2.109, 2.037, 1.972, 2.574, 1.748, 2.016)
+  gauging_datetime <- as.Date("2020-01-01") + 0:6
+
+  fit <- rate_optimise(discharge_cms, stage_m, gauging_datetime = gauging_datetime)
+
+  expect_true("gauging_datetime" %in% names(fit@gaugings))
+  expect_equal(fit@gaugings$gauging_datetime, gauging_datetime)
+})
+
+test_that("rate_optimise accepts POSIXct as well as Date for gauging_datetime", {
+  discharge_cms <- c(177.685, 240.898, 221.954, 205.55, 383.051, 154.061, 216.582)
+  stage_m <- c(1.855, 2.109, 2.037, 1.972, 2.574, 1.748, 2.016)
+  gauging_datetime <- as.POSIXct("2020-01-01", tz = "UTC") + (0:6) * 3600
+
+  fit <- rate_optimise(discharge_cms, stage_m, gauging_datetime = gauging_datetime)
+
+  expect_equal(fit@gaugings$gauging_datetime, gauging_datetime)
+})
+
+test_that("rate_optimise omitting gauging_datetime behaves exactly as before", {
+  discharge_cms <- c(177.685, 240.898, 221.954, 205.55, 383.051, 154.061, 216.582)
+  stage_m <- c(1.855, 2.109, 2.037, 1.972, 2.574, 1.748, 2.016)
+
+  fit <- rate_optimise(discharge_cms, stage_m)
+
+  expect_false("gauging_datetime" %in% names(fit@gaugings))
+})
+
+test_that("rate_optimise validates gauging_datetime", {
+  discharge_cms <- c(177.685, 240.898, 221.954, 205.55, 383.051, 154.061, 216.582)
+  stage_m <- c(1.855, 2.109, 2.037, 1.972, 2.574, 1.748, 2.016)
+
+  expect_error(
+    rate_optimise(discharge_cms, stage_m, gauging_datetime = seq_along(stage_m)),
+    "Date or POSIXct"
+  )
+  expect_error(
+    rate_optimise(discharge_cms, stage_m, gauging_datetime = as.Date("2020-01-01") + 0:5),
+    "same length"
+  )
+})
+
+test_that("rate_optimise_constrained forwards gauging_datetime through ...", {
+  set.seed(1)
+  stage_m <- seq(0.5, 3.5, by = 0.1)
+  discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.01)
+  gauging_datetime <- as.Date("2020-01-01") + seq_along(stage_m)
+
+  fit <- rate_optimise_constrained(
+    discharge_cms, stage_m,
+    control = c(1.5, 2.5), gauging_datetime = gauging_datetime
+  )
+
+  expect_equal(fit@gaugings$gauging_datetime, gauging_datetime)
+})
+
+test_that("FlodeRatingBase's validator rejects a malformed gauging_datetime column", {
+  gaugings_dt <- data.table::data.table(
+    discharge_cms = c(1, 2, 3), stage_m = c(1, 2, 3),
+    gauging_datetime = c("2020-01-01", "2020-01-02", "2020-01-03")
+  )
+  limbs_dt <- data.table::data.table(
+    limb = 1L, lower_stage_m = 1, upper_stage_m = 3, C = 1, a = 0, n = 1.5
+  )
+  expect_error(
+    FlodeRating(gaugings = gaugings_dt, limbs = limbs_dt),
+    "gauging_datetime.*Date or POSIXct"
+  )
+})
+
 test_that("rating_plot runs without error for single- and multi-limb fits", {
   discharge_cms <- c(177.685, 240.898, 221.954, 205.55, 383.051, 154.061, 216.582)
   stage_m <- c(1.855, 2.109, 2.037, 1.972, 2.574, 1.748, 2.016)

@@ -201,6 +201,12 @@ NULL
 #' @param discharge_cms Numeric vector. Gauged discharge, m\eqn{^3}/s.
 #' @param stage_m Numeric vector. Gauged stage, m. Same length as
 #'   `discharge_cms`.
+#' @param gauging_datetime `Date`/`POSIXct` vector or `NULL`. When each
+#'   gauging in `discharge_cms`/`stage_m` was taken, same length as
+#'   `discharge_cms` if supplied. Not used by the fit itself -- stored on
+#'   the returned rating's `@gaugings` for future age-aware fitting (see
+#'   issue #9). Default `NULL`: no dates recorded, matching today's
+#'   behaviour.
 #' @param control Numeric vector or `NULL`. Stage breakpoints separating
 #'   rating limbs, e.g. `c(1.6, 2.2)` for three limbs. `NULL` (default)
 #'   fits a single limb across the full range.
@@ -222,7 +228,8 @@ NULL
 #'   bounds, coefficients `C`/`a`/`n`, fit diagnostics, and multi-start
 #'   bookkeeping. When `n_boot > 0`, `@bootstrap` holds every draw and
 #'   `@limbs` gains SE/percentile/success-count columns. `@gaugings`
-#'   holds the input data with a `limb` column. `@fit_starts` holds every
+#'   holds the input data with a `limb` column (and `gauging_datetime` if
+#'   supplied). `@fit_starts` holds every
 #'   multi-start attempt when `multi_start = TRUE`. `@status` is
 #'   `"independently_fitted"`.
 #'
@@ -237,7 +244,8 @@ NULL
 #' fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared)]
 #'
 #' @export
-rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, boot_seed = NULL,
+rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, control = NULL,
+                           n_boot = 0L, boot_seed = NULL,
                            min_boot_success = 0.8, multi_start = TRUE, ...) {
   if (!is.numeric(discharge_cms)) stop("discharge_cms must be numeric")
   if (!is.numeric(stage_m)) stop("stage_m must be numeric")
@@ -249,6 +257,14 @@ rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, b
   if (any(!is.finite(stage_m))) stop("stage_m must not contain NA, NaN, or infinite values")
   if (any(discharge_cms < 0)) stop("discharge_cms must be non-negative")
   if (diff(range(stage_m)) <= 0) stop("stage_m must span a non-zero range")
+  if (!is.null(gauging_datetime)) {
+    if (!inherits(gauging_datetime, c("Date", "POSIXct"))) {
+      stop("gauging_datetime must be a Date or POSIXct vector, or NULL")
+    }
+    if (length(gauging_datetime) != length(discharge_cms)) {
+      stop("gauging_datetime must be the same length as discharge_cms")
+    }
+  }
   if (!is.null(control) && !is.numeric(control)) stop("control must be numeric or NULL")
   if (!is.null(control) && any(!is.finite(control))) stop("control must not contain NA, NaN, or infinite values")
   if (!is.null(control) && anyDuplicated(control)) stop("control breakpoints must be unique")
@@ -270,6 +286,7 @@ rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, b
   }
 
   gaugings_dt <- data.table(discharge_cms = discharge_cms, stage_m = stage_m)
+  if (!is.null(gauging_datetime)) gaugings_dt[, gauging_datetime := gauging_datetime]
   breaks <- c(min(stage_m), sort(control), max(stage_m))
   n_limbs_declared <- length(breaks) - 1L
 
@@ -579,7 +596,10 @@ rate_optimise <- function(discharge_cms, stage_m, control = NULL, n_boot = 0L, b
 #' @param discharge_cms,stage_m,control As in [rate_optimise()].
 #' @param anchor_limb Integer. Row index of the limb left unconstrained.
 #'   Default `1L`.
-#' @param ... Passed to `rate_optimise()`'s initial (unconstrained) fit.
+#' @param ... Passed to `rate_optimise()`'s initial (unconstrained) fit --
+#'   this includes `gauging_datetime`, which needs no special handling
+#'   here since it's simply stored on `@gaugings`, not used by either
+#'   function's fitting itself.
 #'   `n_boot` is accepted but the resulting bootstrap draws describe the
 #'   *unconstrained* fit and are dropped with a warning rather than
 #'   presented alongside updated point estimates; `fit_starts` is

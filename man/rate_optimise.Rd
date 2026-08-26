@@ -7,6 +7,7 @@
 rate_optimise(
   discharge_cms,
   stage_m,
+  gauging_datetime = NULL,
   control = NULL,
   n_boot = 0L,
   boot_seed = NULL,
@@ -20,6 +21,13 @@ rate_optimise(
 
 \item{stage_m}{Numeric vector. Gauged stage, m. Same length as
 \code{discharge_cms}.}
+
+\item{gauging_datetime}{\code{Date}/\code{POSIXct} vector or \code{NULL}. When each
+gauging in \code{discharge_cms}/\code{stage_m} was taken, same length as
+\code{discharge_cms} if supplied. Not used by the fit itself -- stored on
+the returned rating's \verb{@gaugings} for future age-aware fitting (see
+issue #9). Default \code{NULL}: no dates recorded, matching today's
+behaviour.}
 
 \item{control}{Numeric vector or \code{NULL}. Stage breakpoints separating
 rating limbs, e.g. \code{c(1.6, 2.2)} for three limbs. \code{NULL} (default)
@@ -48,7 +56,8 @@ A \link{FlodeRating} instance. \verb{@limbs} has one row per limb with
 bounds, coefficients \code{C}/\code{a}/\code{n}, fit diagnostics, and multi-start
 bookkeeping. When \code{n_boot > 0}, \verb{@bootstrap} holds every draw and
 \verb{@limbs} gains SE/percentile/success-count columns. \verb{@gaugings}
-holds the input data with a \code{limb} column. \verb{@fit_starts} holds every
+holds the input data with a \code{limb} column (and \code{gauging_datetime} if
+supplied). \verb{@fit_starts} holds every
 multi-start attempt when \code{multi_start = TRUE}. \verb{@status} is
 \code{"independently_fitted"}.
 }

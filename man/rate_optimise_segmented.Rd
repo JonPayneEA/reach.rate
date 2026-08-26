@@ -7,6 +7,7 @@
 rate_optimise_segmented(
   discharge_cms,
   stage_m,
+  gauging_datetime = NULL,
   control = NULL,
   estimate_breakpoints = FALSE,
   multi_start = TRUE,
@@ -15,6 +16,9 @@ rate_optimise_segmented(
 }
 \arguments{
 \item{discharge_cms, stage_m}{Numeric vectors, as in \code{\link[=rate_optimise]{rate_optimise()}}.}
+
+\item{gauging_datetime}{\code{Date}/\code{POSIXct} vector or \code{NULL}, as in
+\code{\link[=rate_optimise]{rate_optimise()}}. Default \code{NULL}.}
 
 \item{control}{Numeric vector or \code{NULL}. Interior segment breakpoints.}
 
@@ -33,7 +37,8 @@ non-convex.}
 A \link{FlodeSegmentedRating} instance. \verb{@coefficients} is a
 one-row data.table: \code{C}, \code{bp1..bpk}, \code{n1..nk}, \code{rmse_cms},
 \code{r_squared}, \code{n_obs}, \code{n_starts_attempted}, \code{n_starts_converged},
-\code{selected_start_id}. \verb{@gaugings} holds the input data. \verb{@fit_starts}
+\code{selected_start_id}. \verb{@gaugings} holds the input data (and
+\code{gauging_datetime} if supplied). \verb{@fit_starts}
 holds every multi-start attempt when \code{multi_start = TRUE}.
 }
 \description{

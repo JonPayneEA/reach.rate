@@ -18,7 +18,10 @@ rate_optimise_constrained(
 \item{anchor_limb}{Integer. Row index of the limb left unconstrained.
 Default \code{1L}.}
 
-\item{...}{Passed to \code{rate_optimise()}'s initial (unconstrained) fit.
+\item{...}{Passed to \code{rate_optimise()}'s initial (unconstrained) fit --
+this includes \code{gauging_datetime}, which needs no special handling
+here since it's simply stored on \verb{@gaugings}, not used by either
+function's fitting itself.
 \code{n_boot} is accepted but the resulting bootstrap draws describe the
 \emph{unconstrained} fit and are dropped with a warning rather than
 presented alongside updated point estimates; \code{fit_starts} is
