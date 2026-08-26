@@ -47,9 +47,10 @@ NULL
 #' for [FlodeRating]. `rate_optimise()` and `gap_check` parameterise the
 #' same rating equation with opposite-signed offsets: `rate_optimise()`
 #' fits `Q = C(H + a)^n`; `expand_rating_table()` evaluates
-#' `Q = C(h - A)^B`. So `A = -a` and `B = n`. That sign flip is easy to
-#' get backwards, which is exactly why it lives in a named, tested
-#' method here rather than as an inline flip at the call site.
+#' `Q = C(h - a)^n`. So the table's `a = -a` (sign flipped) and `n = n`
+#' (unchanged). That sign flip is easy to get backwards, which is exactly
+#' why it lives in a named, tested method here rather than as an inline
+#' flip at the call site.
 #'
 #' If `fit@limbs` carries a `doubtful` column (see
 #' `flag_extrapolated_limbs()`), it is carried through unchanged so it
@@ -74,8 +75,8 @@ method(as_rating_table, FlodeRating) <- function(fit) {
     lower_level = limbs_dt$lower_stage_m,
     upper_level = limbs_dt$upper_stage_m,
     C = limbs_dt$C,
-    A = -limbs_dt$a,
-    B = limbs_dt$n
+    a = -limbs_dt$a,
+    n = limbs_dt$n
   )
 
   if ("doubtful" %in% names(limbs_dt)) {
@@ -91,7 +92,7 @@ method(as_rating_table, FlodeRating) <- function(fit) {
 #' Bridges `rate_optimise(..., n_boot = )`'s per-draw coefficient samples
 #' (`fit@bootstrap`, which records every requested draw including failed
 #' or rejected ones) to the shape `apply_rating_interval()` expects: one
-#' row per successful (limb, draw), with the same `A = -a`, `B = n` sign
+#' row per successful (limb, draw), with the same `a = -a`, `n = n` sign
 #' flip the `as_rating_table` method applies to the point-estimate
 #' coefficients, applied here to every draw. Failed or rejected draws
 #' (`success == FALSE`) are dropped -- they have no coefficients to
@@ -100,7 +101,7 @@ method(as_rating_table, FlodeRating) <- function(fit) {
 #' @param fit A [FlodeRating] instance from `rate_optimise(..., n_boot > 0)`.
 #'
 #' @return A `data.table` with columns `limb`, `draw`, `lower_level`,
-#'   `upper_level`, `C`, `A`, `B` -- one row per successful bootstrap
+#'   `upper_level`, `C`, `a`, `n` -- one row per successful bootstrap
 #'   draw. Errors if no draws succeeded.
 #'
 #' @seealso `as_rating_table()` (in `flode_classes`)
@@ -131,8 +132,8 @@ bootstrap_to_table <- function(fit) {
   bounds_dt <- fit@limbs[, .(limb, lower_level = lower_stage_m, upper_level = upper_stage_m)]
 
   out_dt <- merge(boot_ok_dt, bounds_dt, by = "limb")
-  out_dt[, `:=`(A = -a, B = n)]
-  out_dt[, c("a", "n", "success", "reason") := NULL]
+  out_dt[, `:=`(a = -a, n = n)]
+  out_dt[, c("success", "reason") := NULL]
   setorder(out_dt, limb, draw)
   out_dt[]
 }

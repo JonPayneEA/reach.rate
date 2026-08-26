@@ -217,8 +217,8 @@ rating_history_dt <- data.table(
   lower_level = c(0.0, 0.0),
   upper_level = c(3.5, 3.5),
   C = c(4.0, 4.6),
-  A = c(0.0, 0.0),
-  B = c(1.6, 1.6)
+  a = c(0.0, 0.0),
+  n = c(1.6, 1.6)
 )
 
 hydrograph_versioned_dt <- data.table(

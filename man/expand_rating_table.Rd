@@ -11,8 +11,8 @@ expand_rating_table(
   lower_col = "lower_level",
   upper_col = "upper_level",
   c_col = "C",
-  a_col = "A",
-  b_col = "B",
+  a_col = "a",
+  b_col = "n",
   doubtful_col = "doubtful"
 )
 }
@@ -39,8 +39,8 @@ upper stage limits of each limb (defaults \code{"lower_level"} and
 \code{"upper_level"}).}
 
 \item{c_col, a_col, b_col}{Character. Column names for the equation
-parameters C (multiplier), A (offset / zero-flow level), and B
-(exponent). Defaults \code{"C"}, \code{"A"}, \code{"B"}.}
+parameters C (multiplier), a (offset / zero-flow level), and n
+(exponent). Defaults \code{"C"}, \code{"a"}, \code{"n"}.}
 
 \item{doubtful_col}{Character. Column name for the doubtful flag
 (default \code{"doubtful"}). Ignored if the column is absent from
@@ -51,7 +51,7 @@ A \code{data.table} with columns:
 \describe{
 \item{stage}{Stage values at which Q was evaluated.}
 \item{discharge}{Computed discharge (m\eqn{^3}/s). Stages at or
-below the zero-flow offset \code{A} are returned as \code{0}.}
+below the zero-flow offset \code{a} are returned as \code{0}.}
 \item{limb}{Integer limb ID (row index of \code{rating_dt}).}
 \item{doubtful}{Logical flag carried from \code{rating_dt} (only
 present when \code{doubtful_col} exists in \code{rating_dt}).}
@@ -64,7 +64,7 @@ defined in a rating table and returns a single stage-discharge
 \code{\link{resolve_rc_gaps}}, and \code{\link{plot_rc_gaps}}.
 
 Each limb is defined by a row in \code{rating_dt} containing a lower and
-upper stage bound, the three equation parameters (C, A, B), and an
+upper stage bound, the three equation parameters (C, a, n), and an
 optional \emph{doubtful} flag (commonly set for upper limbs derived from
 flood-frequency estimates rather than direct gauging).
 }
@@ -81,13 +81,13 @@ gap that \code{detect_rc_gaps()} measures and \code{resolve_rc_gaps()}
 corrects.
 }
 \examples{
-# Three-limb rating with independent C/A/B parameters.
+# Three-limb rating with independent C/a/n parameters.
 rating_dt <- data.table::data.table(
   lower_level = c(0.0, 1.2, 2.5),
   upper_level = c(1.2, 2.5, 4.0),
   C = c(2.5, 4.1, 7.8),
-  A = c(0.0, 0.0, 0.0),
-  B = c(1.50, 1.70, 2.00),
+  a = c(0.0, 0.0, 0.0),
+  n = c(1.50, 1.70, 2.00),
   doubtful = c(FALSE, FALSE, TRUE)
 )
 rc_dt <- expand_rating_table(rating_dt)

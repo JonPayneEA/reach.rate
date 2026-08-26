@@ -12,7 +12,7 @@ align_limb_equations(
 }
 \arguments{
 \item{rating_dt}{A \link{FlodeRatingTable}, or a plain data.frame/
-data.table with columns \code{lower_level}, \code{upper_level}, \code{C}, \code{A}, \code{B}
+data.table with columns \code{lower_level}, \code{upper_level}, \code{C}, \code{a}, \code{n}
 (the same shape expected by \code{\link[=expand_rating_table]{expand_rating_table()}}; for a legacy
 rating with no prior \code{FlodeRatingTable} identity of its own). Limbs
 must be contiguous: \code{upper_level[i]} must equal \code{lower_level[i + 1]}.}
@@ -23,11 +23,11 @@ directions along the chain. Default \code{1L} (the lowest limb, typically
 the best-gauged one).}
 
 \item{on_align_failure}{Character. What to do when a limb's own fixed
-\code{A} (zero-flow datum) sits at or beyond the junction stage it would
-need to align to -- \code{depth = junction_stage - A} non-positive, so
-no real-valued \code{C} solves \code{C * depth^B = target} -- or the solved
+\code{a} (zero-flow datum) sits at or beyond the junction stage it would
+need to align to -- \code{depth = junction_stage - a} non-positive, so
+no real-valued \code{C} solves \code{C * depth^n = target} -- or the solved
 \code{C} comes out non-finite or non-positive. This is a real
-possibility whenever gaugings (and so \code{A}) can be negative, not a
+possibility whenever gaugings (and so \code{a}) can be negative, not a
 sign of malformed input: independently-fitted limbs can end up with
 a datum that just doesn't reach a neighbour's junction. \code{"error"}
 (default) stops immediately, as before. \code{"skip"} warns, leaves that
@@ -53,20 +53,20 @@ skipped limb, always \code{FALSE} under the default \code{on_align_failure = "er
 and \code{target_discharge} (the discharge it was aligned to match). The
 last four are \code{NA} wherever \code{aligned} is \code{FALSE}. \code{C} itself is
 replaced by the aligned value for every successfully-aligned limb;
-\code{A} and \code{B} are always unchanged. Neither the input nor the output
+\code{a} and \code{n} are always unchanged. Neither the input nor the output
 is ever mutated in place.
 }
 \description{
 \code{resolve_rc_gaps()} only patches the discretised stage-discharge table
 produced by \code{\link[=expand_rating_table]{expand_rating_table()}}. That fix does not survive
 re-expanding the same rating equations, or evaluating them directly --
-the underlying \code{C}/\code{A}/\code{B} triples are untouched, so the gap reappears.
+the underlying \code{C}/\code{a}/\code{n} triples are untouched, so the gap reappears.
 
 \code{align_limb_equations()} corrects the equations themselves instead. It
 rescales the \code{C} coefficient of every limb except one fixed anchor,
 propagating outward limb by limb: each limb's \code{C} is set so that its
 discharge at the junction with its \emph{already-corrected} neighbour
-matches exactly. \code{A} and \code{B} are left untouched, so each limb keeps its
+matches exactly. \code{a} and \code{n} are left untouched, so each limb keeps its
 fitted shape and zero-flow datum; only the scale changes.
 
 Because each limb is anchored on one junction and its other junction is
@@ -83,8 +83,8 @@ rating_dt <- data.table::data.table(
   lower_level = c(0.0, 1.2, 2.5),
   upper_level = c(1.2, 2.5, 4.0),
   C = c(2.5, 4.1, 7.8),
-  A = c(0.0, 0.0, 0.0),
-  B = c(1.50, 1.70, 2.00)
+  a = c(0.0, 0.0, 0.0),
+  n = c(1.50, 1.70, 2.00)
 )
 aligned_result <- align_limb_equations(rating_dt)
 aligned_result

@@ -45,7 +45,7 @@
 # Inputs:       stage_dt: data.table with a stage column (and, typically,
 #               a datetime column carried through unchanged). rating_dt/
 #               fit: a FlodeRatingTable, or a plain data.frame/
-#               data.table with lower_level/upper_level/C/A/B, one row
+#               data.table with lower_level/upper_level/C/a/n, one row
 #               per limb, contiguous (same shape as
 #               expand_rating_table()'s input in the gap_check module).
 # Outputs:      stage_dt with a discharge column and an `extrapolated`
@@ -69,7 +69,7 @@ log_threshold(INFO)
 #' towards but none of it actually performs: turning a stage record into
 #' a discharge record. For each stage value, the matching limb is
 #' selected by which `[lower_level, upper_level]` band it falls into,
-#' and discharge is computed from that limb's `Q = C(h - A)^B`. Stage
+#' and discharge is computed from that limb's `Q = C(h - a)^n`. Stage
 #' values below the lowest limb or above the highest are evaluated by
 #' extrapolating the nearest limb's equation, and flagged in the
 #' `extrapolated` column rather than silently treated the same as an
@@ -88,7 +88,7 @@ log_threshold(INFO)
 #' @examples
 #' rating_dt <- data.table::data.table(
 #'   lower_level = c(0.0, 1.2), upper_level = c(1.2, 2.5),
-#'   C = c(2.5, 4.1), A = c(0, 0), B = c(1.5, 1.7)
+#'   C = c(2.5, 4.1), a = c(0, 0), n = c(1.5, 1.7)
 #' )
 #' rating_table <- FlodeRatingTable(table = rating_dt)
 #' stage_dt <- data.table::data.table(stage = c(0.5, 1.8, 3.0))
@@ -121,11 +121,11 @@ method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "s
   limb_idx <- pmin(pmax(limb_idx_raw, 1L), n_limbs)
 
   C <- rating_dt$C[limb_idx]
-  A <- rating_dt$A[limb_idx]
-  B <- rating_dt$B[limb_idx]
+  a <- rating_dt$a[limb_idx]
+  n <- rating_dt$n[limb_idx]
 
-  discharge <- C * (stage_vals - A)^B
-  discharge[!is.na(stage_vals) & stage_vals <= A] <- 0
+  discharge <- C * (stage_vals - a)^n
+  discharge[!is.na(stage_vals) & stage_vals <= a] <- 0
 
   set(out_dt, j = out_col, value = discharge)
   set(out_dt, j = "extrapolated", value = extrapolated)
@@ -148,7 +148,7 @@ method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "s
 #' `bootstrap_to_table()`) to a discharge *prediction interval* at each
 #' stage, rather than a single point value. For each stage row, discharge
 #' is computed once per bootstrap draw using that draw's limb assignment
-#' and `C`/`A`/`B`, and the draws are summarised into a mean, median, and
+#' and `C`/`a`/`n`, and the draws are summarised into a mean, median, and
 #' geometric standard error -- the same summary Hodson et al. (2024)'s
 #' `ratingcurve` package reports -- plus a lower/upper interval at
 #' `conf_level`. This is a bootstrap approximation, not a Bayesian
@@ -157,7 +157,7 @@ method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "s
 #' include stage measurement error, or uncertainty in the equation form
 #' itself).
 #'
-#' Limb bounds are assumed fixed across draws (only `C`/`A`/`B` vary),
+#' Limb bounds are assumed fixed across draws (only `C`/`a`/`n` vary),
 #' which matches how `rate_optimise(..., n_boot = )` bootstraps: it
 #' resamples gaugings and refits within each limb's fixed stage range,
 #' not the breakpoints themselves.
@@ -165,7 +165,7 @@ method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "s
 #' @param stage_dt Data.frame or data.table with a stage column.
 #' @param rating_boot_dt Data.table of per-draw coefficients, one row per
 #'   (limb, draw): columns `limb`, `draw`, `lower_level`, `upper_level`,
-#'   `C`, `A`, `B`. See [bootstrap_to_table()] (in `rating_curve_demo`)
+#'   `C`, `a`, `n`. See [bootstrap_to_table()] (in `rating_curve_demo`)
 #'   for building this from a `rate_optimise(..., n_boot = )` fit.
 #' @param stage_col Character. Default `"stage"`.
 #' @param conf_level Numeric in (0, 1). Width of the prediction interval.
@@ -181,7 +181,7 @@ method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "s
 #' rating_boot_dt <- data.table::data.table(
 #'   limb = rep(1L, 20), draw = 1:20,
 #'   lower_level = 0.0, upper_level = 3.0,
-#'   C = rnorm(20, 3, 0.1), A = 0, B = rnorm(20, 1.6, 0.02)
+#'   C = rnorm(20, 3, 0.1), a = 0, n = rnorm(20, 1.6, 0.02)
 #' )
 #' stage_dt <- data.table::data.table(stage = c(0.5, 1.5, 2.5))
 #' apply_rating_interval(stage_dt, rating_boot_dt)
@@ -196,7 +196,7 @@ apply_rating_interval <- function(stage_dt, rating_boot_dt, stage_col = "stage",
     stop("conf_level must be a number strictly between 0 and 1")
   }
 
-  required <- c("limb", "draw", "lower_level", "upper_level", "C", "A", "B")
+  required <- c("limb", "draw", "lower_level", "upper_level", "C", "a", "n")
   missing <- setdiff(required, names(rating_boot_dt))
   if (length(missing)) {
     stop("apply_rating_interval(): rating_boot_dt is missing column(s): ", paste(missing, collapse = ", "))
@@ -220,11 +220,11 @@ apply_rating_interval <- function(stage_dt, rating_boot_dt, stage_col = "stage",
 
   joined_dt <- merge(
     out_dt[, .(.row_id, .limb, .stage_value = get(stage_col))],
-    rating_boot_dt[, .(limb, C, A, B)],
+    rating_boot_dt[, .(limb, C, a, n)],
     by.x = ".limb", by.y = "limb",
     allow.cartesian = TRUE
   )
-  joined_dt[, discharge_draw := fifelse(.stage_value <= A, 0, C * (.stage_value - A)^B)]
+  joined_dt[, discharge_draw := fifelse(.stage_value <= a, 0, C * (.stage_value - a)^n)]
 
   alpha <- 1 - conf_level
   summary_dt <- joined_dt[, .(
@@ -259,8 +259,8 @@ apply_rating_interval <- function(stage_dt, rating_boot_dt, stage_col = "stage",
 #' @param rating_history_dt Data.table with one row per (version, limb):
 #'   `version`, `effective_from`, `effective_to` (both POSIXct or Date;
 #'   `effective_to = NA` means "still current", and only the most recent
-#'   version may have `NA` here), `lower_level`, `upper_level`, `C`, `A`,
-#'   `B`. Version date ranges must not overlap.
+#'   version may have `NA` here), `lower_level`, `upper_level`, `C`, `a`,
+#'   `n`. Version date ranges must not overlap.
 #' @param stage_col,datetime_col Character. Column names in `stage_dt`.
 #'   Defaults `"stage"`, `"datetime"`.
 #' @param out_col Character. Default `"discharge"`.
@@ -278,7 +278,7 @@ apply_rating_interval <- function(stage_dt, rating_boot_dt, stage_col = "stage",
 #'   effective_from = as.POSIXct(c("2024-01-01", "2025-06-01"), tz = "UTC"),
 #'   effective_to = as.POSIXct(c("2025-06-01", NA), tz = "UTC"),
 #'   lower_level = c(0.0, 0.0), upper_level = c(3.0, 3.0),
-#'   C = c(3.0, 3.4), A = c(0, 0), B = c(1.6, 1.6)
+#'   C = c(3.0, 3.4), a = c(0, 0), n = c(1.6, 1.6)
 #' )
 #' stage_dt <- data.table::data.table(
 #'   datetime = as.POSIXct(c("2024-06-01", "2025-12-01"), tz = "UTC"),
@@ -295,7 +295,7 @@ apply_rating_versioned <- function(stage_dt, rating_history_dt,
   if (!stage_col %in% names(stage_dt)) stop("stage_col must be a column of stage_dt")
   if (!datetime_col %in% names(stage_dt)) stop("datetime_col must be a column of stage_dt")
 
-  required <- c("version", "effective_from", "effective_to", "lower_level", "upper_level", "C", "A", "B")
+  required <- c("version", "effective_from", "effective_to", "lower_level", "upper_level", "C", "a", "n")
   missing <- setdiff(required, names(rating_history_dt))
   if (length(missing)) {
     stop("apply_rating_versioned(): rating_history_dt is missing column(s): ", paste(missing, collapse = ", "))
@@ -344,7 +344,7 @@ apply_rating_versioned <- function(stage_dt, rating_history_dt,
     ver <- as.character(versions_dt$version[v])
     rows_v_dt <- out_dt[version == ver]
     if (nrow(rows_v_dt) == 0L) next
-    rating_v_dt <- rating_history_dt[as.character(version) == ver, .(lower_level, upper_level, C, A, B)]
+    rating_v_dt <- rating_history_dt[as.character(version) == ver, .(lower_level, upper_level, C, a, n)]
     rating_v_table <- FlodeRatingTable(table = rating_v_dt)
     result_list[[v]] <- apply_rating(rating_v_table, rows_v_dt, stage_col = stage_col, out_col = out_col)
   }

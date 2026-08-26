@@ -23,7 +23,7 @@
 #               import at all -- same package namespace.
 # Tier:         3
 # Inputs:       Two rating equation tables -- FlodeRatingTable or a plain
-#               data.frame/data.table with lower_level/upper_level/C/A/B,
+#               data.frame/data.table with lower_level/upper_level/C/a/n,
 #               same shape as expand_rating_table()'s input
 # Outputs:      compare_ratings() returns a list(coefficients, discharge)
 #               of data.tables. plot_rating_comparison() draws a two-panel
@@ -40,7 +40,7 @@ log_threshold(INFO)
 #' gauging review) two ways:
 #'
 #' \describe{
-#'   \item{coefficients}{A limb-by-limb comparison of `C`/`A`/`B`,
+#'   \item{coefficients}{A limb-by-limb comparison of `C`/`a`/`n`,
 #'     produced only when both tables have the same number of limbs in
 #'     the same order.}
 #'   \item{discharge}{The actual discharge difference across a common
@@ -53,14 +53,14 @@ log_threshold(INFO)
 #'
 #' @param rating_old_dt,rating_new_dt A [FlodeRatingTable], or a plain
 #'   data.frame/data.table with columns `lower_level`, `upper_level`,
-#'   `C`, `A`, `B` -- one row per limb. Need not have the same number of
+#'   `C`, `a`, `n` -- one row per limb. Need not have the same number of
 #'   limbs.
 #' @param step Numeric. Stage increment for the discharge comparison.
 #'   Default `0.01`.
 #'
 #' @return A list with elements:
 #'   \describe{
-#'     \item{coefficients}{A `data.table` comparing limb-by-limb C/A/B,
+#'     \item{coefficients}{A `data.table` comparing limb-by-limb C/a/n,
 #'       or `NULL` if the limb counts differ.}
 #'     \item{discharge}{A `data.table` with `stage`, `discharge_old`,
 #'       `discharge_new`, `discharge_diff`, `discharge_pct_diff`, and the
@@ -73,11 +73,11 @@ log_threshold(INFO)
 #' @examples
 #' rating_old_dt <- data.table::data.table(
 #'   lower_level = c(0.0, 1.2), upper_level = c(1.2, 3.0),
-#'   C = c(2.5, 4.1), A = c(0, 0), B = c(1.5, 1.7)
+#'   C = c(2.5, 4.1), a = c(0, 0), n = c(1.5, 1.7)
 #' )
 #' rating_new_dt <- data.table::data.table(
 #'   lower_level = c(0.0, 1.2), upper_level = c(1.2, 3.0),
-#'   C = c(2.6, 4.0), A = c(0, 0), B = c(1.5, 1.7)
+#'   C = c(2.6, 4.0), a = c(0, 0), n = c(1.5, 1.7)
 #' )
 #' cmp <- compare_ratings(rating_old_dt, rating_new_dt)
 #' cmp$coefficients
@@ -101,13 +101,13 @@ compare_ratings <- function(rating_old_dt, rating_new_dt, step = 0.01) {
       lower_level = rating_old_dt$lower_level,
       upper_level = rating_old_dt$upper_level,
       C_old = rating_old_dt$C, C_new = rating_new_dt$C,
-      A_old = rating_old_dt$A, A_new = rating_new_dt$A,
-      B_old = rating_old_dt$B, B_new = rating_new_dt$B
+      a_old = rating_old_dt$a, a_new = rating_new_dt$a,
+      n_old = rating_old_dt$n, n_new = rating_new_dt$n
     )
     coefficients_dt[, `:=`(
       C_diff = C_new - C_old,
-      A_diff = A_new - A_old,
-      B_diff = B_new - B_old
+      a_diff = a_new - a_old,
+      n_diff = n_new - n_old
     )]
   } else {
     log_info(
@@ -166,11 +166,11 @@ compare_ratings <- function(rating_old_dt, rating_new_dt, step = 0.01) {
 #' @examples
 #' rating_old_dt <- data.table::data.table(
 #'   lower_level = c(0.0, 1.2), upper_level = c(1.2, 3.0),
-#'   C = c(2.5, 4.1), A = c(0, 0), B = c(1.5, 1.7)
+#'   C = c(2.5, 4.1), a = c(0, 0), n = c(1.5, 1.7)
 #' )
 #' rating_new_dt <- data.table::data.table(
 #'   lower_level = c(0.0, 1.2), upper_level = c(1.2, 3.0),
-#'   C = c(2.6, 4.0), A = c(0, 0), B = c(1.5, 1.7)
+#'   C = c(2.6, 4.0), a = c(0, 0), n = c(1.5, 1.7)
 #' )
 #' cmp <- compare_ratings(rating_old_dt, rating_new_dt)
 #' plot_rating_comparison(cmp)
