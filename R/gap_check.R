@@ -480,6 +480,191 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 }
 
 # ---------------------------------------------------------------------------
+# align_limb_boundaries()
+# ---------------------------------------------------------------------------
+
+# Solve C1*(H-A1)^B1 = C2*(H-A2)^B2 for H within [search_lo, search_hi],
+# or NA_real_ if no crossing is found there (curves don't cross in range,
+# or the interval doesn't bracket a sign change of the difference).
+#' @keywords internal
+#' @noRd
+.find_intersection_stage <- function(C1, A1, B1, C2, A2, B2, search_lo, search_hi) {
+  f <- function(H) C1 * (H - A1)^B1 - C2 * (H - A2)^B2
+  f_lo <- tryCatch(f(search_lo), error = function(e) NA_real_)
+  f_hi <- tryCatch(f(search_hi), error = function(e) NA_real_)
+  if (!is.finite(f_lo) || !is.finite(f_hi) || sign(f_lo) == sign(f_hi)) {
+    return(NA_real_)
+  }
+  # uniroot()'s default tol (~1.2e-4) is loose enough that, on a steep
+  # curve, the discharge values at the "found" root can visibly disagree
+  # -- tighten it so the two curves genuinely agree at the stage returned.
+  tryCatch(
+    uniroot(f, lower = search_lo, upper = search_hi, tol = .Machine$double.eps^0.5)$root,
+    error = function(e) NA_real_
+  )
+}
+
+#' Relocate a junction to where two limb equations actually cross
+#'
+#' @description
+#' `align_limb_equations()` and `resolve_rc_gaps()` both close a junction
+#' gap by changing a \emph{value} (a rescaled `C`, or a patched discharge)
+#' at a \emph{fixed} junction stage. `align_limb_boundaries()` does the
+#' opposite: it leaves every limb's `C`/`A`/`B` completely untouched, and
+#' instead moves the junction stage itself to wherever the two limbs'
+#' curves genuinely cross -- the stage `H` solving `C_lower*(H-A_lower)^
+#' B_lower = C_upper*(H-A_upper)^B_upper`. At that stage the two unchanged
+#' curves already agree, so nothing about either equation needs to change.
+#'
+#' Unlike `align_limb_equations()`'s rescale (which needs a fixed anchor
+#' limb and propagates outward, since rescaling one limb changes the
+#' reference point for the next), boundary relocation has no such
+#' dependency: because no equation is ever changed, junction `i`'s
+#' crossing depends only on limbs `i` and `i + 1`, regardless of what
+#' happens at any other junction. Every junction is resolved
+#' independently -- there is no `anchor_limb` argument.
+#'
+#' The search for a crossing is bounded to the union of the two limbs'
+#' own existing stage ranges (never extrapolated further than either limb
+#' was actually fitted over), and above both limbs' zero-flow stage so
+#' `(H - A)^B` stays real-valued. When no crossing exists in that range --
+#' the curves may not cross at all, or only outside where either was
+#' fitted -- that junction is left unchanged and a warning is issued
+#' rather than the whole call failing.
+#'
+#' @param rating_dt A [FlodeRatingTable], or a plain data.frame/
+#'   data.table with columns `lower_level`, `upper_level`, `C`, `A`, `B`
+#'   (the same shape expected by [expand_rating_table()] and
+#'   [align_limb_equations()]). Limbs must be contiguous: `upper_level[i]`
+#'   must equal `lower_level[i + 1]`.
+#'
+#' @return A [FlodeRatingTable] with `@status` `"post_fit_aligned"` and
+#'   `@previous` referencing the exact pre-alignment object this was
+#'   built from (`NULL` if `rating_dt` was a plain table with no prior
+#'   `FlodeRatingTable` identity). `@table` gains columns:
+#'   `lower_level_original`/`upper_level_original` (the input boundaries,
+#'   unchanged) and `boundary_adjusted` (logical; `TRUE` for a limb whose
+#'   `lower_level` and/or `upper_level` actually moved). `C`, `A`, and `B`
+#'   are always unchanged -- only `lower_level`/`upper_level` are ever
+#'   modified. Neither the input nor the output is ever mutated in place.
+#'
+#' @seealso [align_limb_equations()] for closing a junction by rescaling
+#'   `C` at a fixed stage instead of moving the stage; [resolve_rc_gaps()]
+#'   for the discretised-table-only equivalent; [expand_rating_table()]
+#'
+#' @examples
+#' # A small, realistic gap at the breakpoint (limb 2 reads ~5% high there)
+#' rating_dt <- data.table::data.table(
+#'   lower_level = c(0.0, 1.2),
+#'   upper_level = c(1.2, 4.0),
+#'   C = c(2.5, 2.554),
+#'   A = c(0.0, 0.0),
+#'   B = c(1.50, 1.65)
+#' )
+#' relocated_result <- align_limb_boundaries(rating_dt)
+#' relocated_result@table[, .(lower_level, upper_level, boundary_adjusted)]
+#'
+#' @export
+align_limb_boundaries <- function(rating_dt) {
+  input_was_flode_table <- S7_inherits(rating_dt, FlodeRatingTable)
+  previous_table <- if (input_was_flode_table) rating_dt else NULL
+  if (input_was_flode_table) rating_dt <- rating_dt@table
+
+  if (!is.data.frame(rating_dt)) stop("rating_dt must be a FlodeRatingTable, data.frame, or data.table")
+  if (nrow(rating_dt) == 0) stop("rating_dt must have at least one row")
+
+  required <- c("lower_level", "upper_level", "C", "A", "B")
+  missing <- setdiff(required, names(rating_dt))
+  if (length(missing)) {
+    stop("align_limb_boundaries(): missing column(s): ", paste(missing, collapse = ", "))
+  }
+
+  out_dt <- copy(as.data.table(rating_dt))
+  n <- nrow(out_dt)
+
+  if (n > 1L) {
+    contiguous <- all(abs(out_dt$upper_level[-n] - out_dt$lower_level[-1L]) < 1e-8)
+    if (!contiguous) {
+      stop("align_limb_boundaries(): limbs must be contiguous (upper_level[i] == lower_level[i+1]).")
+    }
+  }
+
+  out_dt[, `:=`(
+    lower_level_original = lower_level,
+    upper_level_original = upper_level,
+    boundary_adjusted = FALSE
+  )]
+
+  if (n > 1L) {
+    for (i in seq_len(n - 1L)) {
+      j <- i + 1L
+      # Union of the two limbs' own ranges is [lower_level[i], upper_level[j]]:
+      # contiguity guarantees lower_level[i] < lower_level[j] == the current
+      # junction and upper_level[i] == lower_level[j] < upper_level[j], so
+      # the lower/upper limb's own bound is already the extreme in each
+      # direction -- no min()/max() needed across the pair for the range
+      # itself, only for the zero-flow floor.
+      search_lo <- max(out_dt$A[i], out_dt$A[j], out_dt$lower_level[i]) + 1e-6
+      search_hi <- out_dt$upper_level[j]
+
+      if (!is.finite(search_lo) || !is.finite(search_hi) || search_lo >= search_hi) {
+        warning(sprintf(
+          paste(
+            "align_limb_boundaries(): junction between limb %d and %d has no",
+            "valid search range for an intersection (both curves must be",
+            "above their zero-flow stage); leaving this junction's boundary",
+            "unchanged."
+          ),
+          i, j
+        ), call. = FALSE)
+        next
+      }
+
+      h_star <- .find_intersection_stage(
+        out_dt$C[i], out_dt$A[i], out_dt$B[i],
+        out_dt$C[j], out_dt$A[j], out_dt$B[j],
+        search_lo, search_hi
+      )
+
+      if (is.na(h_star)) {
+        warning(sprintf(
+          paste(
+            "align_limb_boundaries(): limb %d and %d's curves do not cross",
+            "within [%.4g, %.4g]; leaving this junction's boundary unchanged."
+          ),
+          i, j, search_lo, search_hi
+        ), call. = FALSE)
+        next
+      }
+
+      set(out_dt, i = i, j = "upper_level", value = h_star)
+      set(out_dt, i = j, j = "lower_level", value = h_star)
+      set(out_dt, i = i, j = "boundary_adjusted", value = TRUE)
+      set(out_dt, i = j, j = "boundary_adjusted", value = TRUE)
+    }
+  }
+
+  # Defensive: two adjacent relocations landing in the wrong order would
+  # otherwise silently produce a table that violates FlodeRatingTable's
+  # own contiguity validator, or worse, one with a collapsed/inverted
+  # limb range that happens to still pass it.
+  if (any(out_dt$upper_level <= out_dt$lower_level)) {
+    stop(paste(
+      "align_limb_boundaries(): resulting limb boundaries are invalid",
+      "(a limb's upper_level <= lower_level) -- this can happen when",
+      "adjacent intersections cross each other; inspect the table before",
+      "retrying."
+    ))
+  }
+
+  FlodeRatingTable(
+    table = out_dt[],
+    status = "post_fit_aligned",
+    previous = previous_table
+  )
+}
+
+# ---------------------------------------------------------------------------
 # detect_rc_gaps()
 # ---------------------------------------------------------------------------
 
