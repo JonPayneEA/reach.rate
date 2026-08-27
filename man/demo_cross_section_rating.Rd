@@ -32,3 +32,8 @@ result$cross_section
 result$rating_curve
 
 }
+\seealso{
+\code{\link[=plot_rating_cross_section]{plot_rating_cross_section()}} for the same pairing built from
+a real fit and a real surveyed cross-section, on one shared axis,
+rather than this function's fixed synthetic illustration.
+}
