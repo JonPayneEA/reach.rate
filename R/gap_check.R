@@ -526,7 +526,11 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #' dependency: because no equation is ever changed, junction `i`'s
 #' crossing depends only on limbs `i` and `i + 1`, regardless of what
 #' happens at any other junction. Every junction is resolved
-#' independently -- there is no `anchor_limb` argument.
+#' independently -- there is no `anchor_limb` argument. By default every
+#' junction is attempted; pass `junctions` to restrict this to specific
+#' ones, leaving every other junction's boundary untouched (and silent --
+#' no "no crossing" warning is possible for a junction that was never
+#' attempted).
 #'
 #' The search for a crossing is bounded to the union of the two limbs'
 #' own existing stage ranges (never extrapolated further than either limb
@@ -543,6 +547,13 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #'   `upper_level`, `C`, `a`, `n` (the same shape expected by
 #'   [expand_rating_table()] and [align_limb_equations()]). Limbs must be
 #'   contiguous: `upper_level[i]` must equal `lower_level[i + 1]`.
+#' @param junctions Integer vector, or `NULL` (default). Which junctions to
+#'   attempt, numbered the same way as [detect_rc_gaps()]'s `junction`
+#'   column (`1` = between limbs 1 and 2, `2` = between limbs 2 and 3, and
+#'   so on). `NULL` attempts every junction, as before. Any other junction
+#'   is left completely unchanged -- useful for leaving a junction alone
+#'   deliberately (a known-good join, or one better handled by
+#'   [align_limb_equations()] instead) even where a crossing exists.
 #'
 #' @return A [FlodeRatingTable] with `@status` `"post_fit_aligned"` and
 #'   `@previous` referencing the exact pre-alignment object this was
@@ -570,8 +581,21 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #' relocated_result <- align_limb_boundaries(rating_dt)
 #' relocated_result@table[, .(lower_level, upper_level, boundary_adjusted)]
 #'
+#' # A three-limb table, restricting relocation to junction 2 only (between
+#' # limbs 2 and 3) -- junction 1 is left untouched even though a crossing
+#' # exists there too
+#' rating_dt3 <- data.table::data.table(
+#'   lower_level = c(0.0, 1.2, 2.5),
+#'   upper_level = c(1.2, 2.5, 4.0),
+#'   C = c(2.5, 2.554, 2.337325),
+#'   a = c(0.0, 0.0, 0.0),
+#'   n = c(1.50, 1.65, 1.80)
+#' )
+#' partial_result <- align_limb_boundaries(rating_dt3, junctions = 2L)
+#' partial_result@table[, .(lower_level, upper_level, boundary_adjusted)]
+#'
 #' @export
-align_limb_boundaries <- function(rating_dt) {
+align_limb_boundaries <- function(rating_dt, junctions = NULL) {
   if (S7_inherits(rating_dt, FlodeRating)) rating_dt <- as_rating_table(rating_dt)
   input_was_flode_table <- S7_inherits(rating_dt, FlodeRatingTable)
   previous_table <- if (input_was_flode_table) rating_dt else NULL
@@ -579,6 +603,9 @@ align_limb_boundaries <- function(rating_dt) {
 
   if (!is.data.frame(rating_dt)) stop("rating_dt must be a FlodeRatingTable, data.frame, or data.table")
   if (nrow(rating_dt) == 0) stop("rating_dt must have at least one row")
+  if (!is.null(junctions) && (!is.numeric(junctions) || anyNA(junctions) || any(junctions != round(junctions)))) {
+    stop("align_limb_boundaries(): junctions must be NULL or a vector of whole numbers")
+  }
 
   required <- c("lower_level", "upper_level", "C", "a", "n")
   missing <- setdiff(required, names(rating_dt))
@@ -595,6 +622,12 @@ align_limb_boundaries <- function(rating_dt) {
       stop("align_limb_boundaries(): limbs must be contiguous (upper_level[i] == lower_level[i+1]).")
     }
   }
+  if (!is.null(junctions) && any(junctions < 1L | junctions > n - 1L)) {
+    stop(sprintf(
+      "align_limb_boundaries(): junctions must be between 1 and %d (this table has %d junction(s))",
+      max(n - 1L, 0L), max(n - 1L, 0L)
+    ))
+  }
 
   out_dt[, `:=`(
     lower_level_original = lower_level,
@@ -604,6 +637,7 @@ align_limb_boundaries <- function(rating_dt) {
 
   if (n > 1L) {
     for (i in seq_len(n - 1L)) {
+      if (!is.null(junctions) && !(i %in% junctions)) next
       j <- i + 1L
       # Union of the two limbs' own ranges is [lower_level[i], upper_level[j]]:
       # contiguity guarantees lower_level[i] < lower_level[j] == the current

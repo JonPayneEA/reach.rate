@@ -566,6 +566,57 @@ test_that("align_limb_boundaries validates its inputs", {
   expect_error(align_limb_boundaries(bad_dt), "contiguous")
 })
 
+build_three_junction_boundary_dt <- function() {
+  data.table::data.table(
+    lower_level = c(0.0, 1.2, 2.5),
+    upper_level = c(1.2, 2.5, 4.0),
+    C = c(2.5, 2.554, 2.337325),
+    a = c(0.0, 0.0, 0.0),
+    n = c(1.50, 1.65, 1.80)
+  )
+}
+
+test_that("align_limb_boundaries(junctions = NULL) attempts every junction (the default)", {
+  rating_dt <- build_three_junction_boundary_dt()
+  result <- align_limb_boundaries(rating_dt)
+  expect_true(all(result@table$boundary_adjusted))
+  expect_false(isTRUE(all.equal(result@table$upper_level[1], rating_dt$upper_level[1])))
+  expect_false(isTRUE(all.equal(result@table$upper_level[2], rating_dt$upper_level[2])))
+})
+
+test_that("align_limb_boundaries(junctions = ) restricts relocation to the requested junction(s)", {
+  rating_dt <- build_three_junction_boundary_dt()
+  result <- align_limb_boundaries(rating_dt, junctions = 2L)
+
+  # Junction 1 (limbs 1/2) untouched, even though it does have a crossing
+  expect_false(result@table$boundary_adjusted[1])
+  expect_equal(result@table$lower_level[1], rating_dt$lower_level[1])
+  expect_equal(result@table$upper_level[1], rating_dt$upper_level[1])
+  expect_equal(result@table$lower_level[2], rating_dt$lower_level[2])
+
+  # Junction 2 (limbs 2/3) relocated
+  expect_true(result@table$boundary_adjusted[2])
+  expect_true(result@table$boundary_adjusted[3])
+  expect_false(isTRUE(all.equal(result@table$upper_level[2], rating_dt$upper_level[2])))
+  expect_equal(result@table$upper_level[2], result@table$lower_level[3])
+})
+
+test_that("align_limb_boundaries(junctions = ) accepts multiple junctions", {
+  rating_dt <- build_three_junction_boundary_dt()
+  result_both <- align_limb_boundaries(rating_dt, junctions = c(1L, 2L))
+  result_default <- align_limb_boundaries(rating_dt)
+  expect_equal(result_both@table, result_default@table)
+})
+
+test_that("align_limb_boundaries(junctions = ) validates its argument", {
+  rating_dt <- build_three_junction_boundary_dt()
+  expect_error(align_limb_boundaries(rating_dt, junctions = "a"), "whole numbers")
+  expect_error(align_limb_boundaries(rating_dt, junctions = 1.5), "whole numbers")
+  expect_error(align_limb_boundaries(rating_dt, junctions = NA_integer_), "whole numbers")
+  expect_error(align_limb_boundaries(rating_dt, junctions = 0L), "between 1 and 2")
+  expect_error(align_limb_boundaries(rating_dt, junctions = 3L), "between 1 and 2")
+})
+
 test_that("align_limb_boundaries is a no-op for a single limb", {
   single_dt <- data.table::data.table(lower_level = 0, upper_level = 5, C = 3, a = 0, n = 1.5)
   result <- align_limb_boundaries(single_dt)
