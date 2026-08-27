@@ -1,5 +1,11 @@
 # reach.rate (development)
 
+* New bundled example dataset `station_gaugings`: a real spot-gauging
+  record for a UK gauging station, 1974-2024 (223 gaugings), included to
+  demonstrate `rate_optimise()` against actual station messiness rather
+  than only synthetic data -- irregular gauging intervals, decades-long
+  gaps, and one gauging recorded at zero stage. See `?station_gaugings`.
+
 * **Breaking change**: `align_limb_equations()` and
   `align_limb_boundaries()`, given a `FlodeRating` (the bridge added in a
   previous release this same development cycle), now return a new

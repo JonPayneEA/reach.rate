@@ -237,13 +237,47 @@ untouched (its own junction never moved), and `rating_plot()`/
 plot_rating_residuals(aligned)
 ```
 
+## Finishing the job: `align_limb_equations()`
+
+Junction 2 is still open, and it needs a different tool:
+`align_limb_equations()`'s `C`-only rescale, which works precisely
+because it never needs the curves to actually cross. Called on
+`aligned` -- a `FlodeRating`, not a table -- it stays a `FlodeRating`
+too:
+
+```{r align-equations}
+aligned_equations <- align_limb_equations(aligned, anchor_limb = 1L)
+aligned_equations@limbs[, .(limb, C, C_original, aligned, pct_change, rmse_cms, r_squared, n_obs)]
+```
+
+Limb 1 is the anchor (`aligned` is `FALSE`, nothing changes). Limb 2's
+`pct_change` is essentially zero -- unsurprising, since
+`align_limb_boundaries()` already relocated the limb 1/2 junction to the
+exact stage where their curves agree, so there was barely a gap left for
+a rescale to close. Limb 3's `C` drops by about 52%, and its own
+`r_squared` turns sharply negative: the rescaled curve now agrees with
+limb 2 at the junction, but it is a much worse description of limb 3's
+own twelve gaugings than the original fit was. That trade-off is the
+whole point of a `C`-only rescale -- continuity purchased at the cost of
+within-limb fit -- and it is visible here rather than hidden.
+
+```{r gap-recheck-2}
+rc_final_dt <- expand_rating_table(aligned_equations, step = 0.01)
+detect_rc_gaps(rc_final_dt)[, .(junction, gap_abs, gap_rel, gap_flagged)]
+```
+
+Both junctions are closed now, and the audit chain runs two deep:
+`aligned_equations@previous` is `aligned`, and `aligned@previous` is
+`fit_multi` -- the exact sequence of amendments is recoverable from the
+object alone, not from remembering which vignette chunk produced what.
+
 # A rare flood gauging, and an anchored top limb
 
-That unresolved junction points straight at limb 3: twelve gaugings
-trying to pin down three parameters, over the part of the rating that
-matters most for flood forecasting and is hardest to gauge. Suppose a
-rare high flow finally gets measured -- a flood peak safely above
-anything gauged so far:
+Closing junction 2 by rescaling `C` doesn't change what limb 3's shape
+is actually built on: twelve gaugings trying to pin down three
+parameters, over the part of the rating that matters most for flood
+forecasting and is hardest to gauge. Suppose a rare high flow finally
+gets measured -- a flood peak safely above anything gauged so far:
 
 ```{r extreme-gauging}
 extreme_stage <- 4.1

@@ -15,6 +15,7 @@ Description: Tools for fitting multi-limb power-law stage-discharge rating
     never separated from the data and assumptions that produced it.
 License: MIT + file LICENSE
 Encoding: UTF-8
+LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Collate:
@@ -22,6 +23,7 @@ Collate:
     'apply_rating.R'
     'compare_ratings.R'
     'cross_section_rating_dual_plot.R'
+    'data.R'
     'gap_check.R'
     'plot_rating_curves.R'
     'rate_optimise.R'
