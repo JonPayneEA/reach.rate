@@ -1,0 +1,284 @@
+---
+title: "A Rating Curve Walkthrough: From Spot Gaugings to a Constrained Curve"
+author: "Jonathan Payne, Environment Agency Flood Forecasting"
+date: "August 2026"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{A Rating Curve Walkthrough: From Spot Gaugings to a Constrained Curve}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  eval = TRUE, echo = TRUE, collapse = TRUE, comment = "#>",
+  fig.width = 7, fig.height = 5
+)
+library(reach.rate)
+library(data.table)
+```
+
+# What this vignette is
+
+`vignette("rating_curves_guide")` is the theory-and-reference guide, and
+`vignette("non_standard_optimisation")` explains when and why to reach for
+non-default fitting. Neither tells one continuous story. This one does:
+a single station, one running set of gaugings, taken from "we have some
+spot gaugings" all the way through to a rating a forecaster could actually
+trust at the top end. It deliberately covers a *narrower* path than
+`system.file("examples", "walkthrough.R", package = "reach.rate")`, which
+tours every function in the package -- this instead follows one decision
+at a time, in the order you would actually make them: fit something,
+notice it's wrong, work out why, and fix it.
+
+# The gaugings
+
+Real stations don't arrive with breakpoints attached -- someone has been
+out with a current meter or an ADCP on however many occasions the
+programme allowed, and the job is to work out what curve, or curves, that
+scatter of points implies. This station has three genuine physical
+regimes (a low-flow section control, a mid-flow channel control, and a
+high-flow regime where the floodplain starts to convey water), though we
+won't pretend to know that yet. True to how real programmes work, the
+high-flow gaugings are the sparsest -- big floods are rare and hard to
+gauge safely, so there are far fewer of them.
+
+```{r gaugings}
+set.seed(77)
+stage_lo <- seq(0.3, 1.39, by = 0.025)
+stage_mid <- seq(1.42, 2.59, by = 0.03)
+stage_hi <- seq(2.65, 3.35, by = 0.06)
+stage_m <- c(stage_lo, stage_mid, stage_hi)
+
+true_C <- c(2.5, 3.5, 6.0); true_a <- c(0, 0.15, 0.2); true_n <- c(1.3, 1.6, 1.85)
+discharge_true <- c(
+  true_C[1] * (stage_lo  - true_a[1])^true_n[1],
+  true_C[2] * (stage_mid - true_a[2])^true_n[2],
+  true_C[3] * (stage_hi  - true_a[3])^true_n[3]
+)
+discharge_cms <- discharge_true * exp(rnorm(length(stage_m), sd = 0.02))
+
+length(stage_m)
+range(stage_m)
+```
+
+`true_C`/`true_a`/`true_n` are shown here only so this vignette can check
+its own working later; a real analyst has the gaugings and nothing else.
+Ninety-six gaugings, stage 0.3 to 3.31 m, 2% proportional noise --
+plausible current-meter accuracy (Herschy 2009).
+
+# A single curve, and why it's wrong
+
+The obvious first move: one power law across the whole range.
+
+```{r single-fit}
+fit_single <- rate_optimise(discharge_cms, stage_m)
+fit_single@limbs[, .(C, a, n, rmse_cms, r_squared)]
+```
+
+`r_squared` above 0.95 looks respectable at a glance -- and that is
+exactly the trap. Look at what it took to get there: `n` near 7, `a`
+pinned near -2.9. No open-channel control on earth produces an exponent
+of 7 (Herschy 2009 and Rantz et al. 1982 both put every common control
+between about 1.3 and 2.5), and a zero-flow datum almost 3 m below the
+lowest gauged stage is not a real hydraulic feature -- it is the
+optimiser bending an implausible shape to paper over a curvature the data
+actually has. `r_squared` alone would have let this through:
+
+```{r single-residuals, fig.alt="Residuals against stage for the single-curve fit, showing a systematic bend"}
+plot_rating_residuals(fit_single)
+```
+
+The residuals are not noise -- they swing from strongly positive at low
+stage to negative in the middle and positive again at the top, the
+textbook signature of forcing one power law onto more than one physical
+regime. `rating_plot()` shows the same thing as a curve rather than a
+residual:
+
+```{r single-curve-plot, fig.alt="Fitted single curve against the gauged points, showing visible misfit at low stage"}
+rating_plot(fit_single)
+```
+
+# Where do the limbs split?
+
+Guessing breakpoints by eye is one option; `suggest_breakpoints()` is a
+less subjective one. It fits a two-limb model at every candidate stage,
+scores each by AIC against the current best (so it charges for the extra
+parameters, not just rewards a lower RSS), and greedily keeps whichever
+clears both the AIC test and a minimum RSS improvement.
+
+```{r suggest-breaks}
+candidates_dt <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 2L)
+candidates_dt[fit_status == "ok"]
+breaks <- suggested_breakpoints_vector(candidates_dt)
+breaks
+```
+
+1.375 and 2.59 -- close enough to the station's real transitions (which,
+recall, we are not supposed to know yet) that this is a reasonable
+breakpoint set to fit on. `suggest_breakpoints()` narrows the search; it
+does not replace walking the reach and checking these against an actual
+berm, bank top, or control feature.
+
+# Fitting the multi-limb rating
+
+```{r multi-fit}
+fit_multi <- rate_optimise(discharge_cms, stage_m, control = breaks)
+fit_multi@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs)]
+```
+
+Night and day next to the single curve. Limb 1's `rmse_cms` alone dropped
+by two orders of magnitude, and every `a`/`n` pair now sits in a range an
+engineer could actually defend (compare against `true_a`/`true_n` above --
+limbs 1 and 2, both well-gauged, land close to the values that generated
+them; limb 3, gauged only twelve times, is close but visibly less
+certain, which is exactly what thin evidence should look like).
+
+```{r multi-curve-plot, fig.alt="Fitted three-limb rating curve against the gauged points"}
+rating_plot(fit_multi)
+```
+
+# Checking the junctions
+
+Three limbs fitted independently rarely meet exactly where they join --
+each limb only ever sees its own gaugings, so nothing forces continuity
+at the breakpoints.
+
+```{r gap-check}
+rating_table <- as_rating_table(fit_multi)
+rc_raw_dt <- expand_rating_table(rating_table, step = 0.01)
+gaps_dt <- detect_rc_gaps(rc_raw_dt)
+gaps_dt[, .(junction, stage_break, q_lower_end, q_upper_start, gap_abs, gap_rel, gap_flagged)]
+```
+
+Both junctions are flagged -- a 29% jump at 1.375 m, and a much larger
+108% jump at 2.59 m where the thinly-gauged top limb meets limb 2. A
+hydrograph crossing either stage today would see discharge lurch
+sideways, an artefact of how the limbs were fitted, not anything the
+river actually does.
+
+## Closing them: `align_limb_boundaries()`
+
+Rather than patch the discretised table, `align_limb_boundaries()` works
+on the equations directly: it looks for the stage at which two adjacent
+limbs' fitted curves genuinely cross, and moves the shared boundary
+there -- no rescaling, no changed coefficients, just a relocated join. It
+takes the `FlodeRating` fit directly (no need to call `as_rating_table()`
+first):
+
+```{r align-boundaries}
+aligned <- align_limb_boundaries(fit_multi)
+aligned@table[, .(lower_level, upper_level, lower_level_original, upper_level_original, boundary_adjusted)]
+```
+
+Junction 1 relocated -- from 1.375 down to about 0.85 m. That is a
+genuine root of `C1*(H-a1)^n1 = C2*(H-a2)^n2`, so it is mathematically
+correct, but the shift is bigger than a cosmetic nudge: it lands well
+inside limb 1's own gauged range, worth a second look before it goes
+into an operational rating. Junction 2's `boundary_adjusted` is `FALSE`,
+and the call above also raised a warning explaining why:
+
+```
+Warning message:
+align_limb_boundaries(): limb 2 and 3's curves do not cross within
+[0.8535, 3.31]; leaving this junction's boundary unchanged.
+```
+
+Limb 2 and limb 3's curves simply do not cross anywhere within either
+limb's own fitted range -- their shapes differ too much, which tracks
+with limb 3 being the thinly-gauged one from the start. `align_limb_boundaries()`
+declines to invent a crossing that isn't there rather than silently
+producing a nonsense join; `align_limb_equations()`'s `C`-only rescale
+(which never moves the boundary) is the safer tool for a junction like
+this one. The gap that *did* close is confirmed by re-running the check:
+
+```{r gap-recheck}
+rc_aligned_dt <- expand_rating_table(aligned, step = 0.01)
+gaps_after_dt <- detect_rc_gaps(rc_aligned_dt)
+gaps_after_dt[, .(junction, gap_abs, gap_rel, gap_flagged)]
+```
+
+```{r plot-gaps, fig.alt="Before and after comparison of the rating curve at each junction, showing the lower junction closed and the upper junction still open"}
+plot_rc_gaps(rc_raw_dt, rc_aligned_dt)
+```
+
+Junction 1's gap is gone (down to floating-point noise); junction 2's
+108% jump is exactly where it was -- correctly untouched, and exactly the
+limb that needs more than a boundary relocation.
+
+# A rare flood gauging, and an anchored top limb
+
+That unresolved junction points straight at limb 3: twelve gaugings
+trying to pin down three parameters, over the part of the rating that
+matters most for flood forecasting and is hardest to gauge. Suppose a
+rare high flow finally gets measured -- a flood peak safely above
+anything gauged so far:
+
+```{r extreme-gauging}
+extreme_stage <- 4.1
+extreme_q <- true_C[3] * (extreme_stage - true_a[3])^true_n[3]
+set.seed(999)
+extreme_q <- extreme_q * exp(rnorm(1, sd = 0.02))
+sprintf("Extreme gauging: stage = %.2f m, discharge = %.1f m^3/s", extreme_stage, extreme_q)
+```
+
+One more point should only help. Refit limb 3 alone with it added -- and
+watch what an unconstrained fit does with it:
+
+```{r extreme-unconstrained}
+top_stage <- c(stage_hi, extreme_stage)
+top_discharge <- c(discharge_cms[stage_m >= 2.6], extreme_q)
+
+fit_top_unconstrained <- rate_optimise(top_discharge, top_stage)
+fit_top_unconstrained@limbs[, .(C, a, n, r_squared, n_obs)]
+```
+
+`r_squared` is *higher* than before (0.99) -- and `n` has been dragged
+past 3, `a` past -1.9. One extra point at the far end of a thin limb was
+enough to swing the exponent into territory no open-channel control
+occupies (Herschy 2009; Rantz et al. 1982). This is the same trap as the
+single-curve fit at the start: a good fit statistic hiding an
+indefensible shape. `n_bounds` exists for precisely this -- anchoring the
+exponent to what the physics of a wide, compound channel/floodplain
+control actually allows, rather than whatever the optimiser finds when
+the evidence is this thin:
+
+```{r extreme-constrained}
+fit_top_constrained <- rate_optimise(top_discharge, top_stage, n_bounds = c(1.5, 2.0))
+fit_top_constrained@limbs[, .(C, a, n, r_squared, n_obs, near_bound)]
+```
+
+`r_squared` is essentially unchanged (0.991 either way -- the data cannot
+tell these two shapes apart), but `n` now sits at a defensible 2.0
+instead of an indefensible 3.05, and `near_bound` flags exactly what
+happened: the fit is pressed against its ceiling, worth another gauging
+before this limb is trusted much further. The bound did not push the fit
+anywhere the data disagreed with; it only fenced off the part of
+parameter space no real control reaches.
+
+One honest note to close on: refitting limb 3 changes its equation, which
+would reopen the very junction just closed above -- in an operational
+workflow the next step is exactly the one already covered:
+`detect_rc_gaps()`, then `align_limb_boundaries()` or
+`align_limb_equations()` again, on the new fit.
+
+# Where to go next
+
+- `vignette("rating_curves_guide")` -- the full theory and reference,
+  including the segmented alternative and bootstrap uncertainty this
+  walkthrough didn't touch.
+- `vignette("non_standard_optimisation")` -- more on `n_bounds`, the
+  `objective = "relative"` alternative to least squares in absolute
+  discharge, and why gauging age will eventually matter too.
+- `system.file("examples", "walkthrough.R", package = "reach.rate")` --
+  every function in the package, one section at a time.
+
+# References
+
+Herschy, R. W. (2009). *Streamflow Measurement* (3rd ed.). Routledge.
+
+Rantz, S. E., et al. (1982). *Measurement and Computation of Streamflow*
+(Water Supply Paper 2175). U.S. Geological Survey.

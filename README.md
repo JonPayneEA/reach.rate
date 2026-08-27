@@ -107,6 +107,12 @@ For the full walkthrough -- theory, every function, and the reasoning behind the
 vignette("rating_curves_guide", package = "reach.rate")
 ```
 
+For one continuous worked example -- spot gaugings to a single bad curve to a checked, junction-aligned, physically-constrained multi-limb rating -- see:
+
+```r
+vignette("rating_curve_walkthrough", package = "reach.rate")
+```
+
 For when and why to reach for non-default fitting (`objective`, `n_bounds`, and the `gauging_datetime` groundwork), see:
 
 ```r
