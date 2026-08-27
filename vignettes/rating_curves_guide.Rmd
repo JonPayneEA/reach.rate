@@ -173,6 +173,20 @@ A limb's declared range comes from the breakpoints you chose, not from where the
 
 This function compares each limb's declared bounds against its gauged support and flags a limb `doubtful` where the unsupported distance exceeds `tol_frac` of the limb's width (default 5%). Separately, if you supply an operational range (the stages your forecasting or reporting actually requires), it flags whether the whole rating fails to reach it. The `doubtful` flag is carried through `as_rating_table()` into the expanded table and the plots, so a weakly supported limb stays visibly weakly supported all the way downstream.
 
+## `plot_rating_cross_section()`: check the fit against the channel itself
+
+Every diagnostic so far reads the fit against its own gaugings. If you also have a surveyed cross-section, `plot_rating_cross_section()` puts the channel's actual shape on the same figure as the curve it produced, by rescaling the survey's distance onto the discharge axis:
+
+```{r xs-overlay, fig.alt = "Rating curve with a surveyed cross-section overlaid, rescaled onto the discharge axis, with a secondary distance axis"}
+xs <- data.table(
+  distance_m = c(-6, -3, -1, 1, 3, 6),
+  elevation_m = c(3.6, 0.2, 0, 0, 0.2, 3.6)
+)
+plot_rating_cross_section(fit, xs)
+```
+
+`elevation_m` must already sit on the same vertical datum as `stage_m` -- this is not a survey-to-gauge-datum converter, only an overlay. The secondary axis on top reads off the true distance scale; the rescale itself carries no hydraulic meaning; it only lets two curves that live on genuinely different axes (distance and discharge) share one plot. Read the shape the same way `vignette("n_bounds_guide")` reads its idealised ones: a channel that widens sharply above some stage is a compound-channel signal worth a fresh look at whether one set of limbs still describes it, independent of anything `rmse_cms` or `r_squared` says.
+
 # The junction gap problem
 
 Fit each limb independently and their curves will not meet. Limb 1's equation, evaluated at the shared boundary stage, gives one discharge; limb 2's gives another. The mismatch
@@ -378,6 +392,25 @@ plot_rating_comparison(comparison, old_label = "Unaligned", new_label = "Aligned
 ```
 
 When you amend a rating, the question that matters is not whether the coefficients moved but how much the discharge a real hydrograph would report has changed, and over what part of the stage range. `compare_ratings()` answers both: a limb-by-limb coefficient diff where the limb counts match, and always a discharge diff computed by running both ratings across their shared stage range. `plot_rating_comparison()` draws the two curves and the difference against stage. A change that only bites above bankfull is a very different amendment, operationally, from one that shifts the whole record, even if the coefficient tables look similar.
+
+## Extending into ungauged ground: `graft_rating()`
+
+`align_limb_equations()`/`align_limb_boundaries()` both reconcile a junction *within* one already-built table. A different situation: this station is only gauged up to stage 3.5, but an existing rating, from an earlier survey, already covers the reach above that -- there is nothing to refit against up there, only a rating already in force. `graft_rating()` joins the two, finding the stage where `aligned_result`'s own top limb and the existing rating's lowest limb actually cross:
+
+```{r graft}
+top <- aligned_result@table[.N]
+q_at_top <- top$C * (top$upper_level - top$a)^top$n
+
+existing_rating <- data.table(
+  lower_level = 3.5, upper_level = 6.0,
+  C = (q_at_top * 1.15) / 3.5^1.3, a = 0, n = 1.3
+)
+
+grafted <- graft_rating(aligned_result, existing_rating)
+grafted@table[, .(lower_level, upper_level, C, a, n, source)]
+```
+
+The two curves happened to start about 15% apart at stage 3.5 -- exactly the kind of small discontinuity `align_limb_equations()` closes *within* a table -- but here it resolves the same way `align_limb_boundaries()` does: the boundary itself moves, out to `r round(grafted@table$upper_level[3], 3)`, where the (unchanged) equations on both sides already agree. `source` marks which limb came from where; `@previous` references `aligned_result` directly, so the join is still an amendment with an audit trail, not a table built once and forgotten. The result is always a `FlodeRatingTable`, even here where `aligned_result` was one already -- `existing_rating` carries no gaugings of its own, so nothing genuinely new is being merged into `@gaugings`; `aligned_result` itself remains the object to go to for this station's own diagnostics.
 
 # Guidance: reading a fit, in order
 

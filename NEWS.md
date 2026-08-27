@@ -1,5 +1,22 @@
 # reach.rate (development)
 
+* New function `plot_rating_cross_section()`: overlays a real surveyed
+  channel cross-section on a real fitted rating's own plot, rescaling
+  the survey's distance onto the discharge axis (with a secondary axis
+  giving the true distance scale back) so the channel's shape and the
+  rating's shape sit on one figure. Complements
+  `demo_cross_section_rating()`, which stays a fixed synthetic
+  illustration.
+
+* New function `graft_rating()`: joins a freshly-fitted rating onto a
+  pre-existing one used above the newly gauged range, finding the stage
+  where the two curves actually cross (reusing the same crossing search
+  `align_limb_boundaries()` uses for a junction inside one table) and
+  combining them into one contiguous `FlodeRatingTable`. Distinct from
+  `align_limb_equations()`/`align_limb_boundaries()`, which reconcile a
+  junction within one already-built table rather than joining two
+  independently-sourced ratings.
+
 * New vignette `n_bounds_guide`: a visual companion to
   `non_standard_optimisation`'s `n_bounds` demonstration, with idealised
   cross-section diagrams for the rectangular/V-notch/wide-channel control

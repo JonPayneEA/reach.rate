@@ -39,6 +39,10 @@
 #               (re)runnable on demand; wrapping it also lets a caller
 #               (or a test) get the intermediate objects back directly
 #               instead of sourcing the file into an environment.
+# Modified:     2026-08-27 - JP: this function stays a fixed synthetic
+#               illustration on purpose. For the same cross-section/
+#               rating pairing built from a real fit and a real survey,
+#               see plot_rating_cross_section() (R/plot_rating_cross_section.R).
 # Tier:         3
 # Inputs:       None -- self-contained synthetic example.
 # Outputs:      A combined two-panel plot (cross-section over rating
@@ -91,6 +95,10 @@
 #'   data.table), `gauged` (the synthetic gauged points),
 #'   `p_xs`/`p_rc` (the two individual `ggplot` objects), and `combined`
 #'   (the combined grob from `gridExtra::grid.arrange()`).
+#'
+#' @seealso [plot_rating_cross_section()] for the same pairing built from
+#'   a real fit and a real surveyed cross-section, on one shared axis,
+#'   rather than this function's fixed synthetic illustration.
 #'
 #' @examples
 #' result <- demo_cross_section_rating(plot = FALSE)
