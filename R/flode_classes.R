@@ -55,10 +55,11 @@
 #' Properties and validation shared by [FlodeRating] and
 #' [FlodeSegmentedRating]: the gaugings a fit was built from, multi-start
 #' fitting bookkeeping (if any), a status flag distinguishing an
-#' independently-fitted result from a post-fit amendment, and a
-#' provenance list for auditability (fitting method, controls, bounds,
-#' tool version). Never constructed directly -- see [FlodeRating] and
-#' [FlodeSegmentedRating].
+#' independently-fitted result from a post-fit amendment, a provenance
+#' list for auditability (fitting method, controls, bounds, tool
+#' version), and a `previous` chain for amendments produced from an
+#' earlier fit of the same class. Never constructed directly -- see
+#' [FlodeRating] and [FlodeSegmentedRating].
 #'
 #' @param gaugings Data.table with `discharge_cms` and `stage_m`
 #'   columns -- the gaugings the fit was built from. May optionally
@@ -72,6 +73,10 @@
 #'   `"post_fit_aligned"`, or `"constrained_refit"`.
 #' @param provenance List recording how the fit was made (fitting
 #'   method, controls, bounds, tool version).
+#' @param previous The exact pre-amendment fit this was built from (same
+#'   class as this instance), or `NULL` (default) for a fit with no such
+#'   history -- an independently-fitted result, for instance. Mirrors
+#'   [FlodeRatingTable]'s own `@previous` audit chain.
 #' @export
 FlodeRatingBase <- new_class(
   "FlodeRatingBase",
@@ -84,7 +89,8 @@ FlodeRatingBase <- new_class(
     # would be one shared, mutable object handed to every instance --
     # exactly the classic mutable-default-argument trap. (S7 currently
     # warns on this and will make it an error in a future release.)
-    provenance = new_property(class_list, default = quote(list()))
+    provenance = new_property(class_list, default = quote(list())),
+    previous = new_property(class_any, default = NULL)
   ),
   abstract = TRUE,
   validator = function(self) {
@@ -133,6 +139,9 @@ FlodeRatingBase <- new_class(
 #'   `C`/`a`/`n`, and fit diagnostics.
 #' @param bootstrap Data.table of per-draw bootstrap coefficients, or
 #'   `NULL` if the fit wasn't produced with `n_boot > 0`.
+#' @param previous The exact pre-amendment `FlodeRating` this was built
+#'   from (e.g. by `align_limb_equations()`/`align_limb_boundaries()`),
+#'   or `NULL` (default) for an independently-fitted result.
 #' @export
 FlodeRating <- new_class(
   "FlodeRating",
@@ -209,6 +218,10 @@ method(print, FlodeRating) <- function(x, ...) {
 #' @param estimate_breakpoints Logical. Whether the interior
 #'   breakpoints were refit as free parameters (`TRUE`) or held fixed
 #'   at `control` (`FALSE`).
+#' @param previous The exact pre-amendment `FlodeSegmentedRating` this
+#'   was built from, or `NULL` (default) for an independently-fitted
+#'   result. Nothing in the package currently produces an amended
+#'   `FlodeSegmentedRating` -- this exists for parity with [FlodeRating].
 #' @export
 FlodeSegmentedRating <- new_class(
   "FlodeSegmentedRating",

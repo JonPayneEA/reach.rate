@@ -11,7 +11,8 @@ FlodeRatingBase(
     NULL), class = "S7_constructor"))(),
   fit_starts = NULL,
   status = "independently_fitted",
-  provenance = list()
+  provenance = list(),
+  previous = NULL
 )
 }
 \arguments{
@@ -30,13 +31,19 @@ option (see issue #9).}
 
 \item{provenance}{List recording how the fit was made (fitting
 method, controls, bounds, tool version).}
+
+\item{previous}{The exact pre-amendment fit this was built from (same
+class as this instance), or \code{NULL} (default) for a fit with no such
+history -- an independently-fitted result, for instance. Mirrors
+\link{FlodeRatingTable}'s own \verb{@previous} audit chain.}
 }
 \description{
 Properties and validation shared by \link{FlodeRating} and
 \link{FlodeSegmentedRating}: the gaugings a fit was built from, multi-start
 fitting bookkeeping (if any), a status flag distinguishing an
-independently-fitted result from a post-fit amendment, and a
-provenance list for auditability (fitting method, controls, bounds,
-tool version). Never constructed directly -- see \link{FlodeRating} and
-\link{FlodeSegmentedRating}.
+independently-fitted result from a post-fit amendment, a provenance
+list for auditability (fitting method, controls, bounds, tool
+version), and a \code{previous} chain for amendments produced from an
+earlier fit of the same class. Never constructed directly -- see
+\link{FlodeRating} and \link{FlodeSegmentedRating}.
 }

@@ -12,6 +12,7 @@ FlodeRating(
   fit_starts = NULL,
   status = "independently_fitted",
   provenance = list(),
+  previous = NULL,
   limbs = (structure(function (.data) 
 
     stop2(sprintf("S3 class <\%s> doesn't have a constructor.", "data.table"), call =
@@ -35,6 +36,10 @@ option (see issue #9).}
 
 \item{provenance}{List recording how the fit was made (fitting
 method, controls, bounds, tool version).}
+
+\item{previous}{The exact pre-amendment \code{FlodeRating} this was built
+from (e.g. by \code{align_limb_equations()}/\code{align_limb_boundaries()}),
+or \code{NULL} (default) for an independently-fitted result.}
 
 \item{limbs}{Data.table, one row per limb: bounds, coefficients
 \code{C}/\code{a}/\code{n}, and fit diagnostics.}

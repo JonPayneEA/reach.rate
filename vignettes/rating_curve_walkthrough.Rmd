@@ -167,12 +167,19 @@ on the equations directly: it looks for the stage at which two adjacent
 limbs' fitted curves genuinely cross, and moves the shared boundary
 there -- no rescaling, no changed coefficients, just a relocated join. It
 takes the `FlodeRating` fit directly (no need to call `as_rating_table()`
-first):
+first) -- and, since the fit carries its own gaugings, the result stays
+a `FlodeRating` too, not a bare equation table with no data behind it:
 
 ```{r align-boundaries}
 aligned <- align_limb_boundaries(fit_multi)
-aligned@table[, .(lower_level, upper_level, lower_level_original, upper_level_original, boundary_adjusted)]
+aligned@limbs[, .(limb, lower_stage_m, upper_stage_m, lower_stage_m_original, upper_stage_m_original, boundary_adjusted)]
 ```
+
+(The warning about bootstrap uncertainty and multi-start bookkeeping
+being dropped is expected here -- `fit_multi` was fitted with the
+default `multi_start = TRUE`, so it carries `@fit_starts`, and that
+bookkeeping describes the *pre*-alignment equations. It's discarded
+rather than left around implying it still applies.)
 
 Junction 1 relocated -- from 1.375 down to about 0.85 m. That is a
 genuine root of `C1*(H-a1)^n1 = C2*(H-a2)^n2`, so it is mathematically
@@ -193,7 +200,8 @@ with limb 3 being the thinly-gauged one from the start. `align_limb_boundaries()
 declines to invent a crossing that isn't there rather than silently
 producing a nonsense join; `align_limb_equations()`'s `C`-only rescale
 (which never moves the boundary) is the safer tool for a junction like
-this one. The gap that *did* close is confirmed by re-running the check:
+this one. The gap that *did* close is confirmed by re-running the check
+-- `expand_rating_table()` takes `aligned` directly too:
 
 ```{r gap-recheck}
 rc_aligned_dt <- expand_rating_table(aligned, step = 0.01)
@@ -208,6 +216,26 @@ plot_rc_gaps(rc_raw_dt, rc_aligned_dt)
 Junction 1's gap is gone (down to floating-point noise); junction 2's
 108% jump is exactly where it was -- correctly untouched, and exactly the
 limb that needs more than a boundary relocation.
+
+There's a second payoff to staying inside `FlodeRating`: relocating
+junction 1 moved some gaugings from limb 1's territory into limb 2's (a
+boundary shift can do that on either side), and `aligned@gaugings`
+reflects the reassignment -- `n_obs` per limb, and every diagnostic
+below, describe the *amended* rating, not the one before alignment:
+
+```{r aligned-limbs}
+aligned@limbs[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
+```
+
+Compare `n_obs` above against `fit_multi@limbs$n_obs` (44, 40, 12):
+limb 1 lost gaugings to limb 2 across the relocated boundary, limb 3 is
+untouched (its own junction never moved), and `rating_plot()`/
+`plot_rating_residuals()` -- unchanged functions, written only for
+`FlodeRating` -- work immediately, because `aligned` still is one:
+
+```{r aligned-residuals, fig.alt="Residuals by limb for the boundary-aligned rating, confirming the amendment didn't introduce a new systematic pattern"}
+plot_rating_residuals(aligned)
+```
 
 # A rare flood gauging, and an anchored top limb
 
@@ -259,11 +287,13 @@ before this limb is trusted much further. The bound did not push the fit
 anywhere the data disagreed with; it only fenced off the part of
 parameter space no real control reaches.
 
-One honest note to close on: refitting limb 3 changes its equation, which
-would reopen the very junction just closed above -- in an operational
-workflow the next step is exactly the one already covered:
-`detect_rc_gaps()`, then `align_limb_boundaries()` or
-`align_limb_equations()` again, on the new fit.
+One honest note to close on: this refit changes limb 3's equation, which
+still leaves the junction between limbs 2 and 3 exactly as open as it
+was -- that junction was never closed to begin with, and a changed limb
+3 doesn't close it on its own. In an operational workflow the next step
+is exactly the one already covered: `detect_rc_gaps()`, then
+`align_limb_boundaries()` or `align_limb_equations()` again, on a fit
+that includes both this new gauging and the constrained top limb.
 
 # Where to go next
 

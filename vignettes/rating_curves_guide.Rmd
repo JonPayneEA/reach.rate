@@ -194,9 +194,9 @@ gaps_dt
 
 Set the tolerances against what matters at the site. A 0.5 m³/s step is invisible on a large river and material on a small one; the relative tolerance exists for exactly that reason.
 
-# Three ways to close a gap
+# Ways to close a gap
 
-The toolkit offers three closure strategies because they make different trade-offs, and the right one depends on what you hold and what you need.
+The toolkit offers several closure strategies because they make different trade-offs, and the right one depends on what you hold and what you need.
 
 ## `resolve_rc_gaps()`: patch the table
 
@@ -225,6 +225,23 @@ where $Q_{\text{target}}$ is the already-corrected neighbour's discharge at the 
 
 The cost is honest: the rescaled $C$ is no longer the least-squares optimum for that limb's own gaugings. You have traded a small amount of within-limb fit for continuity, holding shape fixed. When only the equations survive (a legacy rating, an imported table), this is the best available move.
 
+Call it on a `FlodeRating` directly (`align_limb_equations(fit, anchor_limb = 1L)`) instead of on a table, and the result stays a `FlodeRating` rather than downgrading to a `FlodeRatingTable`: gaugings carry through unchanged (equations are rescaled, not boundaries, so which limb a gauging belongs to never changes here), `@limbs` diagnostics are recomputed against the rescaled $C$ rather than left describing the pre-alignment fit, and `rating_plot()`/`plot_rating_residuals()` work on the result immediately, since it is the same class they were always written for.
+
+## `align_limb_boundaries()`: relocate the junction
+
+Rather than change $C$ at a fixed junction stage, `align_limb_boundaries()` leaves every limb's equation completely untouched and instead moves the junction itself to wherever the two limbs' curves actually cross -- the stage $H$ solving $C_{\text{lower}}(H-a_{\text{lower}})^{n_{\text{lower}}} = C_{\text{upper}}(H-a_{\text{upper}})^{n_{\text{upper}}}$. Where that root exists, both curves already agree there, so nothing about either equation needs to change.
+
+```{r align-boundaries}
+aligned_boundaries <- align_limb_boundaries(fit)
+aligned_boundaries@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs, boundary_adjusted)]
+```
+
+Called on a `FlodeRating`, as here, the result stays a `FlodeRating`: gaugings are reassigned to whichever limb the new boundary puts them in (a relocation can shift gaugings across the junction, in either direction), and every limb's diagnostics are recomputed from that reassignment -- never left describing the pre-alignment gauging split.
+
+Junction 1 relocated from 1.6 m down to about 0.58 m -- a genuine crossing, but a large one: limb 1 is left with only 3 gaugings and an $R^2$ of 0.64, a much weaker within-limb fit than the original 1.6 m breakpoint gave it. A relocation this size is not a bug -- the curves really do cross there -- but it is exactly the kind of result to check against `lower_stage_m_original`/`upper_stage_m_original` before trusting it operationally, rather than accepting any relocation uncritically. Junction 2 raised a warning instead: limb 2 and limb 3's curves do not cross anywhere within either limb's own fitted range, so the function leaves that boundary unchanged rather than inventing a join where none exists. `align_limb_equations()`'s `C`-only rescale is the safer tool for a junction like that one.
+
+`align_limb_boundaries()` also accepts a `junctions` argument to restrict which junction is attempted, useful for deliberately leaving a junction alone -- a known-good join, or one better handled by `align_limb_equations()` -- even where a crossing does exist.
+
 ## `rate_optimise_constrained()`: refit under the constraint
 
 ```{r constrained-refit}
@@ -242,7 +259,7 @@ One honest caveat, reported rather than hidden: any bootstrap uncertainty comput
 
 ## Choosing between them
 
-Equations only, table is the product: `resolve_rc_gaps()`. Equations only, equations are the product: `align_limb_equations()`. Raw gaugings available: `rate_optimise_constrained()`. The comparison below is worth running once to calibrate your intuition for how much the last two actually differ in practice.
+Equations only, table is the product: `resolve_rc_gaps()`. Equations only, equations are the product, and a boundary relocation is acceptable: `align_limb_boundaries()`. Equations only, the boundary must stay fixed (or the curves don't actually cross): `align_limb_equations()`. Raw gaugings available: `rate_optimise_constrained()`. The comparison below is worth running once to calibrate your intuition for how much the last two actually differ in practice.
 
 ```{r compare-alignment-methods}
 rating_constrained_table <- as_rating_table(fit_constrained)

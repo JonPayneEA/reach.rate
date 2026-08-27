@@ -17,11 +17,12 @@ expand_rating_table(
 )
 }
 \arguments{
-\item{rating_dt}{A data.frame or data.table with one row per limb. Must
-contain the columns named by \code{lower_col}, \code{upper_col},
-\code{c_col}, \code{a_col}, and \code{b_col}. An optional doubtful flag
-column named by \code{doubtful_col} is carried through to the output
-if present.}
+\item{rating_dt}{A \link{FlodeRating} (converted via \code{\link[=as_rating_table]{as_rating_table()}}
+first), a \link{FlodeRatingTable}, or a data.frame/data.table with one row
+per limb. The latter two must contain the columns named by
+\code{lower_col}, \code{upper_col}, \code{c_col}, \code{a_col}, and
+\code{b_col}. An optional doubtful flag column named by
+\code{doubtful_col} is carried through to the output if present.}
 
 \item{step}{Numeric. Stage increment for generating evaluation points
 within each limb (default \code{0.01}). The upper bound of each limb

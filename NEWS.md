@@ -1,5 +1,36 @@
 # reach.rate (development)
 
+* **Breaking change**: `align_limb_equations()` and
+  `align_limb_boundaries()`, given a `FlodeRating` (the bridge added in a
+  previous release this same development cycle), now return a new
+  `FlodeRating` instead of downgrading to a `FlodeRatingTable`. This
+  keeps the amendment inside `FlodeRating` -- gaugings, an audit chain,
+  and diagnostics -- rather than losing all of that the moment a rating
+  gets aligned.
+  - `@gaugings` is carried forward (`limb` membership **reclassified**
+    against relocated boundaries for `align_limb_boundaries()`, since a
+    moved junction can shift which limb a gauging belongs to; unchanged
+    for `align_limb_equations()`, which never moves boundaries).
+  - `@limbs` diagnostics (`rmse_cms`, `r_squared`, `n_obs`, and friends)
+    are recomputed against the amended equations, never left describing
+    the pre-amendment fit.
+  - `@bootstrap` and `@fit_starts` are dropped (with a warning if either
+    was present) -- they describe a fit that no longer applies, the same
+    discipline `rate_optimise_constrained()` already applies to its own
+    refit.
+  - `@previous` references the exact original `FlodeRating` (a new
+    `previous` property added to `FlodeRatingBase`, so `FlodeRating` and
+    `FlodeSegmentedRating` both now carry this).
+  - A plain data.frame/data.table or an already-constructed
+    `FlodeRatingTable` input is unaffected -- still returns a
+    `FlodeRatingTable`, exactly as before.
+  - Direct payoff: `rating_plot()` and `plot_rating_residuals()` (both
+    written for `FlodeRating`) now work immediately on an aligned result,
+    with no new arguments or functions needed.
+* `expand_rating_table()` now accepts a `FlodeRating` directly (bridged
+  via `as_rating_table()`), matching `align_limb_equations()`/
+  `align_limb_boundaries()`'s existing bridge.
+
 * **Breaking change**: `rate_optimise()` and `rate_optimise_constrained()`
   now fit `Q = C(H - a)^n` instead of `Q = C(H + a)^n`. This unifies the
   fitting engine's convention with `FlodeRatingTable`'s equation-table

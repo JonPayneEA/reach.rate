@@ -147,11 +147,12 @@ log_threshold(INFO)
 #' optional \emph{doubtful} flag (commonly set for upper limbs derived from
 #' flood-frequency estimates rather than direct gauging).
 #'
-#' @param rating_dt A data.frame or data.table with one row per limb. Must
-#'   contain the columns named by \code{lower_col}, \code{upper_col},
-#'   \code{c_col}, \code{a_col}, and \code{b_col}. An optional doubtful flag
-#'   column named by \code{doubtful_col} is carried through to the output
-#'   if present.
+#' @param rating_dt A [FlodeRating] (converted via [as_rating_table()]
+#'   first), a [FlodeRatingTable], or a data.frame/data.table with one row
+#'   per limb. The latter two must contain the columns named by
+#'   \code{lower_col}, \code{upper_col}, \code{c_col}, \code{a_col}, and
+#'   \code{b_col}. An optional doubtful flag column named by
+#'   \code{doubtful_col} is carried through to the output if present.
 #' @param step Numeric. Stage increment for generating evaluation points
 #'   within each limb (default \code{0.01}). The upper bound of each limb
 #'   is always included regardless of rounding.
@@ -220,9 +221,11 @@ expand_rating_table <- function(rating_dt,
                                  a_col = "a",
                                  b_col = "n",
                                  doubtful_col = "doubtful") {
-  # Accepts either a FlodeRatingTable (unwrapped here) or a plain
-  # data.frame/data.table directly, so this still works for a legacy
-  # rating imported from elsewhere with no FlodeRatingTable identity.
+  # Accepts a FlodeRating (bridged via as_rating_table() here), a
+  # FlodeRatingTable (unwrapped here), or a plain data.frame/data.table
+  # directly, so this still works for a legacy rating imported from
+  # elsewhere with no FlodeRatingTable identity.
+  if (S7_inherits(rating_dt, FlodeRating)) rating_dt <- as_rating_table(rating_dt)
   if (S7_inherits(rating_dt, FlodeRatingTable)) rating_dt <- rating_dt@table
   if (!is.data.frame(rating_dt)) stop("rating_dt must be a FlodeRatingTable, data.frame, or data.table")
   if (!is.numeric(step) || step <= 0) stop("step must be a positive number")
@@ -266,6 +269,148 @@ expand_rating_table <- function(rating_dt,
   rbindlist(rows)
 }
 
+# Rebuild a FlodeRating after align_limb_equations()/align_limb_boundaries()
+# amends a table derived from one, so the amendment stays inside
+# FlodeRating (gaugings, diagnostics, an audit chain) rather than
+# downgrading to a FlodeRatingTable and losing all of that. `out_dt` is
+# the already-amended table (lower_level/upper_level/C/a/n, plus
+# whichever audit columns that function adds); `reclassify_gaugings`
+# is TRUE only for align_limb_boundaries(), since that's the one that
+# moves boundaries and so can shift which limb a gauging belongs to --
+# align_limb_equations() only ever rescales C, so gauging/limb
+# membership never changes there.
+#' @keywords internal
+#' @noRd
+.rebuild_flode_rating <- function(original_fit, out_dt, reclassify_gaugings, provenance_extra, fn_name) {
+  limbs_dt <- copy(original_fit@limbs)
+  limbs_dt[, `:=`(
+    lower_stage_m = out_dt$lower_level,
+    upper_stage_m = out_dt$upper_level,
+    C = out_dt$C,
+    a = out_dt$a,
+    n = out_dt$n
+  )]
+
+  # Carry over whichever audit columns this specific alignment produced,
+  # renamed to FlodeRating's own lower_stage_m/upper_stage_m convention
+  # rather than FlodeRatingTable's lower_level/upper_level.
+  audit_cols <- intersect(
+    c(
+      "C_original", "aligned", "align_failed", "scale_factor", "pct_change",
+      "alignment_stage", "target_discharge", "boundary_adjusted"
+    ),
+    names(out_dt)
+  )
+  for (col in audit_cols) set(limbs_dt, j = col, value = out_dt[[col]])
+  if ("lower_level_original" %in% names(out_dt)) {
+    set(limbs_dt, j = "lower_stage_m_original", value = out_dt$lower_level_original)
+  }
+  if ("upper_level_original" %in% names(out_dt)) {
+    set(limbs_dt, j = "upper_stage_m_original", value = out_dt$upper_level_original)
+  }
+
+  gaugings_dt <- copy(original_fit@gaugings)
+  if (reclassify_gaugings) {
+    # Same cut() call rate_optimise() itself uses to assign gaugings to
+    # limbs (right = TRUE, include.lowest = TRUE) -- not
+    # apply_rating()'s findInterval(rightmost.closed = TRUE) convention,
+    # which disagrees with cut() at an *interior* shared boundary (a
+    # gauging sitting exactly on an untouched junction would otherwise
+    # spuriously reclassify to the limb above it).
+    breaks <- c(limbs_dt$lower_stage_m[1], limbs_dt$upper_stage_m)
+    limb_idx <- cut(gaugings_dt$stage_m, breaks = breaks, labels = FALSE, right = TRUE, include.lowest = TRUE)
+    set(gaugings_dt, j = "limb", value = limbs_dt$limb[limb_idx])
+  }
+
+  # Recompute every limb's diagnostics from the (possibly reclassified)
+  # gaugings against the amended equations -- the same statistics
+  # rate_optimise() itself computes -- so nothing stale is presented as
+  # current.
+  n_limbs <- nrow(limbs_dt)
+  rmse_vec <- rep(NA_real_, n_limbs)
+  r_squared_vec <- rep(NA_real_, n_limbs)
+  n_obs_vec <- integer(n_limbs)
+  n_unique_stage_vec <- integer(n_limbs)
+  mean_error_vec <- rep(NA_real_, n_limbs)
+  median_abs_error_vec <- rep(NA_real_, n_limbs)
+  max_abs_error_vec <- rep(NA_real_, n_limbs)
+  residual_df_vec <- rep(NA_integer_, n_limbs)
+
+  for (i in seq_len(n_limbs)) {
+    limb_gaugings <- gaugings_dt[limb == limbs_dt$limb[i]]
+    n_obs_vec[i] <- nrow(limb_gaugings)
+    if (n_obs_vec[i] == 0L) {
+      warning(sprintf(
+        "%s(): limb %s has no gaugings after this amendment; its diagnostics are set to NA.",
+        fn_name, limbs_dt$limb[i]
+      ), call. = FALSE)
+      next
+    }
+    predicted_cms <- limbs_dt$C[i] * (limb_gaugings$stage_m - limbs_dt$a[i])^limbs_dt$n[i]
+    resid_vals <- limb_gaugings$discharge_cms - predicted_cms
+    ss_res <- sum(resid_vals^2)
+    ss_tot <- sum((limb_gaugings$discharge_cms - mean(limb_gaugings$discharge_cms))^2)
+    rmse_vec[i] <- sqrt(mean(resid_vals^2))
+    r_squared_vec[i] <- if (ss_tot > 1e-12) 1 - ss_res / ss_tot else NA_real_
+    n_unique_stage_vec[i] <- length(unique(limb_gaugings$stage_m))
+    mean_error_vec[i] <- mean(resid_vals)
+    median_abs_error_vec[i] <- median(abs(resid_vals))
+    max_abs_error_vec[i] <- max(abs(resid_vals))
+    residual_df_vec[i] <- n_obs_vec[i] - 3L
+  }
+
+  limbs_dt[, `:=`(
+    rmse_cms = rmse_vec, r_squared = r_squared_vec, n_obs = n_obs_vec,
+    n_unique_stage = n_unique_stage_vec, mean_error_cms = mean_error_vec,
+    median_abs_error_cms = median_abs_error_vec, max_abs_error_cms = max_abs_error_vec,
+    residual_df = residual_df_vec
+  )]
+
+  # Fitting bookkeeping that no longer means anything for a purely
+  # algebraic transform (no bounds, no starts, no refit happened here).
+  if ("near_bound" %in% names(limbs_dt)) set(limbs_dt, j = "near_bound", value = NA)
+  if ("n_starts_attempted" %in% names(limbs_dt)) {
+    set(limbs_dt, j = "n_starts_attempted", value = NA_integer_)
+    set(limbs_dt, j = "n_starts_converged", value = NA_integer_)
+    set(limbs_dt, j = "selected_start_id", value = NA_integer_)
+  }
+
+  # Bootstrap uncertainty and multi-start bookkeeping describe the
+  # pre-amendment fit and are not recomputed here -- dropped rather than
+  # presented alongside updated point estimates, the same discipline
+  # rate_optimise_constrained() already applies to its own refit.
+  bootstrap_cols <- c(
+    "C_se", "a_se", "n_se", "C_q025", "C_q50", "C_q975",
+    "a_q025", "a_q50", "a_q975", "n_q025", "n_q50", "n_q975",
+    "n_boot_requested", "n_boot_success", "n_boot_failed", "boot_success_fraction"
+  )
+  had_bootstrap <- !is.null(original_fit@bootstrap) || any(bootstrap_cols %in% names(limbs_dt))
+  had_fit_starts <- !is.null(original_fit@fit_starts)
+  if (had_bootstrap || had_fit_starts) {
+    warning(sprintf(
+      paste(
+        "%s(): bootstrap uncertainty (n_boot) and multi-start bookkeeping",
+        "describe the pre-amendment fit and are not recomputed for this",
+        "amendment; dropped rather than presented alongside updated point",
+        "estimates."
+      ),
+      fn_name
+    ), call. = FALSE)
+  }
+  present_bootstrap_cols <- intersect(bootstrap_cols, names(limbs_dt))
+  if (length(present_bootstrap_cols)) limbs_dt[, (present_bootstrap_cols) := NULL]
+
+  FlodeRating(
+    limbs = limbs_dt[],
+    gaugings = gaugings_dt[],
+    bootstrap = NULL,
+    fit_starts = NULL,
+    status = "post_fit_aligned",
+    provenance = c(original_fit@provenance, provenance_extra),
+    previous = original_fit
+  )
+}
+
 # ---------------------------------------------------------------------------
 # align_limb_equations()
 # ---------------------------------------------------------------------------
@@ -294,14 +439,12 @@ expand_rating_table <- function(rating_dt,
 #' corrected value, and an `aligned` flag marks which limbs were changed,
 #' so the amendment is auditable rather than a silent overwrite.
 #'
-#' @param rating_dt A [FlodeRating] (converted via [as_rating_table()]
-#'   before aligning -- `@previous` then references the freshly-built
-#'   `FlodeRatingTable`, not the `FlodeRating` itself), a [FlodeRatingTable],
-#'   or a plain data.frame/data.table with columns `lower_level`,
-#'   `upper_level`, `C`, `a`, `n` (the same shape expected by
-#'   [expand_rating_table()]; for a legacy rating with no prior
-#'   `FlodeRatingTable` identity of its own). Limbs must be contiguous:
-#'   `upper_level[i]` must equal `lower_level[i + 1]`.
+#' @param rating_dt A [FlodeRating], a [FlodeRatingTable], or a plain
+#'   data.frame/data.table with columns `lower_level`, `upper_level`,
+#'   `C`, `a`, `n` (the same shape expected by [expand_rating_table()];
+#'   for a legacy rating with no prior `FlodeRatingTable` identity of its
+#'   own). Limbs must be contiguous: `upper_level[i]` must equal
+#'   `lower_level[i + 1]`.
 #' @param anchor_limb Integer. Row index of the limb held fixed; every
 #'   other limb is corrected relative to it, propagating outward in both
 #'   directions along the chain. Default `1L` (the lowest limb, typically
@@ -321,24 +464,34 @@ expand_rating_table <- function(rating_dt,
 #'   over one bad limb" fallback `rate_optimise_constrained()` already
 #'   uses for its own refit failures.
 #'
-#' @return A [FlodeRatingTable] with `@status` `"post_fit_aligned"` and
+#' @return If `rating_dt` was a [FlodeRating], a new [FlodeRating] with
+#'   `@status` `"post_fit_aligned"`, `@previous` referencing the exact
+#'   original fit, `@gaugings` unchanged (equations were rescaled, not
+#'   boundaries, so gauging/limb membership never changes here), and
+#'   `@limbs` diagnostics (`rmse_cms`, `r_squared`, and friends)
+#'   recomputed against the amended `C` -- never left stale. `@bootstrap`/
+#'   `@fit_starts` are dropped (with a warning if either was present),
+#'   since they describe a fit that no longer applies. Otherwise (a plain
+#'   table or an already-constructed [FlodeRatingTable]), a
+#'   [FlodeRatingTable] with `@status` `"post_fit_aligned"` and
 #'   `@previous` referencing the exact pre-alignment object this was
 #'   built from (`NULL` if `rating_dt` was a plain table with no prior
 #'   `FlodeRatingTable` identity) -- a genuine audit chain, not an
-#'   attribute someone has to remember to check. `@table` gains columns:
-#'   `C_original` (the input `C`, unchanged), `aligned` (logical; `TRUE`
-#'   only for a limb that was actually rescaled -- `FALSE` for
-#'   `anchor_limb` and, under `on_align_failure = "skip"`, for any limb
-#'   that failed to align), `align_failed` (logical; `TRUE` for a
-#'   skipped limb, always `FALSE` under the default `on_align_failure =
-#'   "error"` since that stops instead), `scale_factor`
-#'   (`C / C_original`), `pct_change` (percentage change in `C`),
-#'   `alignment_stage` (the junction stage this limb was aligned at),
-#'   and `target_discharge` (the discharge it was aligned to match). The
-#'   last four are `NA` wherever `aligned` is `FALSE`. `C` itself is
-#'   replaced by the aligned value for every successfully-aligned limb;
-#'   `a` and `n` are always unchanged. Neither the input nor the output
-#'   is ever mutated in place.
+#'   attribute someone has to remember to check.
+#'
+#'   Either way, `@limbs`/`@table` gains columns: `C_original` (the input
+#'   `C`, unchanged), `aligned` (logical; `TRUE` only for a limb that was
+#'   actually rescaled -- `FALSE` for `anchor_limb` and, under
+#'   `on_align_failure = "skip"`, for any limb that failed to align),
+#'   `align_failed` (logical; `TRUE` for a skipped limb, always `FALSE`
+#'   under the default `on_align_failure = "error"` since that stops
+#'   instead), `scale_factor` (`C / C_original`), `pct_change`
+#'   (percentage change in `C`), `alignment_stage` (the junction stage
+#'   this limb was aligned at), and `target_discharge` (the discharge it
+#'   was aligned to match). The last four are `NA` wherever `aligned` is
+#'   `FALSE`. `C` itself is replaced by the aligned value for every
+#'   successfully-aligned limb; `a` and `n` are always unchanged. Neither
+#'   the input nor the output is ever mutated in place.
 #'
 #' @seealso [expand_rating_table()], [resolve_rc_gaps()],
 #'   `rate_optimise_constrained()` (in the `rate_optimise` module) for a
@@ -370,7 +523,9 @@ expand_rating_table <- function(rating_dt,
 align_limb_equations <- function(rating_dt, anchor_limb = 1L,
                                   on_align_failure = c("error", "skip")) {
   on_align_failure <- match.arg(on_align_failure)
-  if (S7_inherits(rating_dt, FlodeRating)) rating_dt <- as_rating_table(rating_dt)
+  input_was_flode_rating <- S7_inherits(rating_dt, FlodeRating)
+  original_fit <- if (input_was_flode_rating) rating_dt else NULL
+  if (input_was_flode_rating) rating_dt <- as_rating_table(rating_dt)
   input_was_flode_table <- S7_inherits(rating_dt, FlodeRatingTable)
   previous_table <- if (input_was_flode_table) rating_dt else NULL
   if (input_was_flode_table) rating_dt <- rating_dt@table
@@ -469,6 +624,19 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
     }
   }
 
+  # If the caller handed in a FlodeRating, stay inside FlodeRating --
+  # gaugings, an audit chain, and diagnostics recomputed for the amended
+  # equations, not just a table with no way back to any of that.
+  if (input_was_flode_rating) {
+    return(.rebuild_flode_rating(
+      original_fit = original_fit,
+      out_dt = out_dt,
+      reclassify_gaugings = FALSE,
+      provenance_extra = list(aligned_via = "align_limb_equations", anchor_limb = anchor_limb),
+      fn_name = "align_limb_equations"
+    ))
+  }
+
   # An actual audit chain rather than an attribute someone has to
   # remember to check: `previous` references the exact pre-alignment
   # FlodeRatingTable this was built from (NULL if the input was a plain
@@ -540,13 +708,11 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #' fitted -- that junction is left unchanged and a warning is issued
 #' rather than the whole call failing.
 #'
-#' @param rating_dt A [FlodeRating] (converted via [as_rating_table()]
-#'   before relocating -- `@previous` then references the freshly-built
-#'   `FlodeRatingTable`, not the `FlodeRating` itself), a [FlodeRatingTable],
-#'   or a plain data.frame/data.table with columns `lower_level`,
-#'   `upper_level`, `C`, `a`, `n` (the same shape expected by
-#'   [expand_rating_table()] and [align_limb_equations()]). Limbs must be
-#'   contiguous: `upper_level[i]` must equal `lower_level[i + 1]`.
+#' @param rating_dt A [FlodeRating], a [FlodeRatingTable], or a plain
+#'   data.frame/data.table with columns `lower_level`, `upper_level`,
+#'   `C`, `a`, `n` (the same shape expected by [expand_rating_table()]
+#'   and [align_limb_equations()]). Limbs must be contiguous:
+#'   `upper_level[i]` must equal `lower_level[i + 1]`.
 #' @param junctions Integer vector, or `NULL` (default). Which junctions to
 #'   attempt, numbered the same way as [detect_rc_gaps()]'s `junction`
 #'   column (`1` = between limbs 1 and 2, `2` = between limbs 2 and 3, and
@@ -555,15 +721,29 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #'   deliberately (a known-good join, or one better handled by
 #'   [align_limb_equations()] instead) even where a crossing exists.
 #'
-#' @return A [FlodeRatingTable] with `@status` `"post_fit_aligned"` and
+#' @return If `rating_dt` was a [FlodeRating], a new [FlodeRating] with
+#'   `@status` `"post_fit_aligned"`, `@previous` referencing the exact
+#'   original fit, `@gaugings` with `limb` **reclassified** against the
+#'   relocated boundaries (a moved junction can shift which limb a
+#'   gauging belongs to, on either side of it), and `@limbs` diagnostics
+#'   recomputed from those reclassified gaugings -- never left
+#'   describing a limb's old gauging composition. `@bootstrap`/
+#'   `@fit_starts` are dropped (with a warning if either was present),
+#'   since they describe a fit that no longer applies. Otherwise (a plain
+#'   table or an already-constructed [FlodeRatingTable]), a
+#'   [FlodeRatingTable] with `@status` `"post_fit_aligned"` and
 #'   `@previous` referencing the exact pre-alignment object this was
 #'   built from (`NULL` if `rating_dt` was a plain table with no prior
-#'   `FlodeRatingTable` identity). `@table` gains columns:
-#'   `lower_level_original`/`upper_level_original` (the input boundaries,
-#'   unchanged) and `boundary_adjusted` (logical; `TRUE` for a limb whose
-#'   `lower_level` and/or `upper_level` actually moved). `C`, `a`, and `n`
-#'   are always unchanged -- only `lower_level`/`upper_level` are ever
-#'   modified. Neither the input nor the output is ever mutated in place.
+#'   `FlodeRatingTable` identity).
+#'
+#'   Either way, `@limbs`/`@table` gains columns:
+#'   `lower_level_original`/`upper_level_original` (renamed
+#'   `lower_stage_m_original`/`upper_stage_m_original` on a `FlodeRating`
+#'   result, to match its own naming) -- the input boundaries, unchanged
+#'   -- and `boundary_adjusted` (logical; `TRUE` for a limb whose
+#'   boundary actually moved). `C`, `a`, and `n` are always unchanged --
+#'   only the boundaries are ever moved. Neither the input nor the output
+#'   is ever mutated in place.
 #'
 #' @seealso [align_limb_equations()] for closing a junction by rescaling
 #'   `C` at a fixed stage instead of moving the stage; [resolve_rc_gaps()]
@@ -596,7 +776,9 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #'
 #' @export
 align_limb_boundaries <- function(rating_dt, junctions = NULL) {
-  if (S7_inherits(rating_dt, FlodeRating)) rating_dt <- as_rating_table(rating_dt)
+  input_was_flode_rating <- S7_inherits(rating_dt, FlodeRating)
+  original_fit <- if (input_was_flode_rating) rating_dt else NULL
+  if (input_was_flode_rating) rating_dt <- as_rating_table(rating_dt)
   input_was_flode_table <- S7_inherits(rating_dt, FlodeRatingTable)
   previous_table <- if (input_was_flode_table) rating_dt else NULL
   if (input_was_flode_table) rating_dt <- rating_dt@table
@@ -695,6 +877,20 @@ align_limb_boundaries <- function(rating_dt, junctions = NULL) {
       "(a limb's upper_level <= lower_level) -- this can happen when",
       "adjacent intersections cross each other; inspect the table before",
       "retrying."
+    ))
+  }
+
+  # If the caller handed in a FlodeRating, stay inside FlodeRating --
+  # gaugings (reclassified against the relocated boundaries), an audit
+  # chain, and diagnostics recomputed for the amended limbs, not just a
+  # table with no way back to any of that.
+  if (input_was_flode_rating) {
+    return(.rebuild_flode_rating(
+      original_fit = original_fit,
+      out_dt = out_dt,
+      reclassify_gaugings = TRUE,
+      provenance_extra = list(aligned_via = "align_limb_boundaries", junctions = junctions),
+      fn_name = "align_limb_boundaries"
     ))
   }
 
