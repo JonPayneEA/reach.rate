@@ -110,7 +110,9 @@ rectangular control, about 2.5 for a triangular/V-notch one, and Manning's
 equation gives roughly 5/3 for a wide channel (Herschy 2009; Rantz et al.
 1982) -- see `vignette("rating_curves_guide")`'s "Why a power law" section
 for the full derivation. `n_bounds` lets that theory anchor the fit instead
-of leaving it to guess.
+of leaving it to guess. For what these controls actually look like, and
+how to read a cross-section into a starting `n_bounds`, see
+`vignette("n_bounds_guide")`.
 
 ## Demonstration
 

@@ -1,5 +1,12 @@
 # reach.rate (development)
 
+* New vignette `n_bounds_guide`: a visual companion to
+  `non_standard_optimisation`'s `n_bounds` demonstration, with idealised
+  cross-section diagrams for the rectangular/V-notch/wide-channel control
+  families, a log-log plot showing why the control's shape sets the
+  exponent, a compound-channel diagram illustrating why distinct regimes
+  need separate `n_bounds` calls, and a practical starting-bounds table.
+
 * New bundled example dataset `station_gaugings`: a real spot-gauging
   record for a UK gauging station, 1974-2024 (223 gaugings), included to
   demonstrate `rate_optimise()` against actual station messiness rather
