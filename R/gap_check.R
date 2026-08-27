@@ -294,11 +294,14 @@ expand_rating_table <- function(rating_dt,
 #' corrected value, and an `aligned` flag marks which limbs were changed,
 #' so the amendment is auditable rather than a silent overwrite.
 #'
-#' @param rating_dt A [FlodeRatingTable], or a plain data.frame/
-#'   data.table with columns `lower_level`, `upper_level`, `C`, `a`, `n`
-#'   (the same shape expected by [expand_rating_table()]; for a legacy
-#'   rating with no prior `FlodeRatingTable` identity of its own). Limbs
-#'   must be contiguous: `upper_level[i]` must equal `lower_level[i + 1]`.
+#' @param rating_dt A [FlodeRating] (converted via [as_rating_table()]
+#'   before aligning -- `@previous` then references the freshly-built
+#'   `FlodeRatingTable`, not the `FlodeRating` itself), a [FlodeRatingTable],
+#'   or a plain data.frame/data.table with columns `lower_level`,
+#'   `upper_level`, `C`, `a`, `n` (the same shape expected by
+#'   [expand_rating_table()]; for a legacy rating with no prior
+#'   `FlodeRatingTable` identity of its own). Limbs must be contiguous:
+#'   `upper_level[i]` must equal `lower_level[i + 1]`.
 #' @param anchor_limb Integer. Row index of the limb held fixed; every
 #'   other limb is corrected relative to it, propagating outward in both
 #'   directions along the chain. Default `1L` (the lowest limb, typically
@@ -367,6 +370,7 @@ expand_rating_table <- function(rating_dt,
 align_limb_equations <- function(rating_dt, anchor_limb = 1L,
                                   on_align_failure = c("error", "skip")) {
   on_align_failure <- match.arg(on_align_failure)
+  if (S7_inherits(rating_dt, FlodeRating)) rating_dt <- as_rating_table(rating_dt)
   input_was_flode_table <- S7_inherits(rating_dt, FlodeRatingTable)
   previous_table <- if (input_was_flode_table) rating_dt else NULL
   if (input_was_flode_table) rating_dt <- rating_dt@table
@@ -532,11 +536,13 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #' fitted -- that junction is left unchanged and a warning is issued
 #' rather than the whole call failing.
 #'
-#' @param rating_dt A [FlodeRatingTable], or a plain data.frame/
-#'   data.table with columns `lower_level`, `upper_level`, `C`, `a`, `n`
-#'   (the same shape expected by [expand_rating_table()] and
-#'   [align_limb_equations()]). Limbs must be contiguous: `upper_level[i]`
-#'   must equal `lower_level[i + 1]`.
+#' @param rating_dt A [FlodeRating] (converted via [as_rating_table()]
+#'   before relocating -- `@previous` then references the freshly-built
+#'   `FlodeRatingTable`, not the `FlodeRating` itself), a [FlodeRatingTable],
+#'   or a plain data.frame/data.table with columns `lower_level`,
+#'   `upper_level`, `C`, `a`, `n` (the same shape expected by
+#'   [expand_rating_table()] and [align_limb_equations()]). Limbs must be
+#'   contiguous: `upper_level[i]` must equal `lower_level[i + 1]`.
 #'
 #' @return A [FlodeRatingTable] with `@status` `"post_fit_aligned"` and
 #'   `@previous` referencing the exact pre-alignment object this was
@@ -566,6 +572,7 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #'
 #' @export
 align_limb_boundaries <- function(rating_dt) {
+  if (S7_inherits(rating_dt, FlodeRating)) rating_dt <- as_rating_table(rating_dt)
   input_was_flode_table <- S7_inherits(rating_dt, FlodeRatingTable)
   previous_table <- if (input_was_flode_table) rating_dt else NULL
   if (input_was_flode_table) rating_dt <- rating_dt@table
