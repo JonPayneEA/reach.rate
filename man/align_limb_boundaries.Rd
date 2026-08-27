@@ -4,7 +4,7 @@
 \alias{align_limb_boundaries}
 \title{Relocate a junction to where two limb equations actually cross}
 \usage{
-align_limb_boundaries(rating_dt)
+align_limb_boundaries(rating_dt, junctions = NULL)
 }
 \arguments{
 \item{rating_dt}{A \link{FlodeRating} (converted via \code{\link[=as_rating_table]{as_rating_table()}}
@@ -14,6 +14,14 @@ or a plain data.frame/data.table with columns \code{lower_level},
 \code{upper_level}, \code{C}, \code{a}, \code{n} (the same shape expected by
 \code{\link[=expand_rating_table]{expand_rating_table()}} and \code{\link[=align_limb_equations]{align_limb_equations()}}). Limbs must be
 contiguous: \code{upper_level[i]} must equal \code{lower_level[i + 1]}.}
+
+\item{junctions}{Integer vector, or \code{NULL} (default). Which junctions to
+attempt, numbered the same way as \code{\link[=detect_rc_gaps]{detect_rc_gaps()}}'s \code{junction}
+column (\code{1} = between limbs 1 and 2, \code{2} = between limbs 2 and 3, and
+so on). \code{NULL} attempts every junction, as before. Any other junction
+is left completely unchanged -- useful for leaving a junction alone
+deliberately (a known-good join, or one better handled by
+\code{\link[=align_limb_equations]{align_limb_equations()}} instead) even where a crossing exists.}
 }
 \value{
 A \link{FlodeRatingTable} with \verb{@status} \code{"post_fit_aligned"} and
@@ -41,7 +49,11 @@ reference point for the next), boundary relocation has no such
 dependency: because no equation is ever changed, junction \code{i}'s
 crossing depends only on limbs \code{i} and \code{i + 1}, regardless of what
 happens at any other junction. Every junction is resolved
-independently -- there is no \code{anchor_limb} argument.
+independently -- there is no \code{anchor_limb} argument. By default every
+junction is attempted; pass \code{junctions} to restrict this to specific
+ones, leaving every other junction's boundary untouched (and silent --
+no "no crossing" warning is possible for a junction that was never
+attempted).
 
 The search for a crossing is bounded to the union of the two limbs'
 own existing stage ranges (never extrapolated further than either limb
@@ -62,6 +74,19 @@ rating_dt <- data.table::data.table(
 )
 relocated_result <- align_limb_boundaries(rating_dt)
 relocated_result@table[, .(lower_level, upper_level, boundary_adjusted)]
+
+# A three-limb table, restricting relocation to junction 2 only (between
+# limbs 2 and 3) -- junction 1 is left untouched even though a crossing
+# exists there too
+rating_dt3 <- data.table::data.table(
+  lower_level = c(0.0, 1.2, 2.5),
+  upper_level = c(1.2, 2.5, 4.0),
+  C = c(2.5, 2.554, 2.337325),
+  a = c(0.0, 0.0, 0.0),
+  n = c(1.50, 1.65, 1.80)
+)
+partial_result <- align_limb_boundaries(rating_dt3, junctions = 2L)
+partial_result@table[, .(lower_level, upper_level, boundary_adjusted)]
 
 }
 \seealso{
