@@ -424,7 +424,29 @@ test_that("align_limb_equations from a plain table has no previous (nothing to c
   expect_null(aligned_result@previous)
 })
 
-test_that("align_limb_equations accepts a FlodeRating directly, matching as_rating_table(fit) first", {
+build_relocatable_flode_rating <- function(n_boot = 0L, boot_seed = 1L) {
+  set.seed(77)
+  stage_lo <- seq(0.3, 1.39, by = 0.025)
+  stage_mid <- seq(1.42, 2.59, by = 0.03)
+  stage_hi <- seq(2.65, 3.35, by = 0.06)
+  stage_m <- c(stage_lo, stage_mid, stage_hi)
+  true_C <- c(2.5, 3.5, 6.0)
+  true_a <- c(0, 0.15, 0.2)
+  true_n <- c(1.3, 1.6, 1.85)
+  discharge_true <- c(
+    true_C[1] * (stage_lo - true_a[1])^true_n[1],
+    true_C[2] * (stage_mid - true_a[2])^true_n[2],
+    true_C[3] * (stage_hi - true_a[3])^true_n[3]
+  )
+  discharge_cms <- discharge_true * exp(rnorm(length(stage_m), sd = 0.02))
+  if (n_boot > 0L) {
+    rate_optimise(discharge_cms, stage_m, control = c(1.375, 2.59), n_boot = n_boot, boot_seed = boot_seed)
+  } else {
+    rate_optimise(discharge_cms, stage_m, control = c(1.375, 2.59))
+  }
+}
+
+test_that("align_limb_equations accepts a FlodeRating directly, staying inside FlodeRating", {
   set.seed(10)
   stage_seq <- seq(0.5, 3.5, by = 0.03)
   true_limb <- cut(stage_seq, breaks = c(0.5, 1.6, 2.2, 3.5), labels = FALSE, include.lowest = TRUE)
@@ -437,8 +459,33 @@ test_that("align_limb_equations accepts a FlodeRating directly, matching as_rati
   from_fit <- align_limb_equations(fit, anchor_limb = 1L)
   from_table <- align_limb_equations(as_rating_table(fit), anchor_limb = 1L)
 
-  expect_equal(from_fit@table, from_table@table)
-  expect_s3_class(from_fit@previous, "reach.rate::FlodeRatingTable")
+  expect_s3_class(from_fit, "reach.rate::FlodeRating")
+  # Same underlying equations as the table-only path, just carried in
+  # FlodeRating's own lower_stage_m/upper_stage_m naming
+  expect_equal(from_fit@limbs$lower_stage_m, from_table@table$lower_level)
+  expect_equal(from_fit@limbs$upper_stage_m, from_table@table$upper_level)
+  expect_equal(from_fit@limbs$C, from_table@table$C)
+  expect_equal(from_fit@limbs$a, from_table@table$a)
+  expect_equal(from_fit@limbs$n, from_table@table$n)
+
+  # align_limb_equations() never moves boundaries, so gauging/limb
+  # membership is untouched
+  expect_equal(from_fit@gaugings$limb, fit@gaugings$limb)
+  # Anchor limb's C (and so its diagnostics) is genuinely unchanged;
+  # the other limbs' C changed, so their diagnostics must be recomputed,
+  # not copied stale from the pre-alignment fit
+  expect_equal(from_fit@limbs$C[1], fit@limbs$C[1])
+  expect_equal(from_fit@limbs$rmse_cms[1], fit@limbs$rmse_cms[1])
+  expect_false(isTRUE(all.equal(from_fit@limbs$C[2:3], fit@limbs$C[2:3])))
+  expect_false(isTRUE(all.equal(from_fit@limbs$rmse_cms[2:3], fit@limbs$rmse_cms[2:3])))
+
+  expect_equal(from_fit@status, "post_fit_aligned")
+  expect_true(identical(from_fit@previous, fit))
+
+  pdf(NULL)
+  on.exit(dev.off())
+  expect_no_error(rating_plot(from_fit))
+  expect_no_error(plot_rating_residuals(from_fit))
 })
 
 test_that("expand_rating_table accepts a FlodeRatingTable directly", {
@@ -446,6 +493,13 @@ test_that("expand_rating_table accepts a FlodeRatingTable directly", {
   rc_from_object_dt <- expand_rating_table(rating_table, step = 0.05)
   rc_from_plain_dt <- expand_rating_table(build_three_limb_rating_dt(), step = 0.05)
   expect_equal(rc_from_object_dt, rc_from_plain_dt)
+})
+
+test_that("expand_rating_table accepts a FlodeRating directly, matching as_rating_table(fit) first", {
+  fit <- build_relocatable_flode_rating()
+  rc_from_fit_dt <- expand_rating_table(fit, step = 0.05)
+  rc_from_table_dt <- expand_rating_table(as_rating_table(fit), step = 0.05)
+  expect_equal(rc_from_fit_dt, rc_from_table_dt)
 })
 
 test_that("align_limb_equations rejects an invalid depth at the junction", {
@@ -635,7 +689,7 @@ test_that("align_limb_boundaries from a plain table has no previous", {
   expect_null(result@previous)
 })
 
-test_that("align_limb_boundaries accepts a FlodeRating directly, matching as_rating_table(fit) first", {
+test_that("align_limb_boundaries accepts a FlodeRating directly, staying inside FlodeRating", {
   set.seed(10)
   stage_seq <- seq(0.5, 3.5, by = 0.03)
   true_limb <- cut(stage_seq, breaks = c(0.5, 1.6, 2.2, 3.5), labels = FALSE, include.lowest = TRUE)
@@ -648,6 +702,93 @@ test_that("align_limb_boundaries accepts a FlodeRating directly, matching as_rat
   from_fit <- suppressWarnings(align_limb_boundaries(fit))
   from_table <- suppressWarnings(align_limb_boundaries(as_rating_table(fit)))
 
-  expect_equal(from_fit@table, from_table@table)
-  expect_s3_class(from_fit@previous, "reach.rate::FlodeRatingTable")
+  expect_s3_class(from_fit, "reach.rate::FlodeRating")
+  expect_equal(from_fit@limbs$lower_stage_m, from_table@table$lower_level)
+  expect_equal(from_fit@limbs$upper_stage_m, from_table@table$upper_level)
+  # C/a/n never change under align_limb_boundaries() -- only boundaries move
+  expect_equal(from_fit@limbs$C, fit@limbs$C)
+  expect_equal(from_fit@limbs$a, fit@limbs$a)
+  expect_equal(from_fit@limbs$n, fit@limbs$n)
+
+  expect_equal(from_fit@status, "post_fit_aligned")
+  expect_true(identical(from_fit@previous, fit))
+  expect_equal(nrow(from_fit@gaugings), nrow(fit@gaugings))
+
+  pdf(NULL)
+  on.exit(dev.off())
+  expect_no_error(rating_plot(from_fit))
+  expect_no_error(plot_rating_residuals(from_fit))
+})
+
+test_that("align_limb_boundaries(FlodeRating) reclassifies gaugings across a relocated boundary but leaves an untouched junction's gaugings alone", {
+  fit <- build_relocatable_flode_rating()
+  aligned <- suppressWarnings(align_limb_boundaries(fit))
+
+  # Junction 1 (limbs 1/2) relocates; junction 2 (limbs 2/3) doesn't
+  # cross and is left unchanged (confirmed by the warning this emits)
+  expect_true(aligned@limbs$boundary_adjusted[1])
+  expect_false(aligned@limbs$boundary_adjusted[3])
+  expect_equal(aligned@limbs$lower_stage_m[3], fit@limbs$lower_stage_m[3])
+  expect_equal(aligned@limbs$upper_stage_m[3], fit@limbs$upper_stage_m[3])
+
+  # Every gauging is still accounted for, just reshuffled between limbs
+  # 1 and 2 across the relocated boundary
+  expect_equal(nrow(aligned@gaugings), nrow(fit@gaugings))
+  expect_false(identical(table(aligned@gaugings$limb)[1:2], table(fit@gaugings$limb)[1:2]))
+  expect_equal(
+    sum(aligned@gaugings$limb %in% c(1, 2)),
+    sum(fit@gaugings$limb %in% c(1, 2))
+  )
+  # Limb 3's own junction never moved, so its gauging count -- and its
+  # composition -- is exactly unchanged
+  expect_equal(sum(aligned@gaugings$limb == 3), sum(fit@gaugings$limb == 3))
+  expect_equal(aligned@limbs$n_obs[3], fit@limbs$n_obs[3])
+})
+
+test_that("align_limb_boundaries(FlodeRating) recomputes diagnostics rather than copying them stale", {
+  fit <- build_relocatable_flode_rating()
+  aligned <- suppressWarnings(align_limb_boundaries(fit))
+
+  # Limbs 1/2 had their gauging composition change, so their diagnostics
+  # must differ from the pre-alignment fit
+  expect_false(isTRUE(all.equal(aligned@limbs$rmse_cms[1:2], fit@limbs$rmse_cms[1:2])))
+  expect_false(isTRUE(all.equal(aligned@limbs$r_squared[1:2], fit@limbs$r_squared[1:2])))
+  # Limb 3 was genuinely untouched (same boundaries, same gaugings, same
+  # C/a/n), so its diagnostics are identical, not just similar
+  expect_equal(aligned@limbs$rmse_cms[3], fit@limbs$rmse_cms[3])
+  expect_equal(aligned@limbs$r_squared[3], fit@limbs$r_squared[3])
+})
+
+test_that("align_limb_boundaries(FlodeRating) drops bootstrap/fit_starts with a warning when present", {
+  fit <- build_relocatable_flode_rating(n_boot = 20L)
+  expect_true("C_se" %in% names(fit@limbs))
+  expect_false(is.null(fit@fit_starts))
+
+  expect_warning(
+    aligned <- align_limb_boundaries(fit),
+    "bootstrap uncertainty.*multi-start bookkeeping"
+  )
+  expect_null(aligned@bootstrap)
+  expect_null(aligned@fit_starts)
+  expect_false(any(c("C_se", "a_se", "n_se", "n_boot_requested") %in% names(aligned@limbs)))
+})
+
+test_that("align_limb_boundaries(FlodeRating) NAs out fitting bookkeeping that no longer applies", {
+  fit <- build_relocatable_flode_rating()
+  aligned <- suppressWarnings(align_limb_boundaries(fit))
+
+  expect_true(all(is.na(aligned@limbs$near_bound)))
+  expect_true(all(is.na(aligned@limbs$n_starts_attempted)))
+  expect_true(all(is.na(aligned@limbs$n_starts_converged)))
+  expect_true(all(is.na(aligned@limbs$selected_start_id)))
+})
+
+test_that("align_limb_boundaries(junctions = ) on a FlodeRating still restricts which junction is attempted", {
+  fit <- build_relocatable_flode_rating()
+  aligned <- suppressWarnings(align_limb_boundaries(fit, junctions = 2L))
+
+  # Junction 1 was never attempted -- untouched, no warning possible
+  expect_false(aligned@limbs$boundary_adjusted[1])
+  expect_equal(aligned@limbs$upper_stage_m[1], fit@limbs$upper_stage_m[1])
+  expect_equal(aligned@gaugings$limb, fit@gaugings$limb)
 })

@@ -12,6 +12,7 @@ FlodeSegmentedRating(
   fit_starts = NULL,
   status = "independently_fitted",
   provenance = list(),
+  previous = NULL,
   coefficients = (structure(function (.data) 
 
     stop2(sprintf("S3 class <\%s> doesn't have a constructor.", "data.table"), call =
@@ -36,6 +37,11 @@ option (see issue #9).}
 
 \item{provenance}{List recording how the fit was made (fitting
 method, controls, bounds, tool version).}
+
+\item{previous}{The exact pre-amendment \code{FlodeSegmentedRating} this
+was built from, or \code{NULL} (default) for an independently-fitted
+result. Nothing in the package currently produces an amended
+\code{FlodeSegmentedRating} -- this exists for parity with \link{FlodeRating}.}
 
 \item{coefficients}{Single-row data.table: \code{C}, \code{bp1..bpk},
 \code{n1..nk}, and fit diagnostics.}

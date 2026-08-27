@@ -7,13 +7,11 @@
 align_limb_boundaries(rating_dt, junctions = NULL)
 }
 \arguments{
-\item{rating_dt}{A \link{FlodeRating} (converted via \code{\link[=as_rating_table]{as_rating_table()}}
-before relocating -- \verb{@previous} then references the freshly-built
-\code{FlodeRatingTable}, not the \code{FlodeRating} itself), a \link{FlodeRatingTable},
-or a plain data.frame/data.table with columns \code{lower_level},
-\code{upper_level}, \code{C}, \code{a}, \code{n} (the same shape expected by
-\code{\link[=expand_rating_table]{expand_rating_table()}} and \code{\link[=align_limb_equations]{align_limb_equations()}}). Limbs must be
-contiguous: \code{upper_level[i]} must equal \code{lower_level[i + 1]}.}
+\item{rating_dt}{A \link{FlodeRating}, a \link{FlodeRatingTable}, or a plain
+data.frame/data.table with columns \code{lower_level}, \code{upper_level},
+\code{C}, \code{a}, \code{n} (the same shape expected by \code{\link[=expand_rating_table]{expand_rating_table()}}
+and \code{\link[=align_limb_equations]{align_limb_equations()}}). Limbs must be contiguous:
+\code{upper_level[i]} must equal \code{lower_level[i + 1]}.}
 
 \item{junctions}{Integer vector, or \code{NULL} (default). Which junctions to
 attempt, numbered the same way as \code{\link[=detect_rc_gaps]{detect_rc_gaps()}}'s \code{junction}
@@ -24,15 +22,29 @@ deliberately (a known-good join, or one better handled by
 \code{\link[=align_limb_equations]{align_limb_equations()}} instead) even where a crossing exists.}
 }
 \value{
-A \link{FlodeRatingTable} with \verb{@status} \code{"post_fit_aligned"} and
+If \code{rating_dt} was a \link{FlodeRating}, a new \link{FlodeRating} with
+\verb{@status} \code{"post_fit_aligned"}, \verb{@previous} referencing the exact
+original fit, \verb{@gaugings} with \code{limb} \strong{reclassified} against the
+relocated boundaries (a moved junction can shift which limb a
+gauging belongs to, on either side of it), and \verb{@limbs} diagnostics
+recomputed from those reclassified gaugings -- never left
+describing a limb's old gauging composition. \verb{@bootstrap}/
+\verb{@fit_starts} are dropped (with a warning if either was present),
+since they describe a fit that no longer applies. Otherwise (a plain
+table or an already-constructed \link{FlodeRatingTable}), a
+\link{FlodeRatingTable} with \verb{@status} \code{"post_fit_aligned"} and
 \verb{@previous} referencing the exact pre-alignment object this was
 built from (\code{NULL} if \code{rating_dt} was a plain table with no prior
-\code{FlodeRatingTable} identity). \verb{@table} gains columns:
-\code{lower_level_original}/\code{upper_level_original} (the input boundaries,
-unchanged) and \code{boundary_adjusted} (logical; \code{TRUE} for a limb whose
-\code{lower_level} and/or \code{upper_level} actually moved). \code{C}, \code{a}, and \code{n}
-are always unchanged -- only \code{lower_level}/\code{upper_level} are ever
-modified. Neither the input nor the output is ever mutated in place.
+\code{FlodeRatingTable} identity).
+
+Either way, \verb{@limbs}/\verb{@table} gains columns:
+\code{lower_level_original}/\code{upper_level_original} (renamed
+\code{lower_stage_m_original}/\code{upper_stage_m_original} on a \code{FlodeRating}
+result, to match its own naming) -- the input boundaries, unchanged
+-- and \code{boundary_adjusted} (logical; \code{TRUE} for a limb whose
+boundary actually moved). \code{C}, \code{a}, and \code{n} are always unchanged --
+only the boundaries are ever moved. Neither the input nor the output
+is ever mutated in place.
 }
 \description{
 \code{align_limb_equations()} and \code{resolve_rc_gaps()} both close a junction

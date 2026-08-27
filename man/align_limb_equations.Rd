@@ -11,14 +11,12 @@ align_limb_equations(
 )
 }
 \arguments{
-\item{rating_dt}{A \link{FlodeRating} (converted via \code{\link[=as_rating_table]{as_rating_table()}}
-before aligning -- \verb{@previous} then references the freshly-built
-\code{FlodeRatingTable}, not the \code{FlodeRating} itself), a \link{FlodeRatingTable},
-or a plain data.frame/data.table with columns \code{lower_level},
-\code{upper_level}, \code{C}, \code{a}, \code{n} (the same shape expected by
-\code{\link[=expand_rating_table]{expand_rating_table()}}; for a legacy rating with no prior
-\code{FlodeRatingTable} identity of its own). Limbs must be contiguous:
-\code{upper_level[i]} must equal \code{lower_level[i + 1]}.}
+\item{rating_dt}{A \link{FlodeRating}, a \link{FlodeRatingTable}, or a plain
+data.frame/data.table with columns \code{lower_level}, \code{upper_level},
+\code{C}, \code{a}, \code{n} (the same shape expected by \code{\link[=expand_rating_table]{expand_rating_table()}};
+for a legacy rating with no prior \code{FlodeRatingTable} identity of its
+own). Limbs must be contiguous: \code{upper_level[i]} must equal
+\code{lower_level[i + 1]}.}
 
 \item{anchor_limb}{Integer. Row index of the limb held fixed; every
 other limb is corrected relative to it, propagating outward in both
@@ -41,23 +39,34 @@ over one bad limb" fallback \code{rate_optimise_constrained()} already
 uses for its own refit failures.}
 }
 \value{
-A \link{FlodeRatingTable} with \verb{@status} \code{"post_fit_aligned"} and
+If \code{rating_dt} was a \link{FlodeRating}, a new \link{FlodeRating} with
+\verb{@status} \code{"post_fit_aligned"}, \verb{@previous} referencing the exact
+original fit, \verb{@gaugings} unchanged (equations were rescaled, not
+boundaries, so gauging/limb membership never changes here), and
+\verb{@limbs} diagnostics (\code{rmse_cms}, \code{r_squared}, and friends)
+recomputed against the amended \code{C} -- never left stale. \verb{@bootstrap}/
+\verb{@fit_starts} are dropped (with a warning if either was present),
+since they describe a fit that no longer applies. Otherwise (a plain
+table or an already-constructed \link{FlodeRatingTable}), a
+\link{FlodeRatingTable} with \verb{@status} \code{"post_fit_aligned"} and
 \verb{@previous} referencing the exact pre-alignment object this was
 built from (\code{NULL} if \code{rating_dt} was a plain table with no prior
 \code{FlodeRatingTable} identity) -- a genuine audit chain, not an
-attribute someone has to remember to check. \verb{@table} gains columns:
-\code{C_original} (the input \code{C}, unchanged), \code{aligned} (logical; \code{TRUE}
-only for a limb that was actually rescaled -- \code{FALSE} for
-\code{anchor_limb} and, under \code{on_align_failure = "skip"}, for any limb
-that failed to align), \code{align_failed} (logical; \code{TRUE} for a
-skipped limb, always \code{FALSE} under the default \code{on_align_failure = "error"} since that stops instead), \code{scale_factor}
-(\code{C / C_original}), \code{pct_change} (percentage change in \code{C}),
-\code{alignment_stage} (the junction stage this limb was aligned at),
-and \code{target_discharge} (the discharge it was aligned to match). The
-last four are \code{NA} wherever \code{aligned} is \code{FALSE}. \code{C} itself is
-replaced by the aligned value for every successfully-aligned limb;
-\code{a} and \code{n} are always unchanged. Neither the input nor the output
-is ever mutated in place.
+attribute someone has to remember to check.
+
+Either way, \verb{@limbs}/\verb{@table} gains columns: \code{C_original} (the input
+\code{C}, unchanged), \code{aligned} (logical; \code{TRUE} only for a limb that was
+actually rescaled -- \code{FALSE} for \code{anchor_limb} and, under
+\code{on_align_failure = "skip"}, for any limb that failed to align),
+\code{align_failed} (logical; \code{TRUE} for a skipped limb, always \code{FALSE}
+under the default \code{on_align_failure = "error"} since that stops
+instead), \code{scale_factor} (\code{C / C_original}), \code{pct_change}
+(percentage change in \code{C}), \code{alignment_stage} (the junction stage
+this limb was aligned at), and \code{target_discharge} (the discharge it
+was aligned to match). The last four are \code{NA} wherever \code{aligned} is
+\code{FALSE}. \code{C} itself is replaced by the aligned value for every
+successfully-aligned limb; \code{a} and \code{n} are always unchanged. Neither
+the input nor the output is ever mutated in place.
 }
 \description{
 \code{resolve_rc_gaps()} only patches the discretised stage-discharge table
