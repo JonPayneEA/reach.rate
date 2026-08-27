@@ -119,6 +119,12 @@ For when and why to reach for non-default fitting (`objective`, `n_bounds`, and 
 vignette("non_standard_optimisation", package = "reach.rate")
 ```
 
+For how to read a channel cross-section into a starting `n_bounds`, with diagrams of the canonical control shapes, see:
+
+```r
+vignette("n_bounds_guide", package = "reach.rate")
+```
+
 or run the linear, section-by-section script at:
 
 ```r
