@@ -328,6 +328,7 @@ expand_rating_table <- function(rating_dt,
   # current.
   n_limbs <- nrow(limbs_dt)
   rmse_vec <- rep(NA_real_, n_limbs)
+  rmse_pct_vec <- rep(NA_real_, n_limbs)
   r_squared_vec <- rep(NA_real_, n_limbs)
   n_obs_vec <- integer(n_limbs)
   n_unique_stage_vec <- integer(n_limbs)
@@ -351,6 +352,7 @@ expand_rating_table <- function(rating_dt,
     ss_res <- sum(resid_vals^2)
     ss_tot <- sum((limb_gaugings$discharge_cms - mean(limb_gaugings$discharge_cms))^2)
     rmse_vec[i] <- sqrt(mean(resid_vals^2))
+    rmse_pct_vec[i] <- 100 * sqrt(mean((resid_vals / pmax(abs(limb_gaugings$discharge_cms), 1e-6))^2))
     r_squared_vec[i] <- if (ss_tot > 1e-12) 1 - ss_res / ss_tot else NA_real_
     n_unique_stage_vec[i] <- length(unique(limb_gaugings$stage_m))
     mean_error_vec[i] <- mean(resid_vals)
@@ -360,7 +362,7 @@ expand_rating_table <- function(rating_dt,
   }
 
   limbs_dt[, `:=`(
-    rmse_cms = rmse_vec, r_squared = r_squared_vec, n_obs = n_obs_vec,
+    rmse_cms = rmse_vec, rmse_pct = rmse_pct_vec, r_squared = r_squared_vec, n_obs = n_obs_vec,
     n_unique_stage = n_unique_stage_vec, mean_error_cms = mean_error_vec,
     median_abs_error_cms = median_abs_error_vec, max_abs_error_cms = max_abs_error_vec,
     residual_df = residual_df_vec
@@ -368,6 +370,15 @@ expand_rating_table <- function(rating_dt,
 
   # Fitting bookkeeping that no longer means anything for a purely
   # algebraic transform (no bounds, no starts, no refit happened here).
+  # C_se_asymp/a_se_asymp/n_se_asymp (unlike rmse_pct above) can't be
+  # recomputed here -- there's no refit model to take a covariance matrix
+  # from -- so, like near_bound, they're explicitly NA'd rather than left
+  # describing the pre-amendment equations.
+  if ("C_se_asymp" %in% names(limbs_dt)) {
+    set(limbs_dt, j = "C_se_asymp", value = NA_real_)
+    set(limbs_dt, j = "a_se_asymp", value = NA_real_)
+    set(limbs_dt, j = "n_se_asymp", value = NA_real_)
+  }
   if ("near_bound" %in% names(limbs_dt)) set(limbs_dt, j = "near_bound", value = NA)
   if ("n_starts_attempted" %in% names(limbs_dt)) {
     set(limbs_dt, j = "n_starts_attempted", value = NA_integer_)

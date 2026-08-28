@@ -361,3 +361,177 @@ apply_rating_versioned <- function(stage_dt, rating_history_dt,
   final_dt[, .row_id := NULL]
   final_dt[]
 }
+
+#' Invert a rating: convert discharge back to stage
+#'
+#' @description
+#' The other direction from [apply_rating()]: given a discharge series,
+#' find the stage that produced it. Within one limb this is safe and
+#' closed-form -- `H = a + (Q/C)^(1/n)` -- since [FlodeRatingTable]'s own
+#' validator already requires `C > 0` and `n > 0` for every limb, which
+#' makes `Q = C(H-a)^n` strictly monotonic increasing over that limb's
+#' domain.
+#'
+#' The real risk is at a junction: if two adjacent limbs' equations don't
+#' actually agree at their shared boundary stage (a discharge "gap," the
+#' same thing [detect_rc_gaps()] exists to catch), the discharge axis has
+#' either an overlap (a query discharge could belong to either limb) or a
+#' hole (a query discharge belongs to neither) -- both make the inverse
+#' genuinely ambiguous, not just cosmetically imperfect. This function
+#' checks every junction directly from the equations (not by discretising
+#' first) before doing anything else, using the same `tol_abs`/`tol_rel`
+#' combination [detect_rc_gaps()] defaults to, and errors -- rather than
+#' guessing -- if any junction is flagged. Close the gap first with
+#' [resolve_rc_gaps()], [align_limb_equations()], [align_limb_boundaries()],
+#' or [graft_rating()], as appropriate.
+#'
+#' `discharge <= 0` has no unique inverse (any `H <= a` gives `Q = 0`):
+#' `out_col` is `NA` for those rows, with a warning, rather than guessing
+#' a boundary convention.
+#'
+#' This function assumes a genuinely monotonic power-law rating --
+#' guaranteed within a single limb, and across limbs once the junction
+#' check above passes. It is **not valid for tidal or strongly
+#' backwater-affected stations**, where the true stage-discharge
+#' relationship is not single-valued at all; no data available from a
+#' table alone can detect that condition, so this is a documented
+#' limitation, not a runtime check. Uncertainty propagation through the
+#' inverse (via the local derivative `dH/dQ = 1/(C n (H-a)^{n-1})`) is
+#' not included in this first version.
+#'
+#' @param fit A [FlodeRating] or [FlodeRatingTable]. A `FlodeRating` is
+#'   bridged via [as_rating_table()] first, the same one-line pattern
+#'   [align_limb_equations()]/[graft_rating()] already use.
+#' @param discharge_dt Data.frame or data.table with a discharge column
+#'   (named by `discharge_col`, default `"discharge"`); any other columns
+#'   are carried through unchanged.
+#' @param discharge_col,out_col Character. Column names for the input
+#'   discharge and the output stage. Defaults `"discharge"`/`"stage"`.
+#' @param tol_abs,tol_rel Numeric. The same junction-gap tolerance
+#'   combination [detect_rc_gaps()] defaults to (`0.5`, `0.02`) -- a
+#'   junction is flagged if the discharge mismatch there exceeds *either*
+#'   the absolute or the relative tolerance.
+#'
+#' @return `discharge_dt` as a data.table with two columns added:
+#'   `out_col` (the inverted stage; `NA` where `discharge <= 0`) and
+#'   `extrapolated` (logical; `TRUE` where the discharge fell outside
+#'   every limb's own range and was extrapolated from the nearest one;
+#'   `NA` where `discharge <= 0`, since no lookup was attempted there).
+#'
+#' @seealso [apply_rating()] for the forward direction; [detect_rc_gaps()]
+#'   for the same junction check with more diagnostic detail.
+#'
+#' @examples
+#' # C on the upper limb (2.410481) is chosen so the two equations agree
+#' # exactly at their shared boundary stage (1.2) -- a genuinely gap-free
+#' # table, the precondition this function checks for.
+#' rating_dt <- data.table::data.table(
+#'   lower_level = c(0.0, 1.2), upper_level = c(1.2, 2.5),
+#'   C = c(2.5, 2.410481), a = c(0, 0), n = c(1.5, 1.7)
+#' )
+#' rating_table <- FlodeRatingTable(table = rating_dt)
+#' discharge_dt <- data.table::data.table(discharge = c(1.0, 5.0, 20.0))
+#' apply_rating_inverse(rating_table, discharge_dt)
+#'
+#' @export
+apply_rating_inverse <- function(fit, discharge_dt, discharge_col = "discharge", out_col = "stage",
+                                  tol_abs = 0.5, tol_rel = 0.02) {
+  if (S7_inherits(fit, FlodeRating)) fit <- as_rating_table(fit)
+  if (!S7_inherits(fit, FlodeRatingTable)) stop("apply_rating_inverse(): fit must be a FlodeRating or FlodeRatingTable")
+  if (!is.data.frame(discharge_dt)) stop("discharge_dt must be a data.frame or data.table")
+  if (!discharge_col %in% names(discharge_dt)) stop("discharge_col must be a column of discharge_dt")
+
+  rating_dt <- copy(fit@table)
+  setorder(rating_dt, lower_level)
+  n_limbs <- nrow(rating_dt)
+
+  if (n_limbs > 1L) {
+    contiguous <- all(abs(rating_dt$upper_level[-n_limbs] - rating_dt$lower_level[-1L]) < 1e-8)
+    if (!contiguous) {
+      stop("apply_rating_inverse(): limbs in fit@table must be contiguous (upper_level[i] == lower_level[i+1]).")
+    }
+  }
+
+  eval_q <- function(C, a, n, H) C * (H - a)^n
+
+  # Junction gap check, computed directly from the equations at their
+  # exact shared boundary stage -- not via expand_rating_table()'s
+  # discretisation, so there's no step-size approximation to worry about.
+  if (n_limbs > 1L) {
+    flagged_junctions <- integer(0)
+    for (j in seq_len(n_limbs - 1L)) {
+      brk <- rating_dt$upper_level[j]
+      q_low <- eval_q(rating_dt$C[j], rating_dt$a[j], rating_dt$n[j], brk)
+      q_high <- eval_q(rating_dt$C[j + 1L], rating_dt$a[j + 1L], rating_dt$n[j + 1L], brk)
+      gap_abs <- q_high - q_low
+      gap_rel <- if (abs(q_low) > 1e-9) gap_abs / q_low else NA_real_
+      if (abs(gap_abs) > tol_abs || (!is.na(gap_rel) && abs(gap_rel) > tol_rel)) {
+        flagged_junctions <- c(flagged_junctions, j)
+      }
+    }
+    if (length(flagged_junctions) > 0L) {
+      stop(sprintf(
+        paste(
+          "apply_rating_inverse(): junction(s) %s have a discharge gap at their shared",
+          "boundary stage -- the inverse is ambiguous there (an overlapping or missing",
+          "discharge range between adjacent limbs). Close the gap first with",
+          "detect_rc_gaps()/resolve_rc_gaps(), align_limb_equations(),",
+          "align_limb_boundaries(), or graft_rating()."
+        ),
+        paste(flagged_junctions, collapse = ", ")
+      ))
+    }
+  }
+
+  # The discharge-axis equivalent of apply_rating()'s stage-axis breaks --
+  # each limb's own equation evaluated at its own bounds, monotonic
+  # increasing across limbs since the junction check above just confirmed
+  # adjacent limbs' ranges connect rather than overlap or gap.
+  q_lo <- eval_q(rating_dt$C, rating_dt$a, rating_dt$n, rating_dt$lower_level)
+  q_hi <- eval_q(rating_dt$C, rating_dt$a, rating_dt$n, rating_dt$upper_level)
+  q_breaks <- c(q_lo[1], q_hi)
+
+  out_dt <- copy(as.data.table(discharge_dt))
+  discharge_vals <- out_dt[[discharge_col]]
+
+  stage <- rep(NA_real_, nrow(out_dt))
+  extrapolated <- rep(NA, nrow(out_dt))
+
+  non_positive <- !is.na(discharge_vals) & discharge_vals <= 0
+  if (any(non_positive)) {
+    warning(sprintf(
+      paste(
+        "apply_rating_inverse(): %d discharge value(s) <= 0 have no unique inverse stage",
+        "(any H <= a gives Q = 0); %s set to NA for those rows."
+      ),
+      sum(non_positive), out_col
+    ))
+  }
+
+  valid_idx <- !is.na(discharge_vals) & discharge_vals > 0
+  if (any(valid_idx)) {
+    q_valid <- discharge_vals[valid_idx]
+    limb_idx_raw <- findInterval(q_valid, q_breaks, rightmost.closed = TRUE)
+    extrap_valid <- limb_idx_raw == 0L | limb_idx_raw == (n_limbs + 1L)
+    limb_idx <- pmin(pmax(limb_idx_raw, 1L), n_limbs)
+
+    C <- rating_dt$C[limb_idx]
+    a <- rating_dt$a[limb_idx]
+    n <- rating_dt$n[limb_idx]
+
+    stage[valid_idx] <- a + (q_valid / C)^(1 / n)
+    extrapolated[valid_idx] <- extrap_valid
+  }
+
+  set(out_dt, j = out_col, value = stage)
+  set(out_dt, j = "extrapolated", value = extrapolated)
+
+  n_extrap <- sum(extrapolated, na.rm = TRUE)
+  if (n_extrap > 0L) {
+    log_info(
+      "apply_rating_inverse(): {n_extrap} of {nrow(out_dt)} discharge value(s) fell outside the rating and were extrapolated."
+    )
+  }
+
+  out_dt[]
+}

@@ -21,7 +21,10 @@ columns -- the gaugings the fit was built from. May optionally
 include a \code{gauging_datetime} column (\code{Date} or \code{POSIXct}) recording
 when each spot gauging was taken. Nothing in the package currently
 reads this column -- it's groundwork for a future age-aware fitting
-option (see issue #9).}
+option (see issue #9). A gauging's own measurement method (current-
+meter, ADCP, salt-dilution, index-velocity, ...) is not currently
+recorded either -- every gauging is treated identically regardless
+of source.}
 
 \item{fit_starts}{Data.table of multi-start fitting attempts, or
 \code{NULL} if the fit wasn't produced with \code{multi_start = TRUE}.}

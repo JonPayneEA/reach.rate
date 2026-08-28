@@ -254,7 +254,10 @@ A few practical notes that don't fit neatly in the table:
   `non_standard_optimisation.Rmd`'s "What this is not" section (and
   [issue #11](https://github.com/JonPayneEA/reach.rate/issues/11)) for
   the distinction. Use it when you're confident enough in the control
-  type to rule other exponents out, not as a softer nudge.
+  type to rule other exponents out, not as a softer nudge. If you need
+  the real thing today rather than waiting on #11, `bdrc`
+  (Hrafnkelsson et al. 2022) already implements a Bayesian power-law fit
+  in R, with priors on the exponent that data can genuinely update.
 - **Compound geometry needs compound handling**, per the previous
   section -- one `n_bounds` per control, one `rate_optimise()` call per
   control.
@@ -307,6 +310,11 @@ physical anchor matters.
 # References
 
 Herschy, R. W. (2009). *Streamflow Measurement* (3rd ed.). Routledge.
+
+Hrafnkelsson, B., Sigurdarson, H., Rögnvaldsson, S., Jansson, A. Ö., Vias,
+R. D., & Gardarsson, S. M. (2022). Generalization of the power-law rating
+curve using hydrodynamic theory and Bayesian hierarchical modeling.
+*Environmetrics*, 33(2), e2711.
 
 Rantz, S. E., et al. (1982). *Measurement and Computation of Streamflow*
 (Water Supply Paper 2175). U.S. Geological Survey.

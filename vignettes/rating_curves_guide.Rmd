@@ -360,6 +360,17 @@ flow_dt[c(1, 10, 20, 30, 40)]
 
 The step everything else builds towards: stage record in, discharge record out. Each stage value is assigned to the limb whose band it falls in, and that limb's $Q = C(h - a)^n$ is evaluated. Stage at or below the zero-flow datum returns exactly zero. Stage outside every limb is evaluated by extrapolating the nearest limb's equation and flagged in the `extrapolated` column: a value is still returned, because for forecasting an extrapolated estimate is usually more useful than an NA, but it is never silently indistinguishable from an interpolated one. The flag is the contract; respect it downstream.
 
+## `apply_rating_inverse()`: the other direction
+
+Sometimes the question runs backwards -- given a target discharge (a design flood, a flow threshold a warning triggers on), what stage does that correspond to. `apply_rating_inverse()` answers it, using `aligned_result` rather than `rating_table` deliberately: within one limb the inverse is safe closed-form algebra, but a real junction gap makes it genuinely ambiguous (an overlapping or missing discharge range between limbs), so it insists on a gap-free table -- exactly what `align_limb_equations()` already produced above.
+
+```{r apply-rating-inverse}
+target_flows_dt <- data.table(discharge = c(5, 20, 60))
+apply_rating_inverse(aligned_result, target_flows_dt, discharge_col = "discharge", out_col = "stage_m")
+```
+
+Discharge at or below zero has no unique inverse (any stage at or below the zero-flow datum gives zero flow), so those rows come back `NA` with a warning rather than a guessed answer. Like `apply_rating()`, discharge outside the rating's own range is still extrapolated and flagged rather than refused outright.
+
 ## `as_rating_table()`: a straight copy
 
 `rate_optimise()` and the equation-table representation write the same equation with the same sign convention: both are $Q = C(H - a)^n$. So converting a fit to a table is a straight column-and-name copy of `C`/`a`/`n`, with no coefficient transformation -- `as_rating_table()` remains a named, tested method (rather than an inline conversion at the call site) so the two representations stay a single, deliberate seam rather than something re-derived wherever it's needed. `as_rating_table()` also carries the `doubtful` flag through, so support weakness survives the change of representation.
@@ -418,6 +429,8 @@ When a fit lands on your desk, look at things in this order. First the residual 
 
 None of this replaces the walk along the reach. Every statistical signal in this document is a prompt for a physical question.
 
+One caution cuts across all of it: New Zealand's National Environmental Monitoring Standard for rating curves warns explicitly against over-refining a rating -- adding breakpoints, or tightening a fit, purely to chase a better statistical score -- at the expense of hydraulic validity. A curve with a breakpoint at every visible wiggle in the residuals may report a lower `rmse_cms` than one with breakpoints only where the channel's control actually changes, but it is describing noise, not the channel. Every check above should stop once it stops answering a physical question.
+
 # Where to go next
 
 Every function used above has its own roxygen documentation with a fuller `@description` and a runnable `@examples` block -- see `?rate_optimise`, `?flode_classes` (for the class hierarchy: `FlodeRatingBase`, `FlodeRating`, `FlodeSegmentedRating`, `FlodeRatingTable`, and the three shared generics), and so on. `system.file("examples", "walkthrough.R", package = "reach.rate")` is a linear, section-by-section script covering the same ground as this vignette plus the cross-section demonstration (`demo_cross_section_rating()`) and the interactive explorer (`rating_curve_explorer()`), meant to be run a section at a time rather than sourced in one go. The testthat files under `tests/testthat/` in the package sources are a third source of worked examples, each tied to a specific behaviour being checked.
@@ -439,5 +452,7 @@ Levenberg, K. (1944). A method for the solution of certain non-linear problems i
 Mansanarez, V., Westerberg, I. K., Lam, N., & Lyon, S. W. (2019). Shift happens! Adjusting stage-discharge rating curves to morphological changes at known times. *Water Resources Research*, 55(8), 6642-6661.
 
 Marquardt, D. W. (1963). An algorithm for least-squares estimation of nonlinear parameters. *Journal of the Society for Industrial and Applied Mathematics*, 11(2), 431-441.
+
+National Environmental Monitoring Standards (2016). *NEMS Rating Curves* (v2.0.2). New Zealand.
 
 Rantz, S. E., et al. (1982). *Measurement and Computation of Streamflow* (Water Supply Paper 2175). U.S. Geological Survey.

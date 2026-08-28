@@ -66,7 +66,10 @@
 #'   include a `gauging_datetime` column (`Date` or `POSIXct`) recording
 #'   when each spot gauging was taken. Nothing in the package currently
 #'   reads this column -- it's groundwork for a future age-aware fitting
-#'   option (see issue #9).
+#'   option (see issue #9). A gauging's own measurement method (current-
+#'   meter, ADCP, salt-dilution, index-velocity, ...) is not currently
+#'   recorded either -- every gauging is treated identically regardless
+#'   of source.
 #' @param fit_starts Data.table of multi-start fitting attempts, or
 #'   `NULL` if the fit wasn't produced with `multi_start = TRUE`.
 #' @param status Character. One of `"independently_fitted"`,
@@ -128,7 +131,10 @@ FlodeRatingBase <- new_class(
 #'   include a `gauging_datetime` column (`Date` or `POSIXct`) recording
 #'   when each spot gauging was taken. Nothing in the package currently
 #'   reads this column -- it's groundwork for a future age-aware fitting
-#'   option (see issue #9).
+#'   option (see issue #9). A gauging's own measurement method (current-
+#'   meter, ADCP, salt-dilution, index-velocity, ...) is not currently
+#'   recorded either -- every gauging is treated identically regardless
+#'   of source.
 #' @param fit_starts Data.table of multi-start fitting attempts, or
 #'   `NULL` if the fit wasn't produced with `multi_start = TRUE`.
 #' @param status Character. One of `"independently_fitted"`,
@@ -205,7 +211,10 @@ method(print, FlodeRating) <- function(x, ...) {
 #'   include a `gauging_datetime` column (`Date` or `POSIXct`) recording
 #'   when each spot gauging was taken. Nothing in the package currently
 #'   reads this column -- it's groundwork for a future age-aware fitting
-#'   option (see issue #9).
+#'   option (see issue #9). A gauging's own measurement method (current-
+#'   meter, ADCP, salt-dilution, index-velocity, ...) is not currently
+#'   recorded either -- every gauging is treated identically regardless
+#'   of source.
 #' @param fit_starts Data.table of multi-start fitting attempts, or
 #'   `NULL` if the fit wasn't produced with `multi_start = TRUE`.
 #' @param status Character. One of `"independently_fitted"`,

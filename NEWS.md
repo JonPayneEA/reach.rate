@@ -1,5 +1,28 @@
 # reach.rate (development)
 
+* New function `apply_rating_inverse()`: the other direction from
+  `apply_rating()` -- given a discharge series, finds the stage that
+  produced it. Requires a gap-free `FlodeRatingTable` (checked directly
+  from the equations at each junction, erroring and naming the junction
+  otherwise, rather than guessing at an ambiguous inverse); discharge
+  `<= 0` returns `NA` with a warning, since it has no unique inverse
+  stage. Not valid for tidal/backwater stations where stage-discharge
+  isn't single-valued -- a documented limitation.
+
+* `rate_optimise()`'s `@limbs` gains `rmse_pct` (a relative/percentage
+  RMSE alongside the existing absolute `rmse_cms`, always computed
+  regardless of `objective`) and `C_se_asymp`/`a_se_asymp`/`n_se_asymp`
+  (closed-form asymptotic parameter standard errors from the fit's own
+  NLS covariance matrix, always computed -- a free fallback when
+  `n_boot = 0`, distinct from the bootstrap-only `C_se`/`a_se`/`n_se`).
+  `rate_optimise_constrained()` recomputes all four for any limb it
+  actually refits (via the delta method for the SEs, since that refit's
+  own model has only `a`/`n` as free parameters) and leaves
+  `anchor_limb`'s untouched; `align_limb_equations()`/
+  `align_limb_boundaries()` recompute `rmse_pct` and NA out the three
+  `*_se_asymp` columns, the same discipline already applied to
+  `near_bound`.
+
 * New function `plot_rating_cross_section()`: overlays a real surveyed
   channel cross-section on a real fitted rating's own plot, rescaling
   the survey's distance onto the discharge axis (with a secondary axis

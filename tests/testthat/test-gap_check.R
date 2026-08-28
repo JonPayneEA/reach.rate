@@ -759,6 +759,24 @@ test_that("align_limb_boundaries(FlodeRating) recomputes diagnostics rather than
   expect_equal(aligned@limbs$r_squared[3], fit@limbs$r_squared[3])
 })
 
+test_that("align_limb_boundaries(FlodeRating) recomputes rmse_pct and NAs out the asymptotic SEs", {
+  fit <- build_relocatable_flode_rating()
+  expect_true(all(!is.na(fit@limbs$C_se_asymp)))
+  aligned <- suppressWarnings(align_limb_boundaries(fit))
+
+  # rmse_pct, like rmse_cms, is genuinely recomputed -- changed for the
+  # reclassified limbs, identical for the untouched one
+  expect_false(isTRUE(all.equal(aligned@limbs$rmse_pct[1:2], fit@limbs$rmse_pct[1:2])))
+  expect_equal(aligned@limbs$rmse_pct[3], fit@limbs$rmse_pct[3])
+
+  # C_se_asymp/a_se_asymp/n_se_asymp: no refit model exists to recompute
+  # them from, so -- like near_bound -- they're explicitly NA'd rather
+  # than left describing the pre-amendment equations
+  expect_true(all(is.na(aligned@limbs$C_se_asymp)))
+  expect_true(all(is.na(aligned@limbs$a_se_asymp)))
+  expect_true(all(is.na(aligned@limbs$n_se_asymp)))
+})
+
 test_that("align_limb_boundaries(FlodeRating) drops bootstrap/fit_starts with a warning when present", {
   fit <- build_relocatable_flode_rating(n_boot = 20L)
   expect_true("C_se" %in% names(fit@limbs))
