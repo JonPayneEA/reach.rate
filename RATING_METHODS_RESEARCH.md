@@ -304,3 +304,101 @@ regression rather than power-law NLS.
    (5) demonstrates the need at real stations.
 9. **NEMS over-refinement caution in the guide vignette** -- trivial,
    documentation only.
+
+## Further candidate areas
+
+A lighter survey pass -- one paragraph each, not the full treatment the
+five sections above got. Excludes anything already covered above or
+already tracked in `ROADMAP.md`/`ROBUST_FITTING.md`.
+
+- **Rating extrapolation and design-flood guidance.** Extending a curve
+  beyond its gauged range is where rating uncertainty is largest and
+  matters most (design flood peaks feed flood frequency analysis
+  directly), and the UK's own Extension of Rating Curves at Gauging
+  Stations *Best Practice Guidance Manual* (Environment Agency/Defra R&D,
+  report SW6-061) covers this specifically for EA-operated stations --
+  directly relevant to how `reach.rate` is actually used, and worth
+  reading in full before anything else on this list. Hydraulic modelling
+  (see below) is the main non-statistical extension route the wider
+  literature discusses; a review of that manual's own recommended
+  practice against what `n_bounds`/`rate_optimise_constrained()` already
+  do would be a natural, low-risk first step. Medium (mostly a careful
+  reading and gap-comparison exercise, not new code by default).
+- **Hydraulic/hydrodynamic model-derived ratings.** Deriving a
+  stage-discharge relationship from a calibrated hydraulic model
+  (HEC-RAS and similar) rather than -- or alongside -- fitted gaugings,
+  particularly for extending high-flow ratings where few or no gaugings
+  exist. Genuinely useful for cross-checking an extrapolated curve, but
+  it needs channel geometry and a calibrated model as *input*, which
+  `reach.rate` has no machinery to build or hold -- this is a different
+  kind of tool feeding a rating, not a fitting method `rate_optimise()`
+  could grow into. Large, and probably outside this package's scope
+  rather than a feature to build; more relevant as a cross-check workflow
+  than as new `reach.rate` code.
+- **Salt-dilution and other tracer gauging.** An independent
+  discharge-measurement method (not a rating method at all), typically
+  more accurate than velocity-area gauging on steep, turbulent streams
+  where a current meter or ADCP struggles, though it overestimates low
+  flows by up to 10% if lateral mixing isn't complete (USBR *Water
+  Measurement Manual*, ch. 12). Relevant to `reach.rate` only as another
+  possible *source* of a `discharge_cms` gauging value feeding
+  `rate_optimise()` -- no different in shape from any other gauging once
+  it exists, so there is no code gap here, only a possible note in the
+  gaugings documentation that a gauging's *source method* isn't currently
+  recorded. Small, if done at all.
+- **Sediment- and ice-affected ratings.** Both are cases where the
+  physical control itself changes with something other than stage --
+  sediment deposition/scour shifting the bed, or ice cover displacing the
+  open-water rating and only bounding discharge from above (USGS WSP
+  2378; Beltaos 2011 on winter slope-area methods). Ice effects are a
+  low-priority fit for most EA-operated lowland stations specifically;
+  sediment-affected ratings are more broadly relevant (a shifting-control
+  problem, similar in spirit to what `align_limb_boundaries()`/
+  `graft_rating()` already handle for a *known* shift, but here the shift
+  is continuous and needs detecting, not just reconciling once known).
+  Large, and speculative until a station with this problem is identified.
+- **Remote-sensing / satellite altimetry discharge estimation.** SWOT and
+  similar missions now deliver discharge estimates for thousands of
+  ungauged reaches globally, but a 2025 assessment against 65 gauged
+  reaches found a median bias around 50%, concentrated on smaller rivers
+  (Byrd Polar and Climate Research Center, summarising the mission's own
+  first-15-months validation). Not a good fit for `reach.rate` today --
+  the accuracy gap is large precisely on the scale of river this package
+  is used for, and satellite-derived discharge is itself typically
+  calibrated *against* a conventional rating rather than replacing one.
+  Worth revisiting in a few years as the method matures, not now.
+- **Machine-learning approaches to rating parameters.** The genuinely
+  interesting recent work (Scientific Reports, 2025, on interpretable ML
+  predicting rating-curve parameters from channel geometry and
+  hydrological attributes across the US) predicts the *parameters of a
+  physically-meaningful rating* rather than discharge directly end to
+  end, which is a much better match to how `reach.rate` already thinks
+  about a rating (`C`/`a`/`n` per limb) than a black-box discharge
+  predictor would be -- and other recent comparisons found simpler models
+  outperforming deep learning (LSTM) for this kind of estimation anyway.
+  A plausible, narrow future direction: an ML-informed *starting-values*
+  or *prior-range* generator for `rate_optimise()`'s existing multi-start
+  fitting, not a replacement for NLS fitting itself. Large as a research
+  question, small as a possible future starting-value heuristic once the
+  research question is settled.
+- **Real-time stage-record QC / anomaly detection.** Sensor drift and
+  missing/erroneous data upstream of any rating application is a real
+  problem, but the literature found here is water-quality-sensor and
+  general time-series anomaly detection (deep-learning and concept-drift
+  methods), not hydrometric-stage-specific -- treat that gap as
+  unverified for this specific application rather than assumed to
+  transfer directly. `reach.rate` currently assumes clean stage input
+  throughout; this would be upstream of the package's own scope (data
+  QC before fitting or applying a rating) rather than a rating-curve
+  feature itself. Large, and arguably a different tool's job.
+- **Multi-station regionalisation / transfer.** Transferring a rating (or
+  its parameters) from a gauged station to a hydraulically similar
+  ungauged one, via nearest-neighbour donor selection or regression on
+  catchment attributes -- an active research area (Pool et al. 2021, a
+  large comparative study, is the most substantial single reference
+  found). This is the one candidate here that composes naturally with
+  what `reach.rate` already has: `n_bounds` already lets known
+  channel-control theory anchor a fit, and a "donor station's fitted
+  `C`/`a`/`n` as a starting point or prior range for a new, sparsely
+  gauged station" is a small, natural extension of that same idea, not a
+  new architecture. Medium.
