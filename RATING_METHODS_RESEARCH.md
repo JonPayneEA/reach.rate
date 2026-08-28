@@ -286,24 +286,67 @@ regression rather than power-law NLS.
 
 ## Suggested priority order
 
-1. **Inverse application** (`apply_rating_inverse()`) -- small-medium,
-   fits the architecture cleanly, no new dependency.
-2. **Closed-form asymptotic SEs + relative-RMSE column** -- small, cheap,
-   pure upside.
-3. **Weir/flume equations with GUM-style uncertainty** -- medium, composes
-   with `graft_rating()` immediately.
-4. **Bayesian doc cross-reference to `bdrc`** -- trivial, do regardless of
-   whether a bridge function ever gets built.
-5. **Continuous-series rating-check function** (index/ultrasonic vs.
-   existing rating) -- medium, high practical value, a real pilot before
-   committing further.
-6. **Leverage/influence diagnostics** -- medium.
-7. **`bdrc` bridge function** -- medium-large, do once (4) shows real
-   demand.
-8. **Full `FlodeIndexRating` index-velocity class** -- large, only after
-   (5) demonstrates the need at real stations.
-9. **NEMS over-refinement caution in the guide vignette** -- trivial,
-   documentation only.
+Revised to fold in the further candidate areas above, ranked by effort
+against real value rather than by section order.
+
+**Tier 1 -- do now (trivial/small, no real downside)**
+
+1. **Bayesian doc cross-reference to `bdrc`** -- trivial, closes the "no
+   Bayesian option" gap in the guidance vignettes at zero code risk.
+2. **NEMS over-refinement caution** in the guide vignette -- trivial, one
+   paragraph.
+3. **Closed-form asymptotic SEs + relative-RMSE column** -- small, fixes
+   a real gap (currently no SE at all when `n_boot = 0`), free once
+   already fitting.
+4. **Salt-dilution/tracer note** in the gaugings docs -- small, low
+   stakes, notes that a gauging's source method isn't currently recorded.
+
+**Tier 2 -- strongest candidates (modest effort, clear fit)**
+
+5. **`apply_rating_inverse()`** -- small-medium, fills a real
+   one-directional gap, dispatches the same way everything else already
+   does.
+6. **Review against the EA's own SW6-061 extrapolation manual** --
+   medium, but it's the organisation's own standard governing how this
+   package's users would extend a curve; do this before anything fancier
+   on extrapolation.
+
+**Tier 3 -- good value, less urgent**
+
+7. **Continuous-series rating-check function** (index/ultrasonic vs.
+   existing rating) -- medium, high value, but only pays off at stations
+   that actually have ultrasonic data.
+8. **Multi-station regionalisation** (donor station's `C`/`a`/`n` as a
+   starting point) -- medium, composes with `n_bounds`, speculative until
+   a genuinely sparse station needs it.
+9. **Weir/flume equations with GUM-style uncertainty** -- medium, real
+   value but correctness-critical (needs careful standard transcription,
+   not just architecture work), and only applicable at weir-controlled
+   stations.
+10. **Leverage/influence diagnostics** -- medium, a nice-to-have, not
+    solving an active problem.
+
+**Tier 4 -- bigger investment, defer until demand is proven**
+
+11. **`bdrc` bridge function** -- medium-large, build once (1) shows
+    people actually want it.
+12. **ML-predicted rating parameters** as a starting-value heuristic --
+    large as a research question first, small once/if the research
+    question is settled.
+13. **Full `FlodeIndexRating` index-velocity class** -- large, only after
+    (7) demonstrates the need at a real station.
+
+**Tier 5 -- low priority or likely out of scope**
+
+14. **Hydraulic/hydrodynamic model-derived ratings** -- large, probably
+    belongs outside this package.
+15. **Sediment- and ice-affected ratings** -- large and speculative, low
+    relevance to most EA lowland stations.
+16. **Real-time stage QC/anomaly detection** -- large, arguably a
+    different tool's job, and the literature found doesn't clearly
+    transfer to stage records specifically.
+17. **Satellite altimetry discharge** -- not viable yet (~50% median bias
+    on smaller rivers); revisit in a few years.
 
 ## Further candidate areas
 
