@@ -29,6 +29,7 @@ design choices.
 Useful links:
 \itemize{
   \item \url{https://github.com/JonPayneEA/reach.rate}
+  \item \url{https://jonpayneea.github.io/reach.rate/}
   \item Report bugs at \url{https://github.com/JonPayneEA/reach.rate/issues}
 }
 
