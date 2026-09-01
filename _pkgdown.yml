@@ -19,6 +19,7 @@ articles:
   - non_standard_optimisation
   - n_bounds_guide
   - weir_flume_guide
+  - leverage_influence_guide
 
 reference:
 - title: Fitting a rating
@@ -51,6 +52,8 @@ reference:
   contents:
   - plot_rating_residuals
   - flag_extrapolated_limbs
+  - flag_influential_gaugings
+  - plot_rating_leverage
   - plot_rating_cross_section
   - demo_cross_section_rating
 

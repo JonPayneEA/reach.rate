@@ -1069,6 +1069,186 @@ flag_extrapolated_limbs <- function(fit, tol_frac = 0.05,
   )
 }
 
+# Per-gauging leverage and Cook's distance, computed analytically from
+# each limb's own fitted C/a/n and its gaugings -- no dependence on the
+# original nlsLM fit object (already discarded by the time @limbs/
+# @gaugings exist), the same choice plot_rating_residuals() makes for
+# fitted_cms/residual_cms. The nonlinear model's Jacobian w.r.t. (C, a,
+# n), evaluated at each gauging, plays the role of a design matrix in
+# the classical (linear) leverage/Cook's-distance formulas (St. Laurent
+# & Cook 1992; the same local-linearisation idea rate_optimise()'s own
+# vcov()-based asymptotic SEs already rely on). A gauging with H <= a
+# (zero or negative depth) has an undefined n-partial (log(H - a)) and
+# is excluded, matching how apply_rating_inverse() treats that case as
+# not meaningfully part of the fitted curve.
+.rating_leverage_dt <- function(fit) {
+  gaugings_dt <- copy(fit@gaugings)
+  limbs_dt <- fit@limbs
+
+  gaugings_dt[limbs_dt, on = "limb", `:=`(
+    fitted_cms = i.C * (stage_m - i.a)^i.n,
+    .C = i.C, .a = i.a, .n = i.n
+  )]
+  gaugings_dt[, residual_cms := discharge_cms - fitted_cms]
+  gaugings_dt[, depth := stage_m - .a]
+
+  gaugings_dt[, `:=`(leverage = NA_real_, cooks_distance = NA_real_)]
+
+  for (lb in limbs_dt$limb) {
+    idx <- which(gaugings_dt$limb == lb & gaugings_dt$depth > 0)
+    p <- 3L
+    if (length(idx) <= p) next
+
+    C_i <- gaugings_dt$.C[idx[1]]; a_i <- gaugings_dt$.a[idx[1]]; n_i <- gaugings_dt$.n[idx[1]]
+    depth_i <- gaugings_dt$depth[idx]
+    J <- cbind(
+      dC = depth_i^n_i,
+      da = -C_i * n_i * depth_i^(n_i - 1),
+      dn = C_i * depth_i^n_i * log(depth_i)
+    )
+    JtJ_inv <- tryCatch(solve(t(J) %*% J), error = function(e) NULL)
+    if (is.null(JtJ_inv)) next
+
+    hat <- rowSums((J %*% JtJ_inv) * J)
+    resid_i <- gaugings_dt$residual_cms[idx]
+    s2 <- sum(resid_i^2) / (length(idx) - p)
+    cooks_d <- if (s2 > 0) (hat / (p * (1 - hat)^2)) * (resid_i^2 / s2) else rep(0, length(idx))
+
+    gaugings_dt[idx, `:=`(leverage = hat, cooks_distance = cooks_d)]
+  }
+
+  gaugings_dt[, c(".C", ".a", ".n", "depth") := NULL]
+  gaugings_dt[]
+}
+
+#' Flag gaugings that disproportionately steer their limb's fit
+#'
+#' @description
+#' [plot_rating_residuals()] shows how far off each gauging ends up
+#' *after* fitting; this asks a different question -- how much each
+#' gauging *shaped* the fit to begin with. A gauging can sit right on
+#' its own limb's curve (a small residual) while still having pulled
+#' `C`/`a`/`n` a long way to get there, if nothing else nearby held the
+#' curve in place -- typically a single high or low gauging isolated at
+#' the sparse end of a limb.
+#'
+#' Leverage and Cook's distance are standard linear-regression
+#' diagnostics (Cook 1977), adapted here to `rate_optimise()`'s
+#' nonlinear fit by the usual local-linearisation trick (St. Laurent &
+#' Cook 1992): the model's Jacobian with respect to `C`/`a`/`n`,
+#' evaluated at each gauging, stands in for a design matrix. Leverage
+#' measures how extreme a gauging's position is, independent of fit
+#' quality; Cook's distance combines that with its residual to estimate
+#' how much `C`/`a`/`n` would shift if that one gauging were dropped and
+#' the limb refit -- without actually doing the refit.
+#'
+#' A limb with `n_obs <= 3` (fewer gaugings than free parameters) has no
+#' defined leverage -- both columns are `NA` for its gaugings.
+#'
+#' @param fit A [FlodeRating] instance.
+#' @param cooks_mult,leverage_mult Single positive numbers. A gauging is
+#'   flagged `influential` if its Cook's distance exceeds
+#'   `cooks_mult / n_obs` (limb-specific `n_obs`) or its leverage exceeds
+#'   `leverage_mult * 3 / n_obs` -- the standard rule-of-thumb cutoffs
+#'   (Cook 1977; Belsley, Kuh & Welsch 1980), computed per limb since
+#'   `n_obs` varies by limb. Defaults `4` and `2` respectively.
+#'
+#' @return A new [FlodeRating] instance with `@gaugings` columns added:
+#'   `fitted_cms`, `residual_cms`, `leverage`, `cooks_distance`,
+#'   `influential`.
+#'
+#' @seealso [plot_rating_residuals()] for the complementary
+#'   after-the-fact view; [plot_rating_leverage()] to see this plotted;
+#'   `vignette("leverage_influence_guide")` for a plain-English
+#'   explanation with a worked example.
+#'
+#' @references Cook, R. D. (1977). Detection of influential observations
+#'   in linear regression. *Technometrics*, 19(1), 15-18. St. Laurent,
+#'   R. T., & Cook, R. D. (1992). Leverage and superleverage in
+#'   nonlinear regression. *Journal of the American Statistical
+#'   Association*, 87(420), 985-990. Belsley, D. A., Kuh, E., & Welsch,
+#'   R. E. (1980). *Regression Diagnostics*. Wiley.
+#'
+#' @examples
+#' set.seed(1)
+#' stage_m <- seq(0.3, 3, by = 0.1)
+#' discharge_cms <- 5 * stage_m^1.5 * exp(rnorm(length(stage_m), sd = 0.03))
+#' # one isolated, high gauging at the sparse top end
+#' stage_m <- c(stage_m, 3.5)
+#' discharge_cms <- c(discharge_cms, 5 * 3.5^1.5 * 1.25)
+#'
+#' fit <- rate_optimise(discharge_cms, stage_m, n_bounds = c(1.3, 1.7))
+#' flagged <- flag_influential_gaugings(fit)
+#' flagged@gaugings[order(-cooks_distance)][1:3]
+#'
+#' @export
+flag_influential_gaugings <- function(fit, cooks_mult = 4, leverage_mult = 2) {
+  if (!S7_inherits(fit, FlodeRating)) {
+    stop("fit must be a FlodeRating object from rate_optimise()")
+  }
+  if (!is.numeric(cooks_mult) || length(cooks_mult) != 1L || cooks_mult <= 0) {
+    stop("cooks_mult must be a single positive number")
+  }
+  if (!is.numeric(leverage_mult) || length(leverage_mult) != 1L || leverage_mult <= 0) {
+    stop("leverage_mult must be a single positive number")
+  }
+
+  gaugings_dt <- .rating_leverage_dt(fit)
+  n_by_limb <- gaugings_dt[, .(n_obs = .N), by = limb]
+  gaugings_dt[n_by_limb, on = "limb", n_obs := i.n_obs]
+  gaugings_dt[, influential :=
+    !is.na(cooks_distance) &
+      (cooks_distance > cooks_mult / n_obs | leverage > leverage_mult * 3 / n_obs)]
+  gaugings_dt[, n_obs := NULL]
+
+  FlodeRating(
+    limbs = fit@limbs, gaugings = gaugings_dt[],
+    bootstrap = fit@bootstrap, fit_starts = fit@fit_starts,
+    status = fit@status, provenance = fit@provenance
+  )
+}
+
+#' Plot each gauging's leverage against its influence on the fit
+#'
+#' @description
+#' A scatter of Cook's distance against leverage, one facet per limb,
+#' point size scaled by Cook's distance and colour marking gaugings past
+#' [flag_influential_gaugings()]'s default cutoffs -- the two quantities
+#' behind that function's `influential` flag, plotted directly rather
+#' than collapsed to one flag. See `vignette("leverage_influence_guide")`
+#' for how to read this plot without the statistics background the
+#' terms usually assume.
+#'
+#' @param fit A [FlodeRating] instance.
+#' @inheritParams flag_influential_gaugings
+#' @return A `ggplot` object, invisibly.
+#'
+#' @seealso [flag_influential_gaugings()], [plot_rating_residuals()].
+#' @export
+plot_rating_leverage <- function(fit, cooks_mult = 4, leverage_mult = 2) {
+  if (!S7_inherits(fit, FlodeRating)) {
+    stop("fit must be a FlodeRating object from rate_optimise()")
+  }
+
+  flagged <- flag_influential_gaugings(fit, cooks_mult = cooks_mult, leverage_mult = leverage_mult)
+  plot_dt <- flagged@gaugings
+
+  p <- ggplot(plot_dt, aes(x = leverage, y = cooks_distance)) +
+    geom_point(aes(size = cooks_distance, colour = influential), alpha = 0.8) +
+    scale_colour_manual(values = c(`TRUE` = "#d62728", `FALSE` = "grey50"), na.value = "grey80") +
+    facet_wrap(~limb, scales = "free", labeller = label_both) +
+    labs(
+      title = "Leverage vs. Influence by Limb",
+      x = "Leverage", y = "Cook's distance",
+      size = "Cook's distance", colour = "Influential"
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(plot.title = element_text(face = "bold", size = 13))
+
+  print(p)
+  invisible(p)
+}
+
 #' Suggest candidate stage breakpoints for a multi-limb rating fit
 #'
 #' @description
