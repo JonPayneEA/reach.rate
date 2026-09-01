@@ -1,5 +1,18 @@
 # reach.rate (development)
 
+* New function `rate_from_cross_section()`: derives a theoretical rating
+  from a surveyed channel cross-section via Manning's equation, with no
+  gaugings required. Wetted area and perimeter are found by trapezoidal
+  integration of the surveyed points at a dense sequence of stages, and
+  the resulting synthetic `(stage, discharge)` series is fitted through
+  `rate_optimise()`'s own pipeline, so the result is an ordinary
+  `FlodeRating` -- distinguished from a gauged fit only by
+  `provenance$source == "cross_section_theoretical"`. A standalone
+  diagnostic for now (a first-cut rating at an ungauged site, or a
+  physically-grounded check on a surveyed section's implied shape);
+  composes directly with `plot_rating_cross_section()`, since both take
+  the same `cross_section` object.
+
 * New function `apply_rating_inverse()`: the other direction from
   `apply_rating()` -- given a discharge series, finds the stage that
   produced it. Requires a gap-free `FlodeRatingTable` (checked directly

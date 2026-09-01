@@ -187,6 +187,27 @@ plot_rating_cross_section(fit, xs)
 
 `elevation_m` must already sit on the same vertical datum as `stage_m` -- this is not a survey-to-gauge-datum converter, only an overlay. The secondary axis on top reads off the true distance scale; the rescale itself carries no hydraulic meaning; it only lets two curves that live on genuinely different axes (distance and discharge) share one plot. Read the shape the same way `vignette("n_bounds_guide")` reads its idealised ones: a channel that widens sharply above some stage is a compound-channel signal worth a fresh look at whether one set of limbs still describes it, independent of anything `rmse_cms` or `r_squared` says.
 
+## `rate_from_cross_section()`: a rating with no gaugings at all
+
+Everything up to here starts from gaugings. `rate_from_cross_section()` doesn't: given the same kind of surveyed section as the overlay above, plus a bed slope and a Manning's roughness, it computes wetted area and perimeter at a dense sequence of stages, converts each to a discharge by Manning's equation, and fits that synthetic series through `rate_optimise()`'s own pipeline:
+
+```{r xs-theoretical, fig.alt = "Theoretical rating curve derived from a cross-section by Manning's equation, overlaid on the same cross-section"}
+xs_theoretical <- data.table(
+  distance_m = c(-6, -3, 3, 6),
+  elevation_m = c(2.4, 0, 0, 2.4)
+)
+theoretical_fit <- rate_from_cross_section(
+  xs_theoretical, slope = 0.001, roughness = 0.035, n_points = 60
+)
+theoretical_fit@provenance$source
+
+plot_rating_cross_section(theoretical_fit, xs_theoretical)
+```
+
+The result is an ordinary `FlodeRating` -- same `C`/`a`/`n` limbs, same diagnostics -- distinguished from a gauged fit only by `provenance$source`, which reads `"cross_section_theoretical"` rather than `"gauged"`. Because `cross_section` is exactly the object `plot_rating_cross_section()` also takes, overlaying the fit on the very geometry that produced it is a built-in sanity check: if the curve doesn't visually track the channel shape, something is off in the slope, roughness, or survey before this ever meets a real gauging.
+
+Treat this as a standalone diagnostic for now, not a way to extend an existing gauged rating past its top gauging -- that composition (grafting a cross-section-derived high limb onto a gauged one via `graft_rating()`) isn't wired up yet. A single Manning's `n` is applied across the whole wetted section; a genuine compound channel, with a distinct low-flow channel and overbank berms, is only approximated by that, not modelled with the divided-channel method's separate per-subsection roughness. And the survey must reach at least as high as the highest stage you rate -- `rate_from_cross_section()` does not assume the end points continue as vertical banks above the survey's own top.
+
 # The junction gap problem
 
 Fit each limb independently and their curves will not meet. Limb 1's equation, evaluated at the shared boundary stage, gives one discharge; limb 2's gives another. The mismatch

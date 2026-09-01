@@ -29,6 +29,7 @@ reference:
   - rate_optimise_constrained
   - suggest_breakpoints
   - suggested_breakpoints_vector
+  - rate_from_cross_section
 
 - title: The segmented alternative
   desc: A joint model with no junction gap to reconcile, after Hodson et al. (2024).
