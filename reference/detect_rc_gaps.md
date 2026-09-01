@@ -148,7 +148,7 @@ limb2_dt <- data.table::data.table(
 )
 rc_raw_dt <- data.table::rbindlist(list(limb1_dt, limb2_dt))
 detect_rc_gaps(rc_raw_dt)
-#> INFO [2026-09-01 07:30:28] Checked 1 junction(s): 1 gap(s) flagged.
+#> INFO [2026-09-01 09:53:17] Checked 1 junction(s): 1 gap(s) flagged.
 #>    junction limb_lower limb_upper stage_break stage_lower_end stage_upper_start
 #>       <int>     <char>     <char>       <num>           <num>             <num>
 #> 1:        1          1          2          10              10                10

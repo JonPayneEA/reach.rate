@@ -24,6 +24,7 @@
     <li><a class="dropdown-item" href="../articles/rating_curve_walkthrough.html">A Rating Curve Walkthrough: From Spot Gaugings to a Constrained Curve</a></li>
     <li><a class="dropdown-item" href="../articles/non_standard_optimisation.html">Non-Standard Rating Optimisation: When and Why</a></li>
     <li><a class="dropdown-item" href="../articles/n_bounds_guide.html">Choosing n_bounds: A Cross-Section Guide</a></li>
+    <li><a class="dropdown-item" href="../articles/weir_flume_guide.html">Weir and Flume Equations: Structures, GUM Uncertainty, and Worked Examples</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -77,6 +78,50 @@
 
         </dt>
         <dd>Extract the selected breakpoints from suggest_breakpoints() as a vector</dd>
+
+        <dt>
+
+          <code><a href="rate_from_cross_section.html">rate_from_cross_section()</a></code>
+
+        </dt>
+        <dd>Derive a theoretical rating from a surveyed cross-section (Manning's equation)</dd>
+      </dl></div><div class="section level2">
+      <h2 id="weir-and-flume-equations">Weir and flume equations<a class="anchor" aria-label="anchor" href="#weir-and-flume-equations"></a></h2>
+
+      <div class="section-desc"><p>Physically-derived discharge from structure geometry, not fitted to gaugings, with GUM-style propagated uncertainty.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="weir_discharge_rectangular.html">weir_discharge_rectangular()</a></code>
+
+        </dt>
+        <dd>Discharge over a full-width (suppressed) rectangular sharp-crested weir</dd>
+
+        <dt>
+
+          <code><a href="weir_discharge_vnotch.html">weir_discharge_vnotch()</a></code>
+
+        </dt>
+        <dd>Discharge over a V-notch (triangular) sharp-crested weir</dd>
+
+        <dt>
+
+          <code><a href="weir_discharge_cipoletti.html">weir_discharge_cipoletti()</a></code>
+
+        </dt>
+        <dd>Discharge over a Cipoletti (trapezoidal) sharp-crested weir</dd>
+
+        <dt>
+
+          <code><a href="flume_discharge_parshall.html">flume_discharge_parshall()</a></code>
+
+        </dt>
+        <dd>Discharge through a standard Parshall flume (free flow)</dd>
       </dl></div><div class="section level2">
       <h2 id="the-segmented-alternative">The segmented alternative<a class="anchor" aria-label="anchor" href="#the-segmented-alternative"></a></h2>
 

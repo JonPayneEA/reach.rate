@@ -35,10 +35,10 @@ report), `rc_raw` (the expanded table before resolution), and `rc_fixed`
 
 ``` r
 result <- run_demo(plot = FALSE)
-#> INFO [2026-09-01 07:30:34] Checked 2 junction(s): 2 gap(s) flagged.
-#> INFO [2026-09-01 07:30:34] Checked 2 junction(s): 2 gap(s) flagged.
-#> INFO [2026-09-01 07:30:34] Junction 1 (limbs 1/2, stage 1.6): gap 5.73 -> 11.56 | agreed Q = 8.6452
-#> INFO [2026-09-01 07:30:34] Junction 2 (limbs 2/3, stage 2.2): gap 19.7 -> 34.74 | agreed Q = 27.2196
+#> INFO [2026-09-01 09:53:24] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-01 09:53:24] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-01 09:53:24] Junction 1 (limbs 1/2, stage 1.6): gap 5.73 -> 11.56 | agreed Q = 8.6452
+#> INFO [2026-09-01 09:53:24] Junction 2 (limbs 2/3, stage 2.2): gap 19.7 -> 34.74 | agreed Q = 27.2196
 result$gaps
 #>    junction limb_lower limb_upper stage_break stage_lower_end stage_upper_start
 #>       <int>     <char>     <char>       <num>           <num>             <num>

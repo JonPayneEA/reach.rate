@@ -10,3 +10,5 @@
   Why](https://jonpayneea.github.io/reach.rate/articles/non_standard_optimisation.md):
 - [Choosing n_bounds: A Cross-Section
   Guide](https://jonpayneea.github.io/reach.rate/articles/n_bounds_guide.md):
+- [Weir and Flume Equations: Structures, GUM Uncertainty, and Worked
+  Examples](https://jonpayneea.github.io/reach.rate/articles/weir_flume_guide.md):

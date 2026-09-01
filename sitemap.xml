@@ -10,6 +10,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/non_standard_optimisation.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/rating_curve_walkthrough.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/rating_curves_guide.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/articles/weir_flume_guide.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/authors.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/index.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/news/index.html</loc></url>
@@ -30,6 +31,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/detect_rc_gaps.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/expand_rating_table.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/flag_extrapolated_limbs.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/flume_discharge_parshall.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/graft_rating.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/index.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rating_comparison.html</loc></url>
@@ -38,6 +40,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rating_interval.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rating_residuals.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rc_gaps.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/rate_from_cross_section.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rate_optimise.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rate_optimise_constrained.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rate_optimise_segmented.html</loc></url>
@@ -49,5 +52,8 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/station_gaugings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/suggest_breakpoints.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/suggested_breakpoints_vector.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/weir_discharge_cipoletti.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/weir_discharge_rectangular.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/weir_discharge_vnotch.html</loc></url>
 </urlset>
 

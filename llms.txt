@@ -281,6 +281,24 @@ breakpoints rather than guess them.
 - [`suggested_breakpoints_vector()`](https://jonpayneea.github.io/reach.rate/reference/suggested_breakpoints_vector.md)
   : Extract the selected breakpoints from suggest_breakpoints() as a
   vector
+- [`rate_from_cross_section()`](https://jonpayneea.github.io/reach.rate/reference/rate_from_cross_section.md)
+  : Derive a theoretical rating from a surveyed cross-section (Manning's
+  equation)
+
+## Weir and flume equations
+
+Physically-derived discharge from structure geometry, not fitted to
+gaugings, with GUM-style propagated uncertainty.
+
+- [`weir_discharge_rectangular()`](https://jonpayneea.github.io/reach.rate/reference/weir_discharge_rectangular.md)
+  : Discharge over a full-width (suppressed) rectangular sharp-crested
+  weir
+- [`weir_discharge_vnotch()`](https://jonpayneea.github.io/reach.rate/reference/weir_discharge_vnotch.md)
+  : Discharge over a V-notch (triangular) sharp-crested weir
+- [`weir_discharge_cipoletti()`](https://jonpayneea.github.io/reach.rate/reference/weir_discharge_cipoletti.md)
+  : Discharge over a Cipoletti (trapezoidal) sharp-crested weir
+- [`flume_discharge_parshall()`](https://jonpayneea.github.io/reach.rate/reference/flume_discharge_parshall.md)
+  : Discharge through a standard Parshall flume (free flow)
 
 ## The segmented alternative
 
@@ -402,3 +420,5 @@ holding.
   Why](https://jonpayneea.github.io/reach.rate/articles/non_standard_optimisation.md):
 - [Choosing n_bounds: A Cross-Section
   Guide](https://jonpayneea.github.io/reach.rate/articles/n_bounds_guide.md):
+- [Weir and Flume Equations: Structures, GUM Uncertainty, and Worked
+  Examples](https://jonpayneea.github.io/reach.rate/articles/weir_flume_guide.md):

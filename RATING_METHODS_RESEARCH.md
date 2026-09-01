@@ -58,13 +58,15 @@ already does the joining; it just has no source of a *structural*
 
 **Recommendation.** A new, small, standalone module (e.g.
 `R/weir_equations.R`) with one function per structure type
-(`weir_discharge_rectangular()`, `weir_discharge_vnotch()`,
-`weir_discharge_cipoletti()`, `flume_discharge_parshall()`, …), each
-taking head and geometry, returning discharge plus an uncertainty band
-computed by quadrature propagation of the structure’s own coefficient
-and head uncertainties – not a new subclass. A thin bridge function
-converting one of these into a one-row `FlodeRatingTable`-shaped table
-would let it be handed straight to
+([`weir_discharge_rectangular()`](https://jonpayneea.github.io/reach.rate/reference/weir_discharge_rectangular.md),
+[`weir_discharge_vnotch()`](https://jonpayneea.github.io/reach.rate/reference/weir_discharge_vnotch.md),
+[`weir_discharge_cipoletti()`](https://jonpayneea.github.io/reach.rate/reference/weir_discharge_cipoletti.md),
+[`flume_discharge_parshall()`](https://jonpayneea.github.io/reach.rate/reference/flume_discharge_parshall.md),
+…), each taking head and geometry, returning discharge plus an
+uncertainty band computed by quadrature propagation of the structure’s
+own coefficient and head uncertainties – not a new subclass. A thin
+bridge function converting one of these into a one-row
+`FlodeRatingTable`-shaped table would let it be handed straight to
 [`graft_rating()`](https://jonpayneea.github.io/reach.rate/reference/graft_rating.md),
 [`apply_rating()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating.md),
 and

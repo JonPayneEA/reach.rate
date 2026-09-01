@@ -41,6 +41,7 @@
     <li><a class="dropdown-item" href="../articles/rating_curve_walkthrough.html">A Rating Curve Walkthrough: From Spot Gaugings to a Constrained Curve</a></li>
     <li><a class="dropdown-item" href="../articles/non_standard_optimisation.html">Non-Standard Rating Optimisation: When and Why</a></li>
     <li><a class="dropdown-item" href="../articles/n_bounds_guide.html">Choosing n_bounds: A Cross-Section Guide</a></li>
+    <li><a class="dropdown-item" href="../articles/weir_flume_guide.html">Weir and Flume Equations: Structures, GUM Uncertainty, and Worked Examples</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -485,6 +486,53 @@ signal worth a fresh look at whether one set of limbs still describes
 it, independent of anything <code>rmse_cms</code> or
 <code>r_squared</code> says.</p>
 </div>
+<div class="section level3">
+<h3 id="rate_from_cross_section-a-rating-with-no-gaugings-at-all">
+<code>rate_from_cross_section()</code>: a rating with no gaugings at
+all<a class="anchor" aria-label="anchor" href="#rate_from_cross_section-a-rating-with-no-gaugings-at-all"></a>
+</h3>
+<p>Everything up to here starts from gaugings.
+<code><a href="../reference/rate_from_cross_section.html">rate_from_cross_section()</a></code> doesn’t: given the same kind of
+surveyed section as the overlay above, plus a bed slope and a Manning’s
+roughness, it computes wetted area and perimeter at a dense sequence of
+stages, converts each to a discharge by Manning’s equation, and fits
+that synthetic series through <code><a href="../reference/rate_optimise.html">rate_optimise()</a></code>’s own
+pipeline:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">xs_theoretical</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
+<span>  distance_m <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">6</span>, <span class="op">-</span><span class="fl">3</span>, <span class="fl">3</span>, <span class="fl">6</span><span class="op">)</span>,</span>
+<span>  elevation_m <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.4</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">2.4</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">theoretical_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate_from_cross_section.html">rate_from_cross_section</a></span><span class="op">(</span></span>
+<span>  <span class="va">xs_theoretical</span>, slope <span class="op">=</span> <span class="fl">0.001</span>, roughness <span class="op">=</span> <span class="fl">0.035</span>, n_points <span class="op">=</span> <span class="fl">60</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">theoretical_fit</span><span class="op">@</span><span class="va">provenance</span><span class="op">$</span><span class="va">source</span></span>
+<span><span class="co">#&gt; [1] "cross_section_theoretical"</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/plot_rating_cross_section.html">plot_rating_cross_section</a></span><span class="op">(</span><span class="va">theoretical_fit</span>, <span class="va">xs_theoretical</span><span class="op">)</span></span></code></pre></div>
+<p><img src="rating_curves_guide_files/figure-html/xs-theoretical-1.png" class="r-plt" alt="Theoretical rating curve derived from a cross-section by Manning's equation, overlaid on the same cross-section" width="672"></p>
+<p>The result is an ordinary <code>FlodeRating</code> – same
+<code>C</code>/<code>a</code>/<code>n</code> limbs, same diagnostics –
+distinguished from a gauged fit only by <code>provenance$source</code>,
+which reads <code>"cross_section_theoretical"</code> rather than
+<code>"gauged"</code>. Because <code>cross_section</code> is exactly the
+object <code><a href="../reference/plot_rating_cross_section.html">plot_rating_cross_section()</a></code> also takes, overlaying
+the fit on the very geometry that produced it is a built-in sanity
+check: if the curve doesn’t visually track the channel shape, something
+is off in the slope, roughness, or survey before this ever meets a real
+gauging.</p>
+<p>Treat this as a standalone diagnostic for now, not a way to extend an
+existing gauged rating past its top gauging – that composition (grafting
+a cross-section-derived high limb onto a gauged one via
+<code><a href="../reference/graft_rating.html">graft_rating()</a></code>) isn’t wired up yet. A single Manning’s
+<code>n</code> is applied across the whole wetted section; a genuine
+compound channel, with a distinct low-flow channel and overbank berms,
+is only approximated by that, not modelled with the divided-channel
+method’s separate per-subsection roughness. And the survey must reach at
+least as high as the highest stage you rate –
+<code><a href="../reference/rate_from_cross_section.html">rate_from_cross_section()</a></code> does not assume the end points
+continue as vertical banks above the survey’s own top.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="the-junction-gap-problem">The junction gap problem<a class="anchor" aria-label="anchor" href="#the-junction-gap-problem"></a>
@@ -503,11 +551,11 @@ forecast inputs.</p>
 <div class="section level3">
 <h3 id="detecting-it">Detecting it<a class="anchor" aria-label="anchor" href="#detecting-it"></a>
 </h3>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rating_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_rating_table.html">as_rating_table</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="va">rc_raw_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_rating_table.html">expand_rating_table</a></span><span class="op">(</span><span class="va">rating_table</span>, step <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
 <span><span class="va">gaps_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_rc_gaps.html">detect_rc_gaps</a></span><span class="op">(</span><span class="va">rc_raw_dt</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-09-01 07:30:57] Checked 2 junction(s): 2 gap(s) flagged.</span></span>
+<span><span class="co">#&gt; INFO [2026-09-01 09:53:47] Checked 2 junction(s): 2 gap(s) flagged.</span></span>
 <span><span class="va">gaps_dt</span></span>
 <span><span class="co">#&gt;    junction limb_lower limb_upper stage_break stage_lower_end stage_upper_start</span></span>
 <span><span class="co">#&gt;       &lt;int&gt;     &lt;char&gt;     &lt;char&gt;       &lt;num&gt;           &lt;num&gt;             &lt;num&gt;</span></span>
@@ -553,13 +601,13 @@ when one side is clearly better gauged than the other;
 go further and rescale the <em>whole</em> deferring limb’s curve, not
 just its junction row, so the reshaping is visible across the limb
 rather than only at its boundary.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rc_fixed_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolve_rc_gaps.html">resolve_rc_gaps</a></span><span class="op">(</span><span class="va">rc_raw_dt</span>, method <span class="op">=</span> <span class="st">"midpoint"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-09-01 07:30:57] Checked 2 junction(s): 2 gap(s) flagged.</span></span>
-<span><span class="co">#&gt; INFO [2026-09-01 07:30:57] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -&gt; 11.42 | agreed Q = 8.6042</span></span>
-<span><span class="co">#&gt; INFO [2026-09-01 07:30:57] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -&gt; 34.81 | agreed Q = 27.2512</span></span>
+<span><span class="co">#&gt; INFO [2026-09-01 09:53:47] Checked 2 junction(s): 2 gap(s) flagged.</span></span>
+<span><span class="co">#&gt; INFO [2026-09-01 09:53:47] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -&gt; 11.42 | agreed Q = 8.6042</span></span>
+<span><span class="co">#&gt; INFO [2026-09-01 09:53:47] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -&gt; 34.81 | agreed Q = 27.2512</span></span>
 <span><span class="fu"><a href="../reference/plot_rc_gaps.html">plot_rc_gaps</a></span><span class="op">(</span><span class="va">rc_raw_dt</span>, <span class="va">rc_fixed_dt</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-09-01 07:30:57] Checked 2 junction(s): 2 gap(s) flagged.</span></span></code></pre></div>
+<span><span class="co">#&gt; INFO [2026-09-01 09:53:47] Checked 2 junction(s): 2 gap(s) flagged.</span></span></code></pre></div>
 <p><img src="rating_curves_guide_files/figure-html/resolve-gaps-1.png" class="r-plt" alt="" width="672"></p>
 <p>This is fast and needs nothing but the table. Its limitation is
 fundamental: the equations that produced the table are untouched, so
@@ -571,7 +619,7 @@ equations are not going anywhere.</p>
 <h3 id="align_limb_equations-rescale-c">
 <code>align_limb_equations()</code>: rescale C<a class="anchor" aria-label="anchor" href="#align_limb_equations-rescale-c"></a>
 </h3>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">aligned_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/align_limb_equations.html">align_limb_equations</a></span><span class="op">(</span><span class="va">rating_table</span>, anchor_limb <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
 <span><span class="va">aligned_result</span><span class="op">@</span><span class="va">status</span></span>
 <span><span class="co">#&gt; [1] "post_fit_aligned"</span></span>
@@ -632,7 +680,7 @@ solving
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mtext mathvariant="normal">lower</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>H</mi><mo>−</mo><msub><mi>a</mi><mtext mathvariant="normal">lower</mtext></msub><msup><mo stretchy="false" form="postfix">)</mo><msub><mi>n</mi><mtext mathvariant="normal">lower</mtext></msub></msup><mo>=</mo><msub><mi>C</mi><mtext mathvariant="normal">upper</mtext></msub><mo stretchy="false" form="prefix">(</mo><mi>H</mi><mo>−</mo><msub><mi>a</mi><mtext mathvariant="normal">upper</mtext></msub><msup><mo stretchy="false" form="postfix">)</mo><msub><mi>n</mi><mtext mathvariant="normal">upper</mtext></msub></msup></mrow><annotation encoding="application/x-tex">C_{\text{lower}}(H-a_{\text{lower}})^{n_{\text{lower}}} = C_{\text{upper}}(H-a_{\text{upper}})^{n_{\text{upper}}}</annotation></semantics></math>.
 Where that root exists, both curves already agree there, so nothing
 about either equation needs to change.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">aligned_boundaries</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/align_limb_boundaries.html">align_limb_boundaries</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: align_limb_boundaries(): limb 2 and 3's curves do not cross within</span></span>
 <span><span class="co">#&gt; [0.5754, 3.5]; leaving this junction's boundary unchanged.</span></span>
@@ -683,7 +731,7 @@ crossing does exist.</p>
 <code>rate_optimise_constrained()</code>: refit under the
 constraint<a class="anchor" aria-label="anchor" href="#rate_optimise_constrained-refit-under-the-constraint"></a>
 </h3>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_constrained</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate_optimise_constrained.html">rate_optimise_constrained</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.6</span>, <span class="fl">2.2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">fit_constrained</span><span class="op">@</span><span class="va">limbs</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">C</span>, <span class="va">a</span>, <span class="va">n</span>, <span class="va">rmse_cms</span>, <span class="va">r_squared</span>, <span class="va">aligned</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;     limb         C           a         n   rmse_cms r_squared aligned</span></span>
@@ -734,7 +782,7 @@ boundary must stay fixed (or the curves don’t actually cross):
 <code><a href="../reference/rate_optimise_constrained.html">rate_optimise_constrained()</a></code>. The comparison below is worth
 running once to calibrate your intuition for how much the last two
 actually differ in practice.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rating_constrained_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_rating_table.html">as_rating_table</a></span><span class="op">(</span><span class="va">fit_constrained</span><span class="op">)</span></span>
 <span><span class="va">method_comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_ratings.html">compare_ratings</a></span><span class="op">(</span><span class="va">aligned_result</span>, <span class="va">rating_constrained_table</span><span class="op">)</span></span>
 <span><span class="va">method_comparison</span><span class="op">$</span><span class="va">discharge</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span></span>
@@ -775,7 +823,7 @@ produce one.</p>
 <p>This section uses its own synthetic gaugings – three multiplicative
 segments rather than three independent limbs – since that is what this
 model structurally fits:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">7</span><span class="op">)</span></span>
 <span><span class="va">stage_seg_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">3.5</span>, by <span class="op">=</span> <span class="fl">0.03</span><span class="op">)</span></span>
 <span><span class="va">q1</span> <span class="op">&lt;-</span> <span class="fl">4</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">stage_seg_m</span> <span class="op">-</span> <span class="fl">0.1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">^</span><span class="fl">1.55</span></span>
@@ -793,7 +841,7 @@ model structurally fits:</p>
 <span><span class="co">#&gt; 1: 0.9987902   107                  4                  4                 1</span></span>
 <span><span class="fu"><a href="../reference/rating_plot.html">rating_plot</a></span><span class="op">(</span><span class="va">fit_seg</span><span class="op">)</span></span></code></pre></div>
 <p><img src="rating_curves_guide_files/figure-html/segmented-fit-1.png" class="r-plt" alt="Fitted segmented rating curve against gauged points" width="672"></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">fit_seg</span>, <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span>stage <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">1.5</span>, <span class="fl">3.0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    stage  discharge extrapolated</span></span>
 <span><span class="co">#&gt;    &lt;num&gt;      &lt;num&gt;       &lt;lgcl&gt;</span></span>
@@ -816,7 +864,7 @@ structure inside this toolkit’s conventions.</p>
 <div class="section level2">
 <h2 id="uncertainty-the-bootstrap">Uncertainty: the bootstrap<a class="anchor" aria-label="anchor" href="#uncertainty-the-bootstrap"></a>
 </h2>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.6</span>, <span class="fl">2.2</span><span class="op">)</span>, n_boot <span class="op">=</span> <span class="fl">200L</span>, boot_seed <span class="op">=</span> <span class="fl">11L</span><span class="op">)</span></span>
 <span><span class="va">fit_boot</span><span class="op">@</span><span class="va">limbs</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">C</span>, <span class="va">C_se</span>, <span class="va">n</span>, <span class="va">n_se</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;     limb         C      C_se        n       n_se</span></span>
@@ -886,7 +934,7 @@ point: BaRatin (Le Coz et al. 2014) and Hodson et al. (2024).</p>
 <p>A stage record with a <code>datetime</code> column, spanning both
 sides of a rating re-rate later in this section, so it does double duty
 below:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hydrograph_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
 <span>  datetime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="st">"2024-06-01 00:00"</span>, tz <span class="op">=</span> <span class="st">"UTC"</span><span class="op">)</span>,</span>
@@ -899,7 +947,7 @@ below:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">flow_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">rating_table</span>, <span class="va">hydrograph_dt</span>, stage_col <span class="op">=</span> <span class="st">"stage"</span>, out_col <span class="op">=</span> <span class="st">"discharge_cms"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-09-01 07:31:00] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.</span></span>
+<span><span class="co">#&gt; INFO [2026-09-01 09:53:50] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">flow_dt</span><span class="op">$</span><span class="va">extrapolated</span><span class="op">)</span> <span class="co"># stage values above the gauged range</span></span>
 <span><span class="co">#&gt; [1] 4</span></span>
 <span><span class="va">flow_dt</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">10</span>, <span class="fl">20</span>, <span class="fl">30</span>, <span class="fl">40</span><span class="op">)</span><span class="op">]</span></span>
@@ -935,10 +983,10 @@ but a real junction gap makes it genuinely ambiguous (an overlapping or
 missing discharge range between limbs), so it insists on a gap-free
 table – exactly what <code><a href="../reference/align_limb_equations.html">align_limb_equations()</a></code> already
 produced above.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">target_flows_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span>discharge <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">20</span>, <span class="fl">60</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/apply_rating_inverse.html">apply_rating_inverse</a></span><span class="op">(</span><span class="va">aligned_result</span>, <span class="va">target_flows_dt</span>, discharge_col <span class="op">=</span> <span class="st">"discharge"</span>, out_col <span class="op">=</span> <span class="st">"stage_m"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-09-01 07:31:00] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.</span></span>
+<span><span class="co">#&gt; INFO [2026-09-01 09:53:50] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.</span></span>
 <span><span class="co">#&gt;    discharge  stage_m extrapolated</span></span>
 <span><span class="co">#&gt;        &lt;num&gt;    &lt;num&gt;       &lt;lgcl&gt;</span></span>
 <span><span class="co">#&gt; 1:         5 1.442813        FALSE</span></span>
@@ -969,7 +1017,7 @@ survives the change of representation.</p>
 <div class="section level3">
 <h3 id="ratings-change-over-time-apply_rating_versioned">Ratings change over time: <code>apply_rating_versioned()</code><a class="anchor" aria-label="anchor" href="#ratings-change-over-time-apply_rating_versioned"></a>
 </h3>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rating_history_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
 <span>  version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pre-2025"</span>, <span class="st">"post-2025"</span><span class="op">)</span>,</span>
 <span>  effective_from <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2024-01-01"</span>, <span class="st">"2025-06-01"</span><span class="op">)</span>, tz <span class="op">=</span> <span class="st">"UTC"</span><span class="op">)</span>,</span>
@@ -982,7 +1030,7 @@ survives the change of representation.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">versioned_flow_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/apply_rating_versioned.html">apply_rating_versioned</a></span><span class="op">(</span><span class="va">hydrograph_dt</span>, <span class="va">rating_history_dt</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-09-01 07:31:00] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.</span></span>
+<span><span class="co">#&gt; INFO [2026-09-01 09:53:50] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.</span></span>
 <span><span class="va">versioned_flow_dt</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">10</span>, <span class="fl">20</span>, <span class="fl">30</span>, <span class="fl">40</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;      datetime    stage   version discharge extrapolated</span></span>
 <span><span class="co">#&gt;        &lt;POSc&gt;    &lt;num&gt;    &lt;char&gt;     &lt;num&gt;       &lt;lgcl&gt;</span></span>
@@ -1007,7 +1055,7 @@ reimplementing the calculation.</p>
 <div class="section level3">
 <h3 id="documenting-a-change-compare_ratings">Documenting a change: <code>compare_ratings()</code><a class="anchor" aria-label="anchor" href="#documenting-a-change-compare_ratings"></a>
 </h3>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_ratings.html">compare_ratings</a></span><span class="op">(</span><span class="va">rating_table</span>, <span class="va">aligned_result</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/plot_rating_comparison.html">plot_rating_comparison</a></span><span class="op">(</span><span class="va">comparison</span>, old_label <span class="op">=</span> <span class="st">"Unaligned"</span>, new_label <span class="op">=</span> <span class="st">"Aligned"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="rating_curves_guide_files/figure-html/document-change-1.png" class="r-plt" alt="" width="672"></p>
@@ -1033,7 +1081,7 @@ that – there is nothing to refit against up there, only a rating already
 in force. <code><a href="../reference/graft_rating.html">graft_rating()</a></code> joins the two, finding the stage
 where <code>aligned_result</code>’s own top limb and the existing
 rating’s lowest limb actually cross:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">top</span> <span class="op">&lt;-</span> <span class="va">aligned_result</span><span class="op">@</span><span class="va">table</span><span class="op">[</span><span class="va">.N</span><span class="op">]</span></span>
 <span><span class="va">q_at_top</span> <span class="op">&lt;-</span> <span class="va">top</span><span class="op">$</span><span class="va">C</span> <span class="op">*</span> <span class="op">(</span><span class="va">top</span><span class="op">$</span><span class="va">upper_level</span> <span class="op">-</span> <span class="va">top</span><span class="op">$</span><span class="va">a</span><span class="op">)</span><span class="op">^</span><span class="va">top</span><span class="op">$</span><span class="va">n</span></span>
 <span></span>

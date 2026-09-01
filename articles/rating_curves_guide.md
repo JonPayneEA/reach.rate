@@ -394,6 +394,59 @@ is a compound-channel signal worth a fresh look at whether one set of
 limbs still describes it, independent of anything `rmse_cms` or
 `r_squared` says.
 
+### `rate_from_cross_section()`: a rating with no gaugings at all
+
+Everything up to here starts from gaugings.
+[`rate_from_cross_section()`](https://jonpayneea.github.io/reach.rate/reference/rate_from_cross_section.md)
+doesn’t: given the same kind of surveyed section as the overlay above,
+plus a bed slope and a Manning’s roughness, it computes wetted area and
+perimeter at a dense sequence of stages, converts each to a discharge by
+Manning’s equation, and fits that synthetic series through
+[`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)’s
+own pipeline:
+
+``` r
+
+xs_theoretical <- data.table(
+  distance_m = c(-6, -3, 3, 6),
+  elevation_m = c(2.4, 0, 0, 2.4)
+)
+theoretical_fit <- rate_from_cross_section(
+  xs_theoretical, slope = 0.001, roughness = 0.035, n_points = 60
+)
+theoretical_fit@provenance$source
+#> [1] "cross_section_theoretical"
+
+plot_rating_cross_section(theoretical_fit, xs_theoretical)
+```
+
+![Theoretical rating curve derived from a cross-section by Manning's
+equation, overlaid on the same
+cross-section](rating_curves_guide_files/figure-html/xs-theoretical-1.png)
+
+The result is an ordinary `FlodeRating` – same `C`/`a`/`n` limbs, same
+diagnostics – distinguished from a gauged fit only by
+`provenance$source`, which reads `"cross_section_theoretical"` rather
+than `"gauged"`. Because `cross_section` is exactly the object
+[`plot_rating_cross_section()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_cross_section.md)
+also takes, overlaying the fit on the very geometry that produced it is
+a built-in sanity check: if the curve doesn’t visually track the channel
+shape, something is off in the slope, roughness, or survey before this
+ever meets a real gauging.
+
+Treat this as a standalone diagnostic for now, not a way to extend an
+existing gauged rating past its top gauging – that composition (grafting
+a cross-section-derived high limb onto a gauged one via
+[`graft_rating()`](https://jonpayneea.github.io/reach.rate/reference/graft_rating.md))
+isn’t wired up yet. A single Manning’s `n` is applied across the whole
+wetted section; a genuine compound channel, with a distinct low-flow
+channel and overbank berms, is only approximated by that, not modelled
+with the divided-channel method’s separate per-subsection roughness. And
+the survey must reach at least as high as the highest stage you rate –
+[`rate_from_cross_section()`](https://jonpayneea.github.io/reach.rate/reference/rate_from_cross_section.md)
+does not assume the end points continue as vertical banks above the
+survey’s own top.
+
 ## The junction gap problem
 
 Fit each limb independently and their curves will not meet. Limb 1’s
@@ -417,7 +470,7 @@ steps into flow records and forecast inputs.
 rating_table <- as_rating_table(fit)
 rc_raw_dt <- expand_rating_table(rating_table, step = 0.01)
 gaps_dt <- detect_rc_gaps(rc_raw_dt)
-#> INFO [2026-09-01 07:30:57] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-01 09:53:47] Checked 2 junction(s): 2 gap(s) flagged.
 gaps_dt
 #>    junction limb_lower limb_upper stage_break stage_lower_end stage_upper_start
 #>       <int>     <char>     <char>       <num>           <num>             <num>
@@ -468,11 +521,11 @@ boundary.
 ``` r
 
 rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "midpoint")
-#> INFO [2026-09-01 07:30:57] Checked 2 junction(s): 2 gap(s) flagged.
-#> INFO [2026-09-01 07:30:57] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -> 11.42 | agreed Q = 8.6042
-#> INFO [2026-09-01 07:30:57] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -> 34.81 | agreed Q = 27.2512
+#> INFO [2026-09-01 09:53:47] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-01 09:53:47] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -> 11.42 | agreed Q = 8.6042
+#> INFO [2026-09-01 09:53:47] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -> 34.81 | agreed Q = 27.2512
 plot_rc_gaps(rc_raw_dt, rc_fixed_dt)
-#> INFO [2026-09-01 07:30:57] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-01 09:53:47] Checked 2 junction(s): 2 gap(s) flagged.
 ```
 
 ![](rating_curves_guide_files/figure-html/resolve-gaps-1.png)
@@ -815,7 +868,7 @@ hydrograph_dt <- data.table(
 )
 
 flow_dt <- apply_rating(rating_table, hydrograph_dt, stage_col = "stage", out_col = "discharge_cms")
-#> INFO [2026-09-01 07:31:00] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-09-01 09:53:50] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.
 sum(flow_dt$extrapolated) # stage values above the gauged range
 #> [1] 4
 flow_dt[c(1, 10, 20, 30, 40)]
@@ -856,7 +909,7 @@ already produced above.
 
 target_flows_dt <- data.table(discharge = c(5, 20, 60))
 apply_rating_inverse(aligned_result, target_flows_dt, discharge_col = "discharge", out_col = "stage_m")
-#> INFO [2026-09-01 07:31:00] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-09-01 09:53:50] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
 #>    discharge  stage_m extrapolated
 #>        <num>    <num>       <lgcl>
 #> 1:         5 1.442813        FALSE
@@ -902,7 +955,7 @@ rating_history_dt <- data.table(
 )
 
 versioned_flow_dt <- apply_rating_versioned(hydrograph_dt, rating_history_dt)
-#> INFO [2026-09-01 07:31:00] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-09-01 09:53:50] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.
 versioned_flow_dt[c(1, 10, 20, 30, 40)]
 #>      datetime    stage   version discharge extrapolated
 #>        <POSc>    <num>    <char>     <num>       <lgcl>

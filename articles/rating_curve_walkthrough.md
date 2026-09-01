@@ -196,7 +196,7 @@ at the breakpoints.
 rating_table <- as_rating_table(fit_multi)
 rc_raw_dt <- expand_rating_table(rating_table, step = 0.01)
 gaps_dt <- detect_rc_gaps(rc_raw_dt)
-#> INFO [2026-09-01 07:30:48] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-01 09:53:38] Checked 2 junction(s): 2 gap(s) flagged.
 gaps_dt[, .(junction, stage_break, q_lower_end, q_upper_start, gap_abs, gap_rel, gap_flagged)]
 #>    junction stage_break q_lower_end q_upper_start   gap_abs   gap_rel
 #>       <int>       <num>       <num>         <num>     <num>     <num>
@@ -282,7 +282,7 @@ takes `aligned` directly too:
 
 rc_aligned_dt <- expand_rating_table(aligned, step = 0.01)
 gaps_after_dt <- detect_rc_gaps(rc_aligned_dt)
-#> INFO [2026-09-01 07:30:48] Checked 2 junction(s): 1 gap(s) flagged.
+#> INFO [2026-09-01 09:53:38] Checked 2 junction(s): 1 gap(s) flagged.
 gaps_after_dt[, .(junction, gap_abs, gap_rel, gap_flagged)]
 #>    junction      gap_abs      gap_rel gap_flagged
 #>       <int>        <num>        <num>      <lgcl>
@@ -293,7 +293,7 @@ gaps_after_dt[, .(junction, gap_abs, gap_rel, gap_flagged)]
 ``` r
 
 plot_rc_gaps(rc_raw_dt, rc_aligned_dt)
-#> INFO [2026-09-01 07:30:48] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-01 09:53:38] Checked 2 junction(s): 2 gap(s) flagged.
 ```
 
 ![Before and after comparison of the rating curve at each junction,
@@ -377,7 +377,7 @@ is visible here rather than hidden.
 
 rc_final_dt <- expand_rating_table(aligned_equations, step = 0.01)
 detect_rc_gaps(rc_final_dt)[, .(junction, gap_abs, gap_rel, gap_flagged)]
-#> INFO [2026-09-01 07:30:50] Checked 2 junction(s): 0 gap(s) flagged.
+#> INFO [2026-09-01 09:53:39] Checked 2 junction(s): 0 gap(s) flagged.
 #>    junction gap_abs gap_rel gap_flagged
 #>       <int>   <num>   <num>      <lgcl>
 #> 1:        1       0       0       FALSE
