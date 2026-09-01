@@ -18,6 +18,7 @@ articles:
   - rating_curve_walkthrough
   - non_standard_optimisation
   - n_bounds_guide
+  - weir_flume_guide
 
 reference:
 - title: Fitting a rating
@@ -30,6 +31,16 @@ reference:
   - suggest_breakpoints
   - suggested_breakpoints_vector
   - rate_from_cross_section
+
+- title: Weir and flume equations
+  desc: >
+    Physically-derived discharge from structure geometry, not fitted to
+    gaugings, with GUM-style propagated uncertainty.
+  contents:
+  - weir_discharge_rectangular
+  - weir_discharge_vnotch
+  - weir_discharge_cipoletti
+  - flume_discharge_parshall
 
 - title: The segmented alternative
   desc: A joint model with no junction gap to reconcile, after Hodson et al. (2024).

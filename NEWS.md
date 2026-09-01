@@ -1,5 +1,24 @@
 # reach.rate (development)
 
+* New module `R/weir_equations.R`: four standard weir/flume discharge
+  functions -- `weir_discharge_rectangular()` (Rehbock, full-width
+  sharp-crested; ISO 1438:2017), `weir_discharge_vnotch()`
+  (Kindsvater-Shen triangular notch), `weir_discharge_cipoletti()`
+  (trapezoidal, USBR), and `flume_discharge_parshall()` (standard 1-8 ft
+  throat widths). Physically-derived from structure geometry, not fitted
+  to gaugings -- deliberately outside `FlodeRating`/`FlodeRatingTable`.
+  Each propagates a GUM-style (JCGM 100:2008) uncertainty from a
+  required `u_cd` (discharge coefficient's relative standard
+  uncertainty) and `u_head_m` (head measurement's absolute standard
+  uncertainty) -- both required, not defaulted, since a fabricated
+  default would look authoritative without being traceable to anything.
+  `flume_discharge_parshall()` also checks the standard free-flow
+  submergence limit when a downstream head is supplied, erroring rather
+  than silently applying the free-flow equation to submerged conditions.
+  New `vignette("weir_flume_guide")` covers the four structures (with
+  diagrams), the equations and their sourcing, and the GUM propagation
+  in detail.
+
 * New function `rate_from_cross_section()`: derives a theoretical rating
   from a surveyed channel cross-section via Manning's equation, with no
   gaugings required. Wetted area and perimeter are found by trapezoidal

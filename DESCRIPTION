@@ -34,6 +34,7 @@ Collate:
     'rating_curve_demo.R'
     'rating_curve_explorer_app.R'
     'reach.rate-package.R'
+    'weir_equations.R'
     'zzz.R'
 Depends:
     R (>= 4.1)
