@@ -1,5 +1,15 @@
 # reach.rate (development)
 
+* New `vignette("s7_objects_guide")`: the last gap from the same
+  vignette-coverage audit. Covers the class hierarchy (`FlodeRatingBase`
+  abstract, `FlodeRating`/`FlodeSegmentedRating` as children,
+  `FlodeRatingTable` separate), `@`-access and `print()`, a validator
+  catching a malformed construction, `S7_inherits()` for writing code
+  that accepts either a fit or a table, walking the `@status`/`@previous`
+  audit chain with real code, and the three shared generics
+  (`rating_plot()`/`apply_rating()`/`as_rating_table()`). Previously the
+  entire documentation set had exactly one sentence on any of this.
+
 * `rate_optimise()` and `rate_optimise_segmented()` gain opt-in recency
   weighting: `age_halflife`, `age_min_weight`, `reference_datetime`.
   Each gauging's residual is weighted by exponential decay from its age

@@ -1,0 +1,203 @@
+---
+title: "Working with reach.rate's S7 Objects"
+author: "Jonathan Payne, Environment Agency Flood Forecasting"
+date: "September 2026"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Working with reach.rate's S7 Objects}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  eval = TRUE, echo = TRUE, collapse = TRUE, comment = "#>",
+  fig.width = 7, fig.height = 5
+)
+library(reach.rate)
+library(data.table)
+library(ggplot2)
+```
+
+Every other vignette in this package uses `FlodeRating`, `FlodeRatingTable`,
+and their relatives without pausing to explain them -- `rating_curves_guide.Rmd`'s
+"The objects" section gives them one paragraph before moving on to fitting.
+This vignette is that paragraph, expanded: what these objects actually
+are, how to inspect and check them, and what their built-in guarantees
+buy you that a plain list or data.frame wouldn't.
+
+# Why S7 at all
+
+[S7](https://rconsortium.github.io/S7/) is a typed object system for R,
+built jointly by the R Consortium and Posit as a successor to S4 that
+keeps S4's real guarantees (typed properties, validators that run on
+construction) with a plainer syntax. The practical consequence for you
+as a user is small and mostly cosmetic: you read a fitted rating's
+contents with `@` instead of `$`. What it buys the package is not
+cosmetic -- a `FlodeRating` cannot exist in a broken state, because its
+validator runs before you ever get to hold one.
+
+# The class hierarchy
+
+```{r hierarchy-diagram, echo=FALSE, fig.alt="Class hierarchy diagram: FlodeRatingBase (abstract) is the parent of FlodeRating and FlodeSegmentedRating; FlodeRatingTable stands separately", fig.height=4}
+boxes <- data.table(
+  class = c("FlodeRatingBase\n(abstract)", "FlodeRating", "FlodeSegmentedRating", "FlodeRatingTable"),
+  x = c(1.8, 0.7, 2.9, 5.9), y = c(2, 0.7, 0.7, 1.35),
+  w = c(2.2, 1.9, 2.3, 2.1), h = c(0.7, 0.7, 0.7, 0.7),
+  fill = c("#cfd8dc", "#b3e5fc", "#b3e5fc", "#ffe0b2")
+)
+arrows <- data.table(
+  x = c(0.7, 2.9), y = c(1.05, 1.05), xend = c(1.5, 2.2), yend = c(1.65, 1.65)
+)
+
+ggplot() +
+  geom_rect(data = boxes, aes(xmin = x - w / 2, xmax = x + w / 2, ymin = y - h / 2, ymax = y + h / 2, fill = fill), colour = "grey30") +
+  geom_text(data = boxes, aes(x, y, label = class), size = 3.4, lineheight = 0.9) +
+  geom_segment(data = arrows, aes(x = x, y = y, xend = xend, yend = yend),
+    arrow = arrow(length = unit(0.2, "cm"), type = "closed"), colour = "grey30") +
+  annotate("text", x = 5.9, y = 0.85, label = "separate -- not part of\nthe fit hierarchy", size = 3, colour = "grey40", lineheight = 0.9) +
+  scale_fill_identity() +
+  coord_cartesian(xlim = c(-0.5, 7.2), ylim = c(0, 2.6)) +
+  theme_void()
+```
+
+`FlodeRatingBase` is abstract -- you never construct one directly; it
+exists only to hold what `FlodeRating` (the result of `rate_optimise()`)
+and `FlodeSegmentedRating` (the result of `rate_optimise_segmented()`)
+have in common: `@gaugings`, `@fit_starts`, `@status`, `@provenance`.
+`FlodeRatingTable` sits apart from that hierarchy entirely -- it's the
+equation-table representation `gap_check`'s functions and `apply_rating()`
+work with, not a fit in its own right, and it doesn't inherit anything
+from `FlodeRatingBase`.
+
+# `@`-access and `print()`
+
+```{r access-basics}
+set.seed(1)
+stage_m <- seq(0.3, 3, by = 0.1)
+discharge_cms <- 5 * stage_m^1.5 * exp(rnorm(length(stage_m), sd = 0.03))
+fit <- rate_optimise(discharge_cms, stage_m)
+
+fit # each class has its own print method
+class(fit) # the full inheritance chain, most-specific first
+fit@limbs[, .(C, a, n, rmse_cms, r_squared)]
+```
+
+`print()` gives a one-line summary plus the coefficient table, rather
+than R's default (and much less readable) dump of every property.
+`class(fit)` shows the full chain -- `reach.rate::FlodeRating`,
+`reach.rate::FlodeRatingBase`, `S7_object` -- confirming a `FlodeRating`
+really is a `FlodeRatingBase` underneath, matching the diagram above.
+
+# Validators: what you can't accidentally build
+
+The property that matters most in practice: constructing one of these
+classes with something structurally wrong fails immediately, with a
+specific error, rather than producing an object that only breaks later
+when some downstream function trips over the missing piece.
+
+```{r validator-demo, error=TRUE}
+FlodeRating(
+  limbs = data.table(limb = 1, C = 1, a = 0, n = 1), # missing lower_stage_m/upper_stage_m
+  gaugings = data.table(discharge_cms = 1, stage_m = 1)
+)
+```
+
+That error fires at construction time, naming exactly which columns are
+missing -- not three functions later, as an obscure `NULL` or a cryptic
+subscript error somewhere that merely *assumed* those columns existed.
+Every exported class in this package validates its own structural
+requirements (required columns, `C`/`n` positivity, contiguous limb
+bounds, and more) the same way.
+
+# `S7_inherits()`: accepting either representation
+
+Several exported functions -- `plot_rating_cross_section()`,
+`apply_rating_inverse()`, `graft_rating()` among them -- accept either a
+`FlodeRating` or a `FlodeRatingTable` and quietly bridge the former to
+the latter internally. `S7_inherits()` is how they tell which one they
+were handed, and it's directly usable in your own code if you're writing
+a function meant to work with whichever representation the caller holds:
+
+```{r s7-inherits-demo}
+S7::S7_inherits(fit, FlodeRating)
+S7::S7_inherits(fit, FlodeRatingBase) # also TRUE -- FlodeRating IS a FlodeRatingBase
+
+rating_dt <- data.table(lower_level = 0, upper_level = 3, C = 5, a = 0, n = 1.5)
+tbl <- FlodeRatingTable(table = rating_dt)
+S7::S7_inherits(tbl, FlodeRating) # FALSE -- a table is not a fit
+
+accept_either <- function(x) {
+  if (S7::S7_inherits(x, FlodeRating)) "got a fit" else if (S7::S7_inherits(x, FlodeRatingTable)) "got a table" else stop("neither")
+}
+accept_either(fit)
+accept_either(tbl)
+```
+
+`inherits(x, "FlodeRating")` (base R's own generic) does *not* work
+reliably here -- S7 classes are namespace-qualified
+(`"reach.rate::FlodeRating"`, visible in the `class(fit)` output above),
+so `S7_inherits()` exists specifically to check against the class object
+itself rather than a string you'd have to get exactly right.
+
+# Reading the audit chain: `@status` and `@previous`
+
+`FlodeRatingTable` (and, via `FlodeRatingBase`, the fit classes too)
+carries `@status` and `@previous` so that amending a rating never
+silently loses what it was amended from:
+
+```{r audit-chain}
+rating_dt <- data.table(
+  lower_level = c(0, 1.5), upper_level = c(1.5, 3),
+  C = c(3, 5), a = c(0, 0.1), n = c(1.5, 1.6)
+)
+tbl <- FlodeRatingTable(table = rating_dt)
+tbl@status
+is.null(tbl@previous)
+
+aligned <- align_limb_equations(tbl)
+aligned@status
+aligned@previous@status
+identical(aligned@previous@table, tbl@table) # the exact object it was built from
+```
+
+`aligned@previous` isn't a copy or a re-derived approximation -- it's the
+literal pre-amendment object. Chain several amendments and you can walk
+the whole history backwards, `@previous@previous@previous...`, until you
+reach a `NULL` -- the original, independently-fitted or independently-built
+starting point. This is what `vignette("rating_curves_guide")` means when
+it calls this "an audit trail by construction rather than by discipline":
+there is no code path that produces an amended table with nowhere to
+point `@previous` at.
+
+# Shared generics: one name, dispatched by class
+
+Three functions work identically regardless of which class you're
+holding, because they're registered as S7 methods against shared
+generics rather than being separate functions per class:
+
+```{r shared-generics, eval=FALSE}
+rating_plot(fit) # works on FlodeRating, FlodeSegmentedRating, FlodeRatingTable
+apply_rating(fit, stage_dt) # same
+as_rating_table(fit) # converts any fit class to FlodeRatingTable
+```
+
+You don't need to know or check which class you're holding to call any
+of these three -- S7's method dispatch picks the registered implementation
+for whatever class the object actually is. That's the payoff of the
+class hierarchy in the diagram above: it's not just documentation of
+what properties exist where, it's what makes "call the same function
+regardless of representation" actually work.
+
+# Where to go next
+
+- `vignette("rating_curves_guide")` -- "The objects" for where this
+  material first appears in context, and the running example these
+  classes are built around throughout the rest of that vignette.
+- `?FlodeRatingBase`, `?FlodeRating`, `?FlodeSegmentedRating`,
+  `?FlodeRatingTable` -- full property reference for each class.
+- [S7's own documentation](https://rconsortium.github.io/S7/) for the
+  object system itself, independent of this package.
