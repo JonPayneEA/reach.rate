@@ -184,17 +184,18 @@ always be true.
 
 ### What exists today
 
-The fix for this – weighting gaugings by age, without discounting a
-genuinely large but old flood just because it’s old – is not yet built;
-see [issue \#9](https://github.com/JonPayneEA/reach.rate/issues/9) and
-the package’s `ROBUST_FITTING.md` for the open design questions (decay
-shape, how “large” is defined, per-limb vs. whole-record weighting).
-
-What *has* landed is the data the fix will need.
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
 and
 [`rate_optimise_segmented()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise_segmented.md)
-accept an optional `gauging_datetime`:
+accept an optional `gauging_datetime`, and now an opt-in `age_halflife`
+that weights each gauging by age – exponential decay down to a floor
+(`age_min_weight`) that stops a genuinely large but old flood ever being
+discounted to nothing, though it isn’t magnitude-aware (an old extreme
+and an old ordinary gauging decay identically).
+[`vignette("recency_weighting_guide")`](https://jonpayneea.github.io/reach.rate/articles/recency_weighting_guide.md)
+covers the full formula, a worked example, and what the floor does and
+doesn’t protect against; the fuller, magnitude-aware version remains
+open in [issue \#9](https://github.com/JonPayneEA/reach.rate/issues/9).
 
 ``` r
 
@@ -214,10 +215,11 @@ head(fit_dated@gaugings)
 #> 6:     1.1565643    0.35       2015-05-01     1
 ```
 
-Nothing in the fit reads this column yet – `fit_dated`’s coefficients
-are identical to what an undated call would produce. It’s stored so that
-when the weighting math in \#9 is designed, it has real dates to work
-with rather than needing its own follow-up data-model change first.
+`age_halflife` is left `NULL` by default, so supplying
+`gauging_datetime` alone – as above – still changes nothing about the
+fit; `fit_dated`’s coefficients are identical to what an undated call
+would produce. Recency weighting only switches on once `age_halflife` is
+set too.
 
 ## Where to go next
 

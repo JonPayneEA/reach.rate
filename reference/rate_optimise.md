@@ -24,6 +24,9 @@ rate_optimise(
   multi_start = TRUE,
   n_bounds = NULL,
   objective = c("absolute", "relative"),
+  age_halflife = NULL,
+  age_min_weight = 0.1,
+  reference_datetime = NULL,
   ...
 )
 ```
@@ -42,8 +45,8 @@ rate_optimise(
 
   `Date`/`POSIXct` vector or `NULL`. When each gauging in
   `discharge_cms`/`stage_m` was taken, same length as `discharge_cms` if
-  supplied. Not used by the fit itself – stored on the returned rating's
-  `@gaugings` for future age-aware fitting (see issue \#9). Default
+  supplied. Stored on the returned rating's `@gaugings`; only affects
+  the fit itself if `age_halflife` is also supplied (see below). Default
   `NULL`: no dates recorded, matching today's behaviour.
 
 - control:
@@ -101,6 +104,35 @@ rate_optimise(
   comparable between the two. Not a default – existing callers see no
   change in behaviour.
 
+- age_halflife:
+
+  Single positive number of days, or `NULL` (default). Opt-in recency
+  weighting: each gauging's residual is weighted by
+  `age_min_weight + (1 - age_min_weight) * 0.5^(age_days / age_halflife)`,
+  where `age_days` is its age (clamped at 0) relative to
+  `reference_datetime`. `NULL` (default) fits unweighted, exactly as
+  before – supplying `gauging_datetime` alone, with `age_halflife` left
+  `NULL`, changes nothing about the fit. Requires `gauging_datetime`.
+  See
+  [`vignette("recency_weighting_guide")`](https://jonpayneea.github.io/reach.rate/articles/recency_weighting_guide.md)
+  for the full derivation and a worked example.
+
+- age_min_weight:
+
+  Single number in `[0, 1)`. The weight floor a gauging's age can never
+  fall below, however old – prevents an old-but-genuinely-informative
+  gauging (e.g. a limb's one high-flow flood) from being weighted to
+  near-zero purely for being old. Not magnitude-aware: an old extreme
+  gauging and an old ordinary one decay identically. Default `0.1`.
+  Ignored if `age_halflife` is `NULL`.
+
+- reference_datetime:
+
+  `Date`/`POSIXct` or `NULL` (default). The "as of" point ages are
+  measured back from. `NULL` uses `max(gauging_datetime)` – age relative
+  to this dataset's own most recent gauging. Ignored if `age_halflife`
+  is `NULL`.
+
 - ...:
 
   Passed to
@@ -123,8 +155,9 @@ bookkeeping. When `n_boot > 0`, `@bootstrap` holds every draw and
 `@limbs` gains `C_se`/`a_se`/`n_se`/percentile/ success-count columns;
 prefer these over `*_se_asymp` when present, since they don't rely on
 the NLS asymptotic approximation. `@gaugings` holds the input data with
-a `limb` column (and `gauging_datetime` if supplied). `@fit_starts`
-holds every multi-start attempt when `multi_start = TRUE`. `@status` is
+a `limb` column (and `gauging_datetime` if supplied, and `age_weight` if
+`age_halflife` was supplied). `@fit_starts` holds every multi-start
+attempt when `multi_start = TRUE`. `@status` is
 `"independently_fitted"`.
 
 ## See also

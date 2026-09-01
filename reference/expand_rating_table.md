@@ -134,9 +134,9 @@ rating_dt <- data.table::data.table(
 )
 rc_dt <- expand_rating_table(rating_dt)
 gaps_dt <- detect_rc_gaps(rc_dt)
-#> INFO [2026-09-01 11:10:00] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-01 13:45:19] Checked 2 junction(s): 2 gap(s) flagged.
 rc_fixed_dt <- resolve_rc_gaps(rc_dt)
-#> INFO [2026-09-01 11:10:00] Checked 2 junction(s): 2 gap(s) flagged.
-#> INFO [2026-09-01 11:10:00] Junction 1 (limbs 1/2, stage 1.2): gap 3.29 -> 5.59 | agreed Q = 4.438
-#> INFO [2026-09-01 11:10:00] Junction 2 (limbs 2/3, stage 2.5): gap 19.47 -> 48.75 | agreed Q = 34.1081
+#> INFO [2026-09-01 13:45:19] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-01 13:45:19] Junction 1 (limbs 1/2, stage 1.2): gap 3.29 -> 5.59 | agreed Q = 4.438
+#> INFO [2026-09-01 13:45:19] Junction 2 (limbs 2/3, stage 2.5): gap 19.47 -> 48.75 | agreed Q = 34.1081
 ```

@@ -43,6 +43,9 @@
     <li><a class="dropdown-item" href="../articles/n_bounds_guide.html">Choosing n_bounds: A Cross-Section Guide</a></li>
     <li><a class="dropdown-item" href="../articles/weir_flume_guide.html">Weir and Flume Equations: Structures, GUM Uncertainty, and Worked Examples</a></li>
     <li><a class="dropdown-item" href="../articles/leverage_influence_guide.html">Leverage and Influence: Which Gaugings Are Steering Your Fit</a></li>
+    <li><a class="dropdown-item" href="../articles/recency_weighting_guide.html">Recency Weighting: The Maths Behind age_halflife</a></li>
+    <li><a class="dropdown-item" href="../articles/objective_guide.html">Absolute vs Relative: How the Two Fitting Objectives Actually Work</a></li>
+    <li><a class="dropdown-item" href="../articles/segmented_model_guide.html">How the Segmented Model Actually Composes</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -261,15 +264,18 @@ won’t always be true.</p>
 <div class="section level3">
 <h3 id="what-exists-today">What exists today<a class="anchor" aria-label="anchor" href="#what-exists-today"></a>
 </h3>
-<p>The fix for this – weighting gaugings by age, without discounting a
-genuinely large but old flood just because it’s old – is not yet built;
-see <a href="https://github.com/JonPayneEA/reach.rate/issues/9" class="external-link">issue
-#9</a> and the package’s <code>ROBUST_FITTING.md</code> for the open
-design questions (decay shape, how “large” is defined, per-limb
-vs. whole-record weighting).</p>
-<p>What <em>has</em> landed is the data the fix will need.
-<code><a href="../reference/rate_optimise.html">rate_optimise()</a></code> and <code><a href="../reference/rate_optimise_segmented.html">rate_optimise_segmented()</a></code>
-accept an optional <code>gauging_datetime</code>:</p>
+<p><code><a href="../reference/rate_optimise.html">rate_optimise()</a></code> and
+<code><a href="../reference/rate_optimise_segmented.html">rate_optimise_segmented()</a></code> accept an optional
+<code>gauging_datetime</code>, and now an opt-in
+<code>age_halflife</code> that weights each gauging by age – exponential
+decay down to a floor (<code>age_min_weight</code>) that stops a
+genuinely large but old flood ever being discounted to nothing, though
+it isn’t magnitude-aware (an old extreme and an old ordinary gauging
+decay identically). <code><a href="../articles/recency_weighting_guide.html">vignette("recency_weighting_guide")</a></code>
+covers the full formula, a worked example, and what the floor does and
+doesn’t protect against; the fuller, magnitude-aware version remains
+open in <a href="https://github.com/JonPayneEA/reach.rate/issues/9" class="external-link">issue
+#9</a>.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gauging_datetime</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2015-01-01"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">stage_dense_m</span><span class="op">)</span> <span class="op">*</span> <span class="fl">20</span><span class="op">)</span></span>
 <span><span class="va">fit_dated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate_optimise.html">rate_optimise</a></span><span class="op">(</span></span>
@@ -285,11 +291,11 @@ accept an optional <code>gauging_datetime</code>:</p>
 <span><span class="co">#&gt; 4:     0.9342280    0.29       2015-03-22     1</span></span>
 <span><span class="co">#&gt; 5:     0.9999470    0.32       2015-04-11     1</span></span>
 <span><span class="co">#&gt; 6:     1.1565643    0.35       2015-05-01     1</span></span></code></pre></div>
-<p>Nothing in the fit reads this column yet – <code>fit_dated</code>’s
-coefficients are identical to what an undated call would produce. It’s
-stored so that when the weighting math in #9 is designed, it has real
-dates to work with rather than needing its own follow-up data-model
-change first.</p>
+<p><code>age_halflife</code> is left <code>NULL</code> by default, so
+supplying <code>gauging_datetime</code> alone – as above – still changes
+nothing about the fit; <code>fit_dated</code>’s coefficients are
+identical to what an undated call would produce. Recency weighting only
+switches on once <code>age_halflife</code> is set too.</p>
 </div>
 </div>
 <div class="section level2">

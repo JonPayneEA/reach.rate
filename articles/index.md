@@ -14,3 +14,9 @@
   Examples](https://jonpayneea.github.io/reach.rate/articles/weir_flume_guide.md):
 - [Leverage and Influence: Which Gaugings Are Steering Your
   Fit](https://jonpayneea.github.io/reach.rate/articles/leverage_influence_guide.md):
+- [Recency Weighting: The Maths Behind
+  age_halflife](https://jonpayneea.github.io/reach.rate/articles/recency_weighting_guide.md):
+- [Absolute vs Relative: How the Two Fitting Objectives Actually
+  Work](https://jonpayneea.github.io/reach.rate/articles/objective_guide.md):
+- [How the Segmented Model Actually
+  Composes](https://jonpayneea.github.io/reach.rate/articles/segmented_model_guide.md):

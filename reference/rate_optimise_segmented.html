@@ -60,6 +60,9 @@ non-convexity their paper warns about."></head><body>
     <li><a class="dropdown-item" href="../articles/n_bounds_guide.html">Choosing n_bounds: A Cross-Section Guide</a></li>
     <li><a class="dropdown-item" href="../articles/weir_flume_guide.html">Weir and Flume Equations: Structures, GUM Uncertainty, and Worked Examples</a></li>
     <li><a class="dropdown-item" href="../articles/leverage_influence_guide.html">Leverage and Influence: Which Gaugings Are Steering Your Fit</a></li>
+    <li><a class="dropdown-item" href="../articles/recency_weighting_guide.html">Recency Weighting: The Maths Behind age_halflife</a></li>
+    <li><a class="dropdown-item" href="../articles/objective_guide.html">Absolute vs Relative: How the Two Fitting Objectives Actually Work</a></li>
+    <li><a class="dropdown-item" href="../articles/segmented_model_guide.html">How the Segmented Model Actually Composes</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -109,6 +112,9 @@ non-convexity their paper warns about.</p>
 <span>  estimate_breakpoints <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  multi_start <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  objective <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"absolute"</span>, <span class="st">"relative"</span><span class="op">)</span>,</span>
+<span>  age_halflife <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  age_min_weight <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  reference_datetime <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -153,6 +159,13 @@ natural discharge scale regardless of <code>objective</code>. Not a default –
 existing callers see no change in behaviour.</p></dd>
 
 
+<dt id="arg-age-halflife-age-min-weight-reference-datetime">age_halflife, age_min_weight, reference_datetime<a class="anchor" aria-label="anchor" href="#arg-age-halflife-age-min-weight-reference-datetime"></a></dt>
+<dd><p>As in
+<code><a href="rate_optimise.html">rate_optimise()</a></code> – opt-in recency weighting of the single joint
+fit (this model has no per-limb structure to weight separately).
+<code>age_halflife = NULL</code> (default) fits unweighted, exactly as before.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Passed to <code><a href="https://rdrr.io/pkg/minpack.lm/man/nls.lm.control.html" class="external-link">minpack.lm::nls.lm.control()</a></code>.</p></dd>
 
@@ -163,7 +176,8 @@ existing callers see no change in behaviour.</p></dd>
 one-row data.table: <code>C</code>, <code>bp1..bpk</code>, <code>n1..nk</code>, <code>rmse_cms</code>,
 <code>r_squared</code>, <code>n_obs</code>, <code>n_starts_attempted</code>, <code>n_starts_converged</code>,
 <code>selected_start_id</code>. <code>@gaugings</code> holds the input data (and
-<code>gauging_datetime</code> if supplied). <code>@fit_starts</code>
+<code>gauging_datetime</code> if supplied, and <code>age_weight</code> if <code>age_halflife</code>
+was supplied). <code>@fit_starts</code>
 holds every multi-start attempt when <code>multi_start = TRUE</code>.</p>
     </div>
     <div class="section level2">

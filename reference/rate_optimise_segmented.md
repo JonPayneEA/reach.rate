@@ -34,6 +34,9 @@ rate_optimise_segmented(
   estimate_breakpoints = FALSE,
   multi_start = TRUE,
   objective = c("absolute", "relative"),
+  age_halflife = NULL,
+  age_min_weight = 0.1,
+  reference_datetime = NULL,
   ...
 )
 ```
@@ -80,6 +83,14 @@ rate_optimise_segmented(
   on the natural discharge scale regardless of `objective`. Not a
   default – existing callers see no change in behaviour.
 
+- age_halflife, age_min_weight, reference_datetime:
+
+  As in
+  [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
+  – opt-in recency weighting of the single joint fit (this model has no
+  per-limb structure to weight separately). `age_halflife = NULL`
+  (default) fits unweighted, exactly as before.
+
 - ...:
 
   Passed to
@@ -92,8 +103,9 @@ A
 instance. `@coefficients` is a one-row data.table: `C`, `bp1..bpk`,
 `n1..nk`, `rmse_cms`, `r_squared`, `n_obs`, `n_starts_attempted`,
 `n_starts_converged`, `selected_start_id`. `@gaugings` holds the input
-data (and `gauging_datetime` if supplied). `@fit_starts` holds every
-multi-start attempt when `multi_start = TRUE`.
+data (and `gauging_datetime` if supplied, and `age_weight` if
+`age_halflife` was supplied). `@fit_starts` holds every multi-start
+attempt when `multi_start = TRUE`.
 
 ## See also
 
