@@ -1,6 +1,6 @@
 # reach.rate
 
-Tools for fitting, diagnosing, and applying hydrometric rating curves: multi-limb power-law fitting by nonlinear least squares, junction-gap detection and resolution between independently-fitted limbs, a segmented joint-model alternative (Hodson et al. 2024), bootstrap coefficient uncertainty, versioned ratings, and rating-amendment comparison.
+Tools for fitting, diagnosing, and applying hydrometric rating curves: multi-limb power-law fitting by nonlinear least squares, junction-gap detection and resolution between independently-fitted limbs, a segmented joint-model alternative (Hodson et al. 2024), bootstrap and closed-form coefficient uncertainty, leverage/influence diagnostics, opt-in age-based recency weighting, versioned ratings, and rating-amendment comparison. Beyond gauging-based fitting: a Manning's-equation rating from a surveyed cross-section alone, and standard weir/flume discharge equations (rectangular, V-notch, Cipoletti, Parshall flume) with GUM-style propagated uncertainty.
 
 Fitted ratings are represented as [S7](https://rconsortium.github.io/S7/) classes (`FlodeRating`, `FlodeSegmentedRating`, `FlodeRatingTable`) that carry their own gaugings, fitting bookkeeping, and provenance, so a rating is never separated from the data and assumptions that produced it.
 
@@ -113,16 +113,52 @@ For one continuous worked example -- spot gaugings to a single bad curve to a ch
 vignette("rating_curve_walkthrough", package = "reach.rate")
 ```
 
-For when and why to reach for non-default fitting (`objective`, `n_bounds`, and the `gauging_datetime` groundwork), see:
+For when and why to reach for non-default fitting (`objective`, `n_bounds`, and opt-in `age_halflife` recency weighting), see:
 
 ```r
 vignette("non_standard_optimisation", package = "reach.rate")
+```
+
+For what `objective = "relative"` actually does differently underneath, with diagrams, see:
+
+```r
+vignette("objective_guide", package = "reach.rate")
 ```
 
 For how to read a channel cross-section into a starting `n_bounds`, with diagrams of the canonical control shapes, see:
 
 ```r
 vignette("n_bounds_guide", package = "reach.rate")
+```
+
+For discharge from a weir or flume's own published equation and geometry, with GUM-style uncertainty, see:
+
+```r
+vignette("weir_flume_guide", package = "reach.rate")
+```
+
+For which gaugings are quietly steering a fit, beyond what residuals alone show, see:
+
+```r
+vignette("leverage_influence_guide", package = "reach.rate")
+```
+
+For the maths behind `age_halflife`, on a station whose channel has drifted over time, see:
+
+```r
+vignette("recency_weighting_guide", package = "reach.rate")
+```
+
+For how `rate_optimise_segmented()`'s multiplicative factors actually compose, with diagrams, see:
+
+```r
+vignette("segmented_model_guide", package = "reach.rate")
+```
+
+For working with the package's S7 classes -- `@`-access, validators, `S7_inherits()`, the `@status`/`@previous` audit chain -- see:
+
+```r
+vignette("s7_objects_guide", package = "reach.rate")
 ```
 
 or run the linear, section-by-section script at:
