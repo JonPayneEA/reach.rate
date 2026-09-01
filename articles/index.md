@@ -12,3 +12,5 @@
   Guide](https://jonpayneea.github.io/reach.rate/articles/n_bounds_guide.md):
 - [Weir and Flume Equations: Structures, GUM Uncertainty, and Worked
   Examples](https://jonpayneea.github.io/reach.rate/articles/weir_flume_guide.md):
+- [Leverage and Influence: Which Gaugings Are Steering Your
+  Fit](https://jonpayneea.github.io/reach.rate/articles/leverage_influence_guide.md):

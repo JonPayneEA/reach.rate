@@ -42,6 +42,7 @@
     <li><a class="dropdown-item" href="../articles/non_standard_optimisation.html">Non-Standard Rating Optimisation: When and Why</a></li>
     <li><a class="dropdown-item" href="../articles/n_bounds_guide.html">Choosing n_bounds: A Cross-Section Guide</a></li>
     <li><a class="dropdown-item" href="../articles/weir_flume_guide.html">Weir and Flume Equations: Structures, GUM Uncertainty, and Worked Examples</a></li>
+    <li><a class="dropdown-item" href="../articles/leverage_influence_guide.html">Leverage and Influence: Which Gaugings Are Steering Your Fit</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -245,7 +246,7 @@ continuity at the breakpoints.</p>
 <code class="sourceCode R"><span><span class="va">rating_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_rating_table.html">as_rating_table</a></span><span class="op">(</span><span class="va">fit_multi</span><span class="op">)</span></span>
 <span><span class="va">rc_raw_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_rating_table.html">expand_rating_table</a></span><span class="op">(</span><span class="va">rating_table</span>, step <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
 <span><span class="va">gaps_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_rc_gaps.html">detect_rc_gaps</a></span><span class="op">(</span><span class="va">rc_raw_dt</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-09-01 09:53:38] Checked 2 junction(s): 2 gap(s) flagged.</span></span>
+<span><span class="co">#&gt; INFO [2026-09-01 11:10:25] Checked 2 junction(s): 2 gap(s) flagged.</span></span>
 <span><span class="va">gaps_dt</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">junction</span>, <span class="va">stage_break</span>, <span class="va">q_lower_end</span>, <span class="va">q_upper_start</span>, <span class="va">gap_abs</span>, <span class="va">gap_rel</span>, <span class="va">gap_flagged</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;    junction stage_break q_lower_end q_upper_start   gap_abs   gap_rel</span></span>
 <span><span class="co">#&gt;       &lt;int&gt;       &lt;num&gt;       &lt;num&gt;         &lt;num&gt;     &lt;num&gt;     &lt;num&gt;</span></span>
@@ -320,7 +321,7 @@ directly too:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rc_aligned_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_rating_table.html">expand_rating_table</a></span><span class="op">(</span><span class="va">aligned</span>, step <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
 <span><span class="va">gaps_after_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_rc_gaps.html">detect_rc_gaps</a></span><span class="op">(</span><span class="va">rc_aligned_dt</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-09-01 09:53:38] Checked 2 junction(s): 1 gap(s) flagged.</span></span>
+<span><span class="co">#&gt; INFO [2026-09-01 11:10:25] Checked 2 junction(s): 1 gap(s) flagged.</span></span>
 <span><span class="va">gaps_after_dt</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">junction</span>, <span class="va">gap_abs</span>, <span class="va">gap_rel</span>, <span class="va">gap_flagged</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;    junction      gap_abs      gap_rel gap_flagged</span></span>
 <span><span class="co">#&gt;       &lt;int&gt;        &lt;num&gt;        &lt;num&gt;      &lt;lgcl&gt;</span></span>
@@ -328,7 +329,7 @@ directly too:</p>
 <span><span class="co">#&gt; 2:        2 1.580516e+01 1.082515e+00        TRUE</span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_rc_gaps.html">plot_rc_gaps</a></span><span class="op">(</span><span class="va">rc_raw_dt</span>, <span class="va">rc_aligned_dt</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-09-01 09:53:38] Checked 2 junction(s): 2 gap(s) flagged.</span></span></code></pre></div>
+<span><span class="co">#&gt; INFO [2026-09-01 11:10:25] Checked 2 junction(s): 2 gap(s) flagged.</span></span></code></pre></div>
 <p><img src="rating_curve_walkthrough_files/figure-html/plot-gaps-1.png" class="r-plt" alt="Before and after comparison of the rating curve at each junction, showing the lower junction closed and the upper junction still open" width="672"></p>
 <p>Junction 1’s gap is gone (down to floating-point noise); junction 2’s
 108% jump is exactly where it was – correctly untouched, and exactly the
@@ -392,7 +393,7 @@ within-limb fit – and it is visible here rather than hidden.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rc_final_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_rating_table.html">expand_rating_table</a></span><span class="op">(</span><span class="va">aligned_equations</span>, step <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/detect_rc_gaps.html">detect_rc_gaps</a></span><span class="op">(</span><span class="va">rc_final_dt</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">junction</span>, <span class="va">gap_abs</span>, <span class="va">gap_rel</span>, <span class="va">gap_flagged</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt; INFO [2026-09-01 09:53:39] Checked 2 junction(s): 0 gap(s) flagged.</span></span>
+<span><span class="co">#&gt; INFO [2026-09-01 11:10:26] Checked 2 junction(s): 0 gap(s) flagged.</span></span>
 <span><span class="co">#&gt;    junction gap_abs gap_rel gap_flagged</span></span>
 <span><span class="co">#&gt;       &lt;int&gt;   &lt;num&gt;   &lt;num&gt;      &lt;lgcl&gt;</span></span>
 <span><span class="co">#&gt; 1:        1       0       0       FALSE</span></span>

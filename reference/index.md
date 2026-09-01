@@ -49,6 +49,10 @@ al. (2024).
 - [`flag_extrapolated_limbs()`](https://jonpayneea.github.io/reach.rate/reference/flag_extrapolated_limbs.md)
   : Flag rating limbs that extrapolate substantially beyond their
   gaugings
+- [`flag_influential_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/flag_influential_gaugings.md)
+  : Flag gaugings that disproportionately steer their limb's fit
+- [`plot_rating_leverage()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_leverage.md)
+  : Plot each gauging's leverage against its influence on the fit
 - [`plot_rating_cross_section()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_cross_section.md)
   : Overlay a surveyed cross-section on a fitted rating's own plot
 - [`demo_cross_section_rating()`](https://jonpayneea.github.io/reach.rate/reference/demo_cross_section_rating.md)

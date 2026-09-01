@@ -6,6 +6,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/ROADMAP.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/ROBUST_FITTING.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/index.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/articles/leverage_influence_guide.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/n_bounds_guide.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/non_standard_optimisation.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/rating_curve_walkthrough.html</loc></url>
@@ -31,6 +32,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/detect_rc_gaps.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/expand_rating_table.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/flag_extrapolated_limbs.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/flag_influential_gaugings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/flume_discharge_parshall.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/graft_rating.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/index.html</loc></url>
@@ -38,6 +40,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rating_cross_section.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rating_curves.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rating_interval.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rating_leverage.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rating_residuals.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rc_gaps.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rate_from_cross_section.html</loc></url>
