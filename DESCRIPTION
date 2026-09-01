@@ -49,10 +49,11 @@ Imports:
     stats
 Suggests:
     knitr,
+    pkgdown,
     rmarkdown,
     shiny,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-URL: https://github.com/JonPayneEA/reach.rate
+URL: https://github.com/JonPayneEA/reach.rate, https://jonpayneea.github.io/reach.rate/
 BugReports: https://github.com/JonPayneEA/reach.rate/issues

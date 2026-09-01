@@ -162,8 +162,10 @@ channel-control theory would be a prior distribution on `n` rather than a
 bound -- is a separate, larger, not-yet-started idea tracked as
 [issue #11](https://github.com/JonPayneEA/reach.rate/issues/11). Reach for
 `n_bounds` when you're confident enough in the channel-control type to rule
-out other exponents; wait for #11 if you'd rather let the data override a
-merely plausible assumption.
+out other exponents; wait for #11 -- or, today, look at `bdrc`
+(Hrafnkelsson et al. 2022), an R package already implementing a true
+Bayesian power-law fit -- if you'd rather let the data override a merely
+plausible assumption.
 
 # When gauging age matters
 
@@ -213,6 +215,8 @@ built yet.
 # References
 
 Herschy, R. W. (2009). *Streamflow Measurement* (3rd ed.). Routledge.
+
+Hrafnkelsson, B., Sigurdarson, H., Rögnvaldsson, S., Jansson, A. Ö., Vias, R. D., & Gardarsson, S. M. (2022). Generalization of the power-law rating curve using hydrodynamic theory and Bayesian hierarchical modeling. *Environmetrics*, 33(2), e2711.
 
 Le Coz, J., Renard, B., Bonnifait, L., Branger, F., & Le Boursicaud, R. (2014). Combining hydraulic knowledge and uncertain gaugings in the estimation of hydrometric rating curves: a Bayesian approach. *Journal of Hydrology*, 509, 573-587.
 

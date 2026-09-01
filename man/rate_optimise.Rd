@@ -77,11 +77,19 @@ only, not the bootstrap refits.}
 }
 \value{
 A \link{FlodeRating} instance. \verb{@limbs} has one row per limb with
-bounds, coefficients \code{C}/\code{a}/\code{n}, fit diagnostics, and multi-start
-bookkeeping. When \code{n_boot > 0}, \verb{@bootstrap} holds every draw and
-\verb{@limbs} gains SE/percentile/success-count columns. \verb{@gaugings}
-holds the input data with a \code{limb} column (and \code{gauging_datetime} if
-supplied). \verb{@fit_starts} holds every
+bounds, coefficients \code{C}/\code{a}/\code{n}, fit diagnostics -- including
+\code{rmse_pct} (a relative/percentage RMSE alongside the absolute
+\code{rmse_cms}, always computed regardless of \code{objective}) and
+\code{C_se_asymp}/\code{a_se_asymp}/\code{n_se_asymp} (closed-form asymptotic
+parameter standard errors from the fit's own NLS covariance matrix,
+always computed, \code{NA} if that covariance matrix is singular --
+distinct from the bootstrap-only \code{C_se}/\code{a_se}/\code{n_se} columns below)
+-- and multi-start bookkeeping. When \code{n_boot > 0}, \verb{@bootstrap} holds
+every draw and \verb{@limbs} gains \code{C_se}/\code{a_se}/\code{n_se}/percentile/
+success-count columns; prefer these over \verb{*_se_asymp} when present,
+since they don't rely on the NLS asymptotic approximation.
+\verb{@gaugings} holds the input data with a \code{limb} column (and
+\code{gauging_datetime} if supplied). \verb{@fit_starts} holds every
 multi-start attempt when \code{multi_start = TRUE}. \verb{@status} is
 \code{"independently_fitted"}.
 }

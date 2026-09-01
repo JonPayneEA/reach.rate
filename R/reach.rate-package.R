@@ -67,7 +67,7 @@
 #' @importFrom grid textGrob gpar
 #' @importFrom scales comma_format
 #' @importFrom stats coef residuals lm median quantile sd predict rnorm
-#' @importFrom stats setNames approx as.formula
+#' @importFrom stats setNames approx as.formula vcov
 #' @importFrom graphics plot lines abline
 NULL
 

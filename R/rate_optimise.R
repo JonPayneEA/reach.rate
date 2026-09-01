@@ -251,11 +251,19 @@ NULL
 #'   only, not the bootstrap refits.
 #'
 #' @return A [FlodeRating] instance. `@limbs` has one row per limb with
-#'   bounds, coefficients `C`/`a`/`n`, fit diagnostics, and multi-start
-#'   bookkeeping. When `n_boot > 0`, `@bootstrap` holds every draw and
-#'   `@limbs` gains SE/percentile/success-count columns. `@gaugings`
-#'   holds the input data with a `limb` column (and `gauging_datetime` if
-#'   supplied). `@fit_starts` holds every
+#'   bounds, coefficients `C`/`a`/`n`, fit diagnostics -- including
+#'   `rmse_pct` (a relative/percentage RMSE alongside the absolute
+#'   `rmse_cms`, always computed regardless of `objective`) and
+#'   `C_se_asymp`/`a_se_asymp`/`n_se_asymp` (closed-form asymptotic
+#'   parameter standard errors from the fit's own NLS covariance matrix,
+#'   always computed, `NA` if that covariance matrix is singular --
+#'   distinct from the bootstrap-only `C_se`/`a_se`/`n_se` columns below)
+#'   -- and multi-start bookkeeping. When `n_boot > 0`, `@bootstrap` holds
+#'   every draw and `@limbs` gains `C_se`/`a_se`/`n_se`/percentile/
+#'   success-count columns; prefer these over `*_se_asymp` when present,
+#'   since they don't rely on the NLS asymptotic approximation.
+#'   `@gaugings` holds the input data with a `limb` column (and
+#'   `gauging_datetime` if supplied). `@fit_starts` holds every
 #'   multi-start attempt when `multi_start = TRUE`. `@status` is
 #'   `"independently_fitted"`.
 #'
@@ -373,6 +381,7 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
   a_vec <- numeric(n_limbs)
   n_vec <- numeric(n_limbs)
   rmse_vec <- numeric(n_limbs)
+  rmse_pct_vec <- numeric(n_limbs)
   r_squared_vec <- numeric(n_limbs)
   n_obs_vec <- integer(n_limbs)
   n_unique_stage_vec <- integer(n_limbs)
@@ -383,6 +392,9 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
   C_se_vec <- rep(NA_real_, n_limbs)
   a_se_vec <- rep(NA_real_, n_limbs)
   n_se_vec <- rep(NA_real_, n_limbs)
+  C_se_asymp_vec <- rep(NA_real_, n_limbs)
+  a_se_asymp_vec <- rep(NA_real_, n_limbs)
+  n_se_asymp_vec <- rep(NA_real_, n_limbs)
   C_q025_vec <- rep(NA_real_, n_limbs)
   C_q50_vec <- rep(NA_real_, n_limbs)
   C_q975_vec <- rep(NA_real_, n_limbs)
@@ -483,6 +495,13 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
     a_vec[i] <- coefs[["a"]]
     n_vec[i] <- coefs[["n"]]
     rmse_vec[i] <- sqrt(mean(resid_vals^2))
+    # A relative/percentage counterpart to rmse_cms, on the same natural
+    # scale objective = "relative" actually optimises against, computed
+    # unconditionally (regardless of which objective produced this fit) so
+    # the two are always directly comparable. Guarded against a
+    # near-zero-flow gauging (stage_m close to a) landing in the
+    # denominator.
+    rmse_pct_vec[i] <- 100 * sqrt(mean((resid_vals / pmax(abs(limb_dt$discharge_cms), 1e-6))^2))
     r_squared_vec[i] <- if (ss_tot > 1e-12) 1 - ss_res / ss_tot else NA_real_
     n_obs_vec[i] <- nrow(limb_dt)
     n_unique_stage_vec[i] <- length(unique(limb_dt$stage_m))
@@ -490,6 +509,20 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
     median_abs_error_vec[i] <- median(abs(resid_vals))
     max_abs_error_vec[i] <- max(abs(resid_vals))
     residual_df_vec[i] <- nrow(limb_dt) - 3L
+
+    # Closed-form asymptotic parameter SEs from the NLS covariance matrix
+    # -- an always-available fallback so a limb has *some* SE even when
+    # n_boot = 0. Kept in separate *_se_asymp columns rather than reusing
+    # C_se/a_se/n_se: several call sites (rate_optimise_constrained(),
+    # .rebuild_flode_rating() in gap_check.R) already treat
+    # "C_se present" as a reliable signal that real bootstrap uncertainty
+    # exists, and overloading that name here would make that signal
+    # false. A near-bound or low-residual_df limb can produce a singular
+    # covariance matrix -- NA rather than erroring the whole fit.
+    se_asymp <- tryCatch(sqrt(diag(vcov(model))), error = function(e) c(C = NA_real_, a = NA_real_, n = NA_real_))
+    C_se_asymp_vec[i] <- se_asymp[["C"]]
+    a_se_asymp_vec[i] <- se_asymp[["a"]]
+    n_se_asymp_vec[i] <- se_asymp[["n"]]
 
     if (n_boot > 0) {
       n_limb_obs <- nrow(limb_dt)
@@ -586,12 +619,13 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
 
   meta_dt[, `:=`(
     C = C_vec, a = a_vec, n = n_vec,
-    rmse_cms = rmse_vec, r_squared = r_squared_vec, n_obs = n_obs_vec,
+    rmse_cms = rmse_vec, rmse_pct = rmse_pct_vec, r_squared = r_squared_vec, n_obs = n_obs_vec,
     n_unique_stage = n_unique_stage_vec, mean_error_cms = mean_error_vec,
     median_abs_error_cms = median_abs_error_vec, max_abs_error_cms = max_abs_error_vec,
     residual_df = residual_df_vec, n_starts_attempted = n_starts_attempted_vec,
     n_starts_converged = n_starts_converged_vec, selected_start_id = selected_start_id_vec,
-    near_bound = near_bound_vec
+    near_bound = near_bound_vec,
+    C_se_asymp = C_se_asymp_vec, a_se_asymp = a_se_asymp_vec, n_se_asymp = n_se_asymp_vec
   )]
 
   fit_starts_out <- NULL
@@ -673,8 +707,12 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
 #'   presented alongside updated point estimates; `fit_starts` is
 #'   dropped silently for the same reason. `n_starts_attempted`/
 #'   `n_starts_converged`/`selected_start_id` are set to `NA` and
-#'   `near_bound` is recomputed for any limb this function actually
-#'   refits, since the constrained refit is always single-start.
+#'   `near_bound`/`rmse_pct`/`C_se_asymp`/`a_se_asymp`/`n_se_asymp` are
+#'   recomputed for any limb this function actually refits (the latter
+#'   three via the delta method, since this refit's own model has only
+#'   `a`/`n` as free parameters), since the constrained refit is always
+#'   single-start. `anchor_limb`'s own diagnostics, including these,
+#'   are untouched -- it was never refit.
 #'
 #' @return A [FlodeRating] instance in the same shape as
 #'   `rate_optimise()`'s, plus an `aligned` logical column in `@limbs`
@@ -789,13 +827,32 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
     ss_tot <- sum((limb_dt$discharge_cms - mean(limb_dt$discharge_cms))^2)
     limb_width <- max(limb_dt$stage_m) - min(limb_dt$stage_m)
 
+    # This refit's model only has a/n as free parameters (C is derived
+    # from them via C_new above), so vcov(model) is a 2x2 matrix for
+    # (a, n) -- a's and n's asymptotic SEs read straight off its diagonal,
+    # but C's needs the delta method: C = target_q * (brk - a)^(-n), so
+    # dC/da = C*n/(brk-a) and dC/dn = -C*log(brk-a).
+    se_asymp <- tryCatch({
+      vc <- vcov(model)
+      depth <- brk - a_new
+      dC_da <- C_new * n_new / depth
+      dC_dn <- -C_new * log(depth)
+      var_C <- dC_da^2 * vc["a", "a"] + dC_dn^2 * vc["n", "n"] + 2 * dC_da * dC_dn * vc["a", "n"]
+      c(
+        C = if (is.finite(var_C) && var_C >= 0) sqrt(var_C) else NA_real_,
+        a = sqrt(vc["a", "a"]), n = sqrt(vc["n", "n"])
+      )
+    }, error = function(e) c(C = NA_real_, a = NA_real_, n = NA_real_))
+
     list(
       C = C_new, a = a_new, n = n_new,
       rmse_cms = sqrt(mean(resid_vals^2)),
+      rmse_pct = 100 * sqrt(mean((resid_vals / pmax(abs(limb_dt$discharge_cms), 1e-6))^2)),
       r_squared = if (ss_tot > 1e-12) 1 - ss_res / ss_tot else NA_real_,
       near_bound = (n_new - fit_lower[["n"]]) < 0.01 ||
         (is.finite(fit_upper[["n"]]) && (fit_upper[["n"]] - n_new) < 0.01) ||
-        (fit_upper[["a"]] - a_new) < 0.01 * max(limb_width, 1e-6)
+        (fit_upper[["a"]] - a_new) < 0.01 * max(limb_width, 1e-6),
+      C_se_asymp = se_asymp[["C"]], a_se_asymp = se_asymp[["a"]], n_se_asymp = se_asymp[["n"]]
     )
   }
 
@@ -814,6 +871,14 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
     }
     if ("near_bound" %in% names(limbs_dt)) {
       set(limbs_dt, i = i, j = "near_bound", value = result$near_bound)
+    }
+    if ("rmse_pct" %in% names(limbs_dt)) {
+      set(limbs_dt, i = i, j = "rmse_pct", value = result$rmse_pct)
+    }
+    if ("C_se_asymp" %in% names(limbs_dt)) {
+      set(limbs_dt, i = i, j = "C_se_asymp", value = result$C_se_asymp)
+      set(limbs_dt, i = i, j = "a_se_asymp", value = result$a_se_asymp)
+      set(limbs_dt, i = i, j = "n_se_asymp", value = result$n_se_asymp)
     }
   }
 

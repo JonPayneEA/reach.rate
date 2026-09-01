@@ -5,3 +5,5 @@
 *.Rproj
 inst/doc
 Rplots.pdf
+docs
+pkgdown

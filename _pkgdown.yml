@@ -1,0 +1,97 @@
+url: https://jonpayneea.github.io/reach.rate/
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#00A33B"
+    base_font: {google: "Atkinson Hyperlegible"}
+    code_font: {google: "JetBrains Mono"}
+
+development:
+  mode: auto
+
+articles:
+- title: Guides
+  navbar: Guides
+  contents:
+  - rating_curves_guide
+  - rating_curve_walkthrough
+  - non_standard_optimisation
+  - n_bounds_guide
+
+reference:
+- title: Fitting a rating
+  desc: >
+    Fit a multi-limb power-law rating by nonlinear least squares, and
+    find breakpoints rather than guess them.
+  contents:
+  - rate_optimise
+  - rate_optimise_constrained
+  - suggest_breakpoints
+  - suggested_breakpoints_vector
+
+- title: The segmented alternative
+  desc: A joint model with no junction gap to reconcile, after Hodson et al. (2024).
+  contents:
+  - rate_optimise_segmented
+
+- title: Diagnosing a fit
+  contents:
+  - plot_rating_residuals
+  - flag_extrapolated_limbs
+  - plot_rating_cross_section
+  - demo_cross_section_rating
+
+- title: The junction gap problem
+  desc: >
+    Independently-fitted limbs rarely meet exactly. Detect the resulting
+    discharge gap and close it — by patching the table, rescaling a
+    limb's equation, or relocating the boundary to where the curves
+    actually cross.
+  contents:
+  - detect_rc_gaps
+  - resolve_rc_gaps
+  - align_limb_equations
+  - align_limb_boundaries
+  - plot_rc_gaps
+  - expand_rating_table
+  - graft_rating
+
+- title: Coefficient uncertainty
+  desc: Bootstrap resampling, propagated through to a discharge interval.
+  contents:
+  - bootstrap_to_table
+  - plot_rating_interval
+  - apply_rating_interval
+
+- title: Using a rating
+  desc: Convert between stage and discharge, and handle a rating that has changed over time.
+  contents:
+  - apply_rating
+  - apply_rating_inverse
+  - apply_rating_versioned
+  - as_rating_table
+
+- title: Comparing ratings
+  contents:
+  - compare_ratings
+  - plot_rating_comparison
+
+- title: Shared generics and classes
+  desc: One name per operation, dispatched by whichever representation you're holding.
+  contents:
+  - rating_plot
+  - plot_rating_curves
+  - FlodeRatingBase
+  - FlodeRating
+  - FlodeSegmentedRating
+  - FlodeRatingTable
+
+- title: Interactive tools and demos
+  contents:
+  - rating_curve_explorer
+  - run_demo
+
+- title: Example data
+  contents:
+  - station_gaugings

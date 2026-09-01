@@ -35,8 +35,12 @@ formula regardless of \code{objective}.
 presented alongside updated point estimates; \code{fit_starts} is
 dropped silently for the same reason. \code{n_starts_attempted}/
 \code{n_starts_converged}/\code{selected_start_id} are set to \code{NA} and
-\code{near_bound} is recomputed for any limb this function actually
-refits, since the constrained refit is always single-start.}
+\code{near_bound}/\code{rmse_pct}/\code{C_se_asymp}/\code{a_se_asymp}/\code{n_se_asymp} are
+recomputed for any limb this function actually refits (the latter
+three via the delta method, since this refit's own model has only
+\code{a}/\code{n} as free parameters), since the constrained refit is always
+single-start. \code{anchor_limb}'s own diagnostics, including these,
+are untouched -- it was never refit.}
 }
 \value{
 A \link{FlodeRating} instance in the same shape as

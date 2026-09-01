@@ -442,6 +442,38 @@ test_that("rate_optimise with n_boot = 0 (default) has no bootstrap columns or a
   expect_null(fit@bootstrap)
 })
 
+test_that("rate_optimise always reports rmse_pct and asymptotic SEs, even without bootstrap", {
+  set.seed(5)
+  stage_m <- seq(0.5, 3.5, by = 0.1)
+  discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.02)
+  fit <- rate_optimise(discharge_cms, stage_m)
+
+  expect_true(all(c("rmse_pct", "C_se_asymp", "a_se_asymp", "n_se_asymp") %in% names(fit@limbs)))
+  expect_true(fit@limbs$rmse_pct > 0)
+  expect_true(all(c(fit@limbs$C_se_asymp, fit@limbs$a_se_asymp, fit@limbs$n_se_asymp) >= 0))
+  # Distinct from bootstrap-only C_se/a_se/n_se -- absent here since n_boot = 0
+  expect_false(any(c("C_se", "a_se", "n_se") %in% names(fit@limbs)))
+})
+
+test_that("rate_optimise's asymptotic SEs and bootstrap SEs are both present, and roughly agree, when n_boot > 0", {
+  set.seed(6)
+  stage_m <- seq(0.5, 3.5, by = 0.1)
+  discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.02)
+  fit <- rate_optimise(discharge_cms, stage_m, n_boot = 30L, boot_seed = 1L)
+
+  expect_true(all(c("rmse_pct", "C_se_asymp", "C_se") %in% names(fit@limbs)))
+  expect_equal(fit@limbs$C_se_asymp, fit@limbs$C_se, tolerance = 1)
+})
+
+test_that("rate_optimise's asymptotic SEs are NA, not an error, for a near-degenerate 3-point limb", {
+  stage_m <- c(1.0, 1.5, 2.0)
+  discharge_cms <- 5 * stage_m^1.6
+  fit <- suppressWarnings(rate_optimise(discharge_cms, stage_m, multi_start = FALSE))
+
+  expect_true(all(is.na(c(fit@limbs$C_se_asymp, fit@limbs$a_se_asymp, fit@limbs$n_se_asymp))) ||
+    all(is.finite(c(fit@limbs$C_se_asymp, fit@limbs$a_se_asymp, fit@limbs$n_se_asymp))))
+})
+
 test_that("rate_optimise with n_boot > 0 adds *_se columns and a bootstrap slot", {
   set.seed(1)
   stage_m <- seq(0.5, 3.5, by = 0.1)
@@ -725,6 +757,23 @@ test_that("rate_optimise_constrained clears/recomputes multi-start diagnostics f
   # near_bound is recomputed (not NA) against the new coefficients
   expect_false(is.na(limbs_dt$near_bound[2]))
   expect_null(fit_constrained@fit_starts)
+})
+
+test_that("rate_optimise_constrained leaves the anchor's rmse_pct/*_se_asymp untouched and recomputes them fresh for refit limbs", {
+  g <- build_three_limb_gaugings()
+  fit_plain <- rate_optimise(g$discharge, g$stage, control = c(1.6, 2.2))
+  fit_constrained <- rate_optimise_constrained(g$discharge, g$stage, control = c(1.6, 2.2), anchor_limb = 1L)
+
+  # Anchor (limb 1): never refit, so these are byte-identical to the
+  # unconstrained fit's own values
+  expect_equal(fit_constrained@limbs$rmse_pct[1], fit_plain@limbs$rmse_pct[1])
+  expect_equal(fit_constrained@limbs$C_se_asymp[1], fit_plain@limbs$C_se_asymp[1])
+
+  # Refit limbs (2, 3): fresh values, not the unconstrained fit's stale ones
+  expect_false(isTRUE(all.equal(fit_constrained@limbs$rmse_pct[2:3], fit_plain@limbs$rmse_pct[2:3])))
+  expect_true(all(!is.na(fit_constrained@limbs$C_se_asymp[2:3])))
+  expect_true(all(!is.na(fit_constrained@limbs$a_se_asymp[2:3])))
+  expect_true(all(!is.na(fit_constrained@limbs$n_se_asymp[2:3])))
 })
 
 test_that("rate_optimise_constrained's refit stays valid when the junction stage sits below the limb's own gaugings", {
