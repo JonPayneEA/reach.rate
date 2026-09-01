@@ -1,5 +1,36 @@
 # reach.rate (development)
 
+* `rate_optimise()` and `rate_optimise_segmented()` gain opt-in recency
+  weighting: `age_halflife`, `age_min_weight`, `reference_datetime`.
+  Each gauging's residual is weighted by exponential decay from its age
+  (relative to `reference_datetime`, defaulting to the dataset's own
+  most recent gauging) down to a floor (`age_min_weight`) that stops any
+  gauging -- including a limb's one high-flow flood -- ever being
+  weighted to near-zero purely for being old; not magnitude-aware (an
+  old extreme and an old ordinary gauging decay identically), so this is
+  a partial answer to issue #9, not the full one. `age_halflife = NULL`
+  (default) fits unweighted, exactly as before -- supplying
+  `gauging_datetime` alone still changes nothing about the fit.
+  `rate_optimise_constrained()` forwards the new arguments through `...`,
+  same as `gauging_datetime` itself already does. `@gaugings` gains an
+  `age_weight` column when `age_halflife` is used. New
+  `vignette("recency_weighting_guide")` covers the full formula and a
+  worked example on a station whose channel has genuinely drifted.
+
+* New `vignette("objective_guide")`: absolute vs. relative fitting
+  objectives, with a diagram of the implied per-gauging weight each one
+  uses (flat for absolute; approximately `1/Q^2` for relative, via the
+  standard first-order log-residual approximation) -- the mechanism
+  behind `non_standard_optimisation.Rmd`'s existing `objective =
+  "relative"` coverage, not previously diagrammed.
+
+* New `vignette("segmented_model_guide")`: how
+  `rate_optimise_segmented()`'s multiplicative segments actually compose,
+  with each factor plotted separately to show the "inert until its own
+  breakpoint" property the formula states but didn't previously
+  illustrate, and a side-by-side comparison against independently-fitted
+  limbs showing why the segmented model has no junction gap to reconcile.
+
 * New functions `flag_influential_gaugings()` and `plot_rating_leverage()`:
   per-gauging leverage and Cook's distance, adapted to `rate_optimise()`'s
   nonlinear fit via the standard local-linearisation trick (the fitted

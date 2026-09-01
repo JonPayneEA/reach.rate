@@ -20,6 +20,9 @@ articles:
   - n_bounds_guide
   - weir_flume_guide
   - leverage_influence_guide
+  - recency_weighting_guide
+  - objective_guide
+  - segmented_model_guide
 
 reference:
 - title: Fitting a rating
