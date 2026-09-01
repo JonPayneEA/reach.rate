@@ -1,5 +1,21 @@
 # reach.rate (development)
 
+* New functions `flag_influential_gaugings()` and `plot_rating_leverage()`:
+  per-gauging leverage and Cook's distance, adapted to `rate_optimise()`'s
+  nonlinear fit via the standard local-linearisation trick (the fitted
+  model's Jacobian w.r.t. `C`/`a`/`n`, evaluated at each gauging, in place
+  of a design matrix). Answers a question `plot_rating_residuals()`
+  can't: not how far off a gauging ends up after fitting, but how much
+  it shaped the fit to begin with -- a gauging isolated at the sparse end
+  of a limb can have high leverage regardless of how small its residual
+  looks. `flag_influential_gaugings()` returns a new `FlodeRating` with
+  `@gaugings` columns added (`leverage`, `cooks_distance`, `influential`,
+  using standard rule-of-thumb cutoffs); `plot_rating_leverage()` plots
+  both quantities per limb. New `vignette("leverage_influence_guide")`
+  explains the two diagnostics in plain language, with a worked example
+  showing how much a single flagged gauging can move a fitted
+  coefficient.
+
 * New module `R/weir_equations.R`: four standard weir/flume discharge
   functions -- `weir_discharge_rectangular()` (Rehbock, full-width
   sharp-crested; ISO 1438:2017), `weir_discharge_vnotch()`
