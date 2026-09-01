@@ -87,10 +87,10 @@ limb2_dt <- data.table::data.table(
 )
 rc_raw_dt <- data.table::rbindlist(list(limb1_dt, limb2_dt))
 rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt)
-#> INFO [2026-09-01 13:45:23] Checked 1 junction(s): 1 gap(s) flagged.
-#> INFO [2026-09-01 13:45:23] Junction 1 (limbs 1/2, stage 10): gap 37.66 -> 32.66 | agreed Q = 35.16
+#> INFO [2026-09-01 15:45:14] Checked 1 junction(s): 1 gap(s) flagged.
+#> INFO [2026-09-01 15:45:14] Junction 1 (limbs 1/2, stage 10): gap 37.66 -> 32.66 | agreed Q = 35.16
 p <- plot_rc_gaps(rc_raw_dt, rc_fixed_dt)
-#> INFO [2026-09-01 13:45:23] Checked 1 junction(s): 1 gap(s) flagged.
+#> INFO [2026-09-01 15:45:14] Checked 1 junction(s): 1 gap(s) flagged.
 
 # ggplot2::ggsave("rc_gap_check.png", p, width = 8, height = 6)
 ```
