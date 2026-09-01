@@ -29,10 +29,12 @@ Collate:
     'plot_rating_curves.R'
     'plot_rating_cross_section.R'
     'rate_optimise.R'
+    'rate_from_cross_section.R'
     'rate_optimise_segmented.R'
     'rating_curve_demo.R'
     'rating_curve_explorer_app.R'
     'reach.rate-package.R'
+    'weir_equations.R'
     'zzz.R'
 Depends:
     R (>= 4.1)
