@@ -1,0 +1,12 @@
+# Articles
+
+### Guides
+
+- [Rating Curves: Theory, Functions, and
+  Guidance](https://jonpayneea.github.io/reach.rate/articles/rating_curves_guide.md):
+- [A Rating Curve Walkthrough: From Spot Gaugings to a Constrained
+  Curve](https://jonpayneea.github.io/reach.rate/articles/rating_curve_walkthrough.md):
+- [Non-Standard Rating Optimisation: When and
+  Why](https://jonpayneea.github.io/reach.rate/articles/non_standard_optimisation.md):
+- [Choosing n_bounds: A Cross-Section
+  Guide](https://jonpayneea.github.io/reach.rate/articles/n_bounds_guide.md):
