@@ -50,6 +50,51 @@
 #' @include flode_classes.R
 NULL
 
+# Age-based recency weighting -- shared by rate_optimise() and
+# rate_optimise_segmented(). Exponential half-life decay with a floor:
+# weight = age_min_weight + (1 - age_min_weight) * 0.5^(age_days / age_halflife).
+# The floor exists because naive age-only decay would eventually erase a
+# gauging's contribution to nothing, and a genuinely large but old flood
+# is exactly the gauging a limb's high end can least afford to lose --
+# issue #9 flags this as an open concern for any age-weighting design.
+# This is a partial answer, not the full one: the floor stops total
+# erasure of ANY old gauging, but it is not magnitude-aware -- an old
+# extreme flood and an old ordinary gauging decay identically. True
+# magnitude-aware protection (down-weighting by age only among gaugings
+# of similar size) remains open; see vignette("recency_weighting_guide").
+# Age is clamped at 0, so a gauging dated after reference_datetime (an
+# unusual but valid input) gets full weight 1 rather than > 1.
+.age_recency_weight <- function(gauging_datetime, age_halflife, age_min_weight, reference_datetime) {
+  ref <- if (!is.null(reference_datetime)) reference_datetime else max(gauging_datetime)
+  age_days <- pmax(as.numeric(difftime(ref, gauging_datetime, units = "days")), 0)
+  age_min_weight + (1 - age_min_weight) * 0.5^(age_days / age_halflife)
+}
+
+# Shared validation for the three age-weighting arguments. age_halflife
+# is the opt-in switch: NULL (default) means no weighting at all, and
+# every other check is skipped -- an existing caller who supplies
+# gauging_datetime for record-keeping only sees no behaviour change.
+.validate_age_weighting <- function(gauging_datetime, age_halflife, age_min_weight, reference_datetime, fn_name) {
+  if (is.null(age_halflife)) {
+    return(invisible(NULL))
+  }
+  if (is.null(gauging_datetime)) {
+    stop(fn_name, "(): age_halflife requires gauging_datetime to also be supplied")
+  }
+  if (!is.numeric(age_halflife) || length(age_halflife) != 1L || !is.finite(age_halflife) || age_halflife <= 0) {
+    stop(fn_name, "(): age_halflife must be a single positive number of days")
+  }
+  if (!is.numeric(age_min_weight) || length(age_min_weight) != 1L || !is.finite(age_min_weight) ||
+    age_min_weight < 0 || age_min_weight >= 1) {
+    stop(fn_name, "(): age_min_weight must be a single number in [0, 1)")
+  }
+  if (!is.null(reference_datetime) &&
+    (!inherits(reference_datetime, c("Date", "POSIXct")) || length(reference_datetime) != 1L)) {
+    stop(fn_name, "(): reference_datetime must be a single Date or POSIXct value, or NULL")
+  }
+  invisible(NULL)
+}
+
 #' Generate several starting-value combinations for a limb's nlsLM fit
 #'
 #' @description
@@ -130,6 +175,16 @@ NULL
 .fit_limb_multi_start <- function(limb_dt, fit_lower, fit_upper,
                                    formula = discharge_cms ~ C * (stage_m - a)^n,
                                    maxiter = 100L, ...) {
+  # nlsLM()/nls() resolve `weights` in environment(formula), not the
+  # calling frame -- passing a computed vector through as a value (via a
+  # parameter or `...`) is unreliable (a cryptic "..1 used in an
+  # incorrect context" through nested `...`, or "invalid type (closure)
+  # for variable '(weights)'" if a same-named local variable shadows
+  # base R's stats::weights() generic instead of being found). The
+  # robust, idiomatic fix used throughout the R ecosystem: `weights`
+  # below is a bare symbol resolved against `data` like any other
+  # formula variable -- limb_dt is guaranteed an age_weight column by
+  # the caller (rate_optimise()), always 1 when age weighting is unused.
   starts <- .generate_starts(limb_dt, fit_lower, fit_upper)
 
   attempts <- vector("list", length(starts))
@@ -142,6 +197,7 @@ NULL
     fit_attempt <- tryCatch(
       suppressWarnings(nlsLM(
         formula = formula,
+        weights = age_weight,
         data = limb_dt,
         start = st,
         lower = fit_lower,
@@ -209,10 +265,10 @@ NULL
 #'   `discharge_cms`.
 #' @param gauging_datetime `Date`/`POSIXct` vector or `NULL`. When each
 #'   gauging in `discharge_cms`/`stage_m` was taken, same length as
-#'   `discharge_cms` if supplied. Not used by the fit itself -- stored on
-#'   the returned rating's `@gaugings` for future age-aware fitting (see
-#'   issue #9). Default `NULL`: no dates recorded, matching today's
-#'   behaviour.
+#'   `discharge_cms` if supplied. Stored on the returned rating's
+#'   `@gaugings`; only affects the fit itself if `age_halflife` is also
+#'   supplied (see below). Default `NULL`: no dates recorded, matching
+#'   today's behaviour.
 #' @param control Numeric vector or `NULL`. Stage breakpoints separating
 #'   rating limbs, e.g. `c(1.6, 2.2)` for three limbs. `NULL` (default)
 #'   fits a single limb across the full range.
@@ -247,6 +303,26 @@ NULL
 #'   are always recomputed on the natural discharge scale regardless of
 #'   `objective`, so they stay comparable between the two.  Not a
 #'   default -- existing callers see no change in behaviour.
+#' @param age_halflife Single positive number of days, or `NULL`
+#'   (default). Opt-in recency weighting: each gauging's residual is
+#'   weighted by `age_min_weight + (1 - age_min_weight) *
+#'   0.5^(age_days / age_halflife)`, where `age_days` is its age (clamped
+#'   at 0) relative to `reference_datetime`. `NULL` (default) fits
+#'   unweighted, exactly as before -- supplying `gauging_datetime` alone,
+#'   with `age_halflife` left `NULL`, changes nothing about the fit.
+#'   Requires `gauging_datetime`. See `vignette("recency_weighting_guide")`
+#'   for the full derivation and a worked example.
+#' @param age_min_weight Single number in `[0, 1)`. The weight floor a
+#'   gauging's age can never fall below, however old -- prevents an
+#'   old-but-genuinely-informative gauging (e.g. a limb's one high-flow
+#'   flood) from being weighted to near-zero purely for being old. Not
+#'   magnitude-aware: an old extreme gauging and an old ordinary one
+#'   decay identically. Default `0.1`. Ignored if `age_halflife` is
+#'   `NULL`.
+#' @param reference_datetime `Date`/`POSIXct` or `NULL` (default). The
+#'   "as of" point ages are measured back from. `NULL` uses
+#'   `max(gauging_datetime)` -- age relative to this dataset's own most
+#'   recent gauging. Ignored if `age_halflife` is `NULL`.
 #' @param ... Passed to `minpack.lm::nlsLM()` itself for the primary fit
 #'   only, not the bootstrap refits.
 #'
@@ -263,9 +339,9 @@ NULL
 #'   success-count columns; prefer these over `*_se_asymp` when present,
 #'   since they don't rely on the NLS asymptotic approximation.
 #'   `@gaugings` holds the input data with a `limb` column (and
-#'   `gauging_datetime` if supplied). `@fit_starts` holds every
-#'   multi-start attempt when `multi_start = TRUE`. `@status` is
-#'   `"independently_fitted"`.
+#'   `gauging_datetime` if supplied, and `age_weight` if `age_halflife`
+#'   was supplied). `@fit_starts` holds every multi-start attempt when
+#'   `multi_start = TRUE`. `@status` is `"independently_fitted"`.
 #'
 #' @seealso [rating_plot()], [plot_rating_residuals()],
 #'   [flag_extrapolated_limbs()], [suggest_breakpoints()],
@@ -280,8 +356,10 @@ NULL
 #' @export
 rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, control = NULL,
                            n_boot = 0L, boot_seed = NULL, min_boot_success = 0.8, multi_start = TRUE,
-                           n_bounds = NULL, objective = c("absolute", "relative"), ...) {
+                           n_bounds = NULL, objective = c("absolute", "relative"),
+                           age_halflife = NULL, age_min_weight = 0.1, reference_datetime = NULL, ...) {
   objective <- match.arg(objective)
+  .validate_age_weighting(gauging_datetime, age_halflife, age_min_weight, reference_datetime, "rate_optimise")
   if (!is.null(n_bounds)) {
     if (!is.numeric(n_bounds) || length(n_bounds) != 2L || any(!is.finite(n_bounds))) {
       stop("n_bounds must be NULL or a finite numeric vector c(lower, upper)")
@@ -332,6 +410,17 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
 
   gaugings_dt <- data.table(discharge_cms = discharge_cms, stage_m = stage_m)
   if (!is.null(gauging_datetime)) gaugings_dt[, gauging_datetime := gauging_datetime]
+  # age_weight is always present during fitting -- nlsLM()'s weights
+  # argument must resolve as a bare column of `data` (see
+  # .fit_limb_multi_start()'s comment for why a computed vector passed
+  # as a value is unreliable); it defaults to all-1s (mathematically
+  # identical to unweighted) and is stripped from the output below when
+  # age_halflife wasn't supplied, so @gaugings looks exactly as before.
+  gaugings_dt[, age_weight := if (!is.null(age_halflife)) {
+    .age_recency_weight(gauging_datetime, age_halflife, age_min_weight, reference_datetime)
+  } else {
+    1
+  }]
 
   fit_formula <- if (objective == "relative") {
     log(discharge_cms) ~ log(C) + n * log(stage_m - a)
@@ -446,7 +535,10 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
     start_a <- if (fit_upper[["a"]] < 0) fit_upper[["a"]] - 0.01 else 0
 
     if (multi_start) {
-      fit_result <- .fit_limb_multi_start(limb_dt, fit_lower, fit_upper, formula = fit_formula, maxiter = 100L, ...)
+      fit_result <- .fit_limb_multi_start(
+        limb_dt, fit_lower, fit_upper,
+        formula = fit_formula, maxiter = 100L, ...
+      )
       if (is.null(fit_result$model)) {
         stop(sprintf(
           "rate_optimise(): limb %s -- no starting combination converged to a valid, monotonic equation across %d attempts.",
@@ -467,6 +559,7 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
         lower = fit_lower,
         upper = fit_upper,
         control = nls.lm.control(maxiter = 100),
+        weights = age_weight,
         ...
       )
       n_starts_attempted_vec[i] <- 1L
@@ -558,7 +651,8 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
             start = list(C = coefs[["C"]], a = coefs[["a"]], n = coefs[["n"]]),
             lower = fit_lower,
             upper = fit_upper,
-            control = nls.lm.control(maxiter = 100)
+            control = nls.lm.control(maxiter = 100),
+            weights = age_weight
           )),
           error = function(e) e
         )
@@ -647,6 +741,8 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
     bootstrap_out <- rbindlist(boot_list)
   }
 
+  if (is.null(age_halflife)) gaugings_dt[, age_weight := NULL]
+
   FlodeRating(
     limbs = meta_dt[],
     gaugings = gaugings_dt,
@@ -665,6 +761,13 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
       control = control,
       n_boot = n_boot,
       multi_start = multi_start,
+      age_halflife = age_halflife,
+      age_min_weight = age_min_weight,
+      reference_datetime = if (!is.null(age_halflife)) {
+        if (!is.null(reference_datetime)) reference_datetime else max(gauging_datetime)
+      } else {
+        NULL
+      },
       tool_version = "rating_curves 1.0"
     )
   )
@@ -769,6 +872,11 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
 
   refit_constrained_limb <- function(lb, brk, target_q, start_a, start_n) {
     limb_dt <- gaugings_dt[limb == lb]
+    # gaugings_dt is fit@gaugings here -- age_weight only survives on it
+    # if the original rate_optimise() call used age_halflife (see that
+    # function's own comment on why nlsLM needs this as a real data
+    # column); default to unweighted (1) when absent, same convention.
+    if (!"age_weight" %in% names(limb_dt)) limb_dt[, age_weight := 1]
 
     # a must keep both (H - a) and (brk - a) strictly positive -- brk can
     # sit below this limb's own minimum gauged stage (an extrapolation
@@ -788,7 +896,8 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
         start = list(a = start_a_clipped, n = start_n_clipped),
         lower = fit_lower,
         upper = fit_upper,
-        control = nls.lm.control(maxiter = 200)
+        control = nls.lm.control(maxiter = 200),
+        weights = age_weight
       )),
       error = function(e) NULL
     )

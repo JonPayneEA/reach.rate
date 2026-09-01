@@ -12,6 +12,9 @@ rate_optimise_segmented(
   estimate_breakpoints = FALSE,
   multi_start = TRUE,
   objective = c("absolute", "relative"),
+  age_halflife = NULL,
+  age_min_weight = 0.1,
+  reference_datetime = NULL,
   ...
 )
 }
@@ -40,6 +43,11 @@ diagnostics (\code{rmse_cms}, \code{r_squared}) are always recomputed on the
 natural discharge scale regardless of \code{objective}. Not a default --
 existing callers see no change in behaviour.}
 
+\item{age_halflife, age_min_weight, reference_datetime}{As in
+\code{\link[=rate_optimise]{rate_optimise()}} -- opt-in recency weighting of the single joint
+fit (this model has no per-limb structure to weight separately).
+\code{age_halflife = NULL} (default) fits unweighted, exactly as before.}
+
 \item{...}{Passed to \code{minpack.lm::nls.lm.control()}.}
 }
 \value{
@@ -47,7 +55,8 @@ A \link{FlodeSegmentedRating} instance. \verb{@coefficients} is a
 one-row data.table: \code{C}, \code{bp1..bpk}, \code{n1..nk}, \code{rmse_cms},
 \code{r_squared}, \code{n_obs}, \code{n_starts_attempted}, \code{n_starts_converged},
 \code{selected_start_id}. \verb{@gaugings} holds the input data (and
-\code{gauging_datetime} if supplied). \verb{@fit_starts}
+\code{gauging_datetime} if supplied, and \code{age_weight} if \code{age_halflife}
+was supplied). \verb{@fit_starts}
 holds every multi-start attempt when \code{multi_start = TRUE}.
 }
 \description{

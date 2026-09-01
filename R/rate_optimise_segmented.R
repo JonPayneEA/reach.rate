@@ -114,6 +114,12 @@ NULL
 #' @keywords internal
 #' @noRd
 .fit_segmented_multi_start <- function(model_formula, gaugings_dt, starts, maxiter = 300L, ...) {
+  # weights = age_weight below is a bare symbol resolved against `data`
+  # (gaugings_dt), not a computed value threaded through -- see
+  # rate_optimise.R's .fit_limb_multi_start() comment for why nlsLM()'s
+  # NSE handling of `weights` makes any other approach unreliable.
+  # gaugings_dt is guaranteed an age_weight column by the caller,
+  # defaulting to 1 (unweighted) when age_halflife isn't supplied.
   attempts <- vector("list", length(starts))
   best_model <- NULL
   best_rss <- Inf
@@ -126,6 +132,7 @@ NULL
     fit_attempt <- tryCatch(
       suppressWarnings(nlsLM(
         formula = model_formula,
+        weights = age_weight,
         data = gaugings_dt,
         start = st,
         control = nls.lm.control(maxiter = maxiter),
@@ -202,6 +209,10 @@ NULL
 #' @param gauging_datetime `Date`/`POSIXct` vector or `NULL`, as in
 #'   [rate_optimise()]. Default `NULL`.
 #' @param control Numeric vector or `NULL`. Interior segment breakpoints.
+#' @param age_halflife,age_min_weight,reference_datetime As in
+#'   [rate_optimise()] -- opt-in recency weighting of the single joint
+#'   fit (this model has no per-limb structure to weight separately).
+#'   `age_halflife = NULL` (default) fits unweighted, exactly as before.
 #' @param estimate_breakpoints Logical. If `TRUE`, interior breakpoints
 #'   are refit as free parameters. Default `FALSE`.
 #' @param multi_start Logical. If `TRUE` (default), fits from several
@@ -222,7 +233,8 @@ NULL
 #'   one-row data.table: `C`, `bp1..bpk`, `n1..nk`, `rmse_cms`,
 #'   `r_squared`, `n_obs`, `n_starts_attempted`, `n_starts_converged`,
 #'   `selected_start_id`. `@gaugings` holds the input data (and
-#'   `gauging_datetime` if supplied). `@fit_starts`
+#'   `gauging_datetime` if supplied, and `age_weight` if `age_halflife`
+#'   was supplied). `@fit_starts`
 #'   holds every multi-start attempt when `multi_start = TRUE`.
 #'
 #' @seealso [rate_optimise()] for this toolkit's usual independent-limb
@@ -243,8 +255,10 @@ NULL
 #' @export
 rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = NULL, control = NULL,
                                      estimate_breakpoints = FALSE, multi_start = TRUE,
-                                     objective = c("absolute", "relative"), ...) {
+                                     objective = c("absolute", "relative"),
+                                     age_halflife = NULL, age_min_weight = 0.1, reference_datetime = NULL, ...) {
   objective <- match.arg(objective)
+  .validate_age_weighting(gauging_datetime, age_halflife, age_min_weight, reference_datetime, "rate_optimise_segmented")
   if (!is.numeric(discharge_cms)) stop("discharge_cms must be numeric")
   if (!is.numeric(stage_m)) stop("stage_m must be numeric")
   if (length(discharge_cms) != length(stage_m)) {
@@ -292,6 +306,15 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = N
 
   gaugings_dt <- data.table(discharge_cms = discharge_cms, stage_m = stage_m)
   if (!is.null(gauging_datetime)) gaugings_dt[, gauging_datetime := gauging_datetime]
+  # See rate_optimise.R's own comment on age_weight: always present as a
+  # real data column during fitting (nlsLM() needs it there, not passed
+  # as a computed value), defaulting to 1 (unweighted), stripped from
+  # the output below when age_halflife wasn't supplied.
+  gaugings_dt[, age_weight := if (!is.null(age_halflife)) {
+    .age_recency_weight(gauging_datetime, age_halflife, age_min_weight, reference_datetime)
+  } else {
+    1
+  }]
 
   if (objective == "relative") {
     # log(Q) = log(C) + n1*log(max(H-bp1,0)) + sum_{j>=2} nj*log(max(H-bpj,0)+1).
@@ -348,6 +371,7 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = N
   } else {
     model <- nlsLM(
       formula = model_formula,
+      weights = age_weight,
       data = gaugings_dt,
       start = start_list,
       control = nls.lm.control(maxiter = 300),
@@ -390,6 +414,8 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = N
     selected_start_id = selected_start_id
   )]
 
+  if (is.null(age_halflife)) gaugings_dt[, age_weight := NULL]
+
   FlodeSegmentedRating(
     coefficients = coefficients_dt[],
     n_segments = k,
@@ -404,6 +430,13 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = N
       control = control,
       estimate_breakpoints = estimate_breakpoints,
       multi_start = multi_start,
+      age_halflife = age_halflife,
+      age_min_weight = age_min_weight,
+      reference_datetime = if (!is.null(age_halflife)) {
+        if (!is.null(reference_datetime)) reference_datetime else max(gauging_datetime)
+      } else {
+        NULL
+      },
       tool_version = "rating_curves 1.0"
     )
   )

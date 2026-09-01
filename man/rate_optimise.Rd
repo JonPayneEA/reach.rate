@@ -15,6 +15,9 @@ rate_optimise(
   multi_start = TRUE,
   n_bounds = NULL,
   objective = c("absolute", "relative"),
+  age_halflife = NULL,
+  age_min_weight = 0.1,
+  reference_datetime = NULL,
   ...
 )
 }
@@ -26,10 +29,10 @@ rate_optimise(
 
 \item{gauging_datetime}{\code{Date}/\code{POSIXct} vector or \code{NULL}. When each
 gauging in \code{discharge_cms}/\code{stage_m} was taken, same length as
-\code{discharge_cms} if supplied. Not used by the fit itself -- stored on
-the returned rating's \verb{@gaugings} for future age-aware fitting (see
-issue #9). Default \code{NULL}: no dates recorded, matching today's
-behaviour.}
+\code{discharge_cms} if supplied. Stored on the returned rating's
+\verb{@gaugings}; only affects the fit itself if \code{age_halflife} is also
+supplied (see below). Default \code{NULL}: no dates recorded, matching
+today's behaviour.}
 
 \item{control}{Numeric vector or \code{NULL}. Stage breakpoints separating
 rating limbs, e.g. \code{c(1.6, 2.2)} for three limbs. \code{NULL} (default)
@@ -72,6 +75,28 @@ are always recomputed on the natural discharge scale regardless of
 \code{objective}, so they stay comparable between the two.  Not a
 default -- existing callers see no change in behaviour.}
 
+\item{age_halflife}{Single positive number of days, or \code{NULL}
+(default). Opt-in recency weighting: each gauging's residual is
+weighted by \code{age_min_weight + (1 - age_min_weight) * 0.5^(age_days / age_halflife)}, where \code{age_days} is its age (clamped
+at 0) relative to \code{reference_datetime}. \code{NULL} (default) fits
+unweighted, exactly as before -- supplying \code{gauging_datetime} alone,
+with \code{age_halflife} left \code{NULL}, changes nothing about the fit.
+Requires \code{gauging_datetime}. See \code{vignette("recency_weighting_guide")}
+for the full derivation and a worked example.}
+
+\item{age_min_weight}{Single number in \verb{[0, 1)}. The weight floor a
+gauging's age can never fall below, however old -- prevents an
+old-but-genuinely-informative gauging (e.g. a limb's one high-flow
+flood) from being weighted to near-zero purely for being old. Not
+magnitude-aware: an old extreme gauging and an old ordinary one
+decay identically. Default \code{0.1}. Ignored if \code{age_halflife} is
+\code{NULL}.}
+
+\item{reference_datetime}{\code{Date}/\code{POSIXct} or \code{NULL} (default). The
+"as of" point ages are measured back from. \code{NULL} uses
+\code{max(gauging_datetime)} -- age relative to this dataset's own most
+recent gauging. Ignored if \code{age_halflife} is \code{NULL}.}
+
 \item{...}{Passed to \code{minpack.lm::nlsLM()} itself for the primary fit
 only, not the bootstrap refits.}
 }
@@ -89,9 +114,9 @@ every draw and \verb{@limbs} gains \code{C_se}/\code{a_se}/\code{n_se}/percentil
 success-count columns; prefer these over \verb{*_se_asymp} when present,
 since they don't rely on the NLS asymptotic approximation.
 \verb{@gaugings} holds the input data with a \code{limb} column (and
-\code{gauging_datetime} if supplied). \verb{@fit_starts} holds every
-multi-start attempt when \code{multi_start = TRUE}. \verb{@status} is
-\code{"independently_fitted"}.
+\code{gauging_datetime} if supplied, and \code{age_weight} if \code{age_halflife}
+was supplied). \verb{@fit_starts} holds every multi-start attempt when
+\code{multi_start = TRUE}. \verb{@status} is \code{"independently_fitted"}.
 }
 \description{
 Fits the rating equation \eqn{Q = C(H - a)^n} by Levenberg-Marquardt

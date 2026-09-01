@@ -180,14 +180,16 @@ treats a measurement from a decade ago as equally informative about
 
 ## What exists today
 
-The fix for this -- weighting gaugings by age, without discounting a
-genuinely large but old flood just because it's old -- is not yet built;
-see [issue #9](https://github.com/JonPayneEA/reach.rate/issues/9) and the
-package's `ROBUST_FITTING.md` for the open design questions (decay shape,
-how "large" is defined, per-limb vs. whole-record weighting).
-
-What *has* landed is the data the fix will need. `rate_optimise()` and
-`rate_optimise_segmented()` accept an optional `gauging_datetime`:
+`rate_optimise()` and `rate_optimise_segmented()` accept an optional
+`gauging_datetime`, and now an opt-in `age_halflife` that weights each
+gauging by age -- exponential decay down to a floor
+(`age_min_weight`) that stops a genuinely large but old flood ever being
+discounted to nothing, though it isn't magnitude-aware (an old extreme
+and an old ordinary gauging decay identically).
+`vignette("recency_weighting_guide")` covers the full formula, a worked
+example, and what the floor does and doesn't protect against; the fuller,
+magnitude-aware version remains open in
+[issue #9](https://github.com/JonPayneEA/reach.rate/issues/9).
 
 ```{r datetime-demo}
 gauging_datetime <- as.Date("2015-01-01") + round(seq_along(stage_dense_m) * 20)
@@ -198,10 +200,10 @@ fit_dated <- rate_optimise(
 head(fit_dated@gaugings)
 ```
 
-Nothing in the fit reads this column yet -- `fit_dated`'s coefficients are
-identical to what an undated call would produce. It's stored so that when
-the weighting math in #9 is designed, it has real dates to work with rather
-than needing its own follow-up data-model change first.
+`age_halflife` is left `NULL` by default, so supplying `gauging_datetime`
+alone -- as above -- still changes nothing about the fit; `fit_dated`'s
+coefficients are identical to what an undated call would produce.
+Recency weighting only switches on once `age_halflife` is set too.
 
 # Where to go next
 
