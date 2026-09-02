@@ -146,6 +146,50 @@ interior breakpoints fixed unless you explicitly ask for
 giving up the independence that made each limb's own fit a comparatively
 easy, well-behaved three-parameter problem.
 
+# Bridging to a table
+
+Until recently, that was where a `FlodeSegmentedRating`'s pipeline
+stopped: `apply_rating()` and `rating_plot()` worked directly on the
+fit, but `as_rating_table()` -- the bridge every `FlodeRating` uses to
+reach `apply_rating_inverse()`, `apply_rating_versioned()`, and
+`compare_ratings()` -- had no method for it. `vignette("rating_methods_overview")`'s
+second diagram called this out as a dead end.
+
+It no longer fully is one. `as_rating_table()` now bridges a
+`FlodeSegmentedRating` to a [FlodeSegmentedRatingTable]: one row per
+segment (`bp`, `n`), plus the shared `C` every segment's factor
+multiplies into -- the table-shaped analogue of the formula above, not
+a reinterpretation of it:
+
+```{r bridge-to-table}
+seg_table <- as_rating_table(fit_seg)
+seg_table
+```
+
+`apply_rating()` works on this table exactly as it does on `fit_seg`
+itself (same formula, evaluated from the bridged shape). The genuinely
+new capability is `apply_rating_inverse()`: unlike a single-limb
+`FlodeRatingTable`, there's no algebraic inverse for a product of
+several shifted power terms, so it solves for stage numerically
+(`stats::uniroot()`) per queried discharge, using that the product is
+still strictly monotonic above `b1` (every segment's `n > 0`) to
+guarantee the root is unique:
+
+```{r bridge-inverse}
+forward_dt <- apply_rating(seg_table, data.table(stage = c(1.0, 1.8, 2.6, 3.2)))
+forward_dt
+
+apply_rating_inverse(seg_table, forward_dt[, .(discharge)], out_col = "stage_back")
+```
+
+What still doesn't carry over: `plot_rating_residuals()`,
+`flag_extrapolated_limbs()`, `flag_influential_gaugings()`, and
+`plot_rating_leverage()` all require a `FlodeRating` specifically (they
+`S7_inherits()`-check for it), and `compare_ratings()` still expects a
+`FlodeRatingTable`'s `lower_level`/`upper_level`/`C`/`a`/`n` shape, not
+`FlodeSegmentedRatingTable`'s. Those remain open gaps, not solved by
+this bridge.
+
 # References
 
 Hodson, T.O., et al. (2024). Rating curve estimation under model and
@@ -159,4 +203,8 @@ formulation this function implements).
   doesn't reproduce from Hodson et al.'s own Bayesian treatment; "The
   junction gap problem" for the independent-limb side of this
   comparison in full.
+- `vignette("rating_methods_overview")` -- the two flow diagrams this
+  vignette's "Bridging to a table" section updates one box of.
 - `?rate_optimise_segmented` -- full argument reference.
+- `?apply_rating_inverse` -- the numeric-inverse details for
+  `FlodeSegmentedRatingTable`.

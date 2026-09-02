@@ -14,8 +14,9 @@ apply_rating_inverse(
 )
 }
 \arguments{
-\item{fit}{A \link{FlodeRating} or \link{FlodeRatingTable}. A \code{FlodeRating} is
-bridged via \code{\link[=as_rating_table]{as_rating_table()}} first, the same one-line pattern
+\item{fit}{A \link{FlodeRating}, \link{FlodeRatingTable}, \link{FlodeSegmentedRating},
+or \link{FlodeSegmentedRatingTable}. A \code{FlodeRating}/\code{FlodeSegmentedRating}
+is bridged via \code{\link[=as_rating_table]{as_rating_table()}} first, the same one-line pattern
 \code{\link[=align_limb_equations]{align_limb_equations()}}/\code{\link[=graft_rating]{graft_rating()}} already use.}
 
 \item{discharge_dt}{Data.frame or data.table with a discharge column
@@ -71,6 +72,15 @@ table alone can detect that condition, so this is a documented
 limitation, not a runtime check. Uncertainty propagation through the
 inverse (via the local derivative \verb{dH/dQ = 1/(C n (H-a)^\{n-1\})}) is
 not included in this first version.
+
+A \link{FlodeSegmentedRating}/\link{FlodeSegmentedRatingTable} is accepted too,
+bridged the same way -- but has no closed-form inverse (a product of
+several shifted power terms, not one), so that path solves for \code{H}
+numerically per row via \code{\link[stats:uniroot]{stats::uniroot()}} instead. Monotonicity still
+holds (guaranteed by every segment's \code{n > 0}, which
+\link{FlodeSegmentedRatingTable}'s validator requires), so the root is
+unique; there is no junction check to run, since a segmented rating
+has no junction by construction.
 }
 \examples{
 # C on the upper limb (2.410481) is chosen so the two equations agree

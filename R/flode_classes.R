@@ -333,6 +333,103 @@ method(print, FlodeRatingTable) <- function(x, ...) {
 }
 
 # ---------------------------------------------------------------------------
+# FlodeSegmentedRatingTable -- as_rating_table()'s bridge for
+# FlodeSegmentedRating. Deliberately NOT a subclass of FlodeRatingTable:
+# that class's whole design (and every method registered against it --
+# apply_rating(), apply_rating_inverse(), detect_rc_gaps()) assumes each
+# row's own C/a/n alone determines discharge within its own stage range.
+# A segmented rating's discharge is the *product* of every factor whose
+# breakpoint has been crossed, so a row here isn't self-contained the
+# same way -- C is stored once, on the object, not duplicated per row.
+# ---------------------------------------------------------------------------
+
+#' A segmented rating equation table (S7), as_rating_table()'s bridge for FlodeSegmentedRating
+#'
+#' @description
+#' The structural analogue of [FlodeRatingTable] for
+#' [FlodeSegmentedRating]: one row per segment (`bp`, `n`), plus the
+#' single shared `C` every segment's factor multiplies into. Unlike
+#' `FlodeRatingTable`'s rows, a row here is not independently evaluable
+#' -- discharge at a stage above the lowest breakpoint is the product of
+#' every segment factor active at that stage (see
+#' `vignette("segmented_model_guide")`), so this deliberately does not
+#' inherit from `FlodeRatingTable` and is not accepted by that class's
+#' methods ([detect_rc_gaps()] included -- a segmented rating has no
+#' junction to check by construction).
+#'
+#' `@gauged_upper_m` exists so [apply_rating()]/[apply_rating_inverse()]
+#' can still flag extrapolation correctly once bridged to this table:
+#' unlike a breakpoint, the highest gauged stage isn't recoverable from
+#' `C`/`bp`/`n` alone, so [as_rating_table()] carries it over from the
+#' originating fit's own gaugings at construction time.
+#'
+#' @param table Data.table with `segment` (`1..k`), `bp`, and `n`
+#'   columns, one row per segment, `bp` strictly increasing by segment.
+#' @param C Single positive number. The shared scale coefficient every
+#'   segment's factor multiplies into (see [rate_optimise_segmented()]'s
+#'   `Q = C * max(H - bp_1, 0)^n_1 * prod_(j>=2) (max(H - bp_j, 0) + 1)^n_j`).
+#' @param gauged_upper_m Single number. The highest stage in the gaugings
+#'   the originating fit was built from -- used to flag extrapolation.
+#' @param status Character. One of `"independently_fitted"`,
+#'   `"post_fit_aligned"`.
+#' @param previous The exact pre-amendment [FlodeSegmentedRatingTable]
+#'   this one was built from, or `NULL` if it has no such prior identity.
+#' @export
+FlodeSegmentedRatingTable <- new_class(
+  "FlodeSegmentedRatingTable",
+  properties = list(
+    table = new_property(new_S3_class(c("data.table", "data.frame"))),
+    C = new_property(class_double),
+    gauged_upper_m = new_property(class_double),
+    status = new_property(class_character, default = "independently_fitted"),
+    previous = new_property(class_any, default = NULL)
+  ),
+  validator = function(self) {
+    required <- c("segment", "bp", "n")
+    missing_cols <- setdiff(required, names(self@table))
+    if (length(missing_cols)) {
+      return(paste("table is missing required column(s):", paste(missing_cols, collapse = ", ")))
+    }
+    if (nrow(self@table) == 0) return("table must have at least one row")
+    if (length(self@C) != 1L || is.na(self@C) || self@C <= 0) {
+      return("C must be a single positive number")
+    }
+    if (length(self@gauged_upper_m) != 1L || is.na(self@gauged_upper_m)) {
+      return("gauged_upper_m must be a single non-NA number")
+    }
+    tbl <- self@table[order(self@table$segment), ]
+    if (!identical(tbl$segment, seq_len(nrow(tbl)))) {
+      return("segment must be 1..k with no gaps or duplicates")
+    }
+    if (nrow(tbl) > 1L && any(diff(tbl$bp) <= 0)) {
+      return("bp must be strictly increasing by segment")
+    }
+    if (any(tbl$n <= 0)) return("n must be positive for every segment")
+    NULL
+  }
+)
+
+#' Print a segmented rating equation table (S7 method)
+#'
+#' @description
+#' Registered against base R's `print` generic for
+#' [FlodeSegmentedRatingTable]. Same reasoning as [FlodeRatingTable]'s
+#' `print` method.
+#'
+#' @param x A [FlodeSegmentedRatingTable] instance.
+#' @param ... Unused; present for consistency with the `print` generic.
+#' @return `x`, invisibly.
+#' @export
+method(print, FlodeSegmentedRatingTable) <- function(x, ...) {
+  cat(sprintf(
+    "<FlodeSegmentedRatingTable> %d segment(s), C = %.6g, status: %s\n",
+    nrow(x@table), x@C, x@status
+  ))
+  print(x@table)
+  invisible(x)
+}
+
+# ---------------------------------------------------------------------------
 # Shared generics -- methods registered by rate_optimise.R and
 # rate_optimise_segmented.R for their own classes. Every method defined
 # anywhere under R/ is available wherever this package is loaded, so both
@@ -360,9 +457,12 @@ rating_plot <- new_generic("rating_plot", "fit")
 #' Dispatches on the fit's class: [FlodeRating] and
 #' [FlodeSegmentedRating] each provide their own method. Replaces the
 #' previous separate `apply_rating()`/`apply_segmented_rating()` pair --
-#' one name, dispatched by what you're holding.
+#' one name, dispatched by what you're holding. [FlodeRatingTable] and
+#' [FlodeSegmentedRatingTable] -- the two [as_rating_table()] bridge
+#' representations -- each have their own method too.
 #'
-#' @param fit A `FlodeRating` or `FlodeSegmentedRating` object.
+#' @param fit A `FlodeRating`, `FlodeSegmentedRating`, `FlodeRatingTable`,
+#'   or `FlodeSegmentedRatingTable` object.
 #' @param ... Passed to the class-specific method -- typically
 #'   `stage_dt` (a data.frame or data.table with a stage column) plus
 #'   `stage_col`/`out_col`; see the individual methods' examples.
@@ -370,15 +470,19 @@ rating_plot <- new_generic("rating_plot", "fit")
 #' @export
 apply_rating <- new_generic("apply_rating", "fit")
 
-#' Convert a fit to gap_check's equation-table representation (S7 generic)
+#' Convert a fit to its equation-table representation (S7 generic)
 #'
 #' @description
-#' Replaces `fitted_rating_to_table()`. Dispatches on the fit's class.
+#' Replaces `fitted_rating_to_table()`. Dispatches on the fit's class:
+#' [FlodeRating] bridges to [FlodeRatingTable] (`gap_check`'s native
+#' representation); [FlodeSegmentedRating] bridges to
+#' [FlodeSegmentedRatingTable], its structural analogue.
 #'
 #' @param fit A `FlodeRating` or `FlodeSegmentedRating` object.
 #' @param ... Passed to the class-specific method.
 #'
-#' @return A [FlodeRatingTable].
+#' @return A [FlodeRatingTable] (from a `FlodeRating`) or a
+#'   [FlodeSegmentedRatingTable] (from a `FlodeSegmentedRating`).
 #'
 #' @export
 as_rating_table <- new_generic("as_rating_table", "fit")

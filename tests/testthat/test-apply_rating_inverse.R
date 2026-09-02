@@ -88,5 +88,63 @@ test_that("apply_rating_inverse validates its inputs", {
   tbl <- build_gap_free_table()
   expect_error(apply_rating_inverse(tbl, "not a data.frame"), "data.frame or data.table")
   expect_error(apply_rating_inverse(tbl, data.frame(x = 1)), "discharge_col")
-  expect_error(apply_rating_inverse("not a fit", data.frame(discharge = 1)), "FlodeRating or FlodeRatingTable")
+  expect_error(apply_rating_inverse("not a fit", data.frame(discharge = 1)), "FlodeRatingTable")
+})
+
+build_segmented_fit <- function(seed = 1, sd = 0.02) {
+  set.seed(seed)
+  stage_m <- seq(0.3, 3.5, by = 0.03)
+  q1 <- 4 * pmax(stage_m - 0.1, 0)^1.55
+  q2 <- (pmax(stage_m - 1.6, 0) + 1)^0.9
+  q3 <- (pmax(stage_m - 2.4, 0) + 1)^1.1
+  discharge_cms <- q1 * q2 * q3 * exp(rnorm(length(stage_m), sd = sd))
+  rate_optimise_segmented(discharge_cms, stage_m, control = c(1.6, 2.4))
+}
+
+test_that("apply_rating_inverse round-trips against apply_rating for a FlodeSegmentedRatingTable", {
+  fit_seg <- build_segmented_fit()
+  seg_table <- as_rating_table(fit_seg)
+
+  H <- c(0.5, 1.0, 1.6, 2.0, 2.4, 3.0, 3.4)
+  fwd <- apply_rating(seg_table, data.table::data.table(stage = H), stage_col = "stage", out_col = "discharge")
+  inv <- apply_rating_inverse(seg_table, fwd[, .(discharge)], discharge_col = "discharge", out_col = "stage_back")
+
+  expect_equal(inv$stage_back, H, tolerance = 1e-6)
+  expect_true(all(!inv$extrapolated))
+})
+
+test_that("apply_rating_inverse accepts a FlodeSegmentedRating directly, bridging via as_rating_table()", {
+  fit_seg <- build_segmented_fit()
+  disch_dt <- data.table::data.table(discharge = c(2, 10, 30))
+
+  inv <- apply_rating_inverse(fit_seg, disch_dt)
+  inv_via_table <- apply_rating_inverse(as_rating_table(fit_seg), disch_dt)
+
+  expect_equal(inv$stage, inv_via_table$stage, tolerance = 1e-10)
+})
+
+test_that("apply_rating_inverse flags extrapolation above the highest gauged stage for a segmented table", {
+  fit_seg <- build_segmented_fit()
+  seg_table <- as_rating_table(fit_seg)
+
+  q_at_top <- apply_rating(seg_table, data.table::data.table(stage = seg_table@gauged_upper_m))$discharge
+  inv <- apply_rating_inverse(seg_table, data.table::data.table(discharge = q_at_top * 5))
+
+  expect_true(inv$extrapolated[1])
+  expect_true(inv$stage[1] > seg_table@gauged_upper_m)
+})
+
+test_that("apply_rating_inverse returns NA and warns for discharge <= 0 on a segmented table", {
+  fit_seg <- build_segmented_fit()
+  seg_table <- as_rating_table(fit_seg)
+  disch_dt <- data.table::data.table(discharge = c(0, -1, 5))
+
+  expect_warning(
+    inv <- apply_rating_inverse(seg_table, disch_dt),
+    "no unique inverse stage"
+  )
+  expect_true(is.na(inv$stage[1]))
+  expect_true(is.na(inv$stage[2]))
+  expect_true(is.na(inv$extrapolated[1]))
+  expect_false(is.na(inv$stage[3]))
 })

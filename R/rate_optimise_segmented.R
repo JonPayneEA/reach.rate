@@ -111,6 +111,22 @@ NULL
   q
 }
 
+# Same evaluation, from FlodeSegmentedRatingTable's table shape (one row
+# per segment: bp, n) plus its own C, rather than a coefs list/n_segments
+# pair -- an adapter onto .segmented_predict_cms() so the one evaluation
+# formula stays in one place. table_dt must already be ordered by segment.
+#' @keywords internal
+#' @noRd
+.segmented_predict_cms_from_table <- function(table_dt, C, stage_m) {
+  k <- nrow(table_dt)
+  coefs <- list(C = C)
+  for (j in seq_len(k)) {
+    coefs[[sprintf("bp%d", j)]] <- table_dt$bp[j]
+    coefs[[sprintf("n%d", j)]] <- table_dt$n[j]
+  }
+  .segmented_predict_cms(coefs, k, stage_m)
+}
+
 #' @keywords internal
 #' @noRd
 .fit_segmented_multi_start <- function(model_formula, gaugings_dt, starts, maxiter = 300L, ...) {
@@ -475,6 +491,68 @@ method(apply_rating, FlodeSegmentedRating) <- function(fit, stage_dt, stage_col 
 
   set(out_dt, j = out_col, value = q)
   set(out_dt, j = "extrapolated", value = H > max(gaugings_dt$stage_m))
+  out_dt[]
+}
+
+#' Convert a segmented fit to its equation-table representation (S7 method)
+#'
+#' @description
+#' Registered against the `as_rating_table` generic (`flode_classes.R`)
+#' for [FlodeSegmentedRating]. Pulls `bp1..bpk`/`n1..nk` out of
+#' `fit@coefficients` into [FlodeSegmentedRatingTable]'s one-row-per-
+#' segment shape, carrying the shared `C` and the highest gauged stage
+#' (needed downstream for extrapolation flagging, since it isn't
+#' recoverable from the equation alone) across from `fit@gaugings`.
+#'
+#' @param fit A [FlodeSegmentedRating] instance.
+#' @return A [FlodeSegmentedRatingTable].
+#' @export
+method(as_rating_table, FlodeSegmentedRating) <- function(fit) {
+  coefs <- fit@coefficients
+  k <- fit@n_segments
+  table_dt <- data.table(
+    segment = seq_len(k),
+    bp = vapply(seq_len(k), function(j) coefs[[sprintf("bp%d", j)]], numeric(1)),
+    n = vapply(seq_len(k), function(j) coefs[[sprintf("n%d", j)]], numeric(1))
+  )
+  FlodeSegmentedRatingTable(
+    table = table_dt,
+    C = coefs$C[1],
+    gauged_upper_m = max(fit@gaugings$stage_m),
+    status = fit@status
+  )
+}
+
+#' Apply a segmented rating table to a stage series (S7 method)
+#'
+#' @description
+#' Registered against the `apply_rating` generic (`flode_classes.R`) for
+#' [FlodeSegmentedRatingTable]. Same evaluation as
+#' `method(apply_rating, FlodeSegmentedRating)`, from the bridged table
+#' shape instead of the original fit -- see
+#' `vignette("rating_methods_overview")` for why this bridge exists.
+#'
+#' `fit` is a [FlodeSegmentedRatingTable] instance. `stage_dt` is a
+#' data.frame or data.table with a stage column, named by `stage_col`
+#' (default `"stage"`). `out_col` (default `"discharge"`) names the
+#' output column.
+#'
+#' @return `stage_dt` as a data.table with `out_col` and an
+#'   `extrapolated` logical column added (`TRUE` above
+#'   `fit@gauged_upper_m`).
+#' @export
+method(apply_rating, FlodeSegmentedRatingTable) <- function(fit, stage_dt, stage_col = "stage", out_col = "discharge") {
+  if (!is.data.frame(stage_dt)) stop("stage_dt must be a data.frame or data.table")
+  if (!stage_col %in% names(stage_dt)) stop("stage_col must be a column of stage_dt")
+
+  table_dt <- fit@table[order(fit@table$segment), ]
+  out_dt <- copy(as.data.table(stage_dt))
+  H <- out_dt[[stage_col]]
+
+  q <- .segmented_predict_cms_from_table(table_dt, fit@C, H)
+
+  set(out_dt, j = out_col, value = q)
+  set(out_dt, j = "extrapolated", value = H > fit@gauged_upper_m)
   out_dt[]
 }
 
