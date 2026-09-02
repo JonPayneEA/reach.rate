@@ -117,7 +117,7 @@ rating_dt <- data.table::data.table(
 rating_table <- FlodeRatingTable(table = rating_dt)
 discharge_dt <- data.table::data.table(discharge = c(1.0, 5.0, 20.0))
 apply_rating_inverse(rating_table, discharge_dt)
-#> INFO [2026-09-01 15:45:08] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-09-02 07:43:45] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
 #>    discharge     stage extrapolated
 #>        <num>     <num>       <lgcl>
 #> 1:         1 0.5428835        FALSE

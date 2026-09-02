@@ -122,6 +122,12 @@ residual plot, and bootstrap in this toolkit needs the original data,
 and a rating separated from its gaugings is a rating you can no longer
 question. Keeping them together is deliberate.
 
+This section is deliberately brief –
+[`vignette("s7_objects_guide")`](https://jonpayneea.github.io/reach.rate/articles/s7_objects_guide.md)
+covers `@`-access, [`print()`](https://rdrr.io/r/base/print.html),
+`S7_inherits()`, and the `@status`/`@previous` audit chain in full,
+including a validator actually catching a malformed construction.
+
 ### A running example
 
 Every chunk from here on operates on one running example: a three-limb
@@ -162,7 +168,7 @@ fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
 #>     limb         C           a        n   rmse_cms r_squared n_obs
 #>    <int>     <num>       <num>    <num>      <num>     <num> <int>
 #> 1:     1  2.772226 -0.05503033 1.459775 0.05707128 0.9982030    37
-#> 2:     2  7.249417  0.24224859 1.487198 0.04004832 0.9997172    20
+#> 2:     2  7.249417  0.24224858 1.487198 0.04004832 0.9997172    20
 #> 3:     3 10.188269  0.21374013 1.790580 0.04707026 0.9999901    44
 ```
 
@@ -308,6 +314,13 @@ to be similar.
 
 ## Diagnosing a fit
 
+Residuals, extrapolation, and channel shape below aren’t the whole
+diagnostic picture:
+[`vignette("leverage_influence_guide")`](https://jonpayneea.github.io/reach.rate/articles/leverage_influence_guide.md)
+covers a different question none of these three answer – not how far off
+a gauging ends up after fitting, but how much it shaped the fit to begin
+with.
+
 ### `plot_rating_residuals()`
 
 $`R^2`$ and RMSE say how good a fit is; residuals say where it is weak.
@@ -447,6 +460,19 @@ the survey must reach at least as high as the highest stage you rate –
 does not assume the end points continue as vertical banks above the
 survey’s own top.
 
+A cross-section fit is the general-purpose, no-gaugings-required option.
+At a weir- or flume-controlled station specifically,
+[`vignette("weir_flume_guide")`](https://jonpayneea.github.io/reach.rate/articles/weir_flume_guide.md)
+covers a more precise alternative:
+[`weir_discharge_rectangular()`](https://jonpayneea.github.io/reach.rate/reference/weir_discharge_rectangular.md),
+[`weir_discharge_vnotch()`](https://jonpayneea.github.io/reach.rate/reference/weir_discharge_vnotch.md),
+[`weir_discharge_cipoletti()`](https://jonpayneea.github.io/reach.rate/reference/weir_discharge_cipoletti.md),
+and
+[`flume_discharge_parshall()`](https://jonpayneea.github.io/reach.rate/reference/flume_discharge_parshall.md)
+compute discharge from the structure’s own published equation and
+geometry, with GUM-style propagated uncertainty, rather than an
+approximate Manning calculation.
+
 ## The junction gap problem
 
 Fit each limb independently and their curves will not meet. Limb 1’s
@@ -470,7 +496,7 @@ steps into flow records and forecast inputs.
 rating_table <- as_rating_table(fit)
 rc_raw_dt <- expand_rating_table(rating_table, step = 0.01)
 gaps_dt <- detect_rc_gaps(rc_raw_dt)
-#> INFO [2026-09-01 15:45:48] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-02 07:44:17] Checked 2 junction(s): 2 gap(s) flagged.
 gaps_dt
 #>    junction limb_lower limb_upper stage_break stage_lower_end stage_upper_start
 #>       <int>     <char>     <char>       <num>           <num>             <num>
@@ -521,11 +547,11 @@ boundary.
 ``` r
 
 rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "midpoint")
-#> INFO [2026-09-01 15:45:48] Checked 2 junction(s): 2 gap(s) flagged.
-#> INFO [2026-09-01 15:45:48] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -> 11.42 | agreed Q = 8.6042
-#> INFO [2026-09-01 15:45:48] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -> 34.81 | agreed Q = 27.2512
+#> INFO [2026-09-02 07:44:17] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-02 07:44:17] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -> 11.42 | agreed Q = 8.6042
+#> INFO [2026-09-02 07:44:17] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -> 34.81 | agreed Q = 27.2512
 plot_rc_gaps(rc_raw_dt, rc_fixed_dt)
-#> INFO [2026-09-01 15:45:48] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-02 07:44:17] Checked 2 junction(s): 2 gap(s) flagged.
 ```
 
 ![](rating_curves_guide_files/figure-html/resolve-gaps-1.png)
@@ -605,8 +631,8 @@ aligned_boundaries <- align_limb_boundaries(fit)
 aligned_boundaries@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs, boundary_adjusted)]
 #>     limb lower_stage_m upper_stage_m         C           a        n   rmse_cms
 #>    <int>         <num>         <num>     <num>       <num>    <num>      <num>
-#> 1:     1     0.5000000     0.5753648  2.772226 -0.05503033 1.459775 0.04105721
-#> 2:     2     0.5753648     2.2000000  7.249417  0.24224859 1.487198 2.33401589
+#> 1:     1     0.5000000     0.5753647  2.772226 -0.05503033 1.459775 0.04105721
+#> 2:     2     0.5753647     2.2000000  7.249417  0.24224858 1.487198 2.33401589
 #> 3:     3     2.2000000     3.5000000 10.188269  0.21374013 1.790580 0.04707026
 #>    r_squared n_obs boundary_adjusted
 #>        <num> <int>            <lgcl>
@@ -652,7 +678,7 @@ fit_constrained@limbs[, .(limb, C, a, n, rmse_cms, r_squared, aligned)]
 #>    <int>     <num>       <num>     <num>      <num>     <num>  <lgcl>
 #> 1:     1  2.772226 -0.05503033 1.4597750 0.05707128 0.9982030   FALSE
 #> 2:     2 19.815348  1.59906869 0.1764376 0.91568577 0.8521371    TRUE
-#> 3:     3 71.280869  2.16313908 0.4150836 4.18657133 0.9219092    TRUE
+#> 3:     3 71.280869  2.16313908 0.4150836 4.18657137 0.9219092    TRUE
 ```
 
 When the raw gaugings are available, the job can be done properly.
@@ -781,6 +807,13 @@ them, accepting the non-convexity their paper warns about. If you need
 the full uncertainty treatment, use their package; this function gives
 you their model structure inside this toolkit’s conventions.
 
+[`vignette("segmented_model_guide")`](https://jonpayneea.github.io/reach.rate/articles/segmented_model_guide.md)
+diagrams the mechanism above rather than just stating it – each
+multiplicative factor plotted separately to show the “inert until its
+own breakpoint” property directly, and this section’s independent-limb
+alternative overlaid against the segmented fit to show why one has a
+junction gap and the other structurally cannot.
+
 ## Uncertainty: the bootstrap
 
 ``` r
@@ -790,7 +823,7 @@ fit_boot@limbs[, .(limb, C, C_se, n, n_se)]
 #>     limb         C      C_se        n       n_se
 #>    <int>     <num>     <num>    <num>      <num>
 #> 1:     1  2.772226 0.2523197 1.459775 0.08574848
-#> 2:     2  7.249417 1.4146691 1.487198 0.13708034
+#> 2:     2  7.249417 1.4146802 1.487198 0.13708156
 #> 3:     3 10.188269 0.3404382 1.790580 0.01678121
 plot_rating_interval(fit_boot)
 ```
@@ -868,7 +901,7 @@ hydrograph_dt <- data.table(
 )
 
 flow_dt <- apply_rating(rating_table, hydrograph_dt, stage_col = "stage", out_col = "discharge_cms")
-#> INFO [2026-09-01 15:45:51] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-09-02 07:44:19] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.
 sum(flow_dt$extrapolated) # stage values above the gauged range
 #> [1] 4
 flow_dt[c(1, 10, 20, 30, 40)]
@@ -909,7 +942,7 @@ already produced above.
 
 target_flows_dt <- data.table(discharge = c(5, 20, 60))
 apply_rating_inverse(aligned_result, target_flows_dt, discharge_col = "discharge", out_col = "stage_m")
-#> INFO [2026-09-01 15:45:51] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-09-02 07:44:19] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
 #>    discharge  stage_m extrapolated
 #>        <num>    <num>       <lgcl>
 #> 1:         5 1.442813        FALSE
@@ -955,7 +988,7 @@ rating_history_dt <- data.table(
 )
 
 versioned_flow_dt <- apply_rating_versioned(hydrograph_dt, rating_history_dt)
-#> INFO [2026-09-01 15:45:52] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-09-02 07:44:19] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.
 versioned_flow_dt[c(1, 10, 20, 30, 40)]
 #>      datetime    stage   version discharge extrapolated
 #>        <POSc>    <num>    <char>     <num>       <lgcl>
@@ -1030,7 +1063,7 @@ grafted@table[, .(lower_level, upper_level, C, a, n, source)]
 #>    lower_level upper_level        C           a        n   source
 #>          <num>       <num>    <num>       <num>    <num>   <char>
 #> 1:    0.500000    1.600000 2.772226 -0.05503033 1.459775      new
-#> 2:    1.600000    2.200000 3.670338  0.24224859 1.487198      new
+#> 2:    1.600000    2.200000 3.670338  0.24224858 1.487198      new
 #> 3:    2.200000    4.429085 2.917089  0.21374013 1.790580      new
 #> 4:    4.429085    6.000000 5.540583  0.00000000 1.300000 existing
 ```
@@ -1083,7 +1116,41 @@ answering a physical question.
 
 ## Where to go next
 
-Every function used above has its own roxygen documentation with a
+This vignette covers the whole workflow at introductory depth; each of
+the following goes deeper on one part of it:
+
+- [`vignette("s7_objects_guide")`](https://jonpayneea.github.io/reach.rate/articles/s7_objects_guide.md)
+  – `@`-access, [`print()`](https://rdrr.io/r/base/print.html),
+  `S7_inherits()`, and the `@status`/`@previous` audit chain, with a
+  validator actually catching a mistake.
+- [`vignette("rating_curve_walkthrough")`](https://jonpayneea.github.io/reach.rate/articles/rating_curve_walkthrough.md)
+  – one continuous worked example, spot gaugings to a checked,
+  junction-aligned, physically-constrained multi-limb rating.
+- [`vignette("non_standard_optimisation")`](https://jonpayneea.github.io/reach.rate/articles/non_standard_optimisation.md)
+  – when and why to reach for `objective`, `n_bounds`, or `age_halflife`
+  instead of the default fit.
+- [`vignette("objective_guide")`](https://jonpayneea.github.io/reach.rate/articles/objective_guide.md)
+  – what `objective = "relative"` actually does differently underneath,
+  with diagrams.
+- [`vignette("n_bounds_guide")`](https://jonpayneea.github.io/reach.rate/articles/n_bounds_guide.md)
+  – reading a channel cross-section into a starting `n_bounds`, with
+  diagrams of the canonical control shapes.
+- [`vignette("weir_flume_guide")`](https://jonpayneea.github.io/reach.rate/articles/weir_flume_guide.md)
+  – discharge from a weir or flume’s own published equation and
+  geometry, with GUM-style uncertainty, for stations where that applies
+  instead of a fitted or cross-section rating.
+- [`vignette("leverage_influence_guide")`](https://jonpayneea.github.io/reach.rate/articles/leverage_influence_guide.md)
+  – which gaugings are quietly steering a fit, beyond what residuals
+  alone show.
+- [`vignette("recency_weighting_guide")`](https://jonpayneea.github.io/reach.rate/articles/recency_weighting_guide.md)
+  – the maths behind `age_halflife`, for a station whose channel has
+  drifted over time.
+- [`vignette("segmented_model_guide")`](https://jonpayneea.github.io/reach.rate/articles/segmented_model_guide.md)
+  – how
+  [`rate_optimise_segmented()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise_segmented.md)’s
+  multiplicative factors actually compose, with diagrams.
+
+Every function used above also has its own roxygen documentation with a
 fuller `@description` and a runnable `@examples` block – see
 [`?rate_optimise`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md),
 `?flode_classes` (for the class hierarchy: `FlodeRatingBase`,
