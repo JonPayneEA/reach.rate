@@ -143,10 +143,11 @@ finished than the other, but because a joint segmented model has no
 junction to check and no natural table form the way independently-fitted
 limbs do.
 
-```{r diagram-downstream, echo=FALSE, fig.alt="Flow diagram: FlodeRating branches to diagnostic functions (a dead end) and to as_rating_table(), producing a FlodeRatingTable, which passes through gap detection and resolution to a gap-free FlodeRatingTable, which feeds apply_rating(), apply_rating_inverse(), apply_rating_versioned(), and compare_ratings(). FlodeSegmentedRating goes directly to apply_rating() and rating_plot(), with no gap-check step and no diagnostic-function equivalent.", fig.width=10.5, fig.height=9}
+```{r diagram-downstream, echo=FALSE, fig.alt="Flow diagram: FlodeRating branches to diagnostic functions (a dead end) and to as_rating_table(), producing a FlodeRatingTable, which passes through gap detection and resolution to a gap-free FlodeRatingTable, which feeds apply_rating(), apply_rating_inverse(), apply_rating_versioned(), and compare_ratings(). FlodeSegmentedRating goes directly to apply_rating() and rating_plot(), with no gap-check step and no diagnostic-function equivalent, and also bridges via as_rating_table() to a FlodeSegmentedRatingTable, which supports apply_rating() and apply_rating_inverse() but not apply_rating_versioned() or compare_ratings().", fig.width=12, fig.height=9}
 boxes2 <- data.table(
   id = c("fr", "fseg", "diag", "art", "segapply", "frt1", "gapcheck", "frt2",
-         "app1", "app2", "app3", "app4"),
+         "app1", "app2", "app3", "app4",
+         "art_seg", "fsegtable", "apps_seg"),
   label = c(
     "FlodeRating", "FlodeSegmentedRating",
     "plot_rating_residuals()\nflag_extrapolated_limbs()\nflag_influential_gaugings()\nplot_rating_leverage()",
@@ -156,45 +157,53 @@ boxes2 <- data.table(
     "expand_rating_table() ->\ndetect_rc_gaps() -> resolve_rc_gaps() /\nalign_limb_equations() / align_limb_boundaries() /\ngraft_rating()  (only if gaps found)",
     "FlodeRatingTable\n(gap-free)",
     "apply_rating()", "apply_rating_inverse()", "apply_rating_versioned()",
-    "compare_ratings()\nplot_rating_comparison()"
+    "compare_ratings()\nplot_rating_comparison()",
+    "as_rating_table()",
+    "FlodeSegmentedRatingTable",
+    "apply_rating()\napply_rating_inverse()"
   ),
   x = c(1.5, 9,
-        -2.3, 1.5, 9,
+        -2.3, 1.5, 7.3,
         1.5,
         1.5,
         1.5,
-        -3.4, -0.6, 2.5, 5.9),
+        -3.4, -0.6, 2.5, 5.9,
+        10.7, 10.7, 10.7),
   y = c(11, 11,
         9, 9, 9,
         7,
         5,
         3,
-        0.8, 0.8, 0.8, 0.8),
+        0.8, 0.8, 0.8, 0.8,
+        9, 7, 5),
   w = c(2.0, 3.2,
         3.4, 2.6, 3.0,
         2.3,
         5.4,
         2.7,
-        2.1, 2.5, 2.7, 3.1),
+        2.1, 2.5, 2.7, 3.1,
+        2.7, 3.9, 3.4),
   h = c(0.8, 0.8,
         1.5, 0.8, 1.0,
         0.8,
         1.5,
         0.9,
-        0.8, 0.8, 0.8, 0.9),
+        0.8, 0.8, 0.8, 0.9,
+        0.8, 0.8, 1.0),
   fill = c("#c8e6c9", "#c8e6c9",
            "#ffe0b2", "#b3e5fc", "#d1c4e9",
            "#c8e6c9",
            "#ffe0b2",
            "#c8e6c9",
-           "#d1c4e9", "#d1c4e9", "#d1c4e9", "#d1c4e9")
+           "#d1c4e9", "#d1c4e9", "#d1c4e9", "#d1c4e9",
+           "#b3e5fc", "#c8e6c9", "#d1c4e9")
 )
 
 arrows2 <- data.table(
-  x    = c(1.5, 1.5, 9,   1.5,  1.5,      1.5,   1.5,  1.5,  1.5,  1.5),
-  y    = c(10.6, 10.6, 10.6, 8.6, 6.6,     4.25,  2.55, 2.55, 2.55, 2.55),
-  xend = c(-2.3, 1.5, 9,   1.5,  1.5,      1.5,   -3.4, -0.6,  2.5,  5.9),
-  yend = c(9.75, 9.4, 9.5, 7.4, 5.75,      3.4,   1.2,  1.2,  1.2,  1.25)
+  x    = c(1.5, 1.5, 9,   9,   1.5,  1.5,      1.5,   1.5,  1.5,  1.5,  1.5,   10.7,     10.7),
+  y    = c(10.6, 10.6, 10.6, 10.6, 8.6,  6.6,     4.25,  2.55, 2.55, 2.55, 2.55,  8.6,      6.6),
+  xend = c(-2.3, 1.5, 7.3, 10.7, 1.5,  1.5,      1.5,   -3.4, -0.6,  2.5,  5.9,   10.7,     10.7),
+  yend = c(9.75, 9.4, 9.5, 9.4, 7.4,  5.75,     3.4,   1.2,  1.2,  1.2,  1.25,  7.4,      5.5)
 )
 
 ggplot() +
@@ -203,12 +212,14 @@ ggplot() +
   geom_text(data = boxes2, aes(x, y, label = label), size = 2.4, lineheight = 0.9) +
   geom_segment(data = arrows2, aes(x = x, y = y, xend = xend, yend = yend),
                arrow = arrow(length = unit(0.15, "cm"), type = "closed"), colour = "grey30") +
-  annotate("text", x = 9, y = 7.9, label = "no gap step needed --\nsingle joint model by construction",
+  annotate("text", x = 7.3, y = 7.9, label = "no gap step needed --\nsingle joint model by construction",
            size = 2.2, colour = "grey40", lineheight = 0.9) +
   annotate("text", x = -2.3, y = 7.55, label = "dead end -- diagnostic only,\nno FlodeSegmentedRating equivalent yet",
            size = 2.1, colour = "grey40", lineheight = 0.9) +
+  annotate("text", x = 10.7, y = 3.9, label = "no apply_rating_versioned() or\ncompare_ratings() support yet",
+           size = 2.1, colour = "grey40", lineheight = 0.9) +
   scale_fill_identity() +
-  coord_cartesian(xlim = c(-4.6, 11.1), ylim = c(0.1, 11.6)) +
+  coord_cartesian(xlim = c(-4.6, 13.3), ylim = c(0.1, 11.6)) +
   theme_void()
 ```
 
@@ -229,18 +240,21 @@ is what every application function downstream actually reads.
 **The `FlodeSegmentedRating` path is shorter today, not incomplete by
 design but genuinely narrower.** `apply_rating()` and `rating_plot()`
 both have `FlodeSegmentedRating` methods and work directly on the fit --
-no bridging step, because there's no junction to check. What it does
-*not* have, as of this vignette, is any of: the four diagnostic functions
-above (all four check `S7_inherits(fit, FlodeRating)` and error otherwise
--- see `?flag_influential_gaugings`), `as_rating_table()` (no method
-registered for `FlodeSegmentedRating`), or, downstream of that,
-`apply_rating_inverse()`, `apply_rating_versioned()`, or
-`compare_ratings()`, all of which expect a `FlodeRatingTable`. If you
-need any of those on a segmented fit today, the practical workaround is
-evaluating the fit's own equation (`fit@coefficients`,
-`vignette("segmented_model_guide")`'s multiplicative-factor formula)
-across a stage sequence by hand and working from the resulting table
-directly.
+no bridging step, because there's no junction to check. It also now
+bridges via `as_rating_table()` to a `FlodeSegmentedRatingTable`: one
+row per segment (`bp`, `n`) plus the shared `C`, structurally different
+from `FlodeRatingTable`'s independent per-row equations (see
+`vignette("segmented_model_guide")`'s "Bridging to a table" section),
+but enough to support `apply_rating()` again from the bridged shape and,
+genuinely new, `apply_rating_inverse()` -- solved numerically
+(`stats::uniroot()`) rather than in closed form, since a product of
+several shifted power terms has no algebraic inverse the way one term
+does. What still doesn't carry over: the four diagnostic functions above
+(all four check `S7_inherits(fit, FlodeRating)` and error otherwise --
+see `?flag_influential_gaugings`), `apply_rating_versioned()`, and
+`compare_ratings()`, the latter two because they expect a
+`FlodeRatingTable`'s `lower_level`/`upper_level`/`C`/`a`/`n` shape
+specifically, not `FlodeSegmentedRatingTable`'s.
 
 **Coefficient uncertainty runs beside this diagram, not through it.**
 `bootstrap_to_table()` and `apply_rating_interval()` (or, for a quick

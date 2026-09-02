@@ -7,7 +7,8 @@
 apply_rating(fit, ...)
 }
 \arguments{
-\item{fit}{A \code{FlodeRating} or \code{FlodeSegmentedRating} object.}
+\item{fit}{A \code{FlodeRating}, \code{FlodeSegmentedRating}, \code{FlodeRatingTable},
+or \code{FlodeSegmentedRatingTable} object.}
 
 \item{...}{Passed to the class-specific method -- typically
 \code{stage_dt} (a data.frame or data.table with a stage column) plus
@@ -17,5 +18,7 @@ apply_rating(fit, ...)
 Dispatches on the fit's class: \link{FlodeRating} and
 \link{FlodeSegmentedRating} each provide their own method. Replaces the
 previous separate \code{apply_rating()}/\code{apply_segmented_rating()} pair --
-one name, dispatched by what you're holding.
+one name, dispatched by what you're holding. \link{FlodeRatingTable} and
+\link{FlodeSegmentedRatingTable} -- the two \code{\link[=as_rating_table]{as_rating_table()}} bridge
+representations -- each have their own method too.
 }

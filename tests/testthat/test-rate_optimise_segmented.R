@@ -223,6 +223,81 @@ test_that("rate_optimise_segmented rejects non-finite, negative, and degenerate 
   expect_error(rate_optimise_segmented(ok_discharge, stage_m, control = c(0.5)), "strictly inside")
 })
 
+test_that("as_rating_table on a FlodeSegmentedRating produces a matching FlodeSegmentedRatingTable", {
+  g <- build_three_segment_gaugings()
+  fit_seg <- rate_optimise_segmented(g$discharge, g$stage, control = c(1.6, 2.4))
+  coefs <- fit_seg@coefficients
+
+  seg_table <- as_rating_table(fit_seg)
+
+  expect_s3_class(seg_table, "reach.rate::FlodeSegmentedRatingTable")
+  expect_equal(seg_table@table$segment, 1:3)
+  expect_equal(seg_table@table$bp, c(coefs$bp1, coefs$bp2, coefs$bp3))
+  expect_equal(seg_table@table$n, c(coefs$n1, coefs$n2, coefs$n3))
+  expect_equal(seg_table@C, coefs$C)
+  expect_equal(seg_table@gauged_upper_m, max(g$stage))
+})
+
+test_that("apply_rating on a FlodeSegmentedRatingTable matches the original FlodeSegmentedRating exactly", {
+  g <- build_three_segment_gaugings()
+  fit_seg <- rate_optimise_segmented(g$discharge, g$stage, control = c(1.6, 2.4))
+  seg_table <- as_rating_table(fit_seg)
+
+  stage_check <- c(0.5, 1.2, 2.0, 3.0, 4.5)
+  from_fit <- apply_rating(fit_seg, data.table(stage = stage_check))
+  from_table <- apply_rating(seg_table, data.table(stage = stage_check))
+
+  expect_equal(from_table$discharge, from_fit$discharge, tolerance = 1e-10)
+  expect_equal(from_table$extrapolated, from_fit$extrapolated)
+})
+
+test_that("apply_rating on a FlodeSegmentedRatingTable validates its inputs", {
+  g <- build_single_segment_gaugings()
+  fit_seg <- rate_optimise_segmented(g$discharge, g$stage)
+  seg_table <- as_rating_table(fit_seg)
+
+  expect_error(apply_rating(seg_table, list(stage = 1)), "data.frame or data.table")
+  expect_error(apply_rating(seg_table, data.table(level = 1)), "stage_col")
+})
+
+test_that("FlodeSegmentedRatingTable's validator catches malformed input", {
+  ok_dt <- data.table(segment = 1:2, bp = c(0.1, 1.6), n = c(1.5, 0.9))
+
+  expect_error(
+    FlodeSegmentedRatingTable(table = data.table(segment = 1, bp = 0.1), C = 4, gauged_upper_m = 3),
+    "missing required column"
+  )
+  expect_error(
+    FlodeSegmentedRatingTable(table = ok_dt, C = -1, gauged_upper_m = 3),
+    "C must be a single positive number"
+  )
+  expect_error(
+    FlodeSegmentedRatingTable(table = ok_dt, C = 4, gauged_upper_m = NA_real_),
+    "gauged_upper_m"
+  )
+  expect_error(
+    FlodeSegmentedRatingTable(
+      table = data.table(segment = c(1, 3), bp = c(0.1, 1.6), n = c(1.5, 0.9)),
+      C = 4, gauged_upper_m = 3
+    ),
+    "segment must be 1..k"
+  )
+  expect_error(
+    FlodeSegmentedRatingTable(
+      table = data.table(segment = 1:2, bp = c(1.6, 0.1), n = c(1.5, 0.9)),
+      C = 4, gauged_upper_m = 3
+    ),
+    "strictly increasing"
+  )
+  expect_error(
+    FlodeSegmentedRatingTable(
+      table = data.table(segment = 1:2, bp = c(0.1, 1.6), n = c(1.5, -0.9)),
+      C = 4, gauged_upper_m = 3
+    ),
+    "n must be positive"
+  )
+})
+
 test_that("rate_optimise_segmented errors with too few gaugings for the parameter count", {
   # Three segments with estimated breakpoints needs 2 + k + (k-1) = 7
   # free parameters; five points is not enough.

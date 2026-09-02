@@ -2,7 +2,7 @@
 % Please edit documentation in R/flode_classes.R
 \name{as_rating_table}
 \alias{as_rating_table}
-\title{Convert a fit to gap_check's equation-table representation (S7 generic)}
+\title{Convert a fit to its equation-table representation (S7 generic)}
 \usage{
 as_rating_table(fit, ...)
 }
@@ -12,8 +12,12 @@ as_rating_table(fit, ...)
 \item{...}{Passed to the class-specific method.}
 }
 \value{
-A \link{FlodeRatingTable}.
+A \link{FlodeRatingTable} (from a \code{FlodeRating}) or a
+\link{FlodeSegmentedRatingTable} (from a \code{FlodeSegmentedRating}).
 }
 \description{
-Replaces \code{fitted_rating_to_table()}. Dispatches on the fit's class.
+Replaces \code{fitted_rating_to_table()}. Dispatches on the fit's class:
+\link{FlodeRating} bridges to \link{FlodeRatingTable} (\code{gap_check}'s native
+representation); \link{FlodeSegmentedRating} bridges to
+\link{FlodeSegmentedRatingTable}, its structural analogue.
 }

@@ -1,5 +1,23 @@
 # reach.rate (development)
 
+* New `FlodeSegmentedRatingTable` class closes part of the gap
+  `vignette("rating_methods_overview")` flagged: `as_rating_table()` now
+  has a method for `FlodeSegmentedRating`, bridging to a table of one
+  row per segment (`bp`, `n`) plus the shared `C` -- structurally
+  different from `FlodeRatingTable`'s independent per-row equations,
+  since a segmented rating's discharge is the product of every segment
+  factor active at a stage, not one row's own equation (see
+  `vignette("segmented_model_guide")`'s new "Bridging to a table"
+  section). `apply_rating()` and `apply_rating_inverse()` both gain
+  methods for it; the latter solves numerically (`stats::uniroot()`)
+  rather than in closed form, since a product of several shifted power
+  terms has no algebraic inverse. `plot_rating_residuals()`,
+  `flag_extrapolated_limbs()`, `flag_influential_gaugings()`,
+  `plot_rating_leverage()`, `apply_rating_versioned()`, and
+  `compare_ratings()` still don't support a segmented rating -- real
+  gaps, not solved by this change, and called out as such in both
+  updated vignettes.
+
 * New `vignette("rating_methods_overview")`: two flow diagrams tying the
   whole package together -- which of the five ways to build a rating
   (`rate_optimise()`, `rate_optimise_constrained()`,

@@ -399,8 +399,18 @@ apply_rating_versioned <- function(stage_dt, rating_history_dt,
 #' inverse (via the local derivative `dH/dQ = 1/(C n (H-a)^{n-1})`) is
 #' not included in this first version.
 #'
-#' @param fit A [FlodeRating] or [FlodeRatingTable]. A `FlodeRating` is
-#'   bridged via [as_rating_table()] first, the same one-line pattern
+#' A [FlodeSegmentedRating]/[FlodeSegmentedRatingTable] is accepted too,
+#' bridged the same way -- but has no closed-form inverse (a product of
+#' several shifted power terms, not one), so that path solves for `H`
+#' numerically per row via [stats::uniroot()] instead. Monotonicity still
+#' holds (guaranteed by every segment's `n > 0`, which
+#' [FlodeSegmentedRatingTable]'s validator requires), so the root is
+#' unique; there is no junction check to run, since a segmented rating
+#' has no junction by construction.
+#'
+#' @param fit A [FlodeRating], [FlodeRatingTable], [FlodeSegmentedRating],
+#'   or [FlodeSegmentedRatingTable]. A `FlodeRating`/`FlodeSegmentedRating`
+#'   is bridged via [as_rating_table()] first, the same one-line pattern
 #'   [align_limb_equations()]/[graft_rating()] already use.
 #' @param discharge_dt Data.frame or data.table with a discharge column
 #'   (named by `discharge_col`, default `"discharge"`); any other columns
@@ -436,8 +446,16 @@ apply_rating_versioned <- function(stage_dt, rating_history_dt,
 #' @export
 apply_rating_inverse <- function(fit, discharge_dt, discharge_col = "discharge", out_col = "stage",
                                   tol_abs = 0.5, tol_rel = 0.02) {
-  if (S7_inherits(fit, FlodeRating)) fit <- as_rating_table(fit)
-  if (!S7_inherits(fit, FlodeRatingTable)) stop("apply_rating_inverse(): fit must be a FlodeRating or FlodeRatingTable")
+  if (S7_inherits(fit, FlodeRating) || S7_inherits(fit, FlodeSegmentedRating)) fit <- as_rating_table(fit)
+  if (S7_inherits(fit, FlodeSegmentedRatingTable)) {
+    return(.apply_rating_inverse_segmented(fit, discharge_dt, discharge_col, out_col))
+  }
+  if (!S7_inherits(fit, FlodeRatingTable)) {
+    stop(
+      "apply_rating_inverse(): fit must be a FlodeRating, FlodeRatingTable, ",
+      "FlodeSegmentedRating, or FlodeSegmentedRatingTable"
+    )
+  }
   if (!is.data.frame(discharge_dt)) stop("discharge_dt must be a data.frame or data.table")
   if (!discharge_col %in% names(discharge_dt)) stop("discharge_col must be a column of discharge_dt")
 
@@ -521,6 +539,71 @@ apply_rating_inverse <- function(fit, discharge_dt, discharge_col = "discharge",
 
     stage[valid_idx] <- a + (q_valid / C)^(1 / n)
     extrapolated[valid_idx] <- extrap_valid
+  }
+
+  set(out_dt, j = out_col, value = stage)
+  set(out_dt, j = "extrapolated", value = extrapolated)
+
+  n_extrap <- sum(extrapolated, na.rm = TRUE)
+  if (n_extrap > 0L) {
+    log_info(
+      "apply_rating_inverse(): {n_extrap} of {nrow(out_dt)} discharge value(s) fell outside the rating and were extrapolated."
+    )
+  }
+
+  out_dt[]
+}
+
+# apply_rating_inverse()'s branch for FlodeSegmentedRatingTable: no
+# closed-form inverse exists for a product of several shifted power
+# terms, so each row is solved numerically via uniroot(). Q(H) is
+# monotone increasing above bp1 (every segment's n > 0, enforced by
+# FlodeSegmentedRatingTable's validator) and unbounded as H -> Inf, so a
+# unique root always exists for any q_target > 0; the search ceiling
+# below doubles until it brackets that root rather than guessing one.
+#' @keywords internal
+#' @noRd
+.apply_rating_inverse_segmented <- function(fit, discharge_dt, discharge_col, out_col) {
+  if (!is.data.frame(discharge_dt)) stop("discharge_dt must be a data.frame or data.table")
+  if (!discharge_col %in% names(discharge_dt)) stop("discharge_col must be a column of discharge_dt")
+
+  table_dt <- fit@table[order(fit@table$segment), ]
+  bp1 <- table_dt$bp[1]
+
+  out_dt <- copy(as.data.table(discharge_dt))
+  discharge_vals <- out_dt[[discharge_col]]
+
+  stage <- rep(NA_real_, nrow(out_dt))
+  extrapolated <- rep(NA, nrow(out_dt))
+
+  non_positive <- !is.na(discharge_vals) & discharge_vals <= 0
+  if (any(non_positive)) {
+    warning(sprintf(
+      paste(
+        "apply_rating_inverse(): %d discharge value(s) <= 0 have no unique inverse stage",
+        "(any H <= bp1 gives Q = 0); %s set to NA for those rows."
+      ),
+      sum(non_positive), out_col
+    ))
+  }
+
+  valid_idx <- !is.na(discharge_vals) & discharge_vals > 0
+  if (any(valid_idx)) {
+    q_target <- discharge_vals[valid_idx]
+    q_at_gauged_upper <- .segmented_predict_cms_from_table(table_dt, fit@C, fit@gauged_upper_m)
+
+    solve_one <- function(q) {
+      f <- function(h) .segmented_predict_cms_from_table(table_dt, fit@C, h) - q
+      hi <- max(fit@gauged_upper_m, bp1 + 1)
+      tries <- 0L
+      while (f(hi) < 0 && tries < 60L) {
+        hi <- hi * 2
+        tries <- tries + 1L
+      }
+      uniroot(f, lower = bp1, upper = hi, tol = 1e-8)$root
+    }
+    stage[valid_idx] <- vapply(q_target, solve_one, numeric(1))
+    extrapolated[valid_idx] <- q_target > q_at_gauged_upper
   }
 
   set(out_dt, j = out_col, value = stage)
