@@ -1,5 +1,13 @@
 # reach.rate (development)
 
+* `inst/examples/walkthrough.R` gains steps 22-26, covering functions
+  that shipped after its last pass: `rate_from_cross_section()` (with
+  the `plot_rating_cross_section()` overlay actually shown, not just the
+  fitted coefficients), the weir/flume equations, `flag_influential_
+  gaugings()`/`plot_rating_leverage()`, `age_halflife` recency weighting
+  on a drifting-channel example, and `apply_rating_inverse()` round-
+  tripped against `apply_rating()`.
+
 * New `vignette("s7_objects_guide")`: the last gap from the same
   vignette-coverage audit. Covers the class hierarchy (`FlodeRatingBase`
   abstract, `FlodeRating`/`FlodeSegmentedRating` as children,
