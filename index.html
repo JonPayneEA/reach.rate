@@ -40,6 +40,7 @@
 <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
+    <li><a class="dropdown-item" href="articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
     <li><a class="dropdown-item" href="articles/s7_objects_guide.html">Working with reach.rate's S7 Objects</a></li>
     <li><a class="dropdown-item" href="articles/rating_curve_walkthrough.html">A Rating Curve Walkthrough: From Spot Gaugings to a Constrained Curve</a></li>
     <li><a class="dropdown-item" href="articles/non_standard_optimisation.html">Non-Standard Rating Optimisation: When and Why</a></li>
@@ -169,39 +170,42 @@
 <p>For one continuous worked example – spot gaugings to a single bad curve to a checked, junction-aligned, physically-constrained multi-limb rating – see:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"rating_curve_walkthrough"</span>, package <span class="op">=</span> <span class="st">"reach.rate"</span><span class="op">)</span></span></code></pre></div>
-<p>For when and why to reach for non-default fitting (<code>objective</code>, <code>n_bounds</code>, and opt-in <code>age_halflife</code> recency weighting), see:</p>
+<p>For two flow diagrams showing which of the five ways to build a rating fits your data, and what genuinely differs downstream between a <code>FlodeRating</code> and a <code>FlodeSegmentedRating</code>, see:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"rating_methods_overview"</span>, package <span class="op">=</span> <span class="st">"reach.rate"</span><span class="op">)</span></span></code></pre></div>
+<p>For when and why to reach for non-default fitting (<code>objective</code>, <code>n_bounds</code>, and opt-in <code>age_halflife</code> recency weighting), see:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"non_standard_optimisation"</span>, package <span class="op">=</span> <span class="st">"reach.rate"</span><span class="op">)</span></span></code></pre></div>
 <p>For what <code>objective = "relative"</code> actually does differently underneath, with diagrams, see:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"objective_guide"</span>, package <span class="op">=</span> <span class="st">"reach.rate"</span><span class="op">)</span></span></code></pre></div>
 <p>For how to read a channel cross-section into a starting <code>n_bounds</code>, with diagrams of the canonical control shapes, see:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"n_bounds_guide"</span>, package <span class="op">=</span> <span class="st">"reach.rate"</span><span class="op">)</span></span></code></pre></div>
 <p>For discharge from a weir or flume’s own published equation and geometry, with GUM-style uncertainty, see:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"weir_flume_guide"</span>, package <span class="op">=</span> <span class="st">"reach.rate"</span><span class="op">)</span></span></code></pre></div>
 <p>For which gaugings are quietly steering a fit, beyond what residuals alone show, see:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"leverage_influence_guide"</span>, package <span class="op">=</span> <span class="st">"reach.rate"</span><span class="op">)</span></span></code></pre></div>
 <p>For the maths behind <code>age_halflife</code>, on a station whose channel has drifted over time, see:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"recency_weighting_guide"</span>, package <span class="op">=</span> <span class="st">"reach.rate"</span><span class="op">)</span></span></code></pre></div>
 <p>For how <code><a href="reference/rate_optimise_segmented.html">rate_optimise_segmented()</a></code>’s multiplicative factors actually compose, with diagrams, see:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"segmented_model_guide"</span>, package <span class="op">=</span> <span class="st">"reach.rate"</span><span class="op">)</span></span></code></pre></div>
 <p>For working with the package’s S7 classes – <code>@</code>-access, validators, <code>S7_inherits()</code>, the <code>@status</code>/<code>@previous</code> audit chain – see:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/vignette.html" class="external-link">vignette</a></span><span class="op">(</span><span class="st">"s7_objects_guide"</span>, package <span class="op">=</span> <span class="st">"reach.rate"</span><span class="op">)</span></span></code></pre></div>
 <p>or run the linear, section-by-section script at:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"walkthrough.R"</span>, package <span class="op">=</span> <span class="st">"reach.rate"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>
 </h2>
 <p>This package was assembled from a set of standalone box modules; see <code>NEWS.md</code> for a summary and each <code>R/</code> file’s header comment for the file-by-file conversion notes. If you have R and roxygen2 available locally, regenerate <code>NAMESPACE</code> and <code>man/</code> from the roxygen comments already in <code>R/</code>:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">document</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">test</span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>

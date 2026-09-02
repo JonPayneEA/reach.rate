@@ -161,12 +161,12 @@ limb2_dt <- data.table::data.table(
 )
 rc_raw_dt <- data.table::rbindlist(list(limb1_dt, limb2_dt))
 rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "midpoint")
-#> INFO [2026-09-02 07:43:52] Checked 1 junction(s): 1 gap(s) flagged.
-#> INFO [2026-09-02 07:43:52] Junction 1 (limbs 1/2, stage 10): gap 37.66 -> 32.66 | agreed Q = 35.16
+#> INFO [2026-09-02 08:18:31] Checked 1 junction(s): 1 gap(s) flagged.
+#> INFO [2026-09-02 08:18:31] Junction 1 (limbs 1/2, stage 10): gap 37.66 -> 32.66 | agreed Q = 35.16
 rc_matched_dt <- resolve_rc_gaps(rc_raw_dt, method = "match_upper_to_lower")
-#> INFO [2026-09-02 07:43:52] Checked 1 junction(s): 1 gap(s) flagged.
-#> INFO [2026-09-02 07:43:52] Junction 1 (limbs 1/2, stage 10): matching upper start 32.66 -> 37.66
+#> INFO [2026-09-02 08:18:31] Checked 1 junction(s): 1 gap(s) flagged.
+#> INFO [2026-09-02 08:18:31] Junction 1 (limbs 1/2, stage 10): matching upper start 32.66 -> 37.66
 rc_extended_dt <- resolve_rc_gaps(rc_raw_dt, method = "extend_lower_to_upper")
-#> INFO [2026-09-02 07:43:52] Checked 1 junction(s): 1 gap(s) flagged.
-#> INFO [2026-09-02 07:43:52] Junction 1 (limbs 1/2, stage 10): extending lower limb by a factor of 0.867233 to reach 32.66
+#> INFO [2026-09-02 08:18:31] Checked 1 junction(s): 1 gap(s) flagged.
+#> INFO [2026-09-02 08:18:31] Junction 1 (limbs 1/2, stage 10): extending lower limb by a factor of 0.867233 to reach 32.66
 ```

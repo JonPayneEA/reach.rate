@@ -4,6 +4,8 @@
 
 - [Rating Curves: Theory, Functions, and
   Guidance](https://jonpayneea.github.io/reach.rate/articles/rating_curves_guide.md):
+- [Rating Methods: How the Pieces Fit
+  Together](https://jonpayneea.github.io/reach.rate/articles/rating_methods_overview.md):
 - [Working with reach.rate's S7
   Objects](https://jonpayneea.github.io/reach.rate/articles/s7_objects_guide.md):
 - [A Rating Curve Walkthrough: From Spot Gaugings to a Constrained
