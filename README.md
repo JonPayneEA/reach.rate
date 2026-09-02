@@ -113,6 +113,12 @@ For one continuous worked example -- spot gaugings to a single bad curve to a ch
 vignette("rating_curve_walkthrough", package = "reach.rate")
 ```
 
+For two flow diagrams showing which of the five ways to build a rating fits your data, and what genuinely differs downstream between a `FlodeRating` and a `FlodeSegmentedRating`, see:
+
+```r
+vignette("rating_methods_overview", package = "reach.rate")
+```
+
 For when and why to reach for non-default fitting (`objective`, `n_bounds`, and opt-in `age_halflife` recency weighting), see:
 
 ```r

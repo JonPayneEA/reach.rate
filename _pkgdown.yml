@@ -15,6 +15,7 @@ articles:
   navbar: Guides
   contents:
   - rating_curves_guide
+  - rating_methods_overview
   - s7_objects_guide
   - rating_curve_walkthrough
   - non_standard_optimisation
