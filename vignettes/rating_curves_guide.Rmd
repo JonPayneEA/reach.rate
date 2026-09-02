@@ -69,6 +69,8 @@ Three shared generics work across the classes: `rating_plot()` draws whichever f
 
 A note on why the fit remembers its own gaugings. Every diagnostic, residual plot, and bootstrap in this toolkit needs the original data, and a rating separated from its gaugings is a rating you can no longer question. Keeping them together is deliberate.
 
+This section is deliberately brief -- `vignette("s7_objects_guide")` covers `@`-access, `print()`, `S7_inherits()`, and the `@status`/`@previous` audit chain in full, including a validator actually catching a malformed construction.
+
 ## A running example
 
 Every chunk from here on operates on one running example: a three-limb rating station, gauged independently limb by limb (as real stations usually are -- you don't gauge the whole range in one session), which is exactly the situation that produces junction gaps. The story continues chunk by chunk down to section 8; sections 9 and 10 introduce their own, separate synthetic data since they use a structurally different model. Every number below is synthetic -- the point is the shape of the workflow, not these particular coefficients.
@@ -152,6 +154,12 @@ A statistically supported breakpoint is evidence that the data bend there. It is
 
 # Diagnosing a fit
 
+Residuals, extrapolation, and channel shape below aren't the whole
+diagnostic picture: `vignette("leverage_influence_guide")` covers a
+different question none of these three answer -- not how far off a
+gauging ends up after fitting, but how much it shaped the fit to begin
+with.
+
 ## `plot_rating_residuals()`
 
 $R^2$ and RMSE say how good a fit is; residuals say where it is weak. This plot shows observed minus fitted discharge against stage, one panel per limb.
@@ -207,6 +215,8 @@ plot_rating_cross_section(theoretical_fit, xs_theoretical)
 The result is an ordinary `FlodeRating` -- same `C`/`a`/`n` limbs, same diagnostics -- distinguished from a gauged fit only by `provenance$source`, which reads `"cross_section_theoretical"` rather than `"gauged"`. Because `cross_section` is exactly the object `plot_rating_cross_section()` also takes, overlaying the fit on the very geometry that produced it is a built-in sanity check: if the curve doesn't visually track the channel shape, something is off in the slope, roughness, or survey before this ever meets a real gauging.
 
 Treat this as a standalone diagnostic for now, not a way to extend an existing gauged rating past its top gauging -- that composition (grafting a cross-section-derived high limb onto a gauged one via `graft_rating()`) isn't wired up yet. A single Manning's `n` is applied across the whole wetted section; a genuine compound channel, with a distinct low-flow channel and overbank berms, is only approximated by that, not modelled with the divided-channel method's separate per-subsection roughness. And the survey must reach at least as high as the highest stage you rate -- `rate_from_cross_section()` does not assume the end points continue as vertical banks above the survey's own top.
+
+A cross-section fit is the general-purpose, no-gaugings-required option. At a weir- or flume-controlled station specifically, `vignette("weir_flume_guide")` covers a more precise alternative: `weir_discharge_rectangular()`, `weir_discharge_vnotch()`, `weir_discharge_cipoletti()`, and `flume_discharge_parshall()` compute discharge from the structure's own published equation and geometry, with GUM-style propagated uncertainty, rather than an approximate Manning calculation.
 
 # The junction gap problem
 
@@ -332,6 +342,8 @@ apply_rating(fit_seg, data.table(stage = c(0.5, 1.5, 3.0)))
 
 What this implementation deliberately does not reproduce: Hodson et al. fit by full Bayesian inference, with priors and a posterior over every parameter. This function fits by nonlinear least squares. The reason their paper uses Bayesian machinery is instructive: this model's loss surface is genuinely non-convex, particularly with free breakpoints, and point optimisation can stick. That is exactly why multi-start fitting matters most here, and why interior breakpoints are held fixed at `control` by default; `estimate_breakpoints = TRUE` frees them, accepting the non-convexity their paper warns about. If you need the full uncertainty treatment, use their package; this function gives you their model structure inside this toolkit's conventions.
 
+`vignette("segmented_model_guide")` diagrams the mechanism above rather than just stating it -- each multiplicative factor plotted separately to show the "inert until its own breakpoint" property directly, and this section's independent-limb alternative overlaid against the segmented fit to show why one has a junction gap and the other structurally cannot.
+
 # Uncertainty: the bootstrap
 
 ```{r bootstrap, fig.alt = "Rating curve with a shaded bootstrap prediction interval"}
@@ -454,7 +466,32 @@ One caution cuts across all of it: New Zealand's National Environmental Monitori
 
 # Where to go next
 
-Every function used above has its own roxygen documentation with a fuller `@description` and a runnable `@examples` block -- see `?rate_optimise`, `?flode_classes` (for the class hierarchy: `FlodeRatingBase`, `FlodeRating`, `FlodeSegmentedRating`, `FlodeRatingTable`, and the three shared generics), and so on. `system.file("examples", "walkthrough.R", package = "reach.rate")` is a linear, section-by-section script covering the same ground as this vignette plus the cross-section demonstration (`demo_cross_section_rating()`) and the interactive explorer (`rating_curve_explorer()`), meant to be run a section at a time rather than sourced in one go. The testthat files under `tests/testthat/` in the package sources are a third source of worked examples, each tied to a specific behaviour being checked.
+This vignette covers the whole workflow at introductory depth; each of
+the following goes deeper on one part of it:
+
+- `vignette("s7_objects_guide")` -- `@`-access, `print()`,
+  `S7_inherits()`, and the `@status`/`@previous` audit chain, with a
+  validator actually catching a mistake.
+- `vignette("rating_curve_walkthrough")` -- one continuous worked
+  example, spot gaugings to a checked, junction-aligned,
+  physically-constrained multi-limb rating.
+- `vignette("non_standard_optimisation")` -- when and why to reach for
+  `objective`, `n_bounds`, or `age_halflife` instead of the default fit.
+- `vignette("objective_guide")` -- what `objective = "relative"`
+  actually does differently underneath, with diagrams.
+- `vignette("n_bounds_guide")` -- reading a channel cross-section into a
+  starting `n_bounds`, with diagrams of the canonical control shapes.
+- `vignette("weir_flume_guide")` -- discharge from a weir or flume's own
+  published equation and geometry, with GUM-style uncertainty, for
+  stations where that applies instead of a fitted or cross-section rating.
+- `vignette("leverage_influence_guide")` -- which gaugings are quietly
+  steering a fit, beyond what residuals alone show.
+- `vignette("recency_weighting_guide")` -- the maths behind
+  `age_halflife`, for a station whose channel has drifted over time.
+- `vignette("segmented_model_guide")` -- how `rate_optimise_segmented()`'s
+  multiplicative factors actually compose, with diagrams.
+
+Every function used above also has its own roxygen documentation with a fuller `@description` and a runnable `@examples` block -- see `?rate_optimise`, `?flode_classes` (for the class hierarchy: `FlodeRatingBase`, `FlodeRating`, `FlodeSegmentedRating`, `FlodeRatingTable`, and the three shared generics), and so on. `system.file("examples", "walkthrough.R", package = "reach.rate")` is a linear, section-by-section script covering the same ground as this vignette plus the cross-section demonstration (`demo_cross_section_rating()`) and the interactive explorer (`rating_curve_explorer()`), meant to be run a section at a time rather than sourced in one go. The testthat files under `tests/testthat/` in the package sources are a third source of worked examples, each tied to a specific behaviour being checked.
 
 # References
 

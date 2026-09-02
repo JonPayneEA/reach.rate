@@ -4,15 +4,21 @@ Version: 0.1.0
 Authors@R:
     person("Jonathan", "Payne", , "jonathan.payne1988@gmail.com", role = c("aut", "cre"))
 Description: Tools for fitting multi-limb power-law stage-discharge rating
-    curves by nonlinear least squares, diagnosing fit quality, detecting and
-    resolving discontinuities ("junction gaps") between independently-fitted
-    limbs, converting a fitted rating into a discharge time series, and
-    documenting rating amendments. Includes a segmented joint-model
-    parameterisation after Hodson et al. (2024), bootstrap coefficient
-    uncertainty, and versioned ratings for stations that have been re-rated
-    over time. Fitted ratings are represented as 'S7' classes that carry
-    their own gaugings, fitting bookkeeping, and provenance, so a rating is
-    never separated from the data and assumptions that produced it.
+    curves by nonlinear least squares, diagnosing fit quality (including
+    leverage/influence and closed-form or bootstrap coefficient
+    uncertainty), detecting and resolving discontinuities ("junction gaps")
+    between independently-fitted limbs, converting a fitted rating into a
+    discharge time series, and documenting rating amendments. Includes a
+    segmented joint-model parameterisation after Hodson et al. (2024),
+    opt-in age-based recency weighting for gaugings, and versioned ratings
+    for stations that have been re-rated over time. Beyond gauging-based
+    fitting, also derives a rating from a surveyed cross-section alone via
+    Manning's equation, and computes discharge for standard weir and flume
+    structures (rectangular, V-notch, Cipoletti, Parshall flume) from their
+    own published equations with GUM-style propagated uncertainty. Fitted
+    ratings are represented as 'S7' classes that carry their own gaugings,
+    fitting bookkeeping, and provenance, so a rating is never separated
+    from the data and assumptions that produced it.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
