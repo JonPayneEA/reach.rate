@@ -44,7 +44,7 @@ A station with a gauging history, a freshly-surveyed cross-section with
 no gaugings yet, and a calibrated weir all produce a rating (or a
 discharge estimate) by genuinely different routes.
 
-```{r diagram-start, echo=FALSE, fig.alt="Flow diagram: gaugings feed rate_optimise(), rate_optimise_constrained(), or rate_optimise_segmented(), producing a FlodeRating or FlodeSegmentedRating; a surveyed cross-section feeds rate_from_cross_section(), also producing a FlodeRating; weir or flume geometry feeds the weir/flume discharge equations, producing a standalone discharge table rather than a FlodeRating.", fig.width=10.5, fig.height=5.5}
+```{r diagram-start, echo=FALSE, fig.alt="Flow diagram: gaugings feed rate_optimise(), rate_optimise_constrained(), or rate_optimise_segmented(), producing a FlodeRating or FlodeSegmentedRating; a surveyed cross-section feeds rate_from_cross_section(), also producing a FlodeRating; weir or flume geometry feeds the weir/flume discharge equations, producing a standalone discharge table rather than a FlodeRating.", fig.width=11.5, fig.height=5.5}
 boxes <- data.table(
   id = c("gaug", "xs", "weir",
          "ro", "roc", "ros", "rfcs", "wd",
@@ -61,15 +61,15 @@ boxes <- data.table(
     "FlodeRating", "FlodeSegmentedRating",
     "Discharge + uncertainty\n(data.table, standalone)"
   ),
-  x = c(1.5, 9, 12.5,
-        0, 3, 6, 9, 12.5,
-        3.6, 7.1, 12.5),
+  x = c(3.3, 9.7, 13.3,
+        0, 3.3, 6.6, 9.7, 13.3,
+        4.5, 7.6, 13.3),
   y = c(9, 9, 9,
         7, 7, 7, 7, 7,
         5, 5, 5),
   w = c(3.3, 2.8, 2.6,
         2.6, 2.9, 2.9, 2.6, 2.7,
-        2.0, 2.8, 2.7),
+        2.0, 2.9, 2.7),
   h = c(0.9, 0.9, 0.9,
         0.9, 0.9, 0.9, 0.9, 0.9,
         0.8, 0.8, 0.9),
@@ -77,22 +77,22 @@ boxes <- data.table(
 )
 
 arrows <- data.table(
-  x    = c(1.5, 1.5, 1.5,  9,  12.5,   0,   3,   9,   6,   12.5),
+  x    = c(3.3, 3.3, 3.3,  9.7,  13.3,   0,   3.3,   9.7,  6.6,   13.3),
   y    = c(8.55, 8.55, 8.55, 8.55, 8.55, 6.55, 6.55, 6.55, 6.55, 6.55),
-  xend = c(0, 3, 6,  9,  12.5,   3.6, 3.6, 3.6,   7.1,   12.5),
+  xend = c(0, 3.3, 6.6,  9.7,  13.3,   4.5, 4.5, 4.5,   7.6,   13.3),
   yend = c(7.45, 7.45, 7.45, 7.45, 7.45, 5.4, 5.4, 5.4, 5.4, 5.4)
 )
 
 ggplot() +
   geom_rect(data = boxes, aes(xmin = x - w/2, xmax = x + w/2, ymin = y - h/2, ymax = y + h/2, fill = fill),
             colour = "grey30") +
-  geom_text(data = boxes, aes(x, y, label = label), size = 2.75, lineheight = 0.9) +
+  geom_text(data = boxes, aes(x, y, label = label), size = 2.5, lineheight = 0.9) +
   geom_segment(data = arrows, aes(x = x, y = y, xend = xend, yend = yend),
                arrow = arrow(length = unit(0.15, "cm"), type = "closed"), colour = "grey30") +
-  annotate("text", x = 12.5, y = 5.85, label = "standalone -- not a FlodeRating,\nno gaugings/fitting involved",
-           size = 2.5, colour = "grey40", lineheight = 0.9) +
+  annotate("text", x = 13.3, y = 5.85, label = "standalone -- not a FlodeRating,\nno gaugings/fitting involved",
+           size = 2.3, colour = "grey40", lineheight = 0.9) +
   scale_fill_identity() +
-  coord_cartesian(xlim = c(-1.9, 14.2), ylim = c(4.3, 9.7)) +
+  coord_cartesian(xlim = c(-1.9, 15.25), ylim = c(4.3, 9.7)) +
   theme_void()
 ```
 
@@ -163,7 +163,7 @@ boxes2 <- data.table(
         1.5,
         1.5,
         1.5,
-        -2.5, 0.1, 2.8, 5.7),
+        -3.4, -0.6, 2.5, 5.9),
   y = c(11, 11,
         9, 9, 9,
         7,
@@ -193,22 +193,22 @@ boxes2 <- data.table(
 arrows2 <- data.table(
   x    = c(1.5, 1.5, 9,   1.5,  1.5,      1.5,   1.5,  1.5,  1.5,  1.5),
   y    = c(10.6, 10.6, 10.6, 8.6, 6.6,     4.25,  2.55, 2.55, 2.55, 2.55),
-  xend = c(-2.3, 1.5, 9,   1.5,  1.5,      1.5,   -2.5, 0.1,  2.8,  5.7),
+  xend = c(-2.3, 1.5, 9,   1.5,  1.5,      1.5,   -3.4, -0.6,  2.5,  5.9),
   yend = c(9.75, 9.4, 9.5, 7.4, 5.75,      3.4,   1.2,  1.2,  1.2,  1.25)
 )
 
 ggplot() +
   geom_rect(data = boxes2, aes(xmin = x - w/2, xmax = x + w/2, ymin = y - h/2, ymax = y + h/2, fill = fill),
             colour = "grey30") +
-  geom_text(data = boxes2, aes(x, y, label = label), size = 2.6, lineheight = 0.9) +
+  geom_text(data = boxes2, aes(x, y, label = label), size = 2.4, lineheight = 0.9) +
   geom_segment(data = arrows2, aes(x = x, y = y, xend = xend, yend = yend),
                arrow = arrow(length = unit(0.15, "cm"), type = "closed"), colour = "grey30") +
   annotate("text", x = 9, y = 7.9, label = "no gap step needed --\nsingle joint model by construction",
-           size = 2.4, colour = "grey40", lineheight = 0.9) +
+           size = 2.2, colour = "grey40", lineheight = 0.9) +
   annotate("text", x = -2.3, y = 7.55, label = "dead end -- diagnostic only,\nno FlodeSegmentedRating equivalent yet",
-           size = 2.3, colour = "grey40", lineheight = 0.9) +
+           size = 2.1, colour = "grey40", lineheight = 0.9) +
   scale_fill_identity() +
-  coord_cartesian(xlim = c(-4.4, 11), ylim = c(0.1, 11.6)) +
+  coord_cartesian(xlim = c(-4.6, 11.1), ylim = c(0.1, 11.6)) +
   theme_void()
 ```
 
