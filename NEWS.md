@@ -1,5 +1,15 @@
 # reach.rate (development)
 
+* New `vignette("rating_methods_overview")`: two flow diagrams tying the
+  whole package together -- which of the five ways to build a rating
+  (`rate_optimise()`, `rate_optimise_constrained()`,
+  `rate_optimise_segmented()`, `rate_from_cross_section()`, or the
+  standalone weir/flume equations) fits your data, and what happens
+  downstream of a fit, including an honest accounting of what
+  `FlodeSegmentedRating` doesn't have an equivalent of yet (the four
+  diagnostic functions, `as_rating_table()`, and everything
+  `FlodeRatingTable`-shaped that depends on it).
+
 * `inst/examples/walkthrough.R` gains steps 22-26, covering functions
   that shipped after its last pass: `rate_from_cross_section()` (with
   the `plot_rating_cross_section()` overlay actually shown, not just the

@@ -469,6 +469,9 @@ One caution cuts across all of it: New Zealand's National Environmental Monitori
 This vignette covers the whole workflow at introductory depth; each of
 the following goes deeper on one part of it:
 
+- `vignette("rating_methods_overview")` -- two flow diagrams: which of
+  the five ways to build a rating fits your data, and what genuinely
+  differs downstream between a `FlodeRating` and a `FlodeSegmentedRating`.
 - `vignette("s7_objects_guide")` -- `@`-access, `print()`,
   `S7_inherits()`, and the `@status`/`@previous` audit chain, with a
   validator actually catching a mistake.

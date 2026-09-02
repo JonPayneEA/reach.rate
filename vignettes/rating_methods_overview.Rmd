@@ -1,0 +1,276 @@
+---
+title: "Rating Methods: How the Pieces Fit Together"
+author: "Jonathan Payne, Environment Agency Flood Forecasting"
+date: "September 2026"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Rating Methods: How the Pieces Fit Together}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  eval = TRUE, echo = TRUE, collapse = TRUE, comment = "#>",
+  fig.width = 7, fig.height = 5
+)
+library(reach.rate)
+library(data.table)
+library(ggplot2)
+```
+
+This package started as one function, `rate_optimise()`, and one vignette.
+It is now five ways to build a rating, several ways to check one, and half
+a dozen ways to use one once you have it -- each with its own vignette
+going deep on its own corner. None of them, on its own, shows how the
+corners connect. This vignette is that map: two flow diagrams, read
+top to bottom, and the reasoning behind each arrow.
+
+Throughout both diagrams: **grey** boxes are the data you start with,
+**blue** boxes are functions that fit or bridge between representations,
+**green** boxes are the S7 objects you actually hold at each stage,
+**amber** boxes check or fix something, and **purple** boxes are what you
+do with a finished rating. Nothing here replaces the vignette on any
+individual box -- every box names the function whose own documentation
+and `@examples` you'd actually run.
+
+# Three ways to start
+
+The first decision is not which function to call -- it's what you have.
+A station with a gauging history, a freshly-surveyed cross-section with
+no gaugings yet, and a calibrated weir all produce a rating (or a
+discharge estimate) by genuinely different routes.
+
+```{r diagram-start, echo=FALSE, fig.alt="Flow diagram: gaugings feed rate_optimise(), rate_optimise_constrained(), or rate_optimise_segmented(), producing a FlodeRating or FlodeSegmentedRating; a surveyed cross-section feeds rate_from_cross_section(), also producing a FlodeRating; weir or flume geometry feeds the weir/flume discharge equations, producing a standalone discharge table rather than a FlodeRating.", fig.width=11.5, fig.height=5.5}
+boxes <- data.table(
+  id = c("gaug", "xs", "weir",
+         "ro", "roc", "ros", "rfcs", "wd",
+         "fr", "fseg", "standalone"),
+  label = c(
+    "Gaugings\n(discharge, stage[, datetime])",
+    "Surveyed cross-section\n(distance, elevation)",
+    "Weir/flume geometry\n(known dimensions)",
+    "rate_optimise()\nindependent limbs",
+    "rate_optimise_constrained()\nboundary-matched limbs",
+    "rate_optimise_segmented()\njoint multiplicative model",
+    "rate_from_cross_section()\nManning's equation",
+    "weir_discharge_*()\nflume_discharge_parshall()",
+    "FlodeRating", "FlodeSegmentedRating",
+    "Discharge + uncertainty\n(data.table, standalone)"
+  ),
+  x = c(3.3, 9.7, 13.3,
+        0, 3.3, 6.6, 9.7, 13.3,
+        4.5, 7.6, 13.3),
+  y = c(9, 9, 9,
+        7, 7, 7, 7, 7,
+        5, 5, 5),
+  w = c(3.3, 2.8, 2.6,
+        2.6, 2.9, 2.9, 2.6, 2.7,
+        2.0, 2.9, 2.7),
+  h = c(0.9, 0.9, 0.9,
+        0.9, 0.9, 0.9, 0.9, 0.9,
+        0.8, 0.8, 0.9),
+  fill = c(rep("#cfd8dc", 3), rep("#b3e5fc", 5), "#c8e6c9", "#c8e6c9", "#f5f5f5")
+)
+
+arrows <- data.table(
+  x    = c(3.3, 3.3, 3.3,  9.7,  13.3,   0,   3.3,   9.7,  6.6,   13.3),
+  y    = c(8.55, 8.55, 8.55, 8.55, 8.55, 6.55, 6.55, 6.55, 6.55, 6.55),
+  xend = c(0, 3.3, 6.6,  9.7,  13.3,   4.5, 4.5, 4.5,   7.6,   13.3),
+  yend = c(7.45, 7.45, 7.45, 7.45, 7.45, 5.4, 5.4, 5.4, 5.4, 5.4)
+)
+
+ggplot() +
+  geom_rect(data = boxes, aes(xmin = x - w/2, xmax = x + w/2, ymin = y - h/2, ymax = y + h/2, fill = fill),
+            colour = "grey30") +
+  geom_text(data = boxes, aes(x, y, label = label), size = 2.5, lineheight = 0.9) +
+  geom_segment(data = arrows, aes(x = x, y = y, xend = xend, yend = yend),
+               arrow = arrow(length = unit(0.15, "cm"), type = "closed"), colour = "grey30") +
+  annotate("text", x = 13.3, y = 5.85, label = "standalone -- not a FlodeRating,\nno gaugings/fitting involved",
+           size = 2.3, colour = "grey40", lineheight = 0.9) +
+  scale_fill_identity() +
+  coord_cartesian(xlim = c(-1.9, 15.25), ylim = c(4.3, 9.7)) +
+  theme_void()
+```
+
+**You have gaugings.** This is the default case and the one most of the
+package assumes. Three functions read the same `(discharge_cms, stage_m)`
+pair, and choosing between them is a modelling decision, not a
+preference:
+
+- `rate_optimise()` -- fits each limb independently. Simplest, most
+  transparent, but adjacent limbs rarely meet exactly at their shared
+  boundary (a "junction gap"), which the next section's diagram picks up.
+- `rate_optimise_constrained()` -- the same independent-limb shape, but
+  refit so adjacent limbs are forced to agree at each boundary as part of
+  the fit itself, not as a separate step afterwards.
+- `rate_optimise_segmented()` -- a structurally different joint model
+  (Hodson et al. 2024): one multiplicative expression across the whole
+  range, so there is no junction to reconcile because there was never a
+  junction. See `vignette("segmented_model_guide")` for how the factors
+  compose.
+
+**You have a surveyed cross-section but no gaugings.** `rate_from_cross_section()`
+derives a theoretical rating from channel geometry alone via Manning's
+equation, then hands the resulting synthetic `(stage, discharge)` series
+to `rate_optimise()` internally -- which is why its output is an ordinary
+`FlodeRating`, distinguished only by `@provenance$source`. Useful at an
+ungauged or newly-installed site, or as a physically-grounded sanity
+check on what a surveyed section implies about curve shape. See
+`vignette("weir_flume_guide")`'s sibling discussion and `?rate_from_cross_section`.
+
+**You have a weir or flume with known dimensions.** The four
+`weir_discharge_*()`/`flume_discharge_parshall()` functions compute
+discharge directly from the structure's own published equation and
+geometry, with GUM-style propagated uncertainty -- no gaugings, no
+`rate_optimise()` call, no `FlodeRating` at the end of it. This is the
+one box in the diagram that doesn't feed into anything else in this
+package: it's a standalone calculator, not a fitting pipeline. In
+principle a structure's computed discharge at a given head could be
+treated as one very-high-confidence synthetic gauging and blended into a
+`rate_optimise()` call the way `rate_from_cross_section()` blends
+Manning-derived points -- the package doesn't automate that today; see
+`vignette("weir_flume_guide")` for the equations themselves.
+
+# From a fit to a product
+
+Once you hold a `FlodeRating` or `FlodeSegmentedRating`, what happens
+next genuinely differs between the two -- not because one is more
+finished than the other, but because a joint segmented model has no
+junction to check and no natural table form the way independently-fitted
+limbs do.
+
+```{r diagram-downstream, echo=FALSE, fig.alt="Flow diagram: FlodeRating branches to diagnostic functions (a dead end) and to as_rating_table(), producing a FlodeRatingTable, which passes through gap detection and resolution to a gap-free FlodeRatingTable, which feeds apply_rating(), apply_rating_inverse(), apply_rating_versioned(), and compare_ratings(). FlodeSegmentedRating goes directly to apply_rating() and rating_plot(), with no gap-check step and no diagnostic-function equivalent.", fig.width=10.5, fig.height=9}
+boxes2 <- data.table(
+  id = c("fr", "fseg", "diag", "art", "segapply", "frt1", "gapcheck", "frt2",
+         "app1", "app2", "app3", "app4"),
+  label = c(
+    "FlodeRating", "FlodeSegmentedRating",
+    "plot_rating_residuals()\nflag_extrapolated_limbs()\nflag_influential_gaugings()\nplot_rating_leverage()",
+    "as_rating_table()",
+    "apply_rating()\nrating_plot()",
+    "FlodeRatingTable",
+    "expand_rating_table() ->\ndetect_rc_gaps() -> resolve_rc_gaps() /\nalign_limb_equations() / align_limb_boundaries() /\ngraft_rating()  (only if gaps found)",
+    "FlodeRatingTable\n(gap-free)",
+    "apply_rating()", "apply_rating_inverse()", "apply_rating_versioned()",
+    "compare_ratings()\nplot_rating_comparison()"
+  ),
+  x = c(1.5, 9,
+        -2.3, 1.5, 9,
+        1.5,
+        1.5,
+        1.5,
+        -3.4, -0.6, 2.5, 5.9),
+  y = c(11, 11,
+        9, 9, 9,
+        7,
+        5,
+        3,
+        0.8, 0.8, 0.8, 0.8),
+  w = c(2.0, 3.2,
+        3.4, 2.6, 3.0,
+        2.3,
+        5.4,
+        2.7,
+        2.1, 2.5, 2.7, 3.1),
+  h = c(0.8, 0.8,
+        1.5, 0.8, 1.0,
+        0.8,
+        1.5,
+        0.9,
+        0.8, 0.8, 0.8, 0.9),
+  fill = c("#c8e6c9", "#c8e6c9",
+           "#ffe0b2", "#b3e5fc", "#d1c4e9",
+           "#c8e6c9",
+           "#ffe0b2",
+           "#c8e6c9",
+           "#d1c4e9", "#d1c4e9", "#d1c4e9", "#d1c4e9")
+)
+
+arrows2 <- data.table(
+  x    = c(1.5, 1.5, 9,   1.5,  1.5,      1.5,   1.5,  1.5,  1.5,  1.5),
+  y    = c(10.6, 10.6, 10.6, 8.6, 6.6,     4.25,  2.55, 2.55, 2.55, 2.55),
+  xend = c(-2.3, 1.5, 9,   1.5,  1.5,      1.5,   -3.4, -0.6,  2.5,  5.9),
+  yend = c(9.75, 9.4, 9.5, 7.4, 5.75,      3.4,   1.2,  1.2,  1.2,  1.25)
+)
+
+ggplot() +
+  geom_rect(data = boxes2, aes(xmin = x - w/2, xmax = x + w/2, ymin = y - h/2, ymax = y + h/2, fill = fill),
+            colour = "grey30") +
+  geom_text(data = boxes2, aes(x, y, label = label), size = 2.4, lineheight = 0.9) +
+  geom_segment(data = arrows2, aes(x = x, y = y, xend = xend, yend = yend),
+               arrow = arrow(length = unit(0.15, "cm"), type = "closed"), colour = "grey30") +
+  annotate("text", x = 9, y = 7.9, label = "no gap step needed --\nsingle joint model by construction",
+           size = 2.2, colour = "grey40", lineheight = 0.9) +
+  annotate("text", x = -2.3, y = 7.55, label = "dead end -- diagnostic only,\nno FlodeSegmentedRating equivalent yet",
+           size = 2.1, colour = "grey40", lineheight = 0.9) +
+  scale_fill_identity() +
+  coord_cartesian(xlim = c(-4.6, 11.1), ylim = c(0.1, 11.6)) +
+  theme_void()
+```
+
+**The `FlodeRating` path is the fuller one**, because independently-fitted
+limbs create two problems a joint model doesn't have: you might want to
+know which gaugings are quietly steering the fit (`plot_rating_residuals()`,
+`flag_extrapolated_limbs()`, `flag_influential_gaugings()`,
+`plot_rating_leverage()` -- see `vignette("leverage_influence_guide")`),
+and adjacent limbs may disagree at their shared boundary
+(`as_rating_table()` bridges to a `FlodeRatingTable`, then
+`expand_rating_table()` and `detect_rc_gaps()` find any junction gap,
+closed by whichever of `resolve_rc_gaps()`, `align_limb_equations()`,
+`align_limb_boundaries()`, or `graft_rating()` fits the situation --
+`rating_curves_guide.Rmd`'s "The junction gap problem" section covers all
+four). What comes out the far end is a gap-free `FlodeRatingTable`, which
+is what every application function downstream actually reads.
+
+**The `FlodeSegmentedRating` path is shorter today, not incomplete by
+design but genuinely narrower.** `apply_rating()` and `rating_plot()`
+both have `FlodeSegmentedRating` methods and work directly on the fit --
+no bridging step, because there's no junction to check. What it does
+*not* have, as of this vignette, is any of: the four diagnostic functions
+above (all four check `S7_inherits(fit, FlodeRating)` and error otherwise
+-- see `?flag_influential_gaugings`), `as_rating_table()` (no method
+registered for `FlodeSegmentedRating`), or, downstream of that,
+`apply_rating_inverse()`, `apply_rating_versioned()`, or
+`compare_ratings()`, all of which expect a `FlodeRatingTable`. If you
+need any of those on a segmented fit today, the practical workaround is
+evaluating the fit's own equation (`fit@coefficients`,
+`vignette("segmented_model_guide")`'s multiplicative-factor formula)
+across a stage sequence by hand and working from the resulting table
+directly.
+
+**Coefficient uncertainty runs beside this diagram, not through it.**
+`bootstrap_to_table()` and `apply_rating_interval()` (or, for a quick
+closed-form alternative, the `C_se_asymp`/`a_se_asymp`/`n_se_asymp`
+columns `rate_optimise()` always populates) work directly from a
+`FlodeRating`'s own `@bootstrap`/refit machinery, independent of whether
+the table above is gap-free yet -- `rating_curves_guide.Rmd`'s
+"Coefficient uncertainty" section covers that pipeline on its own terms.
+
+# Where to go next
+
+This vignette is deliberately shallow on every individual box -- it
+exists to show the shape of the whole, not to replace any one part of
+it. Depending on which box you're standing at:
+
+- `vignette("rating_curves_guide")` -- the full introductory walkthrough
+  `rate_optimise()` itself, the junction-gap problem, and coefficient
+  uncertainty in depth.
+- `vignette("segmented_model_guide")` -- how `rate_optimise_segmented()`'s
+  multiplicative factors actually compose, with diagrams.
+- `vignette("weir_flume_guide")` -- the weir/flume equations and
+  `rate_from_cross_section()`'s Manning calculation, with structure
+  diagrams.
+- `vignette("leverage_influence_guide")` -- which gaugings are quietly
+  steering a `FlodeRating` fit, in plain English.
+- `vignette("n_bounds_guide")` -- reading a channel cross-section into a
+  starting `n_bounds` for `rate_optimise()`/`rate_optimise_constrained()`.
+- `vignette("objective_guide")` and `vignette("recency_weighting_guide")`
+  -- two ways `rate_optimise()`'s own fit can be steered, beyond
+  `n_bounds`: `objective = "relative"`, and `age_halflife`.
+- `vignette("s7_objects_guide")` -- what `@`-access, `S7_inherits()`, and
+  the `@status`/`@previous` audit chain actually buy you, for every green
+  box in both diagrams above.
