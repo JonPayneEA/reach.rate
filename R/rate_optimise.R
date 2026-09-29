@@ -1498,13 +1498,22 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
 
     round_dt <- rbindlist(round_results)
     round_dt[, round := round_i]
-    all_round_results[[round_i]] <- round_dt
+    round_dt[, selected := FALSE]
 
     ok_dt <- round_dt[fit_status == "ok" & !is.na(improvement) & improvement >= min_improvement & score > 0]
-    if (nrow(ok_dt) == 0) break
+    if (nrow(ok_dt) == 0) {
+      all_round_results[[round_i]] <- round_dt
+      break
+    }
 
     setorder(ok_dt, -score)
-    selected_breaks <- sort(c(selected_breaks, ok_dt$candidate_stage[1]))
+    adopted_stage <- ok_dt$candidate_stage[1]
+    # Mark the adoption on this round's row only. The same stage was
+    # usually also evaluated (and not adopted) in earlier rounds, so
+    # matching on stage across the whole table would mark it twice.
+    round_dt[candidate_stage == adopted_stage, selected := TRUE]
+    all_round_results[[round_i]] <- round_dt
+    selected_breaks <- sort(c(selected_breaks, adopted_stage))
     current_best <- .fit_rss_aic(selected_breaks)
   }
 
@@ -1517,10 +1526,6 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
 
   setorder(all_candidates_dt, round, -score)
   all_candidates_dt[, rank := seq_len(.N), by = round]
-  # A selected stage cannot reappear in a later round (min_gap excludes
-  # it), so matching on stage marks exactly the candidate each round
-  # adopted.
-  all_candidates_dt[, selected := fit_status == "ok" & candidate_stage %in% selected_breaks]
   attr(all_candidates_dt, "selected_breaks") <- selected_breaks
   all_candidates_dt[]
 }
