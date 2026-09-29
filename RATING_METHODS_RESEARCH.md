@@ -4,7 +4,7 @@ Research and proposal only -- no code, tests, or vignettes are touched by
 this document. It evaluates five directions Jonathan raised against
 `reach.rate`'s actual architecture (`R/flode_classes.R`, `R/rate_optimise.R`,
 `R/rate_optimise_segmented.R`, `R/gap_check.R`, `R/apply_rating.R`), in the
-same spirit as [ROADMAP.md](ROADMAP.md) and
+same spirit as [IMPROVEMENT_PLAN.md](IMPROVEMENT_PLAN.md) and
 [ROBUST_FITTING.md](ROBUST_FITTING.md): one section per idea, a concrete
 recommendation, and a short "what this would take" note. Citations are
 included for every substantive claim; where a claim could not be verified
@@ -352,7 +352,7 @@ against real value rather than by section order.
 
 A lighter survey pass -- one paragraph each, not the full treatment the
 five sections above got. Excludes anything already covered above or
-already tracked in `ROADMAP.md`/`ROBUST_FITTING.md`.
+already tracked in `IMPROVEMENT_PLAN.md`/`ROBUST_FITTING.md`.
 
 - **Rating extrapolation and design-flood guidance.** Extending a curve
   beyond its gauged range is where rating uncertainty is largest and
