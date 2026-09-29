@@ -33,17 +33,44 @@ the container had no R installation. Tranche A1 records the true baseline.
 
 ### Baseline (A1)
 
-Recorded from the first CI run of `R-CMD-check.yaml` and
-`test-coverage.yaml` on the A1 pull request.
+Recorded from the first CI run on PR #56 (head `ef71aa1`, 29 September 2026).
 
-| Matrix cell | `R CMD check` result | Notes |
+| Matrix cell | `R CMD check` | Tests |
 |---|---|---|
-| Windows, R release | pending | |
-| Windows, R oldrel-1 | pending | |
-| Ubuntu, R release | pending | |
-| Ubuntu, R oldrel-1 | pending | |
+| Windows, R release | ERROR | 698 pass, 3 fail, 15 warnings |
+| Windows, R oldrel-1 | ERROR | 698 pass, 3 fail, 12 warnings |
+| Ubuntu, R release | ERROR | 691 pass, 4 fail, 16 warnings |
+| Ubuntu, R oldrel-1 | ERROR | 691 pass, 4 fail, 12 warnings |
 
-Line coverage: pending. Failing tests: pending.
+Every check section before the tests passed without a note or warning. The
+test failure stopped each check, so the post-test sections, including the
+vignette re-build, have not yet been reached.
+
+**One root cause for every failure.** Plot labels contain characters
+outside Latin-1: `\u0394` (Greek capital delta), `\u2212` (minus sign),
+`\u2080` (subscript zero) and `\u2014` (em dash). R's default `pdf()`
+device, which `R CMD check` uses for tests, cannot encode them, and
+R 4.5 turns the conversion failure into an error. `\u00b3`, `\u00b2`
+and `\u00b7` are Latin-1 and render correctly. Any user saving these
+plots to PDF hits the same fault. Failing tests:
+
+- `test-compare_ratings.R:84`: `plot_rating_comparison()` y-axis label
+  (`R/compare_ratings.R:211-212`).
+- `test-gap_check.R:275` and `test-rating_curve_demo.R:54`:
+  `plot_rc_gaps()` gap labels and title (`R/gap_check.R:1502,1535`).
+- `test-cross_section_rating_dual_plot.R:10` (Ubuntu only): subtitle and
+  title in `demo_cross_section_rating()`
+  (`R/cross_section_rating_dual_plot.R:312,316`).
+
+**Warnings worth tracking.** `geom_label(label.size = )` and
+`sec_axis(trans = )` are deprecated since ggplot2 3.5.0 and will break in
+a later ggplot2 release. The remaining warnings are the package's own,
+expected by the tests that raise them.
+
+**Coverage.** 85.7% line coverage; all 707 tests pass under covr, which
+does not render to PDF. Weakest files: `rating_curve_explorer_app.R`
+(0%, the Shiny app), `zzz.R` (0%, `.onLoad`), `flode_classes.R` (35.6%,
+print methods and validators).
 
 ## 2. Decisions taken
 
