@@ -385,10 +385,10 @@ test_that("suggest_breakpoints finds breakpoints near deliberate slope changes",
   expect_true(is.data.table(candidates_dt))
   expect_true(all(c(
     "candidate_stage", "score", "improvement", "n_obs_lower",
-    "n_obs_upper", "round", "fit_status", "rank"
+    "n_obs_upper", "round", "fit_status", "rank", "selected"
   ) %in% names(candidates_dt)))
 
-  breaks <- suggested_breakpoints_vector(candidates_dt)
+  breaks <- sort(candidates_dt[selected == TRUE, candidate_stage])
   expect_true(length(breaks) <= 2L)
   expect_true(is.numeric(breaks))
   expect_equal(breaks, sort(breaks))
@@ -414,7 +414,7 @@ test_that("suggest_breakpoints suggests few or no breakpoints for a clean single
   discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.001)
 
   candidates_dt <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 2L, min_improvement = 0.1)
-  breaks <- suggested_breakpoints_vector(candidates_dt)
+  breaks <- candidates_dt[selected == TRUE, candidate_stage]
   expect_true(length(breaks) <= 1L)
 })
 
@@ -428,9 +428,42 @@ test_that("suggest_breakpoints reports insufficient_obs for a candidate too clos
   expect_true("insufficient_obs" %in% candidates_dt$fit_status)
 })
 
+test_that("suggest_breakpoints marks one selected candidate per adopting round, matching the attribute", {
+  set.seed(5)
+  stage_m <- seq(0.5, 3.5, by = 0.1)
+  true_limb <- cut(stage_m, breaks = c(0.5, 1.6, 2.2, 3.5), labels = FALSE, include.lowest = TRUE)
+  coefs_by_limb <- data.frame(C = c(3, 6, 10), n = c(1.4, 1.9, 2.4))
+  discharge_cms <- coefs_by_limb$C[true_limb] * stage_m^coefs_by_limb$n[true_limb] +
+    rnorm(length(stage_m), sd = 0.02)
+
+  candidates_dt <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 2L, min_obs_per_side = 3L)
+
+  expect_type(candidates_dt$selected, "logical")
+  expect_false(anyNA(candidates_dt$selected))
+  expect_equal(
+    sort(candidates_dt[selected == TRUE, candidate_stage]),
+    attr(candidates_dt, "selected_breaks")
+  )
+  # No round adopts more than one candidate, and only fitted candidates qualify
+  expect_true(all(candidates_dt[, sum(selected), by = round]$V1 <= 1L))
+  expect_true(all(candidates_dt[selected == TRUE, fit_status] == "ok"))
+})
+
+test_that("suggested_breakpoints_vector is deprecated but still returns the selection", {
+  set.seed(5)
+  stage_m <- seq(0.5, 3.5, by = 0.1)
+  discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.01)
+  candidates_dt <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
+
+  expect_warning(breaks <- suggested_breakpoints_vector(candidates_dt), "deprecated")
+  expect_equal(breaks, attr(candidates_dt, "selected_breaks"))
+})
+
 test_that("suggested_breakpoints_vector errors on a malformed argument", {
-  expect_error(suggested_breakpoints_vector(list()), "data.table")
-  expect_error(suggested_breakpoints_vector(data.table(x = 1)), "selected_breaks")
+  suppressWarnings({
+    expect_error(suggested_breakpoints_vector(list()), "data.table")
+    expect_error(suggested_breakpoints_vector(data.table(x = 1)), "selected_breaks")
+  })
 })
 
 test_that("rate_optimise with n_boot = 0 (default) has no bootstrap columns or attribute", {

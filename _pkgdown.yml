@@ -27,91 +27,102 @@ articles:
   - segmented_model_guide
 
 reference:
-- title: Fitting a rating
+- title: Using a rating
   desc: >
-    Fit a multi-limb power-law rating by nonlinear least squares, and
-    find breakpoints rather than guess them.
+    Apply a fitted rating to a stage record, invert it, and compare it
+    with the rating it replaces. The guided workflow (read_gaugings(),
+    validate_gaugings(), fit_rating(), assess_rating(), export_rating())
+    is planned; see IMPROVEMENT_PLAN.md.
+  contents:
+  - apply_rating
+  - apply_rating_inverse
+  - compare_ratings
+  - plot_rating_comparison
+
+- title: Advanced modelling
+  desc: >
+    Direct control over fitting. Until fit_rating() arrives,
+    rate_optimise() is the entry point. suggest_breakpoints() proposes
+    statistical candidates only; whether a breakpoint marks a real change
+    of control is a hydraulic judgement.
   contents:
   - rate_optimise
   - rate_optimise_constrained
-  - suggest_breakpoints
-  - suggested_breakpoints_vector
-  - rate_from_cross_section
-
-- title: Weir and flume equations
-  desc: >
-    Physically-derived discharge from structure geometry, not fitted to
-    gaugings, with GUM-style propagated uncertainty.
-  contents:
-  - weir_discharge_rectangular
-  - weir_discharge_vnotch
-  - weir_discharge_cipoletti
-  - flume_discharge_parshall
-
-- title: The segmented alternative
-  desc: A joint model with no junction gap to reconcile, after Hodson et al. (2024).
-  contents:
   - rate_optimise_segmented
+  - suggest_breakpoints
+  - align_limb_equations
+  - align_limb_boundaries
+  - graft_rating
 
-- title: Diagnosing a fit
+- title: Diagnostics
+  desc: >
+    Residuals, extrapolation, influence, and the discharge gaps left where
+    independently-fitted limbs meet.
   contents:
   - plot_rating_residuals
   - flag_extrapolated_limbs
   - flag_influential_gaugings
   - plot_rating_leverage
-  - plot_rating_cross_section
-  - demo_cross_section_rating
-
-- title: The junction gap problem
-  desc: >
-    Independently-fitted limbs rarely meet exactly. Detect the resulting
-    discharge gap and close it — by patching the table, rescaling a
-    limb's equation, or relocating the boundary to where the curves
-    actually cross.
-  contents:
   - detect_rc_gaps
-  - resolve_rc_gaps
-  - align_limb_equations
-  - align_limb_boundaries
   - plot_rc_gaps
-  - expand_rating_table
-  - graft_rating
 
-- title: Coefficient uncertainty
-  desc: Bootstrap resampling, propagated through to a discharge interval.
+- title: Uncertainty
+  desc: Bootstrap coefficient draws propagated to a discharge interval.
   contents:
-  - bootstrap_to_table
-  - plot_rating_interval
   - apply_rating_interval
+  - plot_rating_interval
+  - bootstrap_to_table
 
-- title: Using a rating
-  desc: Convert between stage and discharge, and handle a rating that has changed over time.
-  contents:
-  - apply_rating
-  - apply_rating_inverse
-  - apply_rating_versioned
-  - as_rating_table
-
-- title: Comparing ratings
-  contents:
-  - compare_ratings
-  - plot_rating_comparison
-
-- title: Shared generics and classes
-  desc: One name per operation, dispatched by whichever representation you're holding.
+- title: Plotting
   contents:
   - rating_plot
   - plot_rating_curves
+
+- title: Specialist hydraulics
+  desc: >
+    Ratings and discharges derived from channel or structure geometry
+    rather than fitted to gaugings: Manning's equation on a surveyed
+    cross-section, and standard weir and flume equations with GUM-style
+    propagated uncertainty.
+  contents:
+  - rate_from_cross_section
+  - plot_rating_cross_section
+  - weir_discharge_rectangular
+  - weir_discharge_vnotch
+  - weir_discharge_cipoletti
+  - flume_discharge_parshall
+
+- title: Conversion and rating tables
+  desc: >
+    Move between a fitted rating and its equation-table form, patch
+    junction gaps at table level, and apply ratings that changed over time.
+  contents:
+  - as_rating_table
+  - expand_rating_table
+  - resolve_rc_gaps
+  - apply_rating_versioned
+
+- title: Rating objects
+  desc: >
+    The S7 classes behind every fit. Accessor functions (planned) will
+    replace direct property access in user code.
+  contents:
   - FlodeRatingBase
   - FlodeRating
   - FlodeSegmentedRating
   - FlodeRatingTable
 
-- title: Interactive tools and demos
+- title: Teaching tools
+  desc: >
+    Demonstrations on synthetic data, for learning the package rather
+    than building a rating from your own evidence.
   contents:
-  - rating_curve_explorer
   - run_demo
-
-- title: Example data
-  contents:
+  - rating_curve_explorer
+  - demo_cross_section_rating
   - station_gaugings
+
+- title: Deprecated
+  desc: Still working, but scheduled for removal. Each page names its replacement.
+  contents:
+  - suggested_breakpoints_vector

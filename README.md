@@ -22,6 +22,21 @@ remotes::install_github("JonPayneEA/reach.rate", build_vignettes = TRUE)
 
 Continuous integration runs `R CMD check`, vignettes included, on Windows and Ubuntu against the current R release and the previous minor release. Those four combinations are the supported set. `DESCRIPTION` declares `R (>= 4.1)`, but versions older than the previous release are untested and unsupported. macOS is also untested.
 
+## The workflow
+
+A rating should be built from evidence, checked, and only then applied. The package is being reorganised around that sequence ([improvement plan](IMPROVEMENT_PLAN.md)). The target is six functions:
+
+| Step | Function | Status |
+|---|---|---|
+| Import your gaugings | `read_gaugings()` | planned |
+| Check them | `validate_gaugings()` | planned |
+| Fit a candidate rating | `fit_rating()` | planned |
+| Assess it | `assess_rating()` | planned |
+| Compare with the current rating | `compare_ratings()` | available |
+| Export it | `export_rating()` | planned |
+
+Until the planned functions land, the route runs through the advanced API: fit with `rate_optimise()`, diagnose with `plot_rating_residuals()`, `flag_extrapolated_limbs()` and `flag_influential_gaugings()`, then apply with `apply_rating()`. That route stays available afterwards for anyone who needs direct control. The [function reference](https://jonpayneea.github.io/reach.rate/reference/) groups every export by the job it does.
+
 ## Rating curve essentials
 
 The essentials from `vignette("rating_curves_guide")` -- enough theory to read the example below against, not the full guide.

@@ -89,7 +89,7 @@ cat("\n== 2. Suggest breakpoints (pretend we don't know them) =======\n")
 
 candidates_dt <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 2L)
 print(candidates_dt[fit_status == "ok"])
-suggested_breaks <- suggested_breakpoints_vector(candidates_dt)
+suggested_breaks <- sort(candidates_dt[selected == TRUE, candidate_stage])
 cat("Selected breakpoints:\n")
 print(suggested_breaks)
 

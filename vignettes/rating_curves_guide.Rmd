@@ -131,7 +131,7 @@ Three points of guidance. First, `r_squared` close to 1 is necessary but weak: a
 
 ```{r suggest-breakpoints}
 candidates_dt <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 2L)
-suggested_breakpoints_vector(candidates_dt)
+sort(candidates_dt[selected == TRUE, candidate_stage])
 ```
 
 ## The trap this function avoids
@@ -146,7 +146,7 @@ $$\mathrm{AIC} = n \ln\!\left(\frac{\mathrm{RSS}}{n}\right) + 2k$$
 
 where $n$ is the number of gaugings and $k$ the number of fitted parameters (three per limb). The first term rewards fit; the second charges for it. A candidate breakpoint is only eligible if the two-limb model's AIC beats the one-limb model's and the relative RSS reduction clears `min_improvement` (default 2%), which screens out breakpoints that are statistically cheap but practically negligible.
 
-Multiple breakpoints are found greedily: the best candidate from round one is fixed, and round two searches for a further breakpoint against that improved baseline, at least `min_gap` away from any breakpoint already chosen. The search stops as soon as a round finds nothing that clears the bar, so asking for `max_breaks = 3` will not manufacture a third breakpoint. The full candidate table is returned, one row per candidate per round, with scores, RSS improvements, observation counts each side, and a status; `suggested_breakpoints_vector()` extracts just the selected stages. One caution when reading the table: scores are only comparable within a round, since each round is scored against a different baseline.
+Multiple breakpoints are found greedily: the best candidate from round one is fixed, and round two searches for a further breakpoint against that improved baseline, at least `min_gap` away from any breakpoint already chosen. The search stops as soon as a round finds nothing that clears the bar, so asking for `max_breaks = 3` will not manufacture a third breakpoint. The full candidate table is returned, one row per candidate per round, with scores, RSS improvements, observation counts each side, a status, and a `selected` flag marking the candidate each round adopted. One caution when reading the table: scores are only comparable within a round, since each round is scored against a different baseline.
 
 ## The judgement that remains yours
 
