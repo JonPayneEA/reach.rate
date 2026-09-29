@@ -1,5 +1,10 @@
 # reach.rate
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/JonPayneEA/reach.rate/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JonPayneEA/reach.rate/actions/workflows/R-CMD-check.yaml)
+[![test-coverage](https://github.com/JonPayneEA/reach.rate/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JonPayneEA/reach.rate/actions/workflows/test-coverage.yaml)
+<!-- badges: end -->
+
 Tools for fitting, diagnosing, and applying hydrometric rating curves: multi-limb power-law fitting by nonlinear least squares, junction-gap detection and resolution between independently-fitted limbs, a segmented joint-model alternative (Hodson et al. 2024), bootstrap and closed-form coefficient uncertainty, leverage/influence diagnostics, opt-in age-based recency weighting, versioned ratings, and rating-amendment comparison. Beyond gauging-based fitting: a Manning's-equation rating from a surveyed cross-section alone, and standard weir/flume discharge equations (rectangular, V-notch, Cipoletti, Parshall flume) with GUM-style propagated uncertainty.
 
 Fitted ratings are represented as [S7](https://rconsortium.github.io/S7/) classes (`FlodeRating`, `FlodeSegmentedRating`, `FlodeRatingTable`) that carry their own gaugings, fitting bookkeeping, and provenance, so a rating is never separated from the data and assumptions that produced it.
@@ -12,6 +17,10 @@ This package is not on CRAN. Install the development version from GitHub:
 # install.packages("remotes")
 remotes::install_github("JonPayneEA/reach.rate", build_vignettes = TRUE)
 ```
+
+### Supported environments
+
+Continuous integration runs `R CMD check`, vignettes included, on Windows and Ubuntu against the current R release and the previous minor release. Those four combinations are the supported set. `DESCRIPTION` declares `R (>= 4.1)`, but versions older than the previous release are untested and unsupported. macOS is also untested.
 
 ## Rating curve essentials
 

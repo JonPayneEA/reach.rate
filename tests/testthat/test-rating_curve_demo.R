@@ -48,10 +48,7 @@ test_that("as_rating_table rejects an object with no method", {
 })
 
 test_that("run_demo wires rate_optimise and gap_check into a single pipeline", {
-  pdf(NULL)
-  on.exit(dev.off())
-
-  result <- run_demo(plot = TRUE)
+  result <- expect_pdf_renders(run_demo(plot = TRUE))
 
   expect_s3_class(result$fit, "reach.rate::FlodeRating")
   expect_true(is.data.table(result$fit@limbs))

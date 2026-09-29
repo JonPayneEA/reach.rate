@@ -78,10 +78,7 @@ test_that("plot_rating_comparison returns a grob without error", {
   )
   cmp <- compare_ratings(rating_old_dt, rating_new_dt)
 
-  pdf(NULL)
-  on.exit(dev.off())
-
-  combined <- plot_rating_comparison(cmp)
+  combined <- expect_pdf_renders(plot_rating_comparison(cmp))
   expect_true(inherits(combined, "gtable") || inherits(combined, "grob"))
 })
 

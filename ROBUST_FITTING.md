@@ -4,7 +4,7 @@ This is a companion explainer for three ideas about how `reach.rate` fits
 rating curves, tracked as issues ([#9](https://github.com/JonPayneEA/reach.rate/issues/9),
 [#13](https://github.com/JonPayneEA/reach.rate/issues/13),
 [#14](https://github.com/JonPayneEA/reach.rate/issues/14)) on the
-[roadmap](ROADMAP.md) — written for anyone who isn't already familiar with
+[improvement plan](IMPROVEMENT_PLAN.md) — written for anyone who isn't already familiar with
 these statistical methods.
 
 **Two of the three are now real, working options.** `objective` (Idea 2) and

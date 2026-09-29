@@ -269,10 +269,7 @@ test_that("plot_rc_gaps returns a ggplot object invisibly", {
   rc_raw_dt <- build_two_limb_rc_dt()
   rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt)
 
-  pdf(NULL)
-  on.exit(dev.off())
-
-  p <- plot_rc_gaps(rc_raw_dt, rc_fixed_dt)
+  p <- expect_pdf_renders(plot_rc_gaps(rc_raw_dt, rc_fixed_dt))
   expect_s3_class(p, "ggplot")
 })
 

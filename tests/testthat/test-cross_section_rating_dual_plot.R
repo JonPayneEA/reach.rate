@@ -4,10 +4,7 @@
 # it's tested the ordinary way: call it and inspect what it returns.
 
 test_that("demo_cross_section_rating runs cleanly and returns a combined grob", {
-  pdf(NULL)
-  on.exit(dev.off())
-
-  result <- demo_cross_section_rating(plot = TRUE)
+  result <- expect_pdf_renders(demo_cross_section_rating(plot = TRUE))
 
   expect_true(is.data.table(result$cross_section))
   expect_true(all(c("distance_m", "elevation_maod") %in% names(result$cross_section)))
