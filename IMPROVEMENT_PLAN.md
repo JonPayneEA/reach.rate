@@ -31,6 +31,20 @@ The analytical breadth is real. The foundation under it is thin.
 Package checks could not be run in the session that wrote this plan, because
 the container had no R installation. Tranche A1 records the true baseline.
 
+### Baseline (A1)
+
+Recorded from the first CI run of `R-CMD-check.yaml` and
+`test-coverage.yaml` on the A1 pull request.
+
+| Matrix cell | `R CMD check` result | Notes |
+|---|---|---|
+| Windows, R release | pending | |
+| Windows, R oldrel-1 | pending | |
+| Ubuntu, R release | pending | |
+| Ubuntu, R oldrel-1 | pending | |
+
+Line coverage: pending. Failing tests: pending.
+
 ## 2. Decisions taken
 
 These were settled before writing. Each tranche assumes them.

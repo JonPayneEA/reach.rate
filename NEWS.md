@@ -1,5 +1,11 @@
 # reach.rate (development)
 
+* Continuous integration now runs `R CMD check`, with vignettes built, on
+  Windows and Ubuntu against R release and oldrel-1, plus a line-coverage
+  job. The README states the supported environments; the `R (>= 4.1)`
+  floor in `DESCRIPTION` is untested and says so. Tranche A1 of
+  `IMPROVEMENT_PLAN.md` (#36). No mathematical changes.
+
 * New `vignette("rating_methods_overview")`: two flow diagrams tying the
   whole package together -- which of the five ways to build a rating
   (`rate_optimise()`, `rate_optimise_constrained()`,
