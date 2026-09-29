@@ -1,5 +1,24 @@
 # reach.rate (development)
 
+* `suggest_breakpoints()` gains a `selected` column marking the candidate
+  each round adopted. Extract the chosen stages with
+  `sort(result[selected == TRUE, candidate_stage])`. The
+  `"selected_breaks"` attribute is still set, but attributes can be lost
+  under ordinary data.table operations. No mathematical changes.
+
+* `suggested_breakpoints_vector()` is deprecated and warns; use the
+  `selected` column instead. It will be removed in the release after next.
+
+* The function reference is regrouped by job: using a rating, advanced
+  modelling, diagnostics, uncertainty, plotting, specialist hydraulics,
+  conversion, rating objects, teaching tools and deprecated. The README
+  gains a workflow section showing the planned six-function route and
+  today's equivalent. Tranche A2 of `IMPROVEMENT_PLAN.md` (#37).
+
+* `R CMD check` no longer notes undefined globals: data.table column
+  names are declared in `R/globals.R`, and `stats::uniroot` is imported.
+  `utils` joins Imports for `globalVariables()`.
+
 * Continuous integration now runs `R CMD check`, with vignettes built, on
   Windows and Ubuntu against R release and oldrel-1, plus a line-coverage
   job. The README states the supported environments; the `R (>= 4.1)`

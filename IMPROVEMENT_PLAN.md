@@ -186,8 +186,16 @@ tests, check notes, coverage figure. Fix nothing yet except CI plumbing.
 
 **A2. Public API and reference index** (#37). Restructure `_pkgdown.yml` to
 section 4. Apply the deprecations in decision 3. Rewrite the README to lead
-with the primary workflow, marking unbuilt functions as planned.
+with the primary workflow, marking unbuilt functions as planned. Clear the
+globals NOTE left by A1.
 *Done when* every export sits in one category and deprecated functions warn.
+*As delivered:* the index groups exports by job; sections with no members
+yet (primary workflow, accessors) are described in the section text rather
+than listed empty. `suggested_breakpoints_vector()` is deprecated in favour
+of a `selected` column on `suggest_breakpoints()` output.
+`bootstrap_to_table()` moves to A3, because its replacement,
+`rating_bootstrap()`, is an accessor: deprecating it before the replacement
+exists would leave users with a warning and nowhere to go.
 
 **A3. Accessors** (#38). Add the eight accessors with success and failure tests.
 Replace every `@` access in README, vignettes and `walkthrough.R`. Rewrite

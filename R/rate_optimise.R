@@ -1385,12 +1385,15 @@ plot_rating_leverage <- function(fit, cooks_mult = 4, leverage_mult = 2) {
 #'
 #' @return A `data.table`, one row per candidate evaluated across every
 #'   round, with `candidate_stage`, `score`, `improvement`,
-#'   `n_obs_lower`, `n_obs_upper`, `round`, `fit_status`, `rank`. The
-#'   greedily-selected breakpoints are attached as the
-#'   `"selected_breaks"` attribute -- use
-#'   [suggested_breakpoints_vector()] to extract them.
+#'   `n_obs_lower`, `n_obs_upper`, `round`, `fit_status`, `rank` and
+#'   `selected`. `selected` is `TRUE` for the candidate each round
+#'   adopted; extract the selected stages with
+#'   `sort(result[selected == TRUE, candidate_stage])`. The same stages
+#'   remain attached as the `"selected_breaks"` attribute for code
+#'   written against earlier versions, but an attribute can be lost
+#'   under ordinary data.table operations, so prefer the column.
 #'
-#' @seealso [rate_optimise()], [suggested_breakpoints_vector()]
+#' @seealso [rate_optimise()]
 #'
 #' @export
 suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
@@ -1419,7 +1422,7 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
     data.table(
       candidate_stage = numeric(0), score = numeric(0), improvement = numeric(0),
       n_obs_lower = integer(0), n_obs_upper = integer(0), round = integer(0),
-      fit_status = character(0), rank = integer(0)
+      fit_status = character(0), rank = integer(0), selected = logical(0)
     )
   }
 
@@ -1514,16 +1517,35 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
 
   setorder(all_candidates_dt, round, -score)
   all_candidates_dt[, rank := seq_len(.N), by = round]
+  # A selected stage cannot reappear in a later round (min_gap excludes
+  # it), so matching on stage marks exactly the candidate each round
+  # adopted.
+  all_candidates_dt[, selected := fit_status == "ok" & candidate_stage %in% selected_breaks]
   attr(all_candidates_dt, "selected_breaks") <- selected_breaks
   all_candidates_dt[]
 }
 
 #' Extract the selected breakpoints from suggest_breakpoints() as a vector
 #'
+#' @description
+#' Deprecated. [suggest_breakpoints()] now marks the adopted candidates in
+#' a `selected` column, which survives data.table operations that can
+#' drop the attribute this function reads. Use
+#' `sort(candidates_dt[selected == TRUE, candidate_stage])` instead.
+#' This function will be removed in the release after next.
+#'
 #' @param candidates_dt The data.table returned by [suggest_breakpoints()].
 #' @return A numeric vector, sorted ascending.
+#' @keywords internal
 #' @export
 suggested_breakpoints_vector <- function(candidates_dt) {
+  .Deprecated(
+    msg = paste(
+      "suggested_breakpoints_vector() is deprecated and will be removed.",
+      "suggest_breakpoints() now returns a `selected` column: use",
+      "sort(candidates_dt[selected == TRUE, candidate_stage]) instead."
+    )
+  )
   if (!is.data.table(candidates_dt)) {
     stop("candidates_dt must be the data.table returned by suggest_breakpoints()")
   }

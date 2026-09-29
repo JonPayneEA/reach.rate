@@ -13,5 +13,10 @@ suggested_breakpoints_vector(candidates_dt)
 A numeric vector, sorted ascending.
 }
 \description{
-Extract the selected breakpoints from suggest_breakpoints() as a vector
+Deprecated. \code{\link[=suggest_breakpoints]{suggest_breakpoints()}} now marks the adopted candidates in
+a \code{selected} column, which survives data.table operations that can
+drop the attribute this function reads. Use
+\code{sort(candidates_dt[selected == TRUE, candidate_stage])} instead.
+This function will be removed in the release after next.
 }
+\keyword{internal}

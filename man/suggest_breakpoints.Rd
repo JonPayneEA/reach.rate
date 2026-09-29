@@ -35,10 +35,13 @@ and thinned if exceeded. Default \code{200L}.}
 \value{
 A \code{data.table}, one row per candidate evaluated across every
 round, with \code{candidate_stage}, \code{score}, \code{improvement},
-\code{n_obs_lower}, \code{n_obs_upper}, \code{round}, \code{fit_status}, \code{rank}. The
-greedily-selected breakpoints are attached as the
-\code{"selected_breaks"} attribute -- use
-\code{\link[=suggested_breakpoints_vector]{suggested_breakpoints_vector()}} to extract them.
+\code{n_obs_lower}, \code{n_obs_upper}, \code{round}, \code{fit_status}, \code{rank} and
+\code{selected}. \code{selected} is \code{TRUE} for the candidate each round
+adopted; extract the selected stages with
+\code{sort(result[selected == TRUE, candidate_stage])}. The same stages
+remain attached as the \code{"selected_breaks"} attribute for code
+written against earlier versions, but an attribute can be lost
+under ordinary data.table operations, so prefer the column.
 }
 \description{
 A heuristic aid for choosing \code{control} in \code{\link[=rate_optimise]{rate_optimise()}}. Reuses
@@ -52,5 +55,5 @@ breakpoint corresponds to a real physical control change -- that
 judgement remains yours.
 }
 \seealso{
-\code{\link[=rate_optimise]{rate_optimise()}}, \code{\link[=suggested_breakpoints_vector]{suggested_breakpoints_vector()}}
+\code{\link[=rate_optimise]{rate_optimise()}}
 }

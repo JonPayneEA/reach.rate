@@ -31,6 +31,7 @@ Collate:
     'cross_section_rating_dual_plot.R'
     'data.R'
     'gap_check.R'
+    'globals.R'
     'graft_rating.R'
     'plot_rating_curves.R'
     'plot_rating_cross_section.R'
@@ -54,7 +55,8 @@ Imports:
     minpack.lm,
     S7,
     scales,
-    stats
+    stats,
+    utils
 Suggests:
     knitr,
     pkgdown,
