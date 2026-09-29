@@ -13,10 +13,7 @@ column someone has to remember to check.
 
 ``` r
 FlodeRatingTable(
-  table = (structure(function (.data) 
-
-    stop2(sprintf("S3 class <%s> doesn't have a constructor.", "data.table"), call =
-    NULL), class = "S7_constructor"))(),
+  table = data.table(),
   status = "independently_fitted",
   previous = NULL
 )

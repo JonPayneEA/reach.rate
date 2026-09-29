@@ -10,18 +10,12 @@ segment.
 
 ``` r
 FlodeSegmentedRating(
-  gaugings = (structure(function (.data) 
-
-    stop2(sprintf("S3 class <%s> doesn't have a constructor.", "data.table"), call =
-    NULL), class = "S7_constructor"))(),
+  gaugings = data.table(),
   fit_starts = NULL,
   status = "independently_fitted",
   provenance = list(),
   previous = NULL,
-  coefficients = (structure(function (.data) 
-
-    stop2(sprintf("S3 class <%s> doesn't have a constructor.", "data.table"), call =
-    NULL), class = "S7_constructor"))(),
+  coefficients = data.table(),
   n_segments = integer(0),
   estimate_breakpoints = logical(0)
 )

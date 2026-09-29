@@ -28,6 +28,14 @@ GitHub:
 remotes::install_github("JonPayneEA/reach.rate", build_vignettes = TRUE)
 ```
 
+### Supported environments
+
+Continuous integration runs `R CMD check`, vignettes included, on
+Windows and Ubuntu against the current R release and the previous minor
+release. Those four combinations are the supported set. `DESCRIPTION`
+declares `R (>= 4.1)`, but versions older than the previous release are
+untested and unsupported. macOS is also untested.
+
 ## Rating curve essentials
 
 The essentials from

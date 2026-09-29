@@ -18,10 +18,7 @@ and
 
 ``` r
 FlodeRatingBase(
-  gaugings = (structure(function (.data) 
-
-    stop2(sprintf("S3 class <%s> doesn't have a constructor.", "data.table"), call =
-    NULL), class = "S7_constructor"))(),
+  gaugings = data.table(),
   fit_starts = NULL,
   status = "independently_fitted",
   provenance = list(),

@@ -50,7 +50,7 @@
 
 <div id="robust-fitting-plain-english-notes" class="section level1">
 
-<p>This is a companion explainer for three ideas about how <code>reach.rate</code> fits rating curves, tracked as issues (<a href="https://github.com/JonPayneEA/reach.rate/issues/9" class="external-link">#9</a>, <a href="https://github.com/JonPayneEA/reach.rate/issues/13" class="external-link">#13</a>, <a href="https://github.com/JonPayneEA/reach.rate/issues/14" class="external-link">#14</a>) on the <a href="ROADMAP.html">roadmap</a> — written for anyone who isn’t already familiar with these statistical methods.</p>
+<p>This is a companion explainer for three ideas about how <code>reach.rate</code> fits rating curves, tracked as issues (<a href="https://github.com/JonPayneEA/reach.rate/issues/9" class="external-link">#9</a>, <a href="https://github.com/JonPayneEA/reach.rate/issues/13" class="external-link">#13</a>, <a href="https://github.com/JonPayneEA/reach.rate/issues/14" class="external-link">#14</a>) on the <a href="IMPROVEMENT_PLAN.html">improvement plan</a> — written for anyone who isn’t already familiar with these statistical methods.</p>
 <p><strong>Two of the three are now real, working options.</strong> <code>objective</code> (Idea 2) and <code>n_bounds</code> (Idea 3) are opt-in arguments on <code><a href="reference/rate_optimise.html">rate_optimise()</a></code> and friends today. The third, age-weighting (Idea 1), is still a future idea.</p>
 <p><strong>All of it stays opt-in.</strong> Leaving these arguments out of a call reproduces today’s default fitting behaviour exactly — nothing described here changes what you get unless you deliberately ask for it.</p>
 <div class="section level2">

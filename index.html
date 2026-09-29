@@ -69,6 +69,8 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="reachrate">reach.rate<a class="anchor" aria-label="anchor" href="#reachrate"></a>
 </h1></div>
+<!-- badges: start -->
+
 <p>Tools for fitting, diagnosing, and applying hydrometric rating curves: multi-limb power-law fitting by nonlinear least squares, junction-gap detection and resolution between independently-fitted limbs, a segmented joint-model alternative (Hodson et al. 2024), bootstrap and closed-form coefficient uncertainty, leverage/influence diagnostics, opt-in age-based recency weighting, versioned ratings, and rating-amendment comparison. Beyond gauging-based fitting: a Manning’s-equation rating from a surveyed cross-section alone, and standard weir/flume discharge equations (rectangular, V-notch, Cipoletti, Parshall flume) with GUM-style propagated uncertainty.</p>
 <p>Fitted ratings are represented as <a href="https://rconsortium.github.io/S7/" class="external-link">S7</a> classes (<code>FlodeRating</code>, <code>FlodeSegmentedRating</code>, <code>FlodeRatingTable</code>) that carry their own gaugings, fitting bookkeeping, and provenance, so a rating is never separated from the data and assumptions that produced it.</p>
 <div class="section level2">
@@ -78,6 +80,11 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"JonPayneEA/reach.rate"</span>, build_vignettes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="supported-environments">Supported environments<a class="anchor" aria-label="anchor" href="#supported-environments"></a>
+</h3>
+<p>Continuous integration runs <code>R CMD check</code>, vignettes included, on Windows and Ubuntu against the current R release and the previous minor release. Those four combinations are the supported set. <code>DESCRIPTION</code> declares <code>R (&gt;= 4.1)</code>, but versions older than the previous release are untested and unsupported. macOS is also untested.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="rating-curve-essentials">Rating curve essentials<a class="anchor" aria-label="anchor" href="#rating-curve-essentials"></a>

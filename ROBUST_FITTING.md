@@ -5,8 +5,10 @@ fits rating curves, tracked as issues
 ([\#9](https://github.com/JonPayneEA/reach.rate/issues/9),
 [\#13](https://github.com/JonPayneEA/reach.rate/issues/13),
 [\#14](https://github.com/JonPayneEA/reach.rate/issues/14)) on the
-[roadmap](https://jonpayneea.github.io/reach.rate/ROADMAP.md) — written
-for anyone who isn’t already familiar with these statistical methods.
+[improvement
+plan](https://jonpayneea.github.io/reach.rate/IMPROVEMENT_PLAN.md) —
+written for anyone who isn’t already familiar with these statistical
+methods.
 
 **Two of the three are now real, working options.** `objective` (Idea 2)
 and `n_bounds` (Idea 3) are opt-in arguments on
