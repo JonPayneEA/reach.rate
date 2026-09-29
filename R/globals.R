@@ -3,11 +3,12 @@
 # R CMD check's code analysis, which cannot see that they are resolved
 # against the table's columns at run time. Declaring them here silences
 # that NOTE without hiding genuine undefined names elsewhere: the list is
-# exactly the set check reported, plus `selected` (suggest_breakpoints()).
+# exactly the set check reported, plus `selected` and `candidate_stage`
+# (suggest_breakpoints()).
 # Add to it when new data.table code introduces a column name.
-utils::globalVariables(c(
+globalVariables(c(
   ".", ".a", ".limb", ".row_id", ".stage_value", "C", "C_new", "C_old", "a",
-  "a_new", "a_old", "above_bankfull", "age_weight", "aligned", "band",
+  "candidate_stage", "a_new", "a_old", "above_bankfull", "age_weight", "aligned", "band",
   "cooks_distance", "depth", "discharge", "discharge_", "discharge_cms",
   "discharge_diff", "discharge_draw", "discharge_lower", "discharge_mean",
   "discharge_new", "discharge_old", "discharge_pct_diff", "discharge_scaled",

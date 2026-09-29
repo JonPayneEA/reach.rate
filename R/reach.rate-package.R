@@ -69,6 +69,7 @@
 #' @importFrom stats coef residuals lm median quantile sd predict rnorm
 #' @importFrom stats setNames approx as.formula vcov uniroot
 #' @importFrom graphics plot lines abline
+#' @importFrom utils globalVariables
 NULL
 
 # data.table's namespace-awareness flag. A box module needed this set
