@@ -62,6 +62,9 @@ plots to PDF hits the same fault. Failing tests:
   title in `demo_cross_section_rating()`
   (`R/cross_section_rating_dual_plot.R:312,316`).
 
+Fixed in PR #56 by replacing the glyphs with Latin-1 text; plotting tests
+now fail on any PDF conversion warning.
+
 **Warnings worth tracking.** `geom_label(label.size = )` and
 `sec_axis(trans = )` are deprecated since ggplot2 3.5.0 and will break in
 a later ggplot2 release. The remaining warnings are the package's own,

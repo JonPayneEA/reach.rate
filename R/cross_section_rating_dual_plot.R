@@ -309,11 +309,11 @@ demo_cross_section_rating <- function(plot = TRUE) {
     p_xs, p_rc,
     ncol = 1,
     top = textGrob(
-      "Hydrometric Station \u2014 Cross-Section & Rating Curve",
+      "Hydrometric Station: Cross-Section & Rating Curve",
       gp = gpar(fontface = "bold", fontsize = 15)
     ),
     bottom = textGrob(
-      "Synthetic example | Manning-derived power-law rating | Q = 12\u00b7(H \u2212 H\u2080)^1.65",
+      "Synthetic example | Manning-derived power-law rating | Q = 12\u00b7(H - H0)^1.65",
       gp = gpar(fontsize = 9, col = "grey50")
     )
   )

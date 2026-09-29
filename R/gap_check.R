@@ -1499,7 +1499,7 @@ plot_rc_gaps <- function(rc_before_dt,
     ) +
     scale_colour_discrete(name = "Limb") +
     labs(
-      title = "Rating Curve \u2014 Gap Detection & Resolution",
+      title = "Rating Curve: Gap Detection & Resolution",
       x = "Discharge (m\u00b3/s)",
       y = paste0("Stage (", stage_col, ")"),
       caption = "Dashed = original | Solid = corrected | Dots = resolved junctions | Doubtful limbs hidden"
@@ -1532,7 +1532,7 @@ plot_rc_gaps <- function(rc_before_dt,
       y_junction = flagged_dt$stage_break,
       label = ifelse(
         flagged_dt$junction_type == "shared_stage",
-        sprintf("Gap %d \u0394Q = %.1f m\u00b3/s", flagged_dt$junction, flagged_dt$gap_abs),
+        sprintf("Gap %d dQ = %.1f m\u00b3/s", flagged_dt$junction, flagged_dt$gap_abs),
         sprintf(
           "Gap %d: %s",
           flagged_dt$junction,

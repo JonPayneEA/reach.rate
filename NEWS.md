@@ -6,6 +6,15 @@
   floor in `DESCRIPTION` is untested and says so. Tranche A1 of
   `IMPROVEMENT_PLAN.md` (#36). No mathematical changes.
 
+* Plot labels no longer use characters outside Latin-1, which the default
+  `pdf()` device cannot encode: saving `plot_rating_comparison()`,
+  `plot_rc_gaps()`, `run_demo()` or `demo_cross_section_rating()` output
+  to PDF failed or substituted dots. `ΔQ` becomes `dQ`, the
+  y-axis `Δ Discharge` becomes `Discharge difference`, and minus
+  signs, em dashes and `H₀` become `-`, `:` and `H0`. Plotting
+  tests now render through `pdf(NULL)` and fail on any conversion
+  warning. Label text only; no mathematical changes.
+
 * New `vignette("rating_methods_overview")`: two flow diagrams tying the
   whole package together -- which of the five ways to build a rating
   (`rate_optimise()`, `rate_optimise_constrained()`,

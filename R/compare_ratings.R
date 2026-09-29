@@ -208,8 +208,8 @@ plot_rating_comparison <- function(cmp, old_label = "Old", new_label = "New") {
     geom_hline(yintercept = 0, colour = "grey50", linetype = "dashed") +
     geom_line(colour = "firebrick", linewidth = 1) +
     labs(
-      title = sprintf("Discharge Difference (%s \u2212 %s)", new_label, old_label),
-      x = "Stage", y = "\u0394 Discharge (m\u00b3/s)"
+      title = sprintf("Discharge Difference (%s - %s)", new_label, old_label),
+      x = "Stage", y = "Discharge difference (m\u00b3/s)"
     ) +
     theme_minimal(base_size = 12) +
     theme(plot.title = element_text(face = "bold", size = 12))
