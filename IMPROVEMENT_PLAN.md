@@ -42,9 +42,16 @@ Recorded from the first CI run on PR #56 (head `ef71aa1`, 29 September 2026).
 | Ubuntu, R release | ERROR | 691 pass, 4 fail, 16 warnings |
 | Ubuntu, R oldrel-1 | ERROR | 691 pass, 4 fail, 12 warnings |
 
-Every check section before the tests passed without a note or warning. The
-test failure stopped each check, so the post-test sections, including the
-vignette re-build, have not yet been reached.
+The test errors dominated the first run's output. Once they were fixed,
+two further findings from earlier check stages surfaced on every cell:
+
+- **WARNING, codoc mismatch** in the four S7 class Rd files. The
+  `data.table` properties had no explicit default, so S7 supplied a call
+  to a placeholder constructor whose deparsed form changed between S7
+  releases. The Rd `\usage` recorded one form; CI's S7 produced another.
+- **NOTE, undeclared globals**: data.table column names used in
+  non-standard evaluation (`age_weight`, `stage_m`, `limb` and others),
+  the `.()` alias, and `stats::uniroot` missing from the imports.
 
 **One root cause for every failure.** Plot labels contain characters
 outside Latin-1: `\u0394` (Greek capital delta), `\u2212` (minus sign),
@@ -62,8 +69,11 @@ plots to PDF hits the same fault. Failing tests:
   title in `demo_cross_section_rating()`
   (`R/cross_section_rating_dual_plot.R:312,316`).
 
-Fixed in PR #56 by replacing the glyphs with Latin-1 text; plotting tests
-now fail on any PDF conversion warning.
+Fixed in PR #56: the glyphs became Latin-1 text and plotting tests now
+fail on any PDF conversion warning; the four classes gained an explicit
+`data.table()` default, so their usage deparses identically on every S7
+release. The globals NOTE does not fail CI and is left for A2, which
+already touches the namespace.
 
 **Warnings worth tracking.** `geom_label(label.size = )` and
 `sec_axis(trans = )` are deprecated since ggplot2 3.5.0 and will break in

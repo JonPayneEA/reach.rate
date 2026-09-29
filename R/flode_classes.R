@@ -84,7 +84,15 @@
 FlodeRatingBase <- new_class(
   "FlodeRatingBase",
   properties = list(
-    gaugings = new_property(new_S3_class(c("data.table", "data.frame"))),
+    # An explicit default for every data.table-typed property. Without
+    # one, S7 fills the constructor's formal with a call to the S3
+    # class's placeholder constructor, and how that call deparses changes
+    # between S7 releases: roxygen writes one form into the Rd \usage,
+    # the installed S7 produces another, and R CMD check's codoc test
+    # fails on the mismatch. An empty data.table() deparses the same way
+    # everywhere; the validator still rejects it, so a fit cannot be
+    # built without real data.
+    gaugings = new_property(new_S3_class(c("data.table", "data.frame")), default = quote(data.table())),
     fit_starts = new_property(class_any, default = NULL),
     status = new_property(class_character, default = "independently_fitted"),
     # default = quote(list()), not default = list(): S7 evaluates a
@@ -153,7 +161,7 @@ FlodeRating <- new_class(
   "FlodeRating",
   parent = FlodeRatingBase,
   properties = list(
-    limbs = new_property(new_S3_class(c("data.table", "data.frame"))),
+    limbs = new_property(new_S3_class(c("data.table", "data.frame")), default = quote(data.table())),
     bootstrap = new_property(class_any, default = NULL)
   ),
   validator = function(self) {
@@ -236,7 +244,7 @@ FlodeSegmentedRating <- new_class(
   "FlodeSegmentedRating",
   parent = FlodeRatingBase,
   properties = list(
-    coefficients = new_property(new_S3_class(c("data.table", "data.frame"))),
+    coefficients = new_property(new_S3_class(c("data.table", "data.frame")), default = quote(data.table())),
     n_segments = class_integer,
     estimate_breakpoints = class_logical
   ),
@@ -294,7 +302,7 @@ method(print, FlodeSegmentedRating) <- function(x, ...) {
 FlodeRatingTable <- new_class(
   "FlodeRatingTable",
   properties = list(
-    table = new_property(new_S3_class(c("data.table", "data.frame"))),
+    table = new_property(new_S3_class(c("data.table", "data.frame")), default = quote(data.table())),
     status = new_property(class_character, default = "independently_fitted"),
     previous = new_property(class_any, default = NULL)
   ),

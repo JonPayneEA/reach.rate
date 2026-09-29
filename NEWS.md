@@ -15,6 +15,14 @@
   tests now render through `pdf(NULL)` and fail on any conversion
   warning. Label text only; no mathematical changes.
 
+* The `data.table` properties of `FlodeRatingBase`, `FlodeRating`,
+  `FlodeSegmentedRating` and `FlodeRatingTable` now default to an empty
+  `data.table()`. The old implicit default deparsed differently between
+  S7 releases, so the documented constructor usage drifted from the code
+  and `R CMD check` warned. Omitting the table still fails: the validator
+  rejects an empty one, now with its own message instead of S7's
+  "doesn't have a constructor". No mathematical changes.
+
 * New `vignette("rating_methods_overview")`: two flow diagrams tying the
   whole package together -- which of the five ways to build a rating
   (`rate_optimise()`, `rate_optimise_constrained()`,

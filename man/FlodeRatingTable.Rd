@@ -5,10 +5,7 @@
 \title{A rating equation table (S7), gap_check's native representation}
 \usage{
 FlodeRatingTable(
-  table = (structure(function (.data) 
-
-    stop2(sprintf("S3 class <\%s> doesn't have a constructor.", "data.table"), call =
-    NULL), class = "S7_constructor"))(),
+  table = data.table(),
   status = "independently_fitted",
   previous = NULL
 )
