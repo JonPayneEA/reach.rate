@@ -87,6 +87,51 @@
 </div>
 </div>
 <div class="section level2">
+<h2 id="the-workflow">The workflow<a class="anchor" aria-label="anchor" href="#the-workflow"></a>
+</h2>
+<p>A rating should be built from evidence, checked, and only then applied. The package is being reorganised around that sequence (<a href="IMPROVEMENT_PLAN.html">improvement plan</a>). The target is six functions:</p>
+<table class="table">
+<thead><tr>
+<th>Step</th>
+<th>Function</th>
+<th>Status</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Import your gaugings</td>
+<td><code>read_gaugings()</code></td>
+<td>planned</td>
+</tr>
+<tr>
+<td>Check them</td>
+<td><code>validate_gaugings()</code></td>
+<td>planned</td>
+</tr>
+<tr>
+<td>Fit a candidate rating</td>
+<td><code>fit_rating()</code></td>
+<td>planned</td>
+</tr>
+<tr>
+<td>Assess it</td>
+<td><code>assess_rating()</code></td>
+<td>planned</td>
+</tr>
+<tr>
+<td>Compare with the current rating</td>
+<td><code><a href="reference/compare_ratings.html">compare_ratings()</a></code></td>
+<td>available</td>
+</tr>
+<tr>
+<td>Export it</td>
+<td><code>export_rating()</code></td>
+<td>planned</td>
+</tr>
+</tbody>
+</table>
+<p>Until the planned functions land, the route runs through the advanced API: fit with <code><a href="reference/rate_optimise.html">rate_optimise()</a></code>, diagnose with <code><a href="reference/plot_rating_residuals.html">plot_rating_residuals()</a></code>, <code><a href="reference/flag_extrapolated_limbs.html">flag_extrapolated_limbs()</a></code> and <code><a href="reference/flag_influential_gaugings.html">flag_influential_gaugings()</a></code>, then apply with <code><a href="reference/apply_rating.html">apply_rating()</a></code>. That route stays available afterwards for anyone who needs direct control. The <a href="https://jonpayneea.github.io/reach.rate/reference/">function reference</a> groups every export by the job it does.</p>
+</div>
+<div class="section level2">
 <h2 id="rating-curve-essentials">Rating curve essentials<a class="anchor" aria-label="anchor" href="#rating-curve-essentials"></a>
 </h2>
 <p>The essentials from <code><a href="articles/rating_curves_guide.html">vignette("rating_curves_guide")</a></code> – enough theory to read the example below against, not the full guide.</p>

@@ -211,8 +211,18 @@ is written into this file.
 **A2. Public API and reference index** (#37). Restructure `_pkgdown.yml`
 to section 4. Apply the deprecations in decision 3. Rewrite the README
 to lead with the primary workflow, marking unbuilt functions as planned.
-*Done when* every export sits in one category and deprecated functions
-warn.
+Clear the globals NOTE left by A1. *Done when* every export sits in one
+category and deprecated functions warn. *As delivered:* the index groups
+exports by job; sections with no members yet (primary workflow,
+accessors) are described in the section text rather than listed empty.
+[`suggested_breakpoints_vector()`](https://jonpayneea.github.io/reach.rate/reference/suggested_breakpoints_vector.md)
+is deprecated in favour of a `selected` column on
+[`suggest_breakpoints()`](https://jonpayneea.github.io/reach.rate/reference/suggest_breakpoints.md)
+output.
+[`bootstrap_to_table()`](https://jonpayneea.github.io/reach.rate/reference/bootstrap_to_table.md)
+moves to A3, because its replacement, `rating_bootstrap()`, is an
+accessor: deprecating it before the replacement exists would leave users
+with a warning and nowhere to go.
 
 **A3. Accessors** (#38). Add the eight accessors with success and
 failure tests. Replace every `@` access in README, vignettes and

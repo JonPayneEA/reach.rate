@@ -48,9 +48,46 @@
     </div>
 
     <div class="section level2">
-      <h2 id="fitting-a-rating">Fitting a rating<a class="anchor" aria-label="anchor" href="#fitting-a-rating"></a></h2>
+      <h2 id="using-a-rating">Using a rating<a class="anchor" aria-label="anchor" href="#using-a-rating"></a></h2>
 
-      <div class="section-desc"><p>Fit a multi-limb power-law rating by nonlinear least squares, and find breakpoints rather than guess them.</p></div>
+      <div class="section-desc"><p>Apply a fitted rating to a stage record, invert it, and compare it with the rating it replaces. The guided workflow (read_gaugings(), validate_gaugings(), fit_rating(), assess_rating(), export_rating()) is planned; see IMPROVEMENT_PLAN.md.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="apply_rating.html">apply_rating()</a></code>
+
+        </dt>
+        <dd>Apply a fitted rating to a stage series (S7 generic)</dd>
+
+        <dt>
+
+          <code><a href="apply_rating_inverse.html">apply_rating_inverse()</a></code>
+
+        </dt>
+        <dd>Invert a rating: convert discharge back to stage</dd>
+
+        <dt>
+
+          <code><a href="compare_ratings.html">compare_ratings()</a></code>
+
+        </dt>
+        <dd>Compare two rating equation tables</dd>
+
+        <dt>
+
+          <code><a href="plot_rating_comparison.html">plot_rating_comparison()</a></code>
+
+        </dt>
+        <dd>Plot a rating comparison: curves and their discharge difference</dd>
+      </dl></div><div class="section level2">
+      <h2 id="advanced-modelling">Advanced modelling<a class="anchor" aria-label="anchor" href="#advanced-modelling"></a></h2>
+
+      <div class="section-desc"><p>Direct control over fitting. Until fit_rating() arrives, rate_optimise() is the entry point. suggest_breakpoints() proposes statistical candidates only; whether a breakpoint marks a real change of control is a hydraulic judgement.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -73,6 +110,13 @@
 
         <dt>
 
+          <code><a href="rate_optimise_segmented.html">rate_optimise_segmented()</a></code>
+
+        </dt>
+        <dd>Fit a rating curve with Hodson et al. (2024)'s segmented parameterisation</dd>
+
+        <dt>
+
           <code><a href="suggest_breakpoints.html">suggest_breakpoints()</a></code>
 
         </dt>
@@ -80,74 +124,28 @@
 
         <dt>
 
-          <code><a href="suggested_breakpoints_vector.html">suggested_breakpoints_vector()</a></code>
+          <code><a href="align_limb_equations.html">align_limb_equations()</a></code>
 
         </dt>
-        <dd>Extract the selected breakpoints from suggest_breakpoints() as a vector</dd>
+        <dd>Align rating-curve limb equations so junctions match exactly</dd>
 
         <dt>
 
-          <code><a href="rate_from_cross_section.html">rate_from_cross_section()</a></code>
+          <code><a href="align_limb_boundaries.html">align_limb_boundaries()</a></code>
 
         </dt>
-        <dd>Derive a theoretical rating from a surveyed cross-section (Manning's equation)</dd>
+        <dd>Relocate a junction to where two limb equations actually cross</dd>
+
+        <dt>
+
+          <code><a href="graft_rating.html">graft_rating()</a></code>
+
+        </dt>
+        <dd>Graft a freshly-fitted rating onto a pre-existing one above its gauged range</dd>
       </dl></div><div class="section level2">
-      <h2 id="weir-and-flume-equations">Weir and flume equations<a class="anchor" aria-label="anchor" href="#weir-and-flume-equations"></a></h2>
+      <h2 id="diagnostics">Diagnostics<a class="anchor" aria-label="anchor" href="#diagnostics"></a></h2>
 
-      <div class="section-desc"><p>Physically-derived discharge from structure geometry, not fitted to gaugings, with GUM-style propagated uncertainty.</p></div>
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="weir_discharge_rectangular.html">weir_discharge_rectangular()</a></code>
-
-        </dt>
-        <dd>Discharge over a full-width (suppressed) rectangular sharp-crested weir</dd>
-
-        <dt>
-
-          <code><a href="weir_discharge_vnotch.html">weir_discharge_vnotch()</a></code>
-
-        </dt>
-        <dd>Discharge over a V-notch (triangular) sharp-crested weir</dd>
-
-        <dt>
-
-          <code><a href="weir_discharge_cipoletti.html">weir_discharge_cipoletti()</a></code>
-
-        </dt>
-        <dd>Discharge over a Cipoletti (trapezoidal) sharp-crested weir</dd>
-
-        <dt>
-
-          <code><a href="flume_discharge_parshall.html">flume_discharge_parshall()</a></code>
-
-        </dt>
-        <dd>Discharge through a standard Parshall flume (free flow)</dd>
-      </dl></div><div class="section level2">
-      <h2 id="the-segmented-alternative">The segmented alternative<a class="anchor" aria-label="anchor" href="#the-segmented-alternative"></a></h2>
-
-      <div class="section-desc"><p>A joint model with no junction gap to reconcile, after Hodson et al. (2024).</p></div>
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="rate_optimise_segmented.html">rate_optimise_segmented()</a></code>
-
-        </dt>
-        <dd>Fit a rating curve with Hodson et al. (2024)'s segmented parameterisation</dd>
-      </dl></div><div class="section level2">
-      <h2 id="diagnosing-a-fit">Diagnosing a fit<a class="anchor" aria-label="anchor" href="#diagnosing-a-fit"></a></h2>
-
-
+      <div class="section-desc"><p>Residuals, extrapolation, influence, and the discharge gaps left where independently-fitted limbs meet.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -184,29 +182,6 @@
 
         <dt>
 
-          <code><a href="plot_rating_cross_section.html">plot_rating_cross_section()</a></code>
-
-        </dt>
-        <dd>Overlay a surveyed cross-section on a fitted rating's own plot</dd>
-
-        <dt>
-
-          <code><a href="demo_cross_section_rating.html">demo_cross_section_rating()</a></code>
-
-        </dt>
-        <dd>Demonstrate a river cross-section against its rating curve</dd>
-      </dl></div><div class="section level2">
-      <h2 id="the-junction-gap-problem">The junction gap problem<a class="anchor" aria-label="anchor" href="#the-junction-gap-problem"></a></h2>
-
-      <div class="section-desc"><p>Independently-fitted limbs rarely meet exactly. Detect the resulting discharge gap and close it — by patching the table, rescaling a limb’s equation, or relocating the boundary to where the curves actually cross.</p></div>
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
           <code><a href="detect_rc_gaps.html">detect_rc_gaps()</a></code>
 
         </dt>
@@ -214,49 +189,14 @@
 
         <dt>
 
-          <code><a href="resolve_rc_gaps.html">resolve_rc_gaps()</a></code>
-
-        </dt>
-        <dd>Resolve discharge gaps between rating-curve limbs</dd>
-
-        <dt>
-
-          <code><a href="align_limb_equations.html">align_limb_equations()</a></code>
-
-        </dt>
-        <dd>Align rating-curve limb equations so junctions match exactly</dd>
-
-        <dt>
-
-          <code><a href="align_limb_boundaries.html">align_limb_boundaries()</a></code>
-
-        </dt>
-        <dd>Relocate a junction to where two limb equations actually cross</dd>
-
-        <dt>
-
           <code><a href="plot_rc_gaps.html">plot_rc_gaps()</a></code>
 
         </dt>
         <dd>Diagnostic plot for rating-curve gap detection and resolution</dd>
-
-        <dt>
-
-          <code><a href="expand_rating_table.html">expand_rating_table()</a></code>
-
-        </dt>
-        <dd>Expand a rating equation table into a stage-discharge data.table</dd>
-
-        <dt>
-
-          <code><a href="graft_rating.html">graft_rating()</a></code>
-
-        </dt>
-        <dd>Graft a freshly-fitted rating onto a pre-existing one above its gauged range</dd>
       </dl></div><div class="section level2">
-      <h2 id="coefficient-uncertainty">Coefficient uncertainty<a class="anchor" aria-label="anchor" href="#coefficient-uncertainty"></a></h2>
+      <h2 id="uncertainty">Uncertainty<a class="anchor" aria-label="anchor" href="#uncertainty"></a></h2>
 
-      <div class="section-desc"><p>Bootstrap resampling, propagated through to a discharge interval.</p></div>
+      <div class="section-desc"><p>Bootstrap coefficient draws propagated to a discharge interval.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -265,10 +205,10 @@
 
       <dl><dt>
 
-          <code><a href="bootstrap_to_table.html">bootstrap_to_table()</a></code>
+          <code><a href="apply_rating_interval.html">apply_rating_interval()</a></code>
 
         </dt>
-        <dd>Convert a fit's bootstrap draws into apply_rating_interval()'s input</dd>
+        <dd>Apply a rating with bootstrap uncertainty to a stage series</dd>
 
         <dt>
 
@@ -279,74 +219,14 @@
 
         <dt>
 
-          <code><a href="apply_rating_interval.html">apply_rating_interval()</a></code>
+          <code><a href="bootstrap_to_table.html">bootstrap_to_table()</a></code>
 
         </dt>
-        <dd>Apply a rating with bootstrap uncertainty to a stage series</dd>
+        <dd>Convert a fit's bootstrap draws into apply_rating_interval()'s input</dd>
       </dl></div><div class="section level2">
-      <h2 id="using-a-rating">Using a rating<a class="anchor" aria-label="anchor" href="#using-a-rating"></a></h2>
-
-      <div class="section-desc"><p>Convert between stage and discharge, and handle a rating that has changed over time.</p></div>
-
-      <dl></dl></div><div class="section level2">
+      <h2 id="plotting">Plotting<a class="anchor" aria-label="anchor" href="#plotting"></a></h2>
 
 
-
-
-      <dl><dt>
-
-          <code><a href="apply_rating.html">apply_rating()</a></code>
-
-        </dt>
-        <dd>Apply a fitted rating to a stage series (S7 generic)</dd>
-
-        <dt>
-
-          <code><a href="apply_rating_inverse.html">apply_rating_inverse()</a></code>
-
-        </dt>
-        <dd>Invert a rating: convert discharge back to stage</dd>
-
-        <dt>
-
-          <code><a href="apply_rating_versioned.html">apply_rating_versioned()</a></code>
-
-        </dt>
-        <dd>Apply a versioned rating to a stage time series</dd>
-
-        <dt>
-
-          <code><a href="as_rating_table.html">as_rating_table()</a></code>
-
-        </dt>
-        <dd>Convert a fit to gap_check's equation-table representation (S7 generic)</dd>
-      </dl></div><div class="section level2">
-      <h2 id="comparing-ratings">Comparing ratings<a class="anchor" aria-label="anchor" href="#comparing-ratings"></a></h2>
-
-
-
-      <dl></dl></div><div class="section level2">
-
-
-
-
-      <dl><dt>
-
-          <code><a href="compare_ratings.html">compare_ratings()</a></code>
-
-        </dt>
-        <dd>Compare two rating equation tables</dd>
-
-        <dt>
-
-          <code><a href="plot_rating_comparison.html">plot_rating_comparison()</a></code>
-
-        </dt>
-        <dd>Plot a rating comparison: curves and their discharge difference</dd>
-      </dl></div><div class="section level2">
-      <h2 id="shared-generics-and-classes">Shared generics and classes<a class="anchor" aria-label="anchor" href="#shared-generics-and-classes"></a></h2>
-
-      <div class="section-desc"><p>One name per operation, dispatched by whichever representation you’re holding.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -366,8 +246,105 @@
 
         </dt>
         <dd>Overlay multiple fitted ratings' curves for quick comparison</dd>
+      </dl></div><div class="section level2">
+      <h2 id="specialist-hydraulics">Specialist hydraulics<a class="anchor" aria-label="anchor" href="#specialist-hydraulics"></a></h2>
+
+      <div class="section-desc"><p>Ratings and discharges derived from channel or structure geometry rather than fitted to gaugings: Manning’s equation on a surveyed cross-section, and standard weir and flume equations with GUM-style propagated uncertainty.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="rate_from_cross_section.html">rate_from_cross_section()</a></code>
+
+        </dt>
+        <dd>Derive a theoretical rating from a surveyed cross-section (Manning's equation)</dd>
 
         <dt>
+
+          <code><a href="plot_rating_cross_section.html">plot_rating_cross_section()</a></code>
+
+        </dt>
+        <dd>Overlay a surveyed cross-section on a fitted rating's own plot</dd>
+
+        <dt>
+
+          <code><a href="weir_discharge_rectangular.html">weir_discharge_rectangular()</a></code>
+
+        </dt>
+        <dd>Discharge over a full-width (suppressed) rectangular sharp-crested weir</dd>
+
+        <dt>
+
+          <code><a href="weir_discharge_vnotch.html">weir_discharge_vnotch()</a></code>
+
+        </dt>
+        <dd>Discharge over a V-notch (triangular) sharp-crested weir</dd>
+
+        <dt>
+
+          <code><a href="weir_discharge_cipoletti.html">weir_discharge_cipoletti()</a></code>
+
+        </dt>
+        <dd>Discharge over a Cipoletti (trapezoidal) sharp-crested weir</dd>
+
+        <dt>
+
+          <code><a href="flume_discharge_parshall.html">flume_discharge_parshall()</a></code>
+
+        </dt>
+        <dd>Discharge through a standard Parshall flume (free flow)</dd>
+      </dl></div><div class="section level2">
+      <h2 id="conversion-and-rating-tables">Conversion and rating tables<a class="anchor" aria-label="anchor" href="#conversion-and-rating-tables"></a></h2>
+
+      <div class="section-desc"><p>Move between a fitted rating and its equation-table form, patch junction gaps at table level, and apply ratings that changed over time.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="as_rating_table.html">as_rating_table()</a></code>
+
+        </dt>
+        <dd>Convert a fit to gap_check's equation-table representation (S7 generic)</dd>
+
+        <dt>
+
+          <code><a href="expand_rating_table.html">expand_rating_table()</a></code>
+
+        </dt>
+        <dd>Expand a rating equation table into a stage-discharge data.table</dd>
+
+        <dt>
+
+          <code><a href="resolve_rc_gaps.html">resolve_rc_gaps()</a></code>
+
+        </dt>
+        <dd>Resolve discharge gaps between rating-curve limbs</dd>
+
+        <dt>
+
+          <code><a href="apply_rating_versioned.html">apply_rating_versioned()</a></code>
+
+        </dt>
+        <dd>Apply a versioned rating to a stage time series</dd>
+      </dl></div><div class="section level2">
+      <h2 id="rating-objects">Rating objects<a class="anchor" aria-label="anchor" href="#rating-objects"></a></h2>
+
+      <div class="section-desc"><p>The S7 classes behind every fit. Accessor functions (planned) will replace direct property access in user code.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
 
           <code><a href="FlodeRatingBase.html">FlodeRatingBase()</a></code>
 
@@ -395,9 +372,9 @@
         </dt>
         <dd>A rating equation table (S7), gap_check's native representation</dd>
       </dl></div><div class="section level2">
-      <h2 id="interactive-tools-and-demos">Interactive tools and demos<a class="anchor" aria-label="anchor" href="#interactive-tools-and-demos"></a></h2>
+      <h2 id="teaching-tools">Teaching tools<a class="anchor" aria-label="anchor" href="#teaching-tools"></a></h2>
 
-
+      <div class="section-desc"><p>Demonstrations on synthetic data, for learning the package rather than building a rating from your own evidence.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -405,6 +382,13 @@
 
 
       <dl><dt>
+
+          <code><a href="run_demo.html">run_demo()</a></code>
+
+        </dt>
+        <dd>Run the fit -&gt; flag -&gt; expand -&gt; detect -&gt; resolve -&gt; plot pipeline</dd>
+
+        <dt>
 
           <code><a href="rating_curve_explorer.html">rating_curve_explorer()</a></code>
 
@@ -413,14 +397,21 @@
 
         <dt>
 
-          <code><a href="run_demo.html">run_demo()</a></code>
+          <code><a href="demo_cross_section_rating.html">demo_cross_section_rating()</a></code>
 
         </dt>
-        <dd>Run the fit -&gt; flag -&gt; expand -&gt; detect -&gt; resolve -&gt; plot pipeline</dd>
+        <dd>Demonstrate a river cross-section against its rating curve</dd>
+
+        <dt>
+
+          <code><a href="station_gaugings.html">station_gaugings</a></code>
+
+        </dt>
+        <dd>Spot gaugings for a real UK gauging station</dd>
       </dl></div><div class="section level2">
-      <h2 id="example-data">Example data<a class="anchor" aria-label="anchor" href="#example-data"></a></h2>
+      <h2 id="deprecated">Deprecated<a class="anchor" aria-label="anchor" href="#deprecated"></a></h2>
 
-
+      <div class="section-desc"><p>Still working, but scheduled for removal. Each page names its replacement.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -429,10 +420,10 @@
 
       <dl><dt>
 
-          <code><a href="station_gaugings.html">station_gaugings</a></code>
+          <code><a href="suggested_breakpoints_vector.html">suggested_breakpoints_vector()</a></code>
 
         </dt>
-        <dd>Spot gaugings for a real UK gauging station</dd>
+        <dd>Extract the selected breakpoints from suggest_breakpoints() as a vector</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

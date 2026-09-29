@@ -36,6 +36,37 @@ release. Those four combinations are the supported set. `DESCRIPTION`
 declares `R (>= 4.1)`, but versions older than the previous release are
 untested and unsupported. macOS is also untested.
 
+## The workflow
+
+A rating should be built from evidence, checked, and only then applied.
+The package is being reorganised around that sequence ([improvement
+plan](https://jonpayneea.github.io/reach.rate/IMPROVEMENT_PLAN.md)). The
+target is six functions:
+
+| Step | Function | Status |
+|----|----|----|
+| Import your gaugings | `read_gaugings()` | planned |
+| Check them | `validate_gaugings()` | planned |
+| Fit a candidate rating | `fit_rating()` | planned |
+| Assess it | `assess_rating()` | planned |
+| Compare with the current rating | [`compare_ratings()`](https://jonpayneea.github.io/reach.rate/reference/compare_ratings.md) | available |
+| Export it | `export_rating()` | planned |
+
+Until the planned functions land, the route runs through the advanced
+API: fit with
+[`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md),
+diagnose with
+[`plot_rating_residuals()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_residuals.md),
+[`flag_extrapolated_limbs()`](https://jonpayneea.github.io/reach.rate/reference/flag_extrapolated_limbs.md)
+and
+[`flag_influential_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/flag_influential_gaugings.md),
+then apply with
+[`apply_rating()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating.md).
+That route stays available afterwards for anyone who needs direct
+control. The [function
+reference](https://jonpayneea.github.io/reach.rate/reference/) groups
+every export by the job it does.
+
 ## Rating curve essentials
 
 The essentials from

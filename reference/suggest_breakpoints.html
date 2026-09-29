@@ -127,14 +127,17 @@ and thinned if exceeded. Default <code>200L</code>.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>data.table</code>, one row per candidate evaluated across every
 round, with <code>candidate_stage</code>, <code>score</code>, <code>improvement</code>,
-<code>n_obs_lower</code>, <code>n_obs_upper</code>, <code>round</code>, <code>fit_status</code>, <code>rank</code>. The
-greedily-selected breakpoints are attached as the
-<code>"selected_breaks"</code> attribute – use
-<code><a href="suggested_breakpoints_vector.html">suggested_breakpoints_vector()</a></code> to extract them.</p>
+<code>n_obs_lower</code>, <code>n_obs_upper</code>, <code>round</code>, <code>fit_status</code>, <code>rank</code> and
+<code>selected</code>. <code>selected</code> is <code>TRUE</code> for the candidate each round
+adopted; extract the selected stages with
+<code>sort(result[selected == TRUE, candidate_stage])</code>. The same stages
+remain attached as the <code>"selected_breaks"</code> attribute for code
+written against earlier versions, but an attribute can be lost
+under ordinary data.table operations, so prefer the column.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="rate_optimise.html">rate_optimise()</a></code>, <code><a href="suggested_breakpoints_vector.html">suggested_breakpoints_vector()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="rate_optimise.html">rate_optimise()</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

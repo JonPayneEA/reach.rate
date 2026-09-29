@@ -126,20 +126,20 @@ candidates_dt[fit_status == "ok"]
 #> 162:           1.300 -78.27991  -1.1231816          41          43         ok
 #> 163:           1.325 -81.93574  -1.2055949          42          42         ok
 #> 164:           1.930 -97.37556  -1.5904425          62          22         ok
-#>      round  rank
-#>      <int> <int>
-#>   1:     1     8
-#>   2:     1     9
-#>   3:     1    10
-#>   4:     1    11
-#>   5:     1    12
-#>  ---            
-#> 160:     2    82
-#> 161:     2    83
-#> 162:     2    84
-#> 163:     2    85
-#> 164:     2    86
-breaks <- suggested_breakpoints_vector(candidates_dt)
+#>      round selected  rank
+#>      <int>   <lgcl> <int>
+#>   1:     1     TRUE     8
+#>   2:     1    FALSE     9
+#>   3:     1    FALSE    10
+#>   4:     1    FALSE    11
+#>   5:     1    FALSE    12
+#>  ---                     
+#> 160:     2    FALSE    82
+#> 161:     2    FALSE    83
+#> 162:     2    FALSE    84
+#> 163:     2    FALSE    85
+#> 164:     2    FALSE    86
+breaks <- sort(candidates_dt[selected == TRUE, candidate_stage])
 breaks
 #> [1] 1.375 2.590
 ```
@@ -196,7 +196,7 @@ at the breakpoints.
 rating_table <- as_rating_table(fit_multi)
 rc_raw_dt <- expand_rating_table(rating_table, step = 0.01)
 gaps_dt <- detect_rc_gaps(rc_raw_dt)
-#> INFO [2026-09-29 20:44:15] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-29 21:57:11] Checked 2 junction(s): 2 gap(s) flagged.
 gaps_dt[, .(junction, stage_break, q_lower_end, q_upper_start, gap_abs, gap_rel, gap_flagged)]
 #>    junction stage_break q_lower_end q_upper_start   gap_abs   gap_rel
 #>       <int>       <num>       <num>         <num>     <num>     <num>
@@ -282,7 +282,7 @@ takes `aligned` directly too:
 
 rc_aligned_dt <- expand_rating_table(aligned, step = 0.01)
 gaps_after_dt <- detect_rc_gaps(rc_aligned_dt)
-#> INFO [2026-09-29 20:44:15] Checked 2 junction(s): 1 gap(s) flagged.
+#> INFO [2026-09-29 21:57:11] Checked 2 junction(s): 1 gap(s) flagged.
 gaps_after_dt[, .(junction, gap_abs, gap_rel, gap_flagged)]
 #>    junction      gap_abs      gap_rel gap_flagged
 #>       <int>        <num>        <num>      <lgcl>
@@ -293,7 +293,7 @@ gaps_after_dt[, .(junction, gap_abs, gap_rel, gap_flagged)]
 ``` r
 
 plot_rc_gaps(rc_raw_dt, rc_aligned_dt)
-#> INFO [2026-09-29 20:44:15] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-09-29 21:57:11] Checked 2 junction(s): 2 gap(s) flagged.
 ```
 
 ![Before and after comparison of the rating curve at each junction,
@@ -377,7 +377,7 @@ is visible here rather than hidden.
 
 rc_final_dt <- expand_rating_table(aligned_equations, step = 0.01)
 detect_rc_gaps(rc_final_dt)[, .(junction, gap_abs, gap_rel, gap_flagged)]
-#> INFO [2026-09-29 20:44:16] Checked 2 junction(s): 0 gap(s) flagged.
+#> INFO [2026-09-29 21:57:12] Checked 2 junction(s): 0 gap(s) flagged.
 #>    junction gap_abs gap_rel gap_flagged
 #>       <int>   <num>   <num>      <lgcl>
 #> 1:        1       0       0       FALSE

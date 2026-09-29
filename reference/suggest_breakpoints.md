@@ -61,12 +61,13 @@ suggest_breakpoints(
 
 A `data.table`, one row per candidate evaluated across every round, with
 `candidate_stage`, `score`, `improvement`, `n_obs_lower`, `n_obs_upper`,
-`round`, `fit_status`, `rank`. The greedily-selected breakpoints are
-attached as the `"selected_breaks"` attribute – use
-[`suggested_breakpoints_vector()`](https://jonpayneea.github.io/reach.rate/reference/suggested_breakpoints_vector.md)
-to extract them.
+`round`, `fit_status`, `rank` and `selected`. `selected` is `TRUE` for
+the candidate each round adopted; extract the selected stages with
+`sort(result[selected == TRUE, candidate_stage])`. The same stages
+remain attached as the `"selected_breaks"` attribute for code written
+against earlier versions, but an attribute can be lost under ordinary
+data.table operations, so prefer the column.
 
 ## See also
 
-[`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md),
-[`suggested_breakpoints_vector()`](https://jonpayneea.github.io/reach.rate/reference/suggested_breakpoints_vector.md)
+[`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
