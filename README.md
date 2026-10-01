@@ -1,8 +1,7 @@
 # reach.rate
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/JonPayneEA/reach.rate/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/JonPayneEA/reach.rate/actions/workflows/R-CMD-check.yaml)
-[![test-coverage](https://github.com/JonPayneEA/reach.rate/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JonPayneEA/reach.rate/actions/workflows/test-coverage.yaml)
+[![CI](https://github.com/JonPayneEA/reach.rate/actions/workflows/ci.yaml/badge.svg)](https://github.com/JonPayneEA/reach.rate/actions/workflows/ci.yaml)
 <!-- badges: end -->
 
 Tools for fitting, diagnosing, and applying hydrometric rating curves: multi-limb power-law fitting by nonlinear least squares, junction-gap detection and resolution between independently-fitted limbs, a segmented joint-model alternative (Hodson et al. 2024), bootstrap and closed-form coefficient uncertainty, leverage/influence diagnostics, opt-in age-based recency weighting, versioned ratings, and rating-amendment comparison. Beyond gauging-based fitting: a Manning's-equation rating from a surveyed cross-section alone, and standard weir/flume discharge equations (rectangular, V-notch, Cipoletti, Parshall flume) with GUM-style propagated uncertainty.
