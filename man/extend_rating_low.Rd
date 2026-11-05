@@ -53,15 +53,70 @@ slightly less discharge than extrapolating the power law would; for
 \code{n < 1} it gives slightly more. For \code{n = 1} the two are identical.
 }
 \examples{
+# A two-limb rating whose lowest limb has a negative datum (a = -0.35)
+# and is gauged down to a stage of 0.4 only. The upper limb's C is set
+# so the two limbs meet exactly at a stage of 1.5.
+q_join <- 2.2 * (1.5 + 0.35)^1.6
 rating_dt <- data.table::data.table(
-  lower_level = c(0.20, 1.2), upper_level = c(1.2, 2.5),
-  C = c(2.5, 2.410481), a = c(0, 0), n = c(1.5, 1.7)
+  lower_level = c(0.4, 1.5), upper_level = c(1.5, 3.0),
+  C = c(2.2, q_join / 1.5^1.9), a = c(-0.35, 0), n = c(1.6, 1.9)
 )
-extended <- extend_rating_low(rating_dt)
+plain <- FlodeRatingTable(table = rating_dt)
+
+# Opt in to the linear limb below the lowest gauged stage
+extended <- extend_rating_low(plain)
 extended@table
 
-# Negative stage is now handled by the linear limb
-apply_rating(extended, data.table::data.table(stage = c(-0.1, 0.1, 0.5, 1.8)))
+# Stage records that dip below the lowest gauged stage, including
+# negative values
+stage_dt <- data.table::data.table(stage = seq(-0.5, 3.0, by = 0.01))
+with_ext <- apply_rating(extended, stage_dt)
+without <- apply_rating(plain, stage_dt)
+
+curves <- data.table::rbindlist(list(
+  data.table::data.table(stage = with_ext$stage, discharge = with_ext$discharge,
+                         rating = "With linear limb"),
+  data.table::data.table(stage = without$stage, discharge = without$discharge,
+                         rating = "Power law extrapolated")
+))
+
+# Where the pieces sit
+h <- rating_dt$lower_level[1]                      # junction stage
+h0 <- extended@table$a[1]                          # zero-flow stage of the line
+q_h <- rating_dt$C[1] * (h - rating_dt$a[1])^rating_dt$n[1]
+
+library(ggplot2)
+base_plot <- ggplot(curves, aes(stage, discharge, colour = rating, linetype = rating)) +
+  annotate("rect", xmin = -Inf, xmax = h, ymin = -Inf, ymax = Inf,
+           fill = "#00A33B", alpha = 0.07) +
+  geom_vline(xintercept = 0, colour = "grey70") +
+  geom_line(linewidth = 0.9) +
+  annotate("point", x = h, y = q_h, size = 3) +
+  annotate("text", x = h, y = q_h, label = "  junction: value and gradient match",
+           hjust = 0, vjust = 1.6, size = 3.3) +
+  annotate("point", x = h0, y = 0, shape = 4, size = 3, stroke = 1.2) +
+  scale_colour_manual(values = c("With linear limb" = "#00A33B",
+                                 "Power law extrapolated" = "grey40")) +
+  scale_linetype_manual(values = c("With linear limb" = "solid",
+                                   "Power law extrapolated" = "22")) +
+  labs(x = "Stage (m)", y = "Discharge (cumecs)", colour = NULL, linetype = NULL,
+       title = "Linear limb below the lowest gauged stage",
+       subtitle = "Shaded: stage below the lowest limb. Cross: zero flow on the line.") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+base_plot
+
+# Zoomed to the extension itself: the line is the tangent at the
+# junction, and reaches zero flow before the power law does
+base_plot +
+  coord_cartesian(xlim = c(-0.5, 0.9), ylim = c(-0.1, 2.5)) +
+  labs(title = "Zoomed to the extension", subtitle = NULL)
+
+# Discharge from the extended rating matches the plain one above the
+# junction, and is exactly zero below the line's zero-flow stage
+stopifnot(isTRUE(all.equal(with_ext$discharge[with_ext$stage >= h],
+                           without$discharge[without$stage >= h])))
+stopifnot(all(with_ext$discharge[with_ext$stage <= h0] == 0))
 
 }
 \seealso{
