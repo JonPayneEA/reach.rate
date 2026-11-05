@@ -10,18 +10,17 @@ actually looks like. This vignette is the diagram.
 ## The formula, read as a product of switches
 
 Hodson et al. (2024)’s segmented model writes discharge as one product
-across all $`k`$ segments, not a curve chosen per stage band:
+across all \\k\\ segments, not a curve chosen per stage band:
 
-``` math
-Q = C \, (H - b_1)_+^{\,n_1} \; \prod_{j=2}^{k} \big[(H - b_j)_+ + 1\big]^{n_j}
-```
+\\Q = C \\ (H - b_1)\_+^{\\n_1} \\ \prod\_{j=2}^{k} \big\[(H - b_j)\_+ +
+1\big\]^{n_j}\\
 
-where $`(x)_+`$ means $`\max(x, 0)`$ and $`b_1 < b_2 < \dots < b_k`$ are
-the breakpoints. Read each factor for $`j \geq 2`$ as a switch: at and
-below its own breakpoint $`b_j`$, $`(H-b_j)_+ = 0`$, so that whole
-factor equals $`1^{n_j} = 1`$ – multiplying by 1 changes nothing, so a
+where \\(x)\_+\\ means \\\max(x, 0)\\ and \\b_1 \< b_2 \< \dots \< b_k\\
+are the breakpoints. Read each factor for \\j \geq 2\\ as a switch: at
+and below its own breakpoint \\b_j\\, \\(H-b_j)\_+ = 0\\, so that whole
+factor equals \\1^{n_j} = 1\\ – multiplying by 1 changes nothing, so a
 segment below its own breakpoint is *completely inert*, not just small.
-Above $`b_j`$, the factor climbs above 1 and starts contributing. The
+Above \\b_j\\, the factor climbs above 1 and starts contributing. The
 first factor is different only in not having the `+ 1`: it can be
 exactly 0, which is what makes it the one that reaches zero flow.
 
@@ -131,7 +130,7 @@ only ever one product to evaluate.
 
 ## The trade-off this buys
 
-Nothing here is free. The segmented model’s factors for $`j \geq 2`$ are
+Nothing here is free. The segmented model’s factors for \\j \geq 2\\ are
 parameterised relative to *every* earlier breakpoint at once (each
 factor multiplies onto everything below it), so its loss surface is
 genuinely non-convex in a way independent per-limb fitting isn’t –

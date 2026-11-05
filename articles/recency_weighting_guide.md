@@ -18,15 +18,13 @@ and
 Each gauging’s contribution to the fit is scaled by a weight between
 `age_min_weight` and 1:
 
-``` math
-w_i = w_{\min} + (1 - w_{\min}) \times 0.5^{\,\text{age}_i / h}
-```
+\\w_i = w\_{\min} + (1 - w\_{\min}) \times 0.5^{\\\text{age}\_i / h}\\
 
-where $`\text{age}_i`$ is that gauging’s age in days relative to
+where \\\text{age}\_i\\ is that gauging’s age in days relative to
 `reference_datetime` (clamped at 0, so a gauging dated *after* the
 reference simply gets full weight 1 rather than something above 1), and
-$`h`$ is `age_halflife` – the age, in days, at which a gauging’s weight
-has decayed exactly halfway from 1 to the floor $`w_{\min}`$
+\\h\\ is `age_halflife` – the age, in days, at which a gauging’s weight
+has decayed exactly halfway from 1 to the floor \\w\_{\min}\\
 (`age_min_weight`).
 
 ``` r

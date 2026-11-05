@@ -149,7 +149,7 @@ aligned_result@status
 # expand_rating_table() accepts the FlodeRatingTable directly
 rc_dt <- expand_rating_table(aligned_result)
 gaps_dt <- detect_rc_gaps(rc_dt)
-#> INFO [2026-11-05 15:50:26] Checked 2 junction(s): 0 gap(s) flagged.
+#> INFO [2026-11-05 16:45:27] Checked 2 junction(s): 0 gap(s) flagged.
 any(gaps_dt$gap_flagged)
 #> [1] FALSE
 ```

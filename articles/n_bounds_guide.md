@@ -111,7 +111,7 @@ sparse to pin the exponent down on their own.
 
 ## Why the shape sets the exponent
 
-$`Q = C(H-a)^n`$ is a straight line on log-log axes, with slope $`n`$
+\\Q = C(H-a)^n\\ is a straight line on log-log axes, with slope \\n\\
 (`rating_curves_guide.Rmd` states this; here it is drawn):
 
 ``` r

@@ -22,17 +22,15 @@ it.
 
 This toolkit fits the standard hydrometric form:
 
-``` math
-Q = C\,(H - a)^{n}
-```
+\\Q = C\\(H - a)^{n}\\
 
-where $`Q`$ is discharge (m³/s), $`H`$ is stage (m), and $`C`$, $`a`$,
-$`n`$ are fitted coefficients. The offset $`a`$ deserves a moment. Stage
+where \\Q\\ is discharge (m³/s), \\H\\ is stage (m), and \\C\\, \\a\\,
+\\n\\ are fitted coefficients. The offset \\a\\ deserves a moment. Stage
 is measured against an arbitrary local datum, not against the point
-where flow actually ceases. The quantity $`H - a`$ converts stage to
+where flow actually ceases. The quantity \\H - a\\ converts stage to
 effective head above the level of zero flow, and it is head, not raw
-stage, that drives flow through a control. When $`H - a \le 0`$ the
-river is below its zero-flow level and $`Q = 0`$ by definition.
+stage, that drives flow through a control. When \\H - a \le 0\\ the
+river is below its zero-flow level and \\Q = 0\\ by definition.
 
 ### Why a power law
 
@@ -41,18 +39,15 @@ open-channel hydraulics predicts. Flow over a rectangular weir goes as
 head to the power 1.5; over a V-notch, head to the power 2.5; Manning’s
 equation for a wide channel gives discharge roughly as depth to the
 power 5/3. Every common control produces discharge as head raised to
-some exponent between about 1.3 and 2.5, with $`C`$ absorbing the
-geometry and roughness (Herschy 2009; Rantz et al. 1982). Fitting
-$`Q = C(H-a)^n`$ is fitting the family of curves the physics says to
-expect.
+some exponent between about 1.3 and 2.5, with \\C\\ absorbing the
+geometry and roughness (Herschy 2009; Rantz et al. 1982). Fitting \\Q =
+C(H-a)^n\\ is fitting the family of curves the physics says to expect.
 
 A useful property follows: on log axes the power law is a straight line,
 
-``` math
-\log Q = \log C + n \log(H - a)
-```
+\\\log Q = \log C + n \log(H - a)\\
 
-with slope $`n`$. This is why hydrometrists have plotted ratings on
+with slope \\n\\. This is why hydrometrists have plotted ratings on
 log-log paper for a century, and why a change of slope on that plot
 signals a change of physical control.
 
@@ -76,7 +71,7 @@ effective geometry entirely.
 
 Each regime approximates a different power law. The standard response is
 a multi-limb rating: the stage range is split at breakpoints, and each
-limb gets its own $`C`$, $`a`$, $`n`$. The breakpoints should correspond
+limb gets its own \\C\\, \\a\\, \\n\\. The breakpoints should correspond
 to real physical transitions, a berm, a bank top, a bypass channel
 activating, and choosing them is a hydrological judgement, not a
 statistical one. Section 5 returns to this.
@@ -168,19 +163,17 @@ fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
 #>     limb         C           a        n   rmse_cms r_squared n_obs
 #>    <int>     <num>       <num>    <num>      <num>     <num> <int>
 #> 1:     1  2.772226 -0.05503033 1.459775 0.05707128 0.9982030    37
-#> 2:     2  7.249417  0.24224859 1.487198 0.04004832 0.9997172    20
+#> 2:     2  7.249417  0.24224858 1.487198 0.04004832 0.9997172    20
 #> 3:     3 10.188269  0.21374016 1.790580 0.04707026 0.9999901    44
 ```
 
 ### The method
 
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
-fits each limb by nonlinear least squares: it finds the $`C`$, $`a`$,
-$`n`$ minimising the residual sum of squares
+fits each limb by nonlinear least squares: it finds the \\C\\, \\a\\,
+\\n\\ minimising the residual sum of squares
 
-``` math
-\mathrm{RSS} = \sum_{i}\left(Q_i - C\,(H_i - a)^n\right)^2
-```
+\\\mathrm{RSS} = \sum\_{i}\left(Q_i - C\\(H_i - a)^n\right)^2\\
 
 over that limb’s gaugings, using the Levenberg-Marquardt algorithm
 (Levenberg 1944; Marquardt 1963) as implemented in
@@ -197,17 +190,17 @@ choice you are inheriting: your low-flow fit is being traded for your
 high-flow fit. Neither convention is wrong; they answer different
 questions.
 
-Note also that $`a`$ is a fitted parameter, not just log-space
+Note also that \\a\\ is a fitted parameter, not just log-space
 regression’s problem to avoid: the classical log-log method requires
-knowing $`a`$ before you can take the logarithm, which is exactly why it
+knowing \\a\\ before you can take the logarithm, which is exactly why it
 was historically estimated by trial and error. Nonlinear fitting
 estimates all three together.
 
 ### Bounds
 
-The fit is constrained so that $`C > 0`$, $`n > 0`$, and $`H - a > 0`$
-for every gauging in the limb. Without these, the optimiser is free to
-wander into regions where the equation is negative, complex, or
+The fit is constrained so that \\C \> 0\\, \\n \> 0\\, and \\H - a \>
+0\\ for every gauging in the limb. Without these, the optimiser is free
+to wander into regions where the equation is negative, complex, or
 undefined, and will occasionally converge there on awkward data. The
 bounds do not push the fit anywhere; they only fence off territory where
 no valid rating exists.
@@ -220,13 +213,13 @@ fit that no small adjustment improves but that a very different set of
 coefficients would beat. By default (`multi_start = TRUE`), each limb is
 fitted from several starting combinations: a few plausible exponents, a
 data-driven estimate from a quick log-log regression, a data-scaled
-$`C`$. Each converged result is checked for validity (finite,
+\\C\\. Each converged result is checked for validity (finite,
 non-decreasing discharge across the limb) and the best valid result
 wins. Every attempt is recorded in `@fit_starts`, so you can see whether
 the starts agreed (reassuring) or scattered (a sign the data constrain
 the fit weakly).
 
-The `near_bound` column flags a fit whose $`n`$ or $`a`$ finished
+The `near_bound` column flags a fit whose \\n\\ or \\a\\ finished
 pressed against its lower bound. That is worth a second look: it can
 mean a degenerate, nearly-flat fit, or an offset being forced against
 the lowest gauging, either of which suggests the limb or its data need
@@ -240,7 +233,7 @@ attention.
 
 Three points of guidance. First, `r_squared` close to 1 is necessary but
 weak: a limb spanning a large discharge range can post an excellent
-$`R^2`$ over a mediocre fit, because the variance being explained is
+\\R^2\\ over a mediocre fit, because the variance being explained is
 mostly the range itself. Compare limbs against each other; the one
 sitting noticeably below its neighbours is the signal, not any fixed
 threshold. Second, `rmse_cms` is in the units of your gaugings, so
@@ -278,11 +271,9 @@ with
 and comparing it against the current best model using the Akaike
 Information Criterion (Akaike 1974):
 
-``` math
-\mathrm{AIC} = n \ln\!\left(\frac{\mathrm{RSS}}{n}\right) + 2k
-```
+\\\mathrm{AIC} = n \ln\\\left(\frac{\mathrm{RSS}}{n}\right) + 2k\\
 
-where $`n`$ is the number of gaugings and $`k`$ the number of fitted
+where \\n\\ is the number of gaugings and \\k\\ the number of fitted
 parameters (three per limb). The first term rewards fit; the second
 charges for it. A candidate breakpoint is only eligible if the two-limb
 model’s AIC beats the one-limb model’s and the relative RSS reduction
@@ -322,7 +313,7 @@ with.
 
 ### `plot_rating_residuals()`
 
-$`R^2`$ and RMSE say how good a fit is; residuals say where it is weak.
+\\R^2\\ and RMSE say how good a fit is; residuals say where it is weak.
 This plot shows observed minus fitted discharge against stage, one panel
 per limb.
 
@@ -478,11 +469,9 @@ Fit each limb independently and their curves will not meet. Limb 1’s
 equation, evaluated at the shared boundary stage, gives one discharge;
 limb 2’s gives another. The mismatch
 
-``` math
-\Delta Q = C_2(H_b + a_2)^{n_2} - C_1(H_b + a_1)^{n_1}
-```
+\\\Delta Q = C_2(H_b + a_2)^{n_2} - C_1(H_b + a_1)^{n_1}\\
 
-at boundary stage $`H_b`$ is generally non-zero because nothing in
+at boundary stage \\H_b\\ is generally non-zero because nothing in
 either fit knew the other existed. The result is a rating that jumps: a
 river rising smoothly through the boundary appears to change flow
 discontinuously, which is hydraulic nonsense and can inject spurious
@@ -495,7 +484,7 @@ steps into flow records and forecast inputs.
 rating_table <- as_rating_table(fit)
 rc_raw_dt <- expand_rating_table(rating_table, step = 0.01)
 gaps_dt <- detect_rc_gaps(rc_raw_dt)
-#> INFO [2026-11-05 15:51:07] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-05 16:45:53] Checked 2 junction(s): 2 gap(s) flagged.
 gaps_dt
 #>    junction limb_lower limb_upper stage_break stage_lower_end stage_upper_start
 #>       <int>     <char>     <char>       <num>           <num>             <num>
@@ -546,11 +535,11 @@ boundary.
 ``` r
 
 rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "midpoint")
-#> INFO [2026-11-05 15:51:07] Checked 2 junction(s): 2 gap(s) flagged.
-#> INFO [2026-11-05 15:51:07] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -> 11.42 | agreed Q = 8.6042
-#> INFO [2026-11-05 15:51:07] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -> 34.81 | agreed Q = 27.2512
+#> INFO [2026-11-05 16:45:53] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-05 16:45:53] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -> 11.42 | agreed Q = 8.6042
+#> INFO [2026-11-05 16:45:53] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -> 34.81 | agreed Q = 27.2512
 plot_rc_gaps(rc_raw_dt, rc_fixed_dt)
-#> INFO [2026-11-05 15:51:07] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-05 16:45:53] Checked 2 junction(s): 2 gap(s) flagged.
 ```
 
 ![](rating_curves_guide_files/figure-html/resolve-gaps-1.png)
@@ -574,23 +563,21 @@ identical(aligned_result@previous, rating_table)
 
 Fixes the equations themselves, using only the equations. Hold one limb
 fixed (the anchor, by default the lowest, usually the best gauged), then
-for each neighbouring limb solve for the $`C`$ that forces an exact
+for each neighbouring limb solve for the \\C\\ that forces an exact
 match at the junction:
 
-``` math
-C_{\text{new}} = \frac{Q_{\text{target}}}{(H_b - a)^{n}}
-```
+\\C\_{\text{new}} = \frac{Q\_{\text{target}}}{(H_b - a)^{n}}\\
 
-where $`Q_{\text{target}}`$ is the already-corrected neighbour’s
-discharge at the junction stage $`H_b`$. The correction propagates
+where \\Q\_{\text{target}}\\ is the already-corrected neighbour’s
+discharge at the junction stage \\H_b\\. The correction propagates
 outward from the anchor, so every junction along the chain closes
-exactly, and $`a`$ and $`n`$ (the curve’s datum and shape) are
-untouched. The original $`C`$ is kept alongside the scale factor and
+exactly, and \\a\\ and \\n\\ (the curve’s datum and shape) are
+untouched. The original \\C\\ is kept alongside the scale factor and
 percentage change, and the result is a new `FlodeRatingTable` whose
 `@previous` references the exact pre-alignment object: an auditable
 amendment, not a silent overwrite.
 
-The cost is honest: the rescaled $`C`$ is no longer the least-squares
+The cost is honest: the rescaled \\C\\ is no longer the least-squares
 optimum for that limb’s own gaugings. You have traded a small amount of
 within-limb fit for continuity, holding shape fixed. When only the
 equations survive (a legacy rating, an imported table), this is the best
@@ -602,21 +589,22 @@ and the result stays a `FlodeRating` rather than downgrading to a
 `FlodeRatingTable`: gaugings carry through unchanged (equations are
 rescaled, not boundaries, so which limb a gauging belongs to never
 changes here), `@limbs` diagnostics are recomputed against the rescaled
-$`C`$ rather than left describing the pre-alignment fit, and
+\\C\\ rather than left describing the pre-alignment fit, and
 [`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md)/[`plot_rating_residuals()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_residuals.md)
 work on the result immediately, since it is the same class they were
 always written for.
 
 ### `align_limb_boundaries()`: relocate the junction
 
-Rather than change $`C`$ at a fixed junction stage,
+Rather than change \\C\\ at a fixed junction stage,
 [`align_limb_boundaries()`](https://jonpayneea.github.io/reach.rate/reference/align_limb_boundaries.md)
 leaves every limb’s equation completely untouched and instead moves the
 junction itself to wherever the two limbs’ curves actually cross – the
-stage $`H`$ solving
-$`C_{\text{lower}}(H-a_{\text{lower}})^{n_{\text{lower}}} = C_{\text{upper}}(H-a_{\text{upper}})^{n_{\text{upper}}}`$.
-Where that root exists, both curves already agree there, so nothing
-about either equation needs to change.
+stage \\H\\ solving
+\\C\_{\text{lower}}(H-a\_{\text{lower}})^{n\_{\text{lower}}} =
+C\_{\text{upper}}(H-a\_{\text{upper}})^{n\_{\text{upper}}}\\. Where that
+root exists, both curves already agree there, so nothing about either
+equation needs to change.
 
 ``` r
 
@@ -630,8 +618,8 @@ aligned_boundaries <- align_limb_boundaries(fit)
 aligned_boundaries@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs, boundary_adjusted)]
 #>     limb lower_stage_m upper_stage_m         C           a        n   rmse_cms
 #>    <int>         <num>         <num>     <num>       <num>    <num>      <num>
-#> 1:     1     0.5000000     0.5753648  2.772226 -0.05503033 1.459775 0.04105721
-#> 2:     2     0.5753648     2.2000000  7.249417  0.24224859 1.487198 2.33401589
+#> 1:     1     0.5000000     0.5753647  2.772226 -0.05503033 1.459775 0.04105721
+#> 2:     2     0.5753647     2.2000000  7.249417  0.24224858 1.487198 2.33401589
 #> 3:     3     2.2000000     3.5000000 10.188269  0.21374016 1.790580 0.04707026
 #>    r_squared n_obs boundary_adjusted
 #>        <num> <int>            <lgcl>
@@ -648,7 +636,7 @@ reassignment – never left describing the pre-alignment gauging split.
 
 Junction 1 relocated from 1.6 m down to about 0.58 m – a genuine
 crossing, but a large one: limb 1 is left with only 3 gaugings and an
-$`R^2`$ of 0.64, a much weaker within-limb fit than the original 1.6 m
+\\R^2\\ of 0.64, a much weaker within-limb fit than the original 1.6 m
 breakpoint gave it. A relocation this size is not a bug – the curves
 really do cross there – but it is exactly the kind of result to check
 against `lower_stage_m_original`/`upper_stage_m_original` before
@@ -677,7 +665,7 @@ fit_constrained@limbs[, .(limb, C, a, n, rmse_cms, r_squared, aligned)]
 #>    <int>     <num>       <num>     <num>      <num>     <num>  <lgcl>
 #> 1:     1  2.772226 -0.05503033 1.4597750 0.05707128 0.9982030   FALSE
 #> 2:     2 19.815348  1.59906869 0.1764376 0.91568577 0.8521371    TRUE
-#> 3:     3 71.280869  2.16313908 0.4150836 4.18657133 0.9219092    TRUE
+#> 3:     3 71.280869  2.16313908 0.4150836 4.18657137 0.9219092    TRUE
 ```
 
 When the raw gaugings are available, the job can be done properly.
@@ -686,15 +674,13 @@ is refitted against its own gaugings subject to matching its neighbour
 exactly at the junction. The constraint is built into the model by
 reparameterisation:
 
-``` math
-Q = Q_{\text{target}}\left(\frac{H - a}{H_b - a}\right)^{n}
-```
+\\Q = Q\_{\text{target}}\left(\frac{H - a}{H_b - a}\right)^{n}\\
 
-At $`H = H_b`$ the bracket equals 1 and $`Q = Q_{\text{target}}`$
-identically, for any $`a`$ and $`n`$. Continuity is therefore guaranteed
-by construction, and the optimiser is free to choose the $`a`$ and $`n`$
-that best fit the limb’s gaugings within that guarantee; $`C`$ is
-recovered afterwards as $`Q_{\text{target}} / (H_b - a)^n`$. Two
+At \\H = H_b\\ the bracket equals 1 and \\Q = Q\_{\text{target}}\\
+identically, for any \\a\\ and \\n\\. Continuity is therefore guaranteed
+by construction, and the optimiser is free to choose the \\a\\ and \\n\\
+that best fit the limb’s gaugings within that guarantee; \\C\\ is
+recovered afterwards as \\Q\_{\text{target}} / (H_b - a)^n\\. Two
 parameters compensate instead of one, so this generally fits each limb’s
 data better than the C-only rescale. The propagation logic is the same
 anchor-outward chain.
@@ -742,15 +728,14 @@ Everything so far reconciles independent limbs after the fact. Hodson et
 al. (2024), in the USGS `ratingcurve` package, parameterise the problem
 so there is nothing to reconcile:
 
-``` math
-Q = C \cdot \max(H - b_1,\, 0)^{n_1} \cdot \prod_{j \ge 2} \bigl(\max(H - b_j,\, 0) + 1\bigr)^{n_j}
-```
+\\Q = C \cdot \max(H - b_1,\\ 0)^{n_1} \cdot \prod\_{j \ge 2}
+\bigl(\max(H - b_j,\\ 0) + 1\bigr)^{n_j}\\
 
-Here $`b_1`$ is the stage of zero flow and $`b_2, \dots, b_k`$ are the
+Here \\b_1\\ is the stage of zero flow and \\b_2, \dots, b_k\\ are the
 interior breakpoints. Read the product term carefully: at and below its
-own breakpoint, each later factor is $`(0 + 1)^{n_j} = 1`$, exactly
+own breakpoint, each later factor is \\(0 + 1)^{n_j} = 1\\, exactly
 inert. Above its breakpoint it begins multiplying flow up (or down, for
-$`n_j < 0`$ behaviour in their general form; here exponents are fitted
+\\n_j \< 0\\ behaviour in their general form; here exponents are fitted
 freely). Every segment therefore contributes across the whole range
 above its threshold rather than owning a disjoint band, transitions are
 smooth, and continuity is automatic by construction. There is no
@@ -822,7 +807,7 @@ fit_boot@limbs[, .(limb, C, C_se, n, n_se)]
 #>     limb         C      C_se        n       n_se
 #>    <int>     <num>     <num>    <num>      <num>
 #> 1:     1  2.772226 0.2523197 1.459775 0.08574848
-#> 2:     2  7.249417 1.4146691 1.487198 0.13708034
+#> 2:     2  7.249417 1.4146802 1.487198 0.13708156
 #> 3:     3 10.188269 0.3404381 1.790580 0.01678121
 plot_rating_interval(fit_boot)
 ```
@@ -832,7 +817,7 @@ interval](rating_curves_guide_files/figure-html/bootstrap-1.png)
 
 ### The idea
 
-A fitted $`C`$, $`a`$, $`n`$ are point estimates. Had the gauging
+A fitted \\C\\, \\a\\, \\n\\ are point estimates. Had the gauging
 programme gone slightly differently, a visit missed, a flood caught, the
 coefficients would differ. The bootstrap (Efron 1979) estimates that
 sensitivity directly: resample each limb’s gaugings with replacement,
@@ -858,9 +843,7 @@ bridges the draws to
 which computes, per stage value, the mean, median, and a prediction
 interval across draws, plus the geometric standard error
 
-``` math
-\mathrm{GSE} = \exp\!\bigl(\mathrm{sd}(\ln Q_{\text{draws}})\bigr)
-```
+\\\mathrm{GSE} = \exp\\\bigl(\mathrm{sd}(\ln Q\_{\text{draws}})\bigr)\\
 
 the same multiplicative summary Hodson et al. (2024) report: a GSE of
 1.1 reads as roughly plus or minus 10%.
@@ -900,7 +883,7 @@ hydrograph_dt <- data.table(
 )
 
 flow_dt <- apply_rating(rating_table, hydrograph_dt, stage_col = "stage", out_col = "discharge_cms")
-#> INFO [2026-11-05 15:51:10] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-05 16:45:55] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.
 sum(flow_dt$extrapolated) # stage values above the gauged range
 #> [1] 4
 flow_dt[c(1, 10, 20, 30, 40)]
@@ -915,7 +898,7 @@ flow_dt[c(1, 10, 20, 30, 40)]
 
 The step everything else builds towards: stage record in, discharge
 record out. Each stage value is assigned to the limb whose band it falls
-in, and that limb’s $`Q = C(h - a)^n`$ is evaluated. Stage at or below
+in, and that limb’s \\Q = C(h - a)^n\\ is evaluated. Stage at or below
 the zero-flow datum returns exactly zero. Stage outside every limb is
 evaluated by extrapolating the nearest limb’s equation and flagged in
 the `extrapolated` column: a value is still returned, because for
@@ -941,7 +924,7 @@ already produced above.
 
 target_flows_dt <- data.table(discharge = c(5, 20, 60))
 apply_rating_inverse(aligned_result, target_flows_dt, discharge_col = "discharge", out_col = "stage_m")
-#> INFO [2026-11-05 15:51:10] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-05 16:45:55] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
 #>    discharge  stage_m extrapolated
 #>        <num>    <num>       <lgcl>
 #> 1:         5 1.442813        FALSE
@@ -960,7 +943,7 @@ flagged rather than refused outright.
 
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
 and the equation-table representation write the same equation with the
-same sign convention: both are $`Q = C(H - a)^n`$. So converting a fit
+same sign convention: both are \\Q = C(H - a)^n\\. So converting a fit
 to a table is a straight column-and-name copy of `C`/`a`/`n`, with no
 coefficient transformation –
 [`as_rating_table()`](https://jonpayneea.github.io/reach.rate/reference/as_rating_table.md)
@@ -987,7 +970,7 @@ rating_history_dt <- data.table(
 )
 
 versioned_flow_dt <- apply_rating_versioned(hydrograph_dt, rating_history_dt)
-#> INFO [2026-11-05 15:51:10] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-05 16:45:55] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.
 versioned_flow_dt[c(1, 10, 20, 30, 40)]
 #>      datetime    stage   version discharge extrapolated
 #>        <POSc>    <num>    <char>     <num>       <lgcl>
@@ -1062,7 +1045,7 @@ grafted@table[, .(lower_level, upper_level, C, a, n, source)]
 #>    lower_level upper_level        C           a        n   source
 #>          <num>       <num>    <num>       <num>    <num>   <char>
 #> 1:    0.500000    1.600000 2.772226 -0.05503033 1.459775      new
-#> 2:    1.600000    2.200000 3.670338  0.24224859 1.487198      new
+#> 2:    1.600000    2.200000 3.670338  0.24224858 1.487198      new
 #> 3:    2.200000    4.429085 2.917089  0.21374016 1.790580      new
 #> 4:    4.429085    6.000000 5.540583  0.00000000 1.300000 existing
 ```

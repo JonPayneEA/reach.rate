@@ -5,7 +5,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Weir and Flume Equations: Structures, GUM Uncertainty, and Worked Examples • reach.rate</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet">
@@ -141,19 +147,16 @@ down on the channel) rather than a front elevation:</p>
 <h2 id="rectangular-rehbock">Rectangular (Rehbock)<a class="anchor" aria-label="anchor" href="#rectangular-rehbock"></a>
 </h2>
 <p>A plate spanning the full width of its approach channel – no side
-contractions – with a sharp horizontal crest at height
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
-above the bed. Head
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math>
-is measured above the crest, upstream of the drawdown curve. The Rehbock
-equation (the form ISO 1438:2017 specifies for this structure) lets the
-discharge coefficient vary with the ratio of head to weir height:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mfrac><mn>2</mn><mn>3</mn></mfrac><msub><mi>C</mi><mi>d</mi></msub><msqrt><mrow><mn>2</mn><mi>g</mi></mrow></msqrt><mspace width="0.167em"></mspace><mi>B</mi><msup><mi>H</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msup><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>C</mi><mi>d</mi></msub><mo>=</mo><mn>0.602</mn><mo>+</mo><mn>0.083</mn><mfrac><mi>H</mi><mi>P</mi></mfrac></mrow><annotation encoding="application/x-tex">Q = \frac{2}{3} C_d \sqrt{2g} \, B H^{3/2}, \qquad C_d = 0.602 + 0.083\frac{H}{P}</annotation></semantics></math></p>
-<p>ISO 1438 restricts this to
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo>&lt;</mo><mn>1</mn><mspace width="0.167em"></mspace><mi mathvariant="normal">m</mi></mrow><annotation encoding="application/x-tex">P &lt; 1\,\mathrm{m}</annotation></semantics></math>;
-<code>weir_height_m &gt;= 1</code> still runs, but warns, since
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>d</mi></msub><annotation encoding="application/x-tex">C_d</annotation></semantics></math>’s
-fit is unvalidated past that point.</p>
+contractions – with a sharp horizontal crest at height <span class="math inline">\(P\)</span> above the bed. Head <span class="math inline">\(H\)</span> is measured above the crest, upstream
+of the drawdown curve. The Rehbock equation (the form ISO 1438:2017
+specifies for this structure) lets the discharge coefficient vary with
+the ratio of head to weir height:</p>
+<p><span class="math display">\[Q = \frac{2}{3} C_d \sqrt{2g} \, B
+H^{3/2}, \qquad C_d = 0.602 + 0.083\frac{H}{P}\]</span></p>
+<p>ISO 1438 restricts this to <span class="math inline">\(P &lt;
+1\,\mathrm{m}\)</span>; <code>weir_height_m &gt;= 1</code> still runs,
+but warns, since <span class="math inline">\(C_d\)</span>’s fit is
+unvalidated past that point.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/weir_discharge_rectangular.html">weir_discharge_rectangular</a></span><span class="op">(</span></span>
 <span>  head_m <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.2</span>, <span class="fl">0.3</span><span class="op">)</span>, width_m <span class="op">=</span> <span class="fl">1.5</span>, weir_height_m <span class="op">=</span> <span class="fl">0.5</span>,</span>
@@ -179,21 +182,18 @@ fixed, a V-notch measures small flows far more precisely than a
 rectangular weir of similar size – the reason it’s the usual choice for
 low-flow gauging. ISO, ASTM, and USBR all specify the Kindsvater-Shen
 form:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mfrac><mn>8</mn><mn>15</mn></mfrac><msqrt><mrow><mn>2</mn><mi>g</mi></mrow></msqrt><mspace width="0.167em"></mspace><msub><mi>C</mi><mi>e</mi></msub><mrow><mi mathvariant="normal">tan</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mi>/</mi><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msubsup><mi>H</mi><mi>e</mi><mrow><mn>5</mn><mi>/</mi><mn>2</mn></mrow></msubsup><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>H</mi><mi>e</mi></msub><mo>=</mo><mi>H</mi><mo>+</mo><msub><mi>k</mi><mi>h</mi></msub></mrow><annotation encoding="application/x-tex">Q = \frac{8}{15}\sqrt{2g}\, C_e \tan(\theta/2)\, H_e^{5/2}, \qquad H_e = H + k_h</annotation></semantics></math></p>
-<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>e</mi></msub><annotation encoding="application/x-tex">C_e</annotation></semantics></math>
-and the small head correction
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>h</mi></msub><annotation encoding="application/x-tex">k_h</annotation></semantics></math>
-are both fitted polynomials in the notch angle
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-(degrees); <code><a href="../reference/weir_discharge_vnotch.html">weir_discharge_vnotch()</a></code> evaluates them exactly
-as published (Shen 1981), converting
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>k</mi><mi>h</mi></msub><annotation encoding="application/x-tex">k_h</annotation></semantics></math>
-from the published feet to metres only after evaluating the polynomial,
-not before – refitting a unit-converted polynomial from scratch would
-risk a transcription error the original doesn’t have. Valid for
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
-between 25 and 100 degrees; outside that, the function errors rather
-than extrapolating an unvalidated fit.</p>
+<p><span class="math display">\[Q = \frac{8}{15}\sqrt{2g}\, C_e
+\tan(\theta/2)\, H_e^{5/2}, \qquad H_e = H + k_h\]</span></p>
+<p><span class="math inline">\(C_e\)</span> and the small head
+correction <span class="math inline">\(k_h\)</span> are both fitted
+polynomials in the notch angle <span class="math inline">\(\theta\)</span> (degrees);
+<code><a href="../reference/weir_discharge_vnotch.html">weir_discharge_vnotch()</a></code> evaluates them exactly as published
+(Shen 1981), converting <span class="math inline">\(k_h\)</span> from
+the published feet to metres only after evaluating the polynomial, not
+before – refitting a unit-converted polynomial from scratch would risk a
+transcription error the original doesn’t have. Valid for <span class="math inline">\(\theta\)</span> between 25 and 100 degrees;
+outside that, the function errors rather than extrapolating an
+unvalidated fit.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/weir_discharge_vnotch.html">weir_discharge_vnotch</a></span><span class="op">(</span></span>
 <span>  head_m <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="fl">0.15</span><span class="op">)</span>, notch_angle_deg <span class="op">=</span> <span class="fl">90</span>,</span>
@@ -218,17 +218,15 @@ slope isn’t arbitrary: it’s chosen so the extra discharge through the
 widening sides compensates for the end-contraction losses a rectangular
 weir suffers, letting the whole structure use one fixed coefficient with
 no weir-height correction:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mn>1.859</mn><mspace width="0.167em"></mspace><mi>L</mi><mspace width="0.167em"></mspace><msup><mi>H</mi><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">Q = 1.859\, L\, H^{3/2}</annotation></semantics></math></p>
+<p><span class="math display">\[Q = 1.859\, L\, H^{3/2}\]</span></p>
 <p>(SI form, derived here from the USBR <em>Water Measurement
-Manual</em>’s published US customary form,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mrow><mi mathvariant="normal">c</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">s</mi></mrow></msub><mo>=</mo><mn>3.367</mn><mspace width="0.167em"></mspace><msub><mi>L</mi><mrow><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow></msub><msubsup><mi>H</mi><mrow><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow><mrow><mn>3</mn><mi>/</mi><mn>2</mn></mrow></msubsup></mrow><annotation encoding="application/x-tex">Q_{\mathrm{cfs}} = 3.367\, L_{\mathrm{ft}}
-H_{\mathrm{ft}}^{3/2}</annotation></semantics></math>, by direct unit
-conversion – shown as a comment in <code>R/weir_equations.R</code>
-alongside the SI constant, so the derivation is auditable rather than
-just asserted.) That simplicity costs accuracy: USBR describes a
-well-maintained Cipoletti installation’s overall accuracy as only around
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>5</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">\pm 5\%</annotation></semantics></math>,
-markedly worse than the other three structures here.</p>
+Manual</em>’s published US customary form, <span class="math inline">\(Q_{\mathrm{cfs}} = 3.367\, L_{\mathrm{ft}}
+H_{\mathrm{ft}}^{3/2}\)</span>, by direct unit conversion – shown as a
+comment in <code>R/weir_equations.R</code> alongside the SI constant, so
+the derivation is auditable rather than just asserted.) That simplicity
+costs accuracy: USBR describes a well-maintained Cipoletti
+installation’s overall accuracy as only around <span class="math inline">\(\pm 5\%\)</span>, markedly worse than the other
+three structures here.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/weir_discharge_cipoletti.html">weir_discharge_cipoletti</a></span><span class="op">(</span></span>
 <span>  head_m <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.2</span>, <span class="fl">0.3</span><span class="op">)</span>, crest_length_m <span class="op">=</span> <span class="fl">1.0</span>,</span>
@@ -250,18 +248,17 @@ markedly worse than the other three structures here.</p>
 </h2>
 <p>Not a plate at all – a shaped constriction built into the channel bed
 and walls, converging to a parallel-sided throat and then diverging back
-out. The head is gauged upstream in the converging section
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mi>a</mi></msub><annotation encoding="application/x-tex">H_a</annotation></semantics></math>),
-and because the constriction itself (not an obstruction across the whole
-flow) creates the head-discharge relationship, a Parshall flume passes
-sediment and debris far better than any of the three plate weirs above –
-the usual reason to choose one for a station with a mobile bed.
-<code><a href="../reference/flume_discharge_parshall.html">flume_discharge_parshall()</a></code> implements the general free-flow
-equation for standard 1-8 ft (0.3048-2.4384 m) throat widths:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mn>2.340</mn><mspace width="0.167em"></mspace><msup><mi>W</mi><mn>1.026</mn></msup><mspace width="0.167em"></mspace><msubsup><mi>H</mi><mi>a</mi><mn>1.522</mn></msubsup></mrow><annotation encoding="application/x-tex">Q = 2.340\, W^{1.026}\, H_a^{1.522}</annotation></semantics></math></p>
-<p>(again SI-derived from the published US customary form,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mrow><mi mathvariant="normal">c</mi><mi mathvariant="normal">f</mi><mi mathvariant="normal">s</mi></mrow></msub><mo>=</mo><mn>4</mn><mspace width="0.167em"></mspace><msubsup><mi>W</mi><mrow><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow><mn>1.026</mn></msubsup><msubsup><mi>H</mi><mrow><mi>a</mi><mo>,</mo><mrow><mi mathvariant="normal">f</mi><mi mathvariant="normal">t</mi></mrow></mrow><mn>1.522</mn></msubsup></mrow><annotation encoding="application/x-tex">Q_{\mathrm{cfs}}
-= 4\, W_{\mathrm{ft}}^{1.026} H_{a,\mathrm{ft}}^{1.522}</annotation></semantics></math>).
+out. The head is gauged upstream in the converging section (<span class="math inline">\(H_a\)</span>), and because the constriction itself
+(not an obstruction across the whole flow) creates the head-discharge
+relationship, a Parshall flume passes sediment and debris far better
+than any of the three plate weirs above – the usual reason to choose one
+for a station with a mobile bed. <code><a href="../reference/flume_discharge_parshall.html">flume_discharge_parshall()</a></code>
+implements the general free-flow equation for standard 1-8 ft
+(0.3048-2.4384 m) throat widths:</p>
+<p><span class="math display">\[Q = 2.340\, W^{1.026}\,
+H_a^{1.522}\]</span></p>
+<p>(again SI-derived from the published US customary form, <span class="math inline">\(Q_{\mathrm{cfs}}
+= 4\, W_{\mathrm{ft}}^{1.026} H_{a,\mathrm{ft}}^{1.522}\)</span>).
 Standard sizes outside that throat-width range use their own
 individually tabulated coefficients (USBR ch. 8 §10; ISO 9826), not
 reproduced here – <code>throat_width_m</code> outside the range warns
@@ -304,20 +301,17 @@ of getting an uncertainty, both covered in
 <code><a href="../articles/rating_curves_guide.html">vignette("rating_curves_guide")</a></code>) – just the discharge
 coefficient’s own uncertainty and the head measurement’s uncertainty,
 propagated through the equation by GUM (JCGM 100:2008) quadrature. For
-any of these structures,
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>∝</mo><mi>C</mi><mspace width="0.167em"></mspace><msubsup><mi>H</mi><mi>e</mi><mrow><mspace width="0.167em"></mspace><mi>n</mi></mrow></msubsup></mrow><annotation encoding="application/x-tex">Q \propto C\,
-H_e^{\,n}</annotation></semantics></math>, so the combined relative
-standard uncertainty is</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><msub><mi>u</mi><mi>c</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>Q</mi><mo stretchy="false" form="postfix">)</mo></mrow><mi>Q</mi></mfrac><mo>=</mo><msqrt><mrow><mi>u</mi><mo stretchy="false" form="prefix">(</mo><mi>C</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>+</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mspace width="0.167em"></mspace><mfrac><mrow><mi>u</mi><mo stretchy="false" form="prefix">(</mo><mi>H</mi><mo stretchy="false" form="postfix">)</mo></mrow><msub><mi>H</mi><mi>e</mi></msub></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow></msqrt></mrow><annotation encoding="application/x-tex">\frac{u_c(Q)}{Q} = \sqrt{u(C)^2 + \left(n\, \frac{u(H)}{H_e}\right)^2}</annotation></semantics></math></p>
-<p>where
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
-is that equation’s own head exponent (<code>3/2</code> for the
-rectangular and Cipoletti weirs, <code>5/2</code> for the V-notch,
-<code>1.522</code> for the Parshall flume) and
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo stretchy="false" form="prefix">(</mo><mi>H</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">u(H)</annotation></semantics></math>
-is the head measurement’s absolute standard uncertainty. Every function
-here takes <code>u_cd</code> and <code>u_head_m</code> directly –
-required arguments, not defaulted, since a fabricated default would look
+any of these structures, <span class="math inline">\(Q \propto C\,
+H_e^{\,n}\)</span>, so the combined relative standard uncertainty is</p>
+<p><span class="math display">\[\frac{u_c(Q)}{Q} = \sqrt{u(C)^2 +
+\left(n\, \frac{u(H)}{H_e}\right)^2}\]</span></p>
+<p>where <span class="math inline">\(n\)</span> is that equation’s own
+head exponent (<code>3/2</code> for the rectangular and Cipoletti weirs,
+<code>5/2</code> for the V-notch, <code>1.522</code> for the Parshall
+flume) and <span class="math inline">\(u(H)\)</span> is the head
+measurement’s absolute standard uncertainty. Every function here takes
+<code>u_cd</code> and <code>u_head_m</code> directly – required
+arguments, not defaulted, since a fabricated default would look
 authoritative without being traceable to anything. The expanded
 uncertainty reported alongside it is <code>U = coverage_k * u_c</code>
 (<code>coverage_k = 2</code> by default, the conventional GUM choice for
@@ -422,9 +416,8 @@ expressing, say, the rectangular case as a one-row
 <code>FlodeRatingTable</code> limb – isn’t built yet; the three
 structures with an exact fixed-form power law (V-notch, Cipoletti,
 Parshall) would convert directly, while the rectangular case’s
-head-dependent
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>d</mi></msub><annotation encoding="application/x-tex">C_d</annotation></semantics></math>
-would need the same synthetic-points-then-fit approach
+head-dependent <span class="math inline">\(C_d\)</span> would need the
+same synthetic-points-then-fit approach
 <code><a href="../reference/rate_from_cross_section.html">rate_from_cross_section()</a></code> already uses for Manning’s
 equation.</p>
 </div>

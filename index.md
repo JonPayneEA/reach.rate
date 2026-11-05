@@ -93,28 +93,26 @@ it.
 
 **The equation.** This toolkit fits the standard hydrometric form:
 
-``` math
-Q = C\,(H - a)^{n}
-```
+\\Q = C\\(H - a)^{n}\\
 
-where $`Q`$ is discharge (m³/s), $`H`$ is stage (m), and $`C`$, $`a`$,
-$`n`$ are fitted coefficients. The offset $`a`$ deserves a moment. Stage
+where \\Q\\ is discharge (m³/s), \\H\\ is stage (m), and \\C\\, \\a\\,
+\\n\\ are fitted coefficients. The offset \\a\\ deserves a moment. Stage
 is measured against an arbitrary local datum, not against the point
-where flow actually ceases. The quantity $`H - a`$ converts stage to
+where flow actually ceases. The quantity \\H - a\\ converts stage to
 effective head above the level of zero flow, and it is head, not raw
-stage, that drives flow through a control. When $`H - a \le 0`$ the
-river is below its zero-flow level and $`Q = 0`$ by definition.
+stage, that drives flow through a control. When \\H - a \le 0\\ the
+river is below its zero-flow level and \\Q = 0\\ by definition.
 
 **Why a power law.** The power law is not a curve-fitting convenience –
 it is what open-channel hydraulics predicts. Flow over a rectangular
 weir goes as head to the power 1.5; over a V-notch, head to the power
 2.5; Manning’s equation for a wide channel gives discharge roughly as
 depth to the power 5/3. Every common control produces discharge as head
-raised to some exponent between about 1.3 and 2.5, with $`C`$ absorbing
+raised to some exponent between about 1.3 and 2.5, with \\C\\ absorbing
 the geometry and roughness (Herschy 2009; Rantz et al. 1982). A useful
-property follows: on log axes the power law is a straight line,
-$`\log Q = \log C + n \log(H - a)`$, with slope $`n`$ – why a change of
-slope on that plot signals a change of physical control.
+property follows: on log axes the power law is a straight line, \\\log Q
+= \log C + n \log(H - a)\\, with slope \\n\\ – why a change of slope on
+that plot signals a change of physical control.
 
 **A convention.** Throughout this toolkit, plots put discharge on the x
 axis and stage on the y axis – the hydrometric convention, reading the
@@ -132,7 +130,7 @@ effective geometry entirely.
 
 Each regime approximates a different power law. The standard response is
 a multi-limb rating: the stage range is split at breakpoints, and each
-limb gets its own $`C`$, $`a`$, $`n`$. The breakpoints should correspond
+limb gets its own \\C\\, \\a\\, \\n\\. The breakpoints should correspond
 to real physical transitions – a berm, a bank top, a bypass channel
 activating – and choosing them is a hydrological judgement, not a
 statistical one
@@ -182,11 +180,11 @@ question.
 ### Fitting: `rate_optimise()`
 
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
-fits each limb by nonlinear least squares: it finds the $`C`$, $`a`$,
-$`n`$ minimising the residual sum of squares
-$`\mathrm{RSS} = \sum_{i}\left(Q_i - C\,(H_i - a)^n\right)^2`$ over that
-limb’s gaugings, using the Levenberg-Marquardt algorithm (Levenberg
-1944; Marquardt 1963) as implemented in
+fits each limb by nonlinear least squares: it finds the \\C\\, \\a\\,
+\\n\\ minimising the residual sum of squares \\\mathrm{RSS} =
+\sum\_{i}\left(Q_i - C\\(H_i - a)^n\right)^2\\ over that limb’s
+gaugings, using the Levenberg-Marquardt algorithm (Levenberg 1944;
+Marquardt 1963) as implemented in
 [`minpack.lm::nlsLM`](https://rdrr.io/pkg/minpack.lm/man/nlsLM.html).
 
 Why not just take logs and fit a straight line by ordinary regression?
@@ -199,8 +197,8 @@ real-space fitting is usually the right default, but be aware of the
 choice you are inheriting: your low-flow fit is being traded for your
 high-flow fit.
 
-The fit is constrained so that $`C > 0`$, $`n > 0`$, and $`H - a > 0`$
-for every gauging in the limb, fencing off territory where no valid
+The fit is constrained so that \\C \> 0\\, \\n \> 0\\, and \\H - a \>
+0\\ for every gauging in the limb, fencing off territory where no valid
 rating exists. By default (`multi_start = TRUE`) each limb is fitted
 from several starting combinations rather than one, since a poor guess
 can strand the optimiser in a local minimum; every attempt is recorded

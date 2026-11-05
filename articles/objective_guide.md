@@ -57,21 +57,18 @@ That difference in what gets penalised is exactly equivalent to an
 implied *weight* on each gauging, even though `objective = "relative"`
 never mentions the word “weight.” Minimising squared log-residuals,
 
-``` math
-\sum_i \big(\log Q_{\text{obs},i} - \log Q_{\text{fit},i}\big)^2,
-```
+\\\sum_i \big(\log Q\_{\text{obs},i} - \log Q\_{\text{fit},i}\big)^2,\\
 
 is, for small residuals, approximately the same as minimising *weighted*
-squared absolute residuals with weight `1/Q_fit^2` – because
-$`\log Q_{\text{obs}} - \log Q_{\text{fit}} \approx (Q_{\text{obs}} -
-Q_{\text{fit}})/Q_{\text{fit}}`$ (a first-order Taylor expansion, the
+squared absolute residuals with weight `1/Q_fit^2` – because \\\log
+Q\_{\text{obs}} - \log Q\_{\text{fit}} \approx (Q\_{\text{obs}} -
+Q\_{\text{fit}})/Q\_{\text{fit}}\\ (a first-order Taylor expansion, the
 same approximation behind treating a lognormal error model as
 “percentage error”), so
 
-``` math
-\big(\log Q_{\text{obs}} - \log Q_{\text{fit}}\big)^2 \approx
-\frac{1}{Q_{\text{fit}}^2}\big(Q_{\text{obs}} - Q_{\text{fit}}\big)^2.
-```
+\\\big(\log Q\_{\text{obs}} - \log Q\_{\text{fit}}\big)^2 \approx
+\frac{1}{Q\_{\text{fit}}^2}\big(Q\_{\text{obs}} -
+Q\_{\text{fit}}\big)^2.\\
 
 `objective = "relative"` never computes this weight explicitly – it fits
 in log-space directly, which amounts to the same thing without ever

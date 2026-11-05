@@ -100,9 +100,9 @@ extended@table
 # negative values
 stage_dt <- data.table::data.table(stage = seq(-0.5, 3.0, by = 0.01))
 with_ext <- apply_rating(extended, stage_dt)
-#> INFO [2026-11-05 15:50:29] apply_rating(): 44 of 351 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-05 16:45:29] apply_rating(): 44 of 351 stage value(s) fell outside the rating and were extrapolated.
 without <- apply_rating(plain, stage_dt)
-#> INFO [2026-11-05 15:50:29] apply_rating(): 90 of 351 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-05 16:45:29] apply_rating(): 90 of 351 stage value(s) fell outside the rating and were extrapolated.
 
 curves <- data.table::rbindlist(list(
   data.table::data.table(stage = with_ext$stage, discharge = with_ext$discharge,

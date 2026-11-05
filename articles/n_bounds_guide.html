@@ -5,7 +5,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Choosing n_bounds: A Cross-Section Guide • reach.rate</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!-- mathjax math --><script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script><script>
+  window.MathJax = {
+    chtml: {
+      fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
+    }
+  };
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet">
@@ -185,9 +191,8 @@ own.</p>
 <div class="section level2">
 <h2 id="why-the-shape-sets-the-exponent">Why the shape sets the exponent<a class="anchor" aria-label="anchor" href="#why-the-shape-sets-the-exponent"></a>
 </h2>
-<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Q</mi><mo>=</mo><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>H</mi><mo>−</mo><mi>a</mi><msup><mo stretchy="false" form="postfix">)</mo><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">Q = C(H-a)^n</annotation></semantics></math>
-is a straight line on log-log axes, with slope
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+<p><span class="math inline">\(Q = C(H-a)^n\)</span> is a straight line
+on log-log axes, with slope <span class="math inline">\(n\)</span>
 (<code>rating_curves_guide.Rmd</code> states this; here it is
 drawn):</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">

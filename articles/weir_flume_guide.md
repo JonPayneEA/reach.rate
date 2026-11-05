@@ -73,18 +73,17 @@ section](weir_flume_guide_files/figure-html/flume-plan-1.png)
 ## Rectangular (Rehbock)
 
 A plate spanning the full width of its approach channel – no side
-contractions – with a sharp horizontal crest at height $`P`$ above the
-bed. Head $`H`$ is measured above the crest, upstream of the drawdown
+contractions – with a sharp horizontal crest at height \\P\\ above the
+bed. Head \\H\\ is measured above the crest, upstream of the drawdown
 curve. The Rehbock equation (the form ISO 1438:2017 specifies for this
 structure) lets the discharge coefficient vary with the ratio of head to
 weir height:
 
-``` math
-Q = \frac{2}{3} C_d \sqrt{2g} \, B H^{3/2}, \qquad C_d = 0.602 + 0.083\frac{H}{P}
-```
+\\Q = \frac{2}{3} C_d \sqrt{2g} \\ B H^{3/2}, \qquad C_d = 0.602 +
+0.083\frac{H}{P}\\
 
-ISO 1438 restricts this to $`P < 1\,\mathrm{m}`$; `weir_height_m >= 1`
-still runs, but warns, since $`C_d`$’s fit is unvalidated past that
+ISO 1438 restricts this to \\P \< 1\\\mathrm{m}\\; `weir_height_m >= 1`
+still runs, but warns, since \\C_d\\’s fit is unvalidated past that
 point.
 
 ``` r
@@ -113,17 +112,16 @@ a V-notch measures small flows far more precisely than a rectangular
 weir of similar size – the reason it’s the usual choice for low-flow
 gauging. ISO, ASTM, and USBR all specify the Kindsvater-Shen form:
 
-``` math
-Q = \frac{8}{15}\sqrt{2g}\, C_e \tan(\theta/2)\, H_e^{5/2}, \qquad H_e = H + k_h
-```
+\\Q = \frac{8}{15}\sqrt{2g}\\ C_e \tan(\theta/2)\\ H_e^{5/2}, \qquad H_e
+= H + k_h\\
 
-$`C_e`$ and the small head correction $`k_h`$ are both fitted
-polynomials in the notch angle $`\theta`$ (degrees);
+\\C_e\\ and the small head correction \\k_h\\ are both fitted
+polynomials in the notch angle \\\theta\\ (degrees);
 [`weir_discharge_vnotch()`](https://jonpayneea.github.io/reach.rate/reference/weir_discharge_vnotch.md)
-evaluates them exactly as published (Shen 1981), converting $`k_h`$ from
+evaluates them exactly as published (Shen 1981), converting \\k_h\\ from
 the published feet to metres only after evaluating the polynomial, not
 before – refitting a unit-converted polynomial from scratch would risk a
-transcription error the original doesn’t have. Valid for $`\theta`$
+transcription error the original doesn’t have. Valid for \\\theta\\
 between 25 and 100 degrees; outside that, the function errors rather
 than extrapolating an unvalidated fit.
 
@@ -153,19 +151,16 @@ sides compensates for the end-contraction losses a rectangular weir
 suffers, letting the whole structure use one fixed coefficient with no
 weir-height correction:
 
-``` math
-Q = 1.859\, L\, H^{3/2}
-```
+\\Q = 1.859\\ L\\ H^{3/2}\\
 
 (SI form, derived here from the USBR *Water Measurement Manual*’s
-published US customary form,
-$`Q_{\mathrm{cfs}} = 3.367\, L_{\mathrm{ft}}
-H_{\mathrm{ft}}^{3/2}`$, by direct unit conversion – shown as a comment
-in `R/weir_equations.R` alongside the SI constant, so the derivation is
-auditable rather than just asserted.) That simplicity costs accuracy:
-USBR describes a well-maintained Cipoletti installation’s overall
-accuracy as only around $`\pm 5\%`$, markedly worse than the other three
-structures here.
+published US customary form, \\Q\_{\mathrm{cfs}} = 3.367\\
+L\_{\mathrm{ft}} H\_{\mathrm{ft}}^{3/2}\\, by direct unit conversion –
+shown as a comment in `R/weir_equations.R` alongside the SI constant, so
+the derivation is auditable rather than just asserted.) That simplicity
+costs accuracy: USBR describes a well-maintained Cipoletti
+installation’s overall accuracy as only around \\\pm 5\\\\, markedly
+worse than the other three structures here.
 
 ``` r
 
@@ -189,7 +184,7 @@ weir_discharge_cipoletti(
 
 Not a plate at all – a shaped constriction built into the channel bed
 and walls, converging to a parallel-sided throat and then diverging back
-out. The head is gauged upstream in the converging section ($`H_a`$),
+out. The head is gauged upstream in the converging section (\\H_a\\),
 and because the constriction itself (not an obstruction across the whole
 flow) creates the head-discharge relationship, a Parshall flume passes
 sediment and debris far better than any of the three plate weirs above –
@@ -198,17 +193,14 @@ the usual reason to choose one for a station with a mobile bed.
 implements the general free-flow equation for standard 1-8 ft
 (0.3048-2.4384 m) throat widths:
 
-``` math
-Q = 2.340\, W^{1.026}\, H_a^{1.522}
-```
+\\Q = 2.340\\ W^{1.026}\\ H_a^{1.522}\\
 
 (again SI-derived from the published US customary form,
-$`Q_{\mathrm{cfs}}
-= 4\, W_{\mathrm{ft}}^{1.026} H_{a,\mathrm{ft}}^{1.522}`$). Standard
-sizes outside that throat-width range use their own individually
-tabulated coefficients (USBR ch. 8 §10; ISO 9826), not reproduced here –
-`throat_width_m` outside the range warns rather than silently applying
-an unconfirmed extrapolation.
+\\Q\_{\mathrm{cfs}} = 4\\ W\_{\mathrm{ft}}^{1.026}
+H\_{a,\mathrm{ft}}^{1.522}\\). Standard sizes outside that throat-width
+range use their own individually tabulated coefficients (USBR ch. 8 §10;
+ISO 9826), not reproduced here – `throat_width_m` outside the range
+warns rather than silently applying an unconfirmed extrapolation.
 
 ``` r
 
@@ -253,16 +245,15 @@ two ways of getting an uncertainty, both covered in
 [`vignette("rating_curves_guide")`](https://jonpayneea.github.io/reach.rate/articles/rating_curves_guide.md))
 – just the discharge coefficient’s own uncertainty and the head
 measurement’s uncertainty, propagated through the equation by GUM (JCGM
-100:2008) quadrature. For any of these structures, $`Q \propto C\,
-H_e^{\,n}`$, so the combined relative standard uncertainty is
+100:2008) quadrature. For any of these structures, \\Q \propto C\\
+H_e^{\\n}\\, so the combined relative standard uncertainty is
 
-``` math
-\frac{u_c(Q)}{Q} = \sqrt{u(C)^2 + \left(n\, \frac{u(H)}{H_e}\right)^2}
-```
+\\\frac{u_c(Q)}{Q} = \sqrt{u(C)^2 + \left(n\\
+\frac{u(H)}{H_e}\right)^2}\\
 
-where $`n`$ is that equation’s own head exponent (`3/2` for the
+where \\n\\ is that equation’s own head exponent (`3/2` for the
 rectangular and Cipoletti weirs, `5/2` for the V-notch, `1.522` for the
-Parshall flume) and $`u(H)`$ is the head measurement’s absolute standard
+Parshall flume) and \\u(H)\\ is the head measurement’s absolute standard
 uncertainty. Every function here takes `u_cd` and `u_head_m` directly –
 required arguments, not defaulted, since a fabricated default would look
 authoritative without being traceable to anything. The expanded
@@ -348,7 +339,7 @@ or fitting-derived limb). Wiring a weir equation’s own `C`/`a`/`n` into
 that same join – expressing, say, the rectangular case as a one-row
 `FlodeRatingTable` limb – isn’t built yet; the three structures with an
 exact fixed-form power law (V-notch, Cipoletti, Parshall) would convert
-directly, while the rectangular case’s head-dependent $`C_d`$ would need
+directly, while the rectangular case’s head-dependent \\C_d\\ would need
 the same synthetic-points-then-fit approach
 [`rate_from_cross_section()`](https://jonpayneea.github.io/reach.rate/reference/rate_from_cross_section.md)
 already uses for Manning’s equation.
