@@ -53,6 +53,7 @@ reference:
   - align_limb_equations
   - align_limb_boundaries
   - graft_rating
+  - extend_rating_low
 
 - title: Diagnostics
   desc: >

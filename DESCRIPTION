@@ -30,6 +30,7 @@ Collate:
     'compare_ratings.R'
     'cross_section_rating_dual_plot.R'
     'data.R'
+    'extend_rating_low.R'
     'gap_check.R'
     'globals.R'
     'graft_rating.R'
