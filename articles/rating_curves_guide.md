@@ -169,7 +169,7 @@ fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
 #>    <int>     <num>       <num>    <num>      <num>     <num> <int>
 #> 1:     1  2.772226 -0.05503033 1.459775 0.05707128 0.9982030    37
 #> 2:     2  7.249417  0.24224859 1.487198 0.04004832 0.9997172    20
-#> 3:     3 10.188269  0.21374013 1.790580 0.04707026 0.9999901    44
+#> 3:     3 10.188269  0.21374016 1.790580 0.04707026 0.9999901    44
 ```
 
 ### The method
@@ -495,7 +495,7 @@ steps into flow records and forecast inputs.
 rating_table <- as_rating_table(fit)
 rc_raw_dt <- expand_rating_table(rating_table, step = 0.01)
 gaps_dt <- detect_rc_gaps(rc_raw_dt)
-#> INFO [2026-09-29 21:57:20] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-05 15:51:07] Checked 2 junction(s): 2 gap(s) flagged.
 gaps_dt
 #>    junction limb_lower limb_upper stage_break stage_lower_end stage_upper_start
 #>       <int>     <char>     <char>       <num>           <num>             <num>
@@ -546,11 +546,11 @@ boundary.
 ``` r
 
 rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "midpoint")
-#> INFO [2026-09-29 21:57:20] Checked 2 junction(s): 2 gap(s) flagged.
-#> INFO [2026-09-29 21:57:20] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -> 11.42 | agreed Q = 8.6042
-#> INFO [2026-09-29 21:57:20] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -> 34.81 | agreed Q = 27.2512
+#> INFO [2026-11-05 15:51:07] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-05 15:51:07] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -> 11.42 | agreed Q = 8.6042
+#> INFO [2026-11-05 15:51:07] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -> 34.81 | agreed Q = 27.2512
 plot_rc_gaps(rc_raw_dt, rc_fixed_dt)
-#> INFO [2026-09-29 21:57:20] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-05 15:51:07] Checked 2 junction(s): 2 gap(s) flagged.
 ```
 
 ![](rating_curves_guide_files/figure-html/resolve-gaps-1.png)
@@ -632,7 +632,7 @@ aligned_boundaries@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_c
 #>    <int>         <num>         <num>     <num>       <num>    <num>      <num>
 #> 1:     1     0.5000000     0.5753648  2.772226 -0.05503033 1.459775 0.04105721
 #> 2:     2     0.5753648     2.2000000  7.249417  0.24224859 1.487198 2.33401589
-#> 3:     3     2.2000000     3.5000000 10.188269  0.21374013 1.790580 0.04707026
+#> 3:     3     2.2000000     3.5000000 10.188269  0.21374016 1.790580 0.04707026
 #>    r_squared n_obs boundary_adjusted
 #>        <num> <int>            <lgcl>
 #> 1: 0.6399419     3              TRUE
@@ -823,7 +823,7 @@ fit_boot@limbs[, .(limb, C, C_se, n, n_se)]
 #>    <int>     <num>     <num>    <num>      <num>
 #> 1:     1  2.772226 0.2523197 1.459775 0.08574848
 #> 2:     2  7.249417 1.4146691 1.487198 0.13708034
-#> 3:     3 10.188269 0.3404382 1.790580 0.01678121
+#> 3:     3 10.188269 0.3404381 1.790580 0.01678121
 plot_rating_interval(fit_boot)
 ```
 
@@ -900,7 +900,7 @@ hydrograph_dt <- data.table(
 )
 
 flow_dt <- apply_rating(rating_table, hydrograph_dt, stage_col = "stage", out_col = "discharge_cms")
-#> INFO [2026-09-29 21:57:23] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-05 15:51:10] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.
 sum(flow_dt$extrapolated) # stage values above the gauged range
 #> [1] 4
 flow_dt[c(1, 10, 20, 30, 40)]
@@ -941,7 +941,7 @@ already produced above.
 
 target_flows_dt <- data.table(discharge = c(5, 20, 60))
 apply_rating_inverse(aligned_result, target_flows_dt, discharge_col = "discharge", out_col = "stage_m")
-#> INFO [2026-09-29 21:57:23] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-05 15:51:10] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
 #>    discharge  stage_m extrapolated
 #>        <num>    <num>       <lgcl>
 #> 1:         5 1.442813        FALSE
@@ -987,7 +987,7 @@ rating_history_dt <- data.table(
 )
 
 versioned_flow_dt <- apply_rating_versioned(hydrograph_dt, rating_history_dt)
-#> INFO [2026-09-29 21:57:23] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-05 15:51:10] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.
 versioned_flow_dt[c(1, 10, 20, 30, 40)]
 #>      datetime    stage   version discharge extrapolated
 #>        <POSc>    <num>    <char>     <num>       <lgcl>
@@ -1063,7 +1063,7 @@ grafted@table[, .(lower_level, upper_level, C, a, n, source)]
 #>          <num>       <num>    <num>       <num>    <num>   <char>
 #> 1:    0.500000    1.600000 2.772226 -0.05503033 1.459775      new
 #> 2:    1.600000    2.200000 3.670338  0.24224859 1.487198      new
-#> 3:    2.200000    4.429085 2.917089  0.21374013 1.790580      new
+#> 3:    2.200000    4.429085 2.917089  0.21374016 1.790580      new
 #> 4:    4.429085    6.000000 5.540583  0.00000000 1.300000 existing
 ```
 

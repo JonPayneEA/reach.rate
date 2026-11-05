@@ -39,6 +39,8 @@ a hydraulic judgement.
 - [`graft_rating()`](https://jonpayneea.github.io/reach.rate/reference/graft_rating.md)
   : Graft a freshly-fitted rating onto a pre-existing one above its
   gauged range
+- [`extend_rating_low()`](https://jonpayneea.github.io/reach.rate/reference/extend_rating_low.md)
+  : Add a linear limb below the lowest limb of a rating
 
 ## Diagnostics
 
