@@ -2,6 +2,10 @@ url: https://jonpayneea.github.io/reach.rate/
 
 template:
   bootstrap: 5
+  # pkgdown 2.1+ defaults to MathML conversion, which needs the katex R
+  # package; without it equations are left as raw $$...$$ text. MathJax
+  # renders in the browser and needs nothing on the build machine.
+  math-rendering: mathjax
   bslib:
     primary: "#00A33B"
     base_font: {google: "Atkinson Hyperlegible"}
