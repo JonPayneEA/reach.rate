@@ -1,5 +1,15 @@
 # reach.rate (development)
 
+* New `extend_rating_low()`: adds an explicit linear limb below the lowest
+  limb of a rating, for stage records that fall below the lowest gauged
+  stage or go negative. The limb is the tangent to the lowest power-law
+  limb at its lower boundary, so discharge and gradient both match at the
+  junction; it reaches zero discharge at `h - (h - a)/n`. It is stored as
+  an ordinary `n = 1` row, so `apply_rating()`, `apply_rating_inverse()`,
+  `apply_rating_interval()` and the gap checks need no changes. The
+  extension is opt-in and never added automatically; the result carries
+  `@status` `"extended_low"` and a `linear_extension` column.
+
 * `suggest_breakpoints()` gains a `selected` column marking the candidate
   each round adopted. Extract the chosen stages with
   `sort(result[selected == TRUE, candidate_stage])`. The
