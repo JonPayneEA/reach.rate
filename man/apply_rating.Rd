@@ -7,17 +7,51 @@
 apply_rating(fit, ...)
 }
 \arguments{
-\item{fit}{A \code{FlodeRating} or \code{FlodeSegmentedRating} object.}
+\item{fit}{A \link{FlodeRatingTable} or \link{FlodeSegmentedRating}. Convert a
+\link{FlodeRating} with \code{\link[=as_rating_table]{as_rating_table()}} first.}
 
-\item{...}{Passed to the class-specific method -- typically
-\code{stage_dt} (a data.frame or data.table with a stage column) plus
-\code{stage_col}/\code{out_col}; see the individual methods' examples.}
+\item{...}{Arguments for the class-specific method, which are the same
+for both:
+\itemize{
+\item \code{stage_dt}: a data.frame or data.table with a stage column. Any
+other columns, such as \code{datetime}, are carried through unchanged.
+\item \code{stage_col}: name of the stage column in \code{stage_dt}. Default
+\code{"stage"}.
+\item \code{out_col}: name of the discharge column to add. Default
+\code{"discharge"}.
+}}
+}
+\value{
+\code{stage_dt} as a data.table with two columns added: \code{out_col}
+(the computed discharge) and \code{extrapolated} (logical; \code{TRUE} where the
+stage fell outside the range the rating covers, as defined for each
+class above).
 }
 \description{
-Dispatches on the fit's class: \link{FlodeRating} and
-\link{FlodeSegmentedRating} each provide their own method. Replaces the
-previous separate \code{apply_rating()}/\code{apply_segmented_rating()} pair --
-one name, dispatched by what you're holding.
+Converts a stage record to discharge. Dispatches on the class of \code{fit}:
+\link{FlodeRatingTable} and \link{FlodeSegmentedRating} each provide a method.
+Replaces the previous separate \code{apply_rating()}/\code{apply_segmented_rating()}
+pair -- one name, dispatched by what you're holding.
+
+A \link{FlodeRating} (what \code{\link[=rate_optimise]{rate_optimise()}} returns) has no method of its
+own. Convert it first with \code{\link[=as_rating_table]{as_rating_table()}}:
+\code{apply_rating(as_rating_table(fit), stage_dt)}.
+}
+\details{
+\strong{\link{FlodeRatingTable} method.} Each stage value is assigned to the limb
+whose \verb{[lower_level, upper_level]} band contains it, and discharge is
+that limb's \code{Q = C(H - a)^n}. Limbs must be contiguous
+(\code{upper_level[i] == lower_level[i + 1]}), or the call stops. Stage at or
+below a limb's \code{a} gives zero discharge. Stage below the lowest limb or
+above the highest is evaluated by extrapolating the nearest limb's
+equation, and flagged \code{extrapolated = TRUE}. Where stage may fall below
+the lowest gauged stage, \code{\link[=extend_rating_low]{extend_rating_low()}} adds an explicit linear
+limb there instead.
+
+\strong{\link{FlodeSegmentedRating} method.} Discharge comes from the joint
+segmented formula. Stage at or below the zero-flow stage \code{bp1} gives zero
+discharge, which falls out of the formula itself. Only stage above the
+highest gauged stage is flagged \code{extrapolated = TRUE}.
 }
 \examples{
 # A rating typed in by hand, e.g. from a station's published rating
@@ -93,4 +127,10 @@ ggplot(long_dt, aes(datetime, value)) +
   theme(strip.placement = "outside")
 
 
+}
+\seealso{
+\code{\link[=apply_rating_interval]{apply_rating_interval()}} for a bootstrap prediction interval,
+\code{\link[=apply_rating_versioned]{apply_rating_versioned()}} for a rating that changed over time,
+\code{\link[=apply_rating_inverse]{apply_rating_inverse()}} for discharge back to stage, and
+\code{\link[=extend_rating_low]{extend_rating_low()}} for stage below the lowest limb.
 }

@@ -365,15 +365,51 @@ rating_plot <- new_generic("rating_plot", "fit")
 #' Apply a fitted rating to a stage series (S7 generic)
 #'
 #' @description
-#' Dispatches on the fit's class: [FlodeRating] and
-#' [FlodeSegmentedRating] each provide their own method. Replaces the
-#' previous separate `apply_rating()`/`apply_segmented_rating()` pair --
-#' one name, dispatched by what you're holding.
+#' Converts a stage record to discharge. Dispatches on the class of `fit`:
+#' [FlodeRatingTable] and [FlodeSegmentedRating] each provide a method.
+#' Replaces the previous separate `apply_rating()`/`apply_segmented_rating()`
+#' pair -- one name, dispatched by what you're holding.
 #'
-#' @param fit A `FlodeRating` or `FlodeSegmentedRating` object.
-#' @param ... Passed to the class-specific method -- typically
-#'   `stage_dt` (a data.frame or data.table with a stage column) plus
-#'   `stage_col`/`out_col`; see the individual methods' examples.
+#' A [FlodeRating] (what [rate_optimise()] returns) has no method of its
+#' own. Convert it first with [as_rating_table()]:
+#' `apply_rating(as_rating_table(fit), stage_dt)`.
+#'
+#' @details
+#' **[FlodeRatingTable] method.** Each stage value is assigned to the limb
+#' whose `[lower_level, upper_level]` band contains it, and discharge is
+#' that limb's `Q = C(H - a)^n`. Limbs must be contiguous
+#' (`upper_level[i] == lower_level[i + 1]`), or the call stops. Stage at or
+#' below a limb's `a` gives zero discharge. Stage below the lowest limb or
+#' above the highest is evaluated by extrapolating the nearest limb's
+#' equation, and flagged `extrapolated = TRUE`. Where stage may fall below
+#' the lowest gauged stage, [extend_rating_low()] adds an explicit linear
+#' limb there instead.
+#'
+#' **[FlodeSegmentedRating] method.** Discharge comes from the joint
+#' segmented formula. Stage at or below the zero-flow stage `bp1` gives zero
+#' discharge, which falls out of the formula itself. Only stage above the
+#' highest gauged stage is flagged `extrapolated = TRUE`.
+#'
+#' @param fit A [FlodeRatingTable] or [FlodeSegmentedRating]. Convert a
+#'   [FlodeRating] with [as_rating_table()] first.
+#' @param ... Arguments for the class-specific method, which are the same
+#'   for both:
+#'   * `stage_dt`: a data.frame or data.table with a stage column. Any
+#'     other columns, such as `datetime`, are carried through unchanged.
+#'   * `stage_col`: name of the stage column in `stage_dt`. Default
+#'     `"stage"`.
+#'   * `out_col`: name of the discharge column to add. Default
+#'     `"discharge"`.
+#'
+#' @return `stage_dt` as a data.table with two columns added: `out_col`
+#'   (the computed discharge) and `extrapolated` (logical; `TRUE` where the
+#'   stage fell outside the range the rating covers, as defined for each
+#'   class above).
+#'
+#' @seealso [apply_rating_interval()] for a bootstrap prediction interval,
+#'   [apply_rating_versioned()] for a rating that changed over time,
+#'   [apply_rating_inverse()] for discharge back to stage, and
+#'   [extend_rating_low()] for stage below the lowest limb.
 #'
 #' @examples
 #' # A rating typed in by hand, e.g. from a station's published rating

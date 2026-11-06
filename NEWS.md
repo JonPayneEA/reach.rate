@@ -1,5 +1,15 @@
 # reach.rate (development)
 
+* The `apply_rating()` reference page now documents what the function does.
+  It states that a `FlodeRating` (what `rate_optimise()` returns) has no
+  method of its own and must go through `as_rating_table()` first, which
+  the old text got wrong. It also describes `stage_dt`, `stage_col` and
+  `out_col`, the return value, and how the `FlodeRatingTable` and
+  `FlodeSegmentedRating` methods differ in zero-flow handling and in which
+  stages are flagged `extrapolated`. The method blocks in `apply_rating.R`
+  and `rate_optimise_segmented.R` are marked `@noRd` because roxygen cannot
+  name a `method(...) <-` call. Documentation only; no behaviour change.
+
 * `apply_rating()` now has a worked, graphed example: a hand-typed four-limb
   rating applied to a two-day stage record, with the rating curve coloured
   by limb and the stage and flow hydrographs. The old two-limb example was

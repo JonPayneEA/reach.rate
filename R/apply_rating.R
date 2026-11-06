@@ -85,8 +85,10 @@ log_threshold(INFO)
 #'   (computed discharge) and `extrapolated` (logical; `TRUE` where the
 #'   stage fell outside every limb's bounds).
 #'
-#' @rdname apply_rating
-#' @export
+#' @noRd
+# User-facing documentation for this method lives on the generic's block in
+# flode_classes.R (see ?apply_rating): roxygen cannot name a
+# `method(...) <-` call, so a block written here is silently dropped.
 method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "stage", out_col = "discharge") {
   if (!is.data.frame(stage_dt)) stop("stage_dt must be a data.frame or data.table")
   if (!stage_col %in% names(stage_dt)) stop("stage_col must be a column of stage_dt")
