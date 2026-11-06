@@ -1,5 +1,13 @@
 # reach.rate (development)
 
+* `apply_rating()` now has a worked, graphed example: a hand-typed four-limb
+  rating applied to a two-day stage record, with the rating curve coloured
+  by limb and the stage and flow hydrographs. The old two-limb example was
+  never published: its roxygen block sat above a `method(...) <-` call,
+  which roxygen cannot name, so it was dropped from the Rd. The example now
+  lives on the generic's block in `R/flode_classes.R`. Documentation only;
+  no mathematical changes.
+
 * New `extend_rating_low()`: adds an explicit linear limb below the lowest
   limb of a rating, for stage records that fall below the lowest gauged
   stage or go negative. The limb is the tangent to the lowest power-law
