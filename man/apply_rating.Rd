@@ -7,37 +7,45 @@
 apply_rating(fit, ...)
 }
 \arguments{
-\item{fit}{A \link{FlodeRatingTable} or \link{FlodeSegmentedRating}. Convert a
-\link{FlodeRating} with \code{\link[=as_rating_table]{as_rating_table()}} first.}
+\item{fit}{A \link{FlodeRating}, \link{FlodeRatingTable} or
+\link{FlodeSegmentedRating}.}
 
 \item{...}{Arguments for the class-specific method, which are the same
-for both:
+for all three:
 \itemize{
-\item \code{stage_dt}: a data.frame or data.table with a stage column. Any
-other columns, such as \code{datetime}, are carried through unchanged.
+\item \code{stage_dt}: a data.frame or data.table with a stage column, or a
+numeric vector of stage values. Any other columns, such as
+\code{datetime}, are carried through unchanged. A vector is wrapped in a
+one-column table named by \code{stage_col}.
 \item \code{stage_col}: name of the stage column in \code{stage_dt}. Default
-\code{"stage"}.
+\code{"stage"}. With a vector it names the stage column of the result.
 \item \code{out_col}: name of the discharge column to add. Default
 \code{"discharge"}.
 }}
 }
 \value{
-\code{stage_dt} as a data.table with two columns added: \code{out_col}
-(the computed discharge) and \code{extrapolated} (logical; \code{TRUE} where the
+\code{stage_dt} as a data.table (or, for a vector input, a table
+holding the stage values) with two columns added: \code{out_col} (the
+computed discharge) and \code{extrapolated} (logical; \code{TRUE} where the
 stage fell outside the range the rating covers, as defined for each
 class above).
 }
 \description{
 Converts a stage record to discharge. Dispatches on the class of \code{fit}:
-\link{FlodeRatingTable} and \link{FlodeSegmentedRating} each provide a method.
-Replaces the previous separate \code{apply_rating()}/\code{apply_segmented_rating()}
-pair -- one name, dispatched by what you're holding.
+\link{FlodeRating}, \link{FlodeRatingTable} and \link{FlodeSegmentedRating} each
+provide a method. Replaces the previous separate
+\code{apply_rating()}/\code{apply_segmented_rating()} pair -- one name,
+dispatched by what you're holding.
 
-A \link{FlodeRating} (what \code{\link[=rate_optimise]{rate_optimise()}} returns) has no method of its
-own. Convert it first with \code{\link[=as_rating_table]{as_rating_table()}}:
-\code{apply_rating(as_rating_table(fit), stage_dt)}.
+The stage record can be a table with a stage column, or simply a
+numeric vector of stage values.
 }
 \details{
+\strong{\link{FlodeRating} method.} What \code{\link[=rate_optimise]{rate_optimise()}} and
+\code{\link[=rate_optimise_constrained]{rate_optimise_constrained()}} return. It is converted with
+\code{\link[=as_rating_table]{as_rating_table()}} and then handled exactly as below, so the two give
+identical results.
+
 \strong{\link{FlodeRatingTable} method.} Each stage value is assigned to the limb
 whose \verb{[lower_level, upper_level]} band contains it, and discharge is
 that limb's \code{Q = C(H - a)^n}. Limbs must be contiguous
@@ -126,6 +134,12 @@ ggplot(long_dt, aes(datetime, value)) +
   theme_minimal() +
   theme(strip.placement = "outside")
 
+# A plain vector of stage values works too, and a fit from
+# rate_optimise() can be used directly
+apply_rating(my_fit, c(0.5, 1.5, 3.0))
+gaugings <- station_gaugings
+fit <- rate_optimise(gaugings$discharge_cms, gaugings$stage_m)
+apply_rating(fit, quantile(gaugings$stage_m, c(0.25, 0.5, 0.75)))
 
 }
 \seealso{

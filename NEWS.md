@@ -1,14 +1,25 @@
 # reach.rate (development)
 
-* The `apply_rating()` reference page now documents what the function does.
-  It states that a `FlodeRating` (what `rate_optimise()` returns) has no
-  method of its own and must go through `as_rating_table()` first, which
-  the old text got wrong. It also describes `stage_dt`, `stage_col` and
-  `out_col`, the return value, and how the `FlodeRatingTable` and
-  `FlodeSegmentedRating` methods differ in zero-flow handling and in which
-  stages are flagged `extrapolated`. The method blocks in `apply_rating.R`
-  and `rate_optimise_segmented.R` are marked `@noRd` because roxygen cannot
-  name a `method(...) <-` call. Documentation only; no behaviour change.
+* `apply_rating()` now accepts a `FlodeRating` directly, so a fit from
+  `rate_optimise()` or `rate_optimise_constrained()` no longer needs
+  `as_rating_table()` first. Before, `apply_rating(fit, stage_dt)` failed
+  with "Can't find method for `apply_rating(<FlodeRating>)`", although the
+  documentation listed `FlodeRating` as supported. The new method converts
+  with `as_rating_table()` and uses the `FlodeRatingTable` method, so the
+  two routes give identical results.
+
+* `apply_rating()` also accepts a plain numeric vector of stage values for
+  all three fit classes, e.g. `apply_rating(fit, dt$stage)`. It returns a
+  table with the stage column (named by `stage_col`), `discharge` and
+  `extrapolated`. A character vector, matrix or list is still refused.
+
+* The `apply_rating()` reference page now documents what the function does:
+  `stage_dt`, `stage_col`, `out_col`, the return value, and how the
+  `FlodeRatingTable` and `FlodeSegmentedRating` methods differ in zero-flow
+  handling and in which stages are flagged `extrapolated`. The method
+  blocks in `apply_rating.R` and `rate_optimise_segmented.R` are marked
+  `@noRd` because roxygen cannot name a `method(...) <-` call, which is why
+  their documentation never reached the page.
 
 * `apply_rating()` now has a worked, graphed example: a hand-typed four-limb
   rating applied to a two-day stage record, with the rating curve coloured
