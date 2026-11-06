@@ -85,15 +85,6 @@ log_threshold(INFO)
 #'   (computed discharge) and `extrapolated` (logical; `TRUE` where the
 #'   stage fell outside every limb's bounds).
 #'
-#' @examples
-#' rating_dt <- data.table::data.table(
-#'   lower_level = c(0.0, 1.2), upper_level = c(1.2, 2.5),
-#'   C = c(2.5, 4.1), a = c(0, 0), n = c(1.5, 1.7)
-#' )
-#' rating_table <- FlodeRatingTable(table = rating_dt)
-#' stage_dt <- data.table::data.table(stage = c(0.5, 1.8, 3.0))
-#' apply_rating(rating_table, stage_dt)
-#'
 #' @rdname apply_rating
 #' @export
 method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "stage", out_col = "discharge") {
