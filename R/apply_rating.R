@@ -61,6 +61,21 @@ NULL
 
 log_threshold(INFO)
 
+# Shared by every apply_rating() method. A data.frame passes through
+# unchanged. A plain numeric vector of stage is wrapped in a one-column
+# data.table named `stage_col`, so apply_rating(fit, c(0.5, 1.2)) works
+# without building a table first. Anything else (a character vector, a
+# matrix, a list) is refused rather than guessed at.
+.coerce_stage_input <- function(stage_dt, stage_col) {
+  if (is.data.frame(stage_dt)) return(stage_dt)
+  if (is.numeric(stage_dt) && is.null(dim(stage_dt))) {
+    out_dt <- data.table(.stage = as.numeric(stage_dt))
+    setnames(out_dt, ".stage", stage_col)
+    return(out_dt)
+  }
+  stop("stage_dt must be a data.frame or data.table (or a numeric vector of stage values)")
+}
+
 #' Apply a rating equation table to a stage series to compute discharge (S7 method)
 #'
 #' @description
@@ -85,10 +100,12 @@ log_threshold(INFO)
 #'   (computed discharge) and `extrapolated` (logical; `TRUE` where the
 #'   stage fell outside every limb's bounds).
 #'
-#' @rdname apply_rating
-#' @export
+#' @noRd
+# User-facing documentation for this method lives on the generic's block in
+# flode_classes.R (see ?apply_rating): roxygen cannot name a
+# `method(...) <-` call, so a block written here is silently dropped.
 method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "stage", out_col = "discharge") {
-  if (!is.data.frame(stage_dt)) stop("stage_dt must be a data.frame or data.table")
+  stage_dt <- .coerce_stage_input(stage_dt, stage_col)
   if (!stage_col %in% names(stage_dt)) stop("stage_col must be a column of stage_dt")
 
   rating_dt <- copy(fit@table)
@@ -129,6 +146,16 @@ method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "s
   }
 
   out_dt[]
+}
+
+# apply_rating() for a FlodeRating (what rate_optimise() and
+# rate_optimise_constrained() return). A FlodeRating's `@limbs` and a
+# FlodeRatingTable's `@table` hold the same equations, so this converts
+# with as_rating_table() and hands over to the FlodeRatingTable method:
+# one implementation of the stage-to-discharge arithmetic, not two.
+# User-facing documentation lives on the generic's block in flode_classes.R.
+method(apply_rating, FlodeRating) <- function(fit, stage_dt, stage_col = "stage", out_col = "discharge") {
+  apply_rating(as_rating_table(fit), stage_dt, stage_col = stage_col, out_col = out_col)
 }
 
 #' Apply a rating with bootstrap uncertainty to a stage series

@@ -365,15 +365,59 @@ rating_plot <- new_generic("rating_plot", "fit")
 #' Apply a fitted rating to a stage series (S7 generic)
 #'
 #' @description
-#' Dispatches on the fit's class: [FlodeRating] and
-#' [FlodeSegmentedRating] each provide their own method. Replaces the
-#' previous separate `apply_rating()`/`apply_segmented_rating()` pair --
-#' one name, dispatched by what you're holding.
+#' Converts a stage record to discharge. Dispatches on the class of `fit`:
+#' [FlodeRating], [FlodeRatingTable] and [FlodeSegmentedRating] each
+#' provide a method. Replaces the previous separate
+#' `apply_rating()`/`apply_segmented_rating()` pair -- one name,
+#' dispatched by what you're holding.
 #'
-#' @param fit A `FlodeRating` or `FlodeSegmentedRating` object.
-#' @param ... Passed to the class-specific method -- typically
-#'   `stage_dt` (a data.frame or data.table with a stage column) plus
-#'   `stage_col`/`out_col`; see the individual methods' examples.
+#' The stage record can be a table with a stage column, or simply a
+#' numeric vector of stage values.
+#'
+#' @details
+#' **[FlodeRating] method.** What [rate_optimise()] and
+#' [rate_optimise_constrained()] return. It is converted with
+#' [as_rating_table()] and then handled exactly as below, so the two give
+#' identical results.
+#'
+#' **[FlodeRatingTable] method.** Each stage value is assigned to the limb
+#' whose `[lower_level, upper_level]` band contains it, and discharge is
+#' that limb's `Q = C(H - a)^n`. Limbs must be contiguous
+#' (`upper_level[i] == lower_level[i + 1]`), or the call stops. Stage at or
+#' below a limb's `a` gives zero discharge. Stage below the lowest limb or
+#' above the highest is evaluated by extrapolating the nearest limb's
+#' equation, and flagged `extrapolated = TRUE`. Where stage may fall below
+#' the lowest gauged stage, [extend_rating_low()] adds an explicit linear
+#' limb there instead.
+#'
+#' **[FlodeSegmentedRating] method.** Discharge comes from the joint
+#' segmented formula. Stage at or below the zero-flow stage `bp1` gives zero
+#' discharge, which falls out of the formula itself. Only stage above the
+#' highest gauged stage is flagged `extrapolated = TRUE`.
+#'
+#' @param fit A [FlodeRating], [FlodeRatingTable] or
+#'   [FlodeSegmentedRating].
+#' @param ... Arguments for the class-specific method, which are the same
+#'   for all three:
+#'   * `stage_dt`: a data.frame or data.table with a stage column, or a
+#'     numeric vector of stage values. Any other columns, such as
+#'     `datetime`, are carried through unchanged. A vector is wrapped in a
+#'     one-column table named by `stage_col`.
+#'   * `stage_col`: name of the stage column in `stage_dt`. Default
+#'     `"stage"`. With a vector it names the stage column of the result.
+#'   * `out_col`: name of the discharge column to add. Default
+#'     `"discharge"`.
+#'
+#' @return `stage_dt` as a data.table (or, for a vector input, a table
+#'   holding the stage values) with two columns added: `out_col` (the
+#'   computed discharge) and `extrapolated` (logical; `TRUE` where the
+#'   stage fell outside the range the rating covers, as defined for each
+#'   class above).
+#'
+#' @seealso [apply_rating_interval()] for a bootstrap prediction interval,
+#'   [apply_rating_versioned()] for a rating that changed over time,
+#'   [apply_rating_inverse()] for discharge back to stage, and
+#'   [extend_rating_low()] for stage below the lowest limb.
 #'
 #' @examples
 #' # A rating typed in by hand, e.g. from a station's published rating
@@ -448,6 +492,12 @@ rating_plot <- new_generic("rating_plot", "fit")
 #'   theme_minimal() +
 #'   theme(strip.placement = "outside")
 #'
+#' # A plain vector of stage values works too, and a fit from
+#' # rate_optimise() can be used directly
+#' apply_rating(my_fit, c(0.5, 1.5, 3.0))
+#' gaugings <- station_gaugings
+#' fit <- rate_optimise(gaugings$discharge_cms, gaugings$stage_m)
+#' apply_rating(fit, quantile(gaugings$stage_m, c(0.25, 0.5, 0.75)))
 #'
 #' @export
 apply_rating <- new_generic("apply_rating", "fit")
