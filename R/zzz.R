@@ -12,4 +12,5 @@
 
 .onLoad <- function(libname, pkgname) {
   S7::methods_register()
+  registerS3method("[", "reach.rate::FlodeEvidence", .subset_flode_evidence)
 }

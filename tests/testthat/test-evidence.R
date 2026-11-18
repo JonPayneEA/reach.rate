@@ -225,3 +225,39 @@ test_that("printing evidence shows the count and the conversion note", {
   expect_output(print(as_flode_evidence(plain_gaugings(3))), "3 row\\(s\\), 3 included")
   expect_output(print(as_flode_evidence(plain_gaugings(3))), "Converted from a plain table")
 })
+
+# ---- subsetting keeps evidence valid, or says it is no longer evidence ----------
+
+test_that("subsetting rows keeps evidence, with its note, valid and printable", {
+  ev <- as_flode_evidence(plain_gaugings(6))
+  for (sub in list(ev[stage_m > 1], ev[order(-stage_m)], head(ev, 3), ev[2:4])) {
+    expect_is_s7(sub, FlodeEvidence)
+    expect_equal(sub@conversion_note, ev@conversion_note)
+    expect_silent(S7::validate(sub))
+    expect_output(print(sub), "<FlodeEvidence>")
+  }
+})
+
+test_that("selecting columns or aggregating returns an ordinary data.table, not a broken evidence object", {
+  ev <- as_flode_evidence(plain_gaugings(6))
+  picked <- ev[, .(stage_m, discharge_cms)]
+  summed <- ev[, .(mean_stage = mean(stage_m))]
+  by_name <- ev[, c("stage_m", "discharge_cms")]
+  for (x in list(picked, summed, by_name)) {
+    expect_s3_class(x, "data.table")
+    expect_false(S7::S7_inherits(x, FlodeEvidence))
+    expect_false(inherits(x, "S7_object"))
+    expect_output(print(x))
+  }
+  expect_equal(summed$mean_stage, mean(plain_gaugings(6)$stage_m))
+  # A column selection that keeps every canonical column is still evidence.
+  expect_is_s7(ev[, canonical, with = FALSE], FlodeEvidence)
+})
+
+test_that("adding a column by reference to a copy keeps it evidence", {
+  ev <- data.table::copy(as_flode_evidence(plain_gaugings(4)))
+  ev[, extra := 1]
+  expect_is_s7(ev, FlodeEvidence)
+  expect_true("extra" %in% names(ev))
+  expect_equal(ev@conversion_note, as_flode_evidence(plain_gaugings(4))@conversion_note)
+})

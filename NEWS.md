@@ -20,6 +20,9 @@
     table saying what was assumed. Evidence ids survive fitting,
     flagging, the diagnostics and `saveRDS()`/`readRDS()`.
     `rating_evidence()` now returns the canonical columns first.
+    Subsetting rows keeps the result as evidence. Selecting columns or
+    aggregating (`ev[, .(a, b)]`) returns an ordinary data.table, unless
+    every canonical column is kept.
   * `@status` splits in two. `@fit_origin` keeps the old values
     (`independently_fitted`, `post_fit_aligned`, `constrained_refit`, and
     on a rating table also `extended_low` and `grafted`). `@lifecycle` is

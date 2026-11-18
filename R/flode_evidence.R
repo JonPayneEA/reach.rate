@@ -262,6 +262,29 @@ as_flode_evidence <- function(x) {
 #' @export
 rating_schema_version <- function() .rating_schema_version
 
+# `[` on evidence. data.table's own `[` keeps the S7 class on its result but
+# drops the object's other attributes, so selecting columns (`ev[, .(a, b)]`)
+# or aggregating (`ev[, .(m = mean(stage_m))]`) used to return something that
+# said it was a FlodeEvidence and had no conversion_note, which then failed
+# to print or validate. Here, a result that still has every canonical column
+# stays evidence and keeps its note; one that does not becomes an ordinary
+# data.table. Registered in .onLoad(), because S7 gives the class a name
+# (`reach.rate::FlodeEvidence`) that roxygen cannot write into NAMESPACE.
+.subset_flode_evidence <- function(x, ...) {
+  note <- attr(x, "conversion_note", exact = TRUE)
+  out <- NextMethod()
+  if (!inherits(out, "data.table")) return(out)
+  if (all(names(.evidence_columns) %in% names(out))) {
+    if (is.null(attr(out, "conversion_note", exact = TRUE))) {
+      data.table::setattr(out, "conversion_note", if (is.null(note)) character(0) else note)
+    }
+  } else {
+    data.table::setattr(out, "class", c("data.table", "data.frame"))
+    data.table::setattr(out, "conversion_note", NULL)
+  }
+  out
+}
+
 #' Print evidence (S7 method)
 #' @param x A [FlodeEvidence].
 #' @param ... Passed to the data.table print method.
