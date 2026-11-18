@@ -20,6 +20,7 @@ articles:
   contents:
   - rating_curves_guide
   - rating_methods_overview
+  - mathematical_contract
   - s7_objects_guide
   - rating_curve_walkthrough
   - non_standard_optimisation
@@ -149,6 +150,7 @@ reference:
     junction gaps at table level, and apply ratings that changed over time.
   contents:
   - as_rating_table
+  - convert_offset_convention
   - expand_rating_table
   - resolve_rc_gaps
   - apply_rating_versioned

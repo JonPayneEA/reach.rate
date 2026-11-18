@@ -219,7 +219,12 @@ NULL
 
     coefs <- coef(fit_attempt)
     resid_vals <- residuals(fit_attempt)
-    rss <- sum(resid_vals^2)
+    # The objective each attempt minimised is the age-weighted sum of
+    # squares (residuals() returns the raw, unweighted residuals), so that
+    # is what the attempts are ranked on. Ranking on the unweighted sum
+    # would pick between local optima by a criterion nobody optimised. With
+    # no age weighting every weight is 1 and the two are the same.
+    rss <- sum(limb_dt$age_weight * resid_vals^2)
 
     stage_check <- seq(min(limb_dt$stage_m), max(limb_dt$stage_m), length.out = 20)
     q_check <- coefs[["C"]] * (stage_check - coefs[["a"]])^coefs[["n"]]
