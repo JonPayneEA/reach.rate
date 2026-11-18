@@ -8,8 +8,8 @@
   uses the C standard library only, allocates nothing, keeps no global state
   and is thread safe. The header is the specification: it fixes how the
   edges of a limb, missing values, extrapolation and errors behave. R calls
-  it through a thin binding (`src/reach_r.c`); a Python package will load
-  the same source, so the two cannot drift apart. `apply_rating()`,
+  it through a thin binding (`src/reach_r.c`); a binding for another
+  language would load the same source, so the two could not drift apart. `apply_rating()`,
   `apply_rating_inverse()` and `extend_rating_low()` use it. Results are
   unchanged: the old R arithmetic is kept in the tests as an oracle, and the
   kernel is compared against it on random ratings, on every limb edge and

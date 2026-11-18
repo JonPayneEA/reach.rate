@@ -4,9 +4,9 @@
 #               Each function takes a rating table's columns, calls the
 #               kernel through the thin binding in src/reach_r.c, and gives
 #               back R types. The kernel is the one definition of the
-#               rating arithmetic, shared with the Python package; these
-#               wrappers add nothing to it except R's missing-value
-#               conventions.
+#               rating arithmetic, so a binding for another language can
+#               share it; these wrappers add nothing to it except R's
+#               missing-value conventions.
 # Author:       Jonathan Payne
 # Created:      2026-11-18
 # Tier:         3

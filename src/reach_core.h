@@ -12,9 +12,9 @@
  * They depend only on the C standard library, allocate nothing, keep no
  * global state and are safe to call from several threads at once, so any
  * language that can call C can use them. The R package wraps them in
- * reach_r.c; the Python package loads the same source through ctypes.
- * R and Python are required to agree with each other because both call
- * this code, not because two implementations were written to match.
+ * reach_r.c. A binding for any other language is expected to call this
+ * same source, so that two bindings agree because they run the same code,
+ * not because two implementations were written to match.
  *
  * Conventions that every caller can rely on:
  *
