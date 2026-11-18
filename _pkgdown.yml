@@ -35,12 +35,17 @@ reference:
   desc: >
     Bring a gauging archive and an operational ratings export into R
     without cleaning them. Every row is kept; what did not parse is noted
-    on the row. The guided read_gaugings() workflow in the improvement plan
+    on the row. match_stations() links the two files' station ids, with a
+    table you supply where the ids differ, and check_operational_ratings()
+    compares every rating with its gaugings and lists what could not be
+    compared. The guided read_gaugings() workflow in the improvement plan
     will build on these.
   contents:
   - read_gaugings
   - read_operational_ratings
   - operational_rating_tables
+  - match_stations
+  - check_operational_ratings
 
 - title: Using a rating
   desc: >
