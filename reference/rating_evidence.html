@@ -17,7 +17,7 @@ is included."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">reach.rate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -98,14 +98,16 @@ was used). A copy.</p>
 <span class="r-in"><span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fl">5</span> <span class="op">*</span> <span class="va">stage_m</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">rating_evidence</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    stage_m discharge_cms  limb</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      &lt;num&gt;         &lt;num&gt; &lt;int&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:    0.50      1.636856     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:    0.55      1.924774     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:    0.60      2.191353     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4:    0.65      2.541661     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5:    0.70      2.832295     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6:    0.75      3.139089     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;FlodeEvidence&gt; 6 row(s), 6 included, source type(s): gauging</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Note: Converted from a plain table; filled evidence_id, site_id, observation_time, source_type, source_name, source_version, quality_code, exclusion_reason, notes, included, weight, source_row, metadata. source_type assumed 'gauging', included assumed TRUE, weight assumed 1. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    evidence_id stage_m discharge_cms observation_time source_type included</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         &lt;char&gt;   &lt;num&gt;         &lt;num&gt;           &lt;POSc&gt;      &lt;char&gt;   &lt;lgcl&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:        G001    0.50      1.636856             &lt;NA&gt;     gauging     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:        G002    0.55      1.924774             &lt;NA&gt;     gauging     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:        G003    0.60      2.191353             &lt;NA&gt;     gauging     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:        G004    0.65      2.541661             &lt;NA&gt;     gauging     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5:        G005    0.70      2.832295             &lt;NA&gt;     gauging     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6:        G006    0.75      3.139089             &lt;NA&gt;     gauging     TRUE</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

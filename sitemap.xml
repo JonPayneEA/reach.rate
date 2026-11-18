@@ -20,6 +20,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/authors.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/index.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/news/index.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/FlodeEvidence.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/FlodeRating.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/FlodeRatingBase.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/FlodeRatingTable.html</loc></url>
@@ -30,6 +31,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/apply_rating_interval.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/apply_rating_inverse.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/apply_rating_versioned.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/as_flode_evidence.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/as_rating_table.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/bootstrap_to_table.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/check_operational_ratings.html</loc></url>
@@ -37,6 +39,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/compare_ratings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/demo_cross_section_rating.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/detect_rc_gaps.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/evidence_source_types.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/expand_rating_table.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/extend_rating_low.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/flag_extrapolated_limbs.html</loc></url>
@@ -66,6 +69,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rating_limbs.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rating_plot.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rating_provenance.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/rating_schema_version.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rating_support.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/reach.rate-package.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/read_gaugings.html</loc></url>

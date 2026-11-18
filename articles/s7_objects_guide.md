@@ -60,7 +60,7 @@ discharge_cms <- 5 * stage_m^1.5 * exp(rnorm(length(stage_m), sd = 0.03))
 fit <- rate_optimise(discharge_cms, stage_m)
 
 fit # each class has its own print method
-#> <FlodeRating> 1 limb(s), status: independently_fitted
+#> <FlodeRating> 1 limb(s), origin: independently_fitted, lifecycle: draft
 #>     limb lower_stage_m upper_stage_m        C          a        n  rmse_cms
 #>    <int>         <num>         <num>    <num>      <num>    <num>     <num>
 #> 1:     1           0.3             3 5.754582 0.08356371 1.394315 0.3719334
@@ -71,8 +71,9 @@ class(fit) # the full inheritance chain, most-specific first
 #> [1] "reach.rate::FlodeRating"     "reach.rate::FlodeRatingBase"
 #> [3] "S7_object"
 S7::prop_names(fit) # every property the class declares
-#> [1] "gaugings"   "fit_starts" "status"     "provenance" "previous"  
-#> [6] "limbs"      "bootstrap"
+#>  [1] "gaugings"       "fit_starts"     "fit_origin"     "lifecycle"     
+#>  [5] "schema_version" "status"         "provenance"     "previous"      
+#>  [9] "limbs"          "bootstrap"
 S7::prop(fit, "limbs")[, .(limb, C, a, n)] # one property, by name
 #>     limb        C          a        n
 #>    <int>    <num>      <num>    <num>
@@ -95,9 +96,10 @@ When you add something to a class, add it here and to an accessor.
 | per-limb bounds and equation | `FlodeRating`, `FlodeRatingTable` | [`rating_limbs()`](https://jonpayneea.github.io/reach.rate/reference/rating_limbs.md) |
 | per-limb diagnostics and uncertainty | `FlodeRating` | [`rating_diagnostics()`](https://jonpayneea.github.io/reach.rate/reference/rating_diagnostics.md), [`rating_coefficients()`](https://jonpayneea.github.io/reach.rate/reference/rating_coefficients.md) |
 | joint coefficients | `FlodeSegmentedRating` | [`rating_coefficients()`](https://jonpayneea.github.io/reach.rate/reference/rating_coefficients.md) |
-| gaugings | `FlodeRating`, `FlodeSegmentedRating` | [`rating_evidence()`](https://jonpayneea.github.io/reach.rate/reference/rating_evidence.md), [`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md) |
+| evidence (a `FlodeEvidence`: stable `evidence_id`, source, inclusion, weight) | `FlodeRating`, `FlodeSegmentedRating` | [`rating_evidence()`](https://jonpayneea.github.io/reach.rate/reference/rating_evidence.md), [`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md) |
 | bootstrap draws | `FlodeRating` | [`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md) |
-| status and previous version | all three | [`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md) |
+| `fit_origin`, `lifecycle` and previous version | all three | [`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md) |
+| `schema_version` | all three | [`rating_provenance()`](https://jonpayneea.github.io/reach.rate/reference/rating_provenance.md) |
 | provenance | `FlodeRating`, `FlodeSegmentedRating` | [`rating_provenance()`](https://jonpayneea.github.io/reach.rate/reference/rating_provenance.md) |
 | per-attempt multi-start record | `FlodeRating`, `FlodeSegmentedRating` | summarised in [`rating_diagnostics()`](https://jonpayneea.github.io/reach.rate/reference/rating_diagnostics.md) |
 
@@ -114,9 +116,10 @@ FlodeRating(
   limbs = data.table(limb = 1, C = 1, a = 0, n = 1), # missing lower_stage_m/upper_stage_m
   gaugings = data.table(discharge_cms = 1, stage_m = 1)
 )
-#> Error:
-#> ! <reach.rate::FlodeRating> object is invalid:
-#> - limbs is missing required column(s): lower_stage_m, upper_stage_m
+#> Warning in set(dt, j = col, value = value): Tried to assign NULL to column
+#> 'metadata', but this column does not exist to remove
+#> Error in `colnamesInt()`:
+#> ! argument specifying columns received non-existing column(s): cols[15]='metadata'
 ```
 
 That error fires at construction time and names exactly which columns
@@ -165,9 +168,11 @@ object itself, so there is no string to get wrong.
 
 ## The amendment chain
 
-Every class carries a status and a link to the version it was amended
-from, so amending a rating never silently loses what it was amended
-from. Users read the whole chain with
+Every class carries how it came to be (`fit_origin`), where it stands in
+review (`lifecycle`, which the package leaves at `"draft"`: approval is
+a person’s decision) and a link to the version it was amended from, so
+amending a rating never silently loses what it was amended from. Users
+read the whole chain with
 [`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md):
 
 ``` r
@@ -180,10 +185,10 @@ tbl <- FlodeRatingTable(table = rating_dt)
 aligned <- align_limb_equations(tbl)
 
 rating_history(aligned)
-#>     step            class               status n_limbs
-#>    <int>           <char>               <char>   <int>
-#> 1:     1 FlodeRatingTable independently_fitted       2
-#> 2:     2 FlodeRatingTable     post_fit_aligned       2
+#>     step            class           fit_origin lifecycle n_limbs
+#>    <int>           <char>               <char>    <char>   <int>
+#> 1:     1 FlodeRatingTable independently_fitted     draft       2
+#> 2:     2 FlodeRatingTable     post_fit_aligned     draft       2
 identical(S7::prop(S7::prop(aligned, "previous"), "table"), S7::prop(tbl, "table")) # the exact object it was built from
 #> [1] TRUE
 ```

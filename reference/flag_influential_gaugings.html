@@ -47,7 +47,7 @@ defined leverage – both columns are NA for its gaugings."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">reach.rate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -167,16 +167,13 @@ explanation with a worked example.</p></div>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, n_bounds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.3</span>, <span class="fl">1.7</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">flagged</span> <span class="op">&lt;-</span> <span class="fu">flag_influential_gaugings</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">flagged</span><span class="op">@</span><span class="va">gaugings</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="op">-</span><span class="va">cooks_distance</span><span class="op">)</span><span class="op">]</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    discharge_cms stage_m  limb fitted_cms residual_cms   leverage</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            &lt;num&gt;   &lt;num&gt; &lt;int&gt;      &lt;num&gt;        &lt;num&gt;      &lt;num&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:      40.92438     3.5     1   35.69908     5.225298 0.59697824</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:      24.85935     3.0     1   27.63987    -2.780520 0.14927731</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:      19.74745     2.6     1   21.81569    -2.068232 0.07708563</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    cooks_distance influential</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             &lt;num&gt;      &lt;lgcl&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     18.6986541        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:      0.2971369        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:      0.0721333       FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;FlodeEvidence&gt; 3 row(s), 3 included, source type(s): gauging</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Note: Converted from a plain table; filled evidence_id, site_id, observation_time, source_type, source_name, source_version, quality_code, exclusion_reason, notes, included, weight, source_row, metadata. source_type assumed 'gauging', included assumed TRUE, weight assumed 1. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    evidence_id stage_m discharge_cms observation_time source_type included</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         &lt;char&gt;   &lt;num&gt;         &lt;num&gt;           &lt;POSc&gt;      &lt;char&gt;   &lt;lgcl&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:        G029     3.5      40.92438             &lt;NA&gt;     gauging     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:        G028     3.0      24.85935             &lt;NA&gt;     gauging     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:        G024     2.6      19.74745             &lt;NA&gt;     gauging     TRUE</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -123,7 +123,7 @@ rating_limbs(constrained, all_columns = TRUE)[, c("limb", "C", "a", "n", "aligne
 #> 1:     1 3.387724  0.03466713 1.474948   FALSE
 #> 2:     2 2.384472 -0.02706901 2.160699    TRUE
 rating_history(constrained)
-#>     step       class            status n_limbs
-#>    <int>      <char>            <char>   <int>
-#> 1:     1 FlodeRating constrained_refit       2
+#>     step       class        fit_origin lifecycle n_limbs
+#>    <int>      <char>            <char>    <char>   <int>
+#> 1:     1 FlodeRating constrained_refit     draft       2
 ```

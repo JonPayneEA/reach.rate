@@ -17,7 +17,7 @@ bp1..bpk, n1..nk, diagnostics), not one row per segment."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">reach.rate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,9 +68,11 @@ rather than independent limbs, so <code>@coefficients</code> is one row (<code>C
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">FlodeSegmentedRating</span><span class="op">(</span></span>
-<span>  gaugings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  gaugings <span class="op">=</span> <span class="fu"><a href="FlodeEvidence.html">FlodeEvidence</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  fit_starts <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  status <span class="op">=</span> <span class="st">"independently_fitted"</span>,</span>
+<span>  fit_origin <span class="op">=</span> <span class="st">"independently_fitted"</span>,</span>
+<span>  lifecycle <span class="op">=</span> <span class="st">"draft"</span>,</span>
+<span>  schema_version <span class="op">=</span> <span class="fl">2L</span>,</span>
 <span>  provenance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  previous <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  coefficients <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span><span class="op">)</span>,</span>
@@ -84,15 +86,12 @@ rather than independent limbs, so <code>@coefficients</code> is one row (<code>C
 
 
 <dl><dt id="arg-gaugings">gaugings<a class="anchor" aria-label="anchor" href="#arg-gaugings"></a></dt>
-<dd><p>Data.table with <code>discharge_cms</code> and <code>stage_m</code>
-columns – the gaugings the fit was built from. May optionally
-include a <code>gauging_datetime</code> column (<code>Date</code> or <code>POSIXct</code>) recording
-when each spot gauging was taken. Nothing in the package currently
-reads this column – it's groundwork for a future age-aware fitting
-option (see issue #9). A gauging's own measurement method (current-
-meter, ADCP, salt-dilution, index-velocity, ...) is not currently
-recorded either – every gauging is treated identically regardless
-of source.</p></dd>
+<dd><p>A <a href="FlodeEvidence.html">FlodeEvidence</a> table of the observations the fit was
+built from. A plain <code>data.table</code> with <code>discharge_cms</code> and <code>stage_m</code>
+columns is accepted and converted by <code><a href="as_flode_evidence.html">as_flode_evidence()</a></code>, which
+generates evidence IDs and records what it assumed. A
+<code>gauging_datetime</code> column (<code>Date</code> or <code>POSIXct</code>) becomes
+<code>observation_time</code> and is used for age weighting.</p></dd>
 
 
 <dt id="arg-fit-starts">fit_starts<a class="anchor" aria-label="anchor" href="#arg-fit-starts"></a></dt>
@@ -100,9 +99,21 @@ of source.</p></dd>
 <code>NULL</code> if the fit wasn't produced with <code>multi_start = TRUE</code>.</p></dd>
 
 
-<dt id="arg-status">status<a class="anchor" aria-label="anchor" href="#arg-status"></a></dt>
-<dd><p>Character. One of <code>"independently_fitted"</code>,
-<code>"post_fit_aligned"</code>, or <code>"constrained_refit"</code>.</p></dd>
+<dt id="arg-fit-origin">fit_origin<a class="anchor" aria-label="anchor" href="#arg-fit-origin"></a></dt>
+<dd><p>Character. How the fit came to be: one of
+<code>"independently_fitted"</code>, <code>"post_fit_aligned"</code> or <code>"constrained_refit"</code>.
+Read-only <code>@status</code> returns the same value.</p></dd>
+
+
+<dt id="arg-lifecycle">lifecycle<a class="anchor" aria-label="anchor" href="#arg-lifecycle"></a></dt>
+<dd><p>Character. Where the rating stands in review: <code>"draft"</code>
+(default), <code>"under_review"</code>, <code>"approved"</code>, <code>"superseded"</code> or <code>"withdrawn"</code>.
+The package never sets <code>"approved"</code>; that is a decision for a person.</p></dd>
+
+
+<dt id="arg-schema-version">schema_version<a class="anchor" aria-label="anchor" href="#arg-schema-version"></a></dt>
+<dd><p>Integer. The layout version the object was made
+under; see <code><a href="rating_schema_version.html">rating_schema_version()</a></code>. Leave at the default.</p></dd>
 
 
 <dt id="arg-provenance">provenance<a class="anchor" aria-label="anchor" href="#arg-provenance"></a></dt>
@@ -142,7 +153,7 @@ at <code>control</code> (<code>FALSE</code>).</p></dd>
 <span class="r-in"><span>  <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">stage_m</span> <span class="op">-</span> <span class="fl">2.4</span>, <span class="fl">0</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">^</span><span class="fl">1.1</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.03</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise_segmented.html">rate_optimise_segmented</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.6</span>, <span class="fl">2.4</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;FlodeSegmentedRating&gt; 3 segment(s), status: independently_fitted, R² = 0.9994</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;FlodeSegmentedRating&gt; 3 segment(s), origin: independently_fitted, lifecycle: draft, R² = 0.9994</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          C        bp1       n1        n2       n3   bp2   bp3  rmse_cms</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      &lt;num&gt;      &lt;num&gt;    &lt;num&gt;     &lt;num&gt;    &lt;num&gt; &lt;num&gt; &lt;num&gt;     &lt;num&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1: 2.37908 -0.1903062 1.986332 0.7764828 1.051703   1.6   2.4 0.9894296</span>

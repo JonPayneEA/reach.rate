@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">reach.rate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -133,7 +133,7 @@ works the same on every class:</p>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit</span> <span class="co"># each class has its own print method</span></span>
-<span><span class="co">#&gt; &lt;FlodeRating&gt; 1 limb(s), status: independently_fitted</span></span>
+<span><span class="co">#&gt; &lt;FlodeRating&gt; 1 limb(s), origin: independently_fitted, lifecycle: draft</span></span>
 <span><span class="co">#&gt;     limb lower_stage_m upper_stage_m        C          a        n  rmse_cms</span></span>
 <span><span class="co">#&gt;    &lt;int&gt;         &lt;num&gt;         &lt;num&gt;    &lt;num&gt;      &lt;num&gt;    &lt;num&gt;     &lt;num&gt;</span></span>
 <span><span class="co">#&gt; 1:     1           0.3             3 5.754582 0.08356371 1.394315 0.3719334</span></span>
@@ -144,8 +144,9 @@ works the same on every class:</p>
 <span><span class="co">#&gt; [1] "reach.rate::FlodeRating"     "reach.rate::FlodeRatingBase"</span></span>
 <span><span class="co">#&gt; [3] "S7_object"</span></span>
 <span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/prop_names.html" class="external-link">prop_names</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span> <span class="co"># every property the class declares</span></span>
-<span><span class="co">#&gt; [1] "gaugings"   "fit_starts" "status"     "provenance" "previous"  </span></span>
-<span><span class="co">#&gt; [6] "limbs"      "bootstrap"</span></span>
+<span><span class="co">#&gt;  [1] "gaugings"       "fit_starts"     "fit_origin"     "lifecycle"     </span></span>
+<span><span class="co">#&gt;  [5] "schema_version" "status"         "provenance"     "previous"      </span></span>
+<span><span class="co">#&gt;  [9] "limbs"          "bootstrap"</span></span>
 <span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/prop.html" class="external-link">prop</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"limbs"</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">C</span>, <span class="va">a</span>, <span class="va">n</span><span class="op">)</span><span class="op">]</span> <span class="co"># one property, by name</span></span>
 <span><span class="co">#&gt;     limb        C          a        n</span></span>
 <span><span class="co">#&gt;    &lt;int&gt;    &lt;num&gt;      &lt;num&gt;    &lt;num&gt;</span></span>
@@ -193,7 +194,8 @@ accessor.</p>
 <td><code><a href="../reference/rating_coefficients.html">rating_coefficients()</a></code></td>
 </tr>
 <tr class="even">
-<td>gaugings</td>
+<td>evidence (a <code>FlodeEvidence</code>: stable
+<code>evidence_id</code>, source, inclusion, weight)</td>
 <td>
 <code>FlodeRating</code>, <code>FlodeSegmentedRating</code>
 </td>
@@ -207,18 +209,25 @@ accessor.</p>
 <td><code><a href="../reference/rating_bootstrap.html">rating_bootstrap()</a></code></td>
 </tr>
 <tr class="even">
-<td>status and previous version</td>
+<td>
+<code>fit_origin</code>, <code>lifecycle</code> and previous
+version</td>
 <td>all three</td>
 <td><code><a href="../reference/rating_history.html">rating_history()</a></code></td>
 </tr>
 <tr class="odd">
+<td><code>schema_version</code></td>
+<td>all three</td>
+<td><code><a href="../reference/rating_provenance.html">rating_provenance()</a></code></td>
+</tr>
+<tr class="even">
 <td>provenance</td>
 <td>
 <code>FlodeRating</code>, <code>FlodeSegmentedRating</code>
 </td>
 <td><code><a href="../reference/rating_provenance.html">rating_provenance()</a></code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>per-attempt multi-start record</td>
 <td>
 <code>FlodeRating</code>, <code>FlodeSegmentedRating</code>
@@ -241,9 +250,10 @@ the missing piece.</p>
 <span>  limbs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span>limb <span class="op">=</span> <span class="fl">1</span>, C <span class="op">=</span> <span class="fl">1</span>, a <span class="op">=</span> <span class="fl">0</span>, n <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, <span class="co"># missing lower_stage_m/upper_stage_m</span></span>
 <span>  gaugings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span>discharge_cms <span class="op">=</span> <span class="fl">1</span>, stage_m <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;">:</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> &lt;reach.rate::FlodeRating&gt; object is invalid:</span></span>
-<span><span class="co">#&gt; - limbs is missing required column(s): lower_stage_m, upper_stage_m</span></span></code></pre></div>
+<span><span class="co">#&gt; Warning in set(dt, j = col, value = value): Tried to assign NULL to column</span></span>
+<span><span class="co">#&gt; 'metadata', but this column does not exist to remove</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;"> in `colnamesInt()`:</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> argument specifying columns received non-existing column(s): cols[15]='metadata'</span></span></code></pre></div>
 <p>That error fires at construction time and names exactly which columns
 are missing, not three functions later as an obscure <code>NULL</code>.
 Every exported class validates its own structural requirements (required
@@ -288,9 +298,12 @@ against the class object itself, so there is no string to get wrong.</p>
 <div class="section level2">
 <h2 id="the-amendment-chain">The amendment chain<a class="anchor" aria-label="anchor" href="#the-amendment-chain"></a>
 </h2>
-<p>Every class carries a status and a link to the version it was amended
-from, so amending a rating never silently loses what it was amended
-from. Users read the whole chain with <code><a href="../reference/rating_history.html">rating_history()</a></code>:</p>
+<p>Every class carries how it came to be (<code>fit_origin</code>),
+where it stands in review (<code>lifecycle</code>, which the package
+leaves at <code>"draft"</code>: approval is a person’s decision) and a
+link to the version it was amended from, so amending a rating never
+silently loses what it was amended from. Users read the whole chain with
+<code><a href="../reference/rating_history.html">rating_history()</a></code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rating_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
 <span>  lower_level <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1.5</span><span class="op">)</span>, upper_level <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.5</span>, <span class="fl">3</span><span class="op">)</span>,</span>
@@ -300,10 +313,10 @@ from. Users read the whole chain with <code><a href="../reference/rating_history
 <span><span class="va">aligned</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/align_limb_equations.html">align_limb_equations</a></span><span class="op">(</span><span class="va">tbl</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/rating_history.html">rating_history</a></span><span class="op">(</span><span class="va">aligned</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     step            class               status n_limbs</span></span>
-<span><span class="co">#&gt;    &lt;int&gt;           &lt;char&gt;               &lt;char&gt;   &lt;int&gt;</span></span>
-<span><span class="co">#&gt; 1:     1 FlodeRatingTable independently_fitted       2</span></span>
-<span><span class="co">#&gt; 2:     2 FlodeRatingTable     post_fit_aligned       2</span></span>
+<span><span class="co">#&gt;     step            class           fit_origin lifecycle n_limbs</span></span>
+<span><span class="co">#&gt;    &lt;int&gt;           &lt;char&gt;               &lt;char&gt;    &lt;char&gt;   &lt;int&gt;</span></span>
+<span><span class="co">#&gt; 1:     1 FlodeRatingTable independently_fitted     draft       2</span></span>
+<span><span class="co">#&gt; 2:     2 FlodeRatingTable     post_fit_aligned     draft       2</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/prop.html" class="external-link">prop</a></span><span class="op">(</span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/prop.html" class="external-link">prop</a></span><span class="op">(</span><span class="va">aligned</span>, <span class="st">"previous"</span><span class="op">)</span>, <span class="st">"table"</span><span class="op">)</span>, <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/prop.html" class="external-link">prop</a></span><span class="op">(</span><span class="va">tbl</span>, <span class="st">"table"</span><span class="op">)</span><span class="op">)</span> <span class="co"># the exact object it was built from</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 <p>The previous version is not a copy or a re-derived approximation: it

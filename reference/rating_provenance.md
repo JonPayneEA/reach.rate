@@ -44,5 +44,5 @@ str(rating_provenance(fit)[c("fitting_equation", "objective", "tool_version")])
 #> List of 3
 #>  $ fitting_equation: chr "Q = C(H - a)^n"
 #>  $ objective       : chr "absolute"
-#>  $ tool_version    : chr "reach.rate 0.1.0"
+#>  $ tool_version    : chr "reach.rate 0.2.0"
 ```

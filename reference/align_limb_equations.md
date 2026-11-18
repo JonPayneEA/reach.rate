@@ -131,7 +131,7 @@ rating_dt <- data.table::data.table(
 )
 aligned_result <- align_limb_equations(rating_dt)
 aligned_result
-#> <FlodeRatingTable> 3 limb(s), status: post_fit_aligned
+#> <FlodeRatingTable> 3 limb(s), origin: post_fit_aligned, lifecycle: draft
 #>    lower_level upper_level        C     a     n C_original aligned align_failed
 #>          <num>       <num>    <num> <num> <num>      <num>  <lgcl>       <lgcl>
 #> 1:         0.0         1.2 2.500000     0   1.5        2.5   FALSE        FALSE
@@ -149,7 +149,7 @@ aligned_result@status
 # expand_rating_table() accepts the FlodeRatingTable directly
 rc_dt <- expand_rating_table(aligned_result)
 gaps_dt <- detect_rc_gaps(rc_dt)
-#> INFO [2026-11-18 16:14:35] Checked 2 junction(s): 0 gap(s) flagged.
+#> INFO [2026-11-18 20:12:13] Checked 2 junction(s): 0 gap(s) flagged.
 any(gaps_dt$gap_flagged)
 #> [1] FALSE
 ```

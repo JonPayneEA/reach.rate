@@ -23,7 +23,7 @@ was used."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">reach.rate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,9 +77,11 @@ was used.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">FlodeRating</span><span class="op">(</span></span>
-<span>  gaugings <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  gaugings <span class="op">=</span> <span class="fu"><a href="FlodeEvidence.html">FlodeEvidence</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  fit_starts <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  status <span class="op">=</span> <span class="st">"independently_fitted"</span>,</span>
+<span>  fit_origin <span class="op">=</span> <span class="st">"independently_fitted"</span>,</span>
+<span>  lifecycle <span class="op">=</span> <span class="st">"draft"</span>,</span>
+<span>  schema_version <span class="op">=</span> <span class="fl">2L</span>,</span>
 <span>  provenance <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  previous <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  limbs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span><span class="op">)</span>,</span>
@@ -92,15 +94,12 @@ was used.</p>
 
 
 <dl><dt id="arg-gaugings">gaugings<a class="anchor" aria-label="anchor" href="#arg-gaugings"></a></dt>
-<dd><p>Data.table with <code>discharge_cms</code> and <code>stage_m</code>
-columns – the gaugings the fit was built from. May optionally
-include a <code>gauging_datetime</code> column (<code>Date</code> or <code>POSIXct</code>) recording
-when each spot gauging was taken. Nothing in the package currently
-reads this column – it's groundwork for a future age-aware fitting
-option (see issue #9). A gauging's own measurement method (current-
-meter, ADCP, salt-dilution, index-velocity, ...) is not currently
-recorded either – every gauging is treated identically regardless
-of source.</p></dd>
+<dd><p>A <a href="FlodeEvidence.html">FlodeEvidence</a> table of the observations the fit was
+built from. A plain <code>data.table</code> with <code>discharge_cms</code> and <code>stage_m</code>
+columns is accepted and converted by <code><a href="as_flode_evidence.html">as_flode_evidence()</a></code>, which
+generates evidence IDs and records what it assumed. A
+<code>gauging_datetime</code> column (<code>Date</code> or <code>POSIXct</code>) becomes
+<code>observation_time</code> and is used for age weighting.</p></dd>
 
 
 <dt id="arg-fit-starts">fit_starts<a class="anchor" aria-label="anchor" href="#arg-fit-starts"></a></dt>
@@ -108,9 +107,21 @@ of source.</p></dd>
 <code>NULL</code> if the fit wasn't produced with <code>multi_start = TRUE</code>.</p></dd>
 
 
-<dt id="arg-status">status<a class="anchor" aria-label="anchor" href="#arg-status"></a></dt>
-<dd><p>Character. One of <code>"independently_fitted"</code>,
-<code>"post_fit_aligned"</code>, or <code>"constrained_refit"</code>.</p></dd>
+<dt id="arg-fit-origin">fit_origin<a class="anchor" aria-label="anchor" href="#arg-fit-origin"></a></dt>
+<dd><p>Character. How the fit came to be: one of
+<code>"independently_fitted"</code>, <code>"post_fit_aligned"</code> or <code>"constrained_refit"</code>.
+Read-only <code>@status</code> returns the same value.</p></dd>
+
+
+<dt id="arg-lifecycle">lifecycle<a class="anchor" aria-label="anchor" href="#arg-lifecycle"></a></dt>
+<dd><p>Character. Where the rating stands in review: <code>"draft"</code>
+(default), <code>"under_review"</code>, <code>"approved"</code>, <code>"superseded"</code> or <code>"withdrawn"</code>.
+The package never sets <code>"approved"</code>; that is a decision for a person.</p></dd>
+
+
+<dt id="arg-schema-version">schema_version<a class="anchor" aria-label="anchor" href="#arg-schema-version"></a></dt>
+<dd><p>Integer. The layout version the object was made
+under; see <code><a href="rating_schema_version.html">rating_schema_version()</a></code>. Leave at the default.</p></dd>
 
 
 <dt id="arg-provenance">provenance<a class="anchor" aria-label="anchor" href="#arg-provenance"></a></dt>
@@ -144,7 +155,7 @@ or <code>NULL</code> (default) for an independently-fitted result.</p></dd>
 <span class="r-in"><span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fl">3.2</span> <span class="op">*</span> <span class="va">stage_m</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.03</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;FlodeRating&gt; 1 limb(s), status: independently_fitted</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;FlodeRating&gt; 1 limb(s), origin: independently_fitted, lifecycle: draft</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     limb lower_stage_m upper_stage_m        C          a        n  rmse_cms</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;         &lt;num&gt;         &lt;num&gt;    &lt;num&gt;      &lt;num&gt;    &lt;num&gt;     &lt;num&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1           0.5             3 3.520861 0.05580791 1.538393 0.2765406</span>
@@ -156,14 +167,16 @@ or <code>NULL</code> (default) for an independently-fitted result.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;         &lt;num&gt;         &lt;num&gt;    &lt;num&gt;      &lt;num&gt;    &lt;num&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1           0.5             3 3.520861 0.05580791 1.538393</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="rating_evidence.html">rating_evidence</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    stage_m discharge_cms  limb</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      &lt;num&gt;         &lt;num&gt; &lt;int&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     0.5      1.035953     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:     0.6      1.420969     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:     0.7      1.763679     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4:     0.8      2.348976     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5:     0.9      2.730430     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6:     1.0      3.122196     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;FlodeEvidence&gt; 6 row(s), 6 included, source type(s): gauging</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Note: Converted from a plain table; filled evidence_id, site_id, observation_time, source_type, source_name, source_version, quality_code, exclusion_reason, notes, included, weight, source_row, metadata. source_type assumed 'gauging', included assumed TRUE, weight assumed 1. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    evidence_id stage_m discharge_cms observation_time source_type included</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         &lt;char&gt;   &lt;num&gt;         &lt;num&gt;           &lt;POSc&gt;      &lt;char&gt;   &lt;lgcl&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:        G001     0.5      1.035953             &lt;NA&gt;     gauging     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:        G002     0.6      1.420969             &lt;NA&gt;     gauging     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:        G003     0.7      1.763679             &lt;NA&gt;     gauging     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:        G004     0.8      2.348976             &lt;NA&gt;     gauging     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5:        G005     0.9      2.730430             &lt;NA&gt;     gauging     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6:        G006     1.0      3.122196             &lt;NA&gt;     gauging     TRUE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The constructor checks its input, so a malformed object cannot exist:</span></span></span>
 <span class="r-in"><span><span class="co"># here the limb table is missing its stage bounds.</span></span></span>
@@ -171,8 +184,9 @@ or <code>NULL</code> (default) for an independently-fitted result.</p></dd>
 <span class="r-in"><span>  limbs <span class="op">=</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span>limb <span class="op">=</span> <span class="fl">1</span>, C <span class="op">=</span> <span class="fl">1</span>, a <span class="op">=</span> <span class="fl">0</span>, n <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  gaugings <span class="op">=</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span>discharge_cms <span class="op">=</span> <span class="fl">1</span>, stage_m <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Error : &lt;reach.rate::FlodeRating&gt; object is invalid:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - limbs is missing required column(s): lower_stage_m, upper_stage_m</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Tried to assign NULL to column 'metadata', but this column does not exist to remove</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Error in colnamesInt(x, neworder, check_dups = FALSE, skip_absent = skip_absent) : </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   argument specifying columns received non-existing column(s): cols[15]='metadata'</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

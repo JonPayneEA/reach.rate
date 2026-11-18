@@ -42,12 +42,14 @@ stage_m <- seq(0.5, 2.5, by = 0.05)
 discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.02)
 fit <- rate_optimise(discharge_cms, stage_m)
 head(rating_evidence(fit))
-#>    stage_m discharge_cms  limb
-#>      <num>         <num> <int>
-#> 1:    0.50      1.636856     1
-#> 2:    0.55      1.924774     1
-#> 3:    0.60      2.191353     1
-#> 4:    0.65      2.541661     1
-#> 5:    0.70      2.832295     1
-#> 6:    0.75      3.139089     1
+#> <FlodeEvidence> 6 row(s), 6 included, source type(s): gauging
+#> Note: Converted from a plain table; filled evidence_id, site_id, observation_time, source_type, source_name, source_version, quality_code, exclusion_reason, notes, included, weight, source_row, metadata. source_type assumed 'gauging', included assumed TRUE, weight assumed 1. 
+#>    evidence_id stage_m discharge_cms observation_time source_type included
+#>         <char>   <num>         <num>           <POSc>      <char>   <lgcl>
+#> 1:        G001    0.50      1.636856             <NA>     gauging     TRUE
+#> 2:        G002    0.55      1.924774             <NA>     gauging     TRUE
+#> 3:        G003    0.60      2.191353             <NA>     gauging     TRUE
+#> 4:        G004    0.65      2.541661             <NA>     gauging     TRUE
+#> 5:        G005    0.70      2.832295             <NA>     gauging     TRUE
+#> 6:        G006    0.75      3.139089             <NA>     gauging     TRUE
 ```

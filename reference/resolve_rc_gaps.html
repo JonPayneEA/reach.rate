@@ -153,7 +153,7 @@ above it could silently reopen the junction below."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">reach.rate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -350,14 +350,14 @@ themselves rather than just the discretised table</p></div>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rc_raw_dt</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/rbindlist.html" class="external-link">rbindlist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">limb1_dt</span>, <span class="va">limb2_dt</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rc_fixed_dt</span> <span class="op">&lt;-</span> <span class="fu">resolve_rc_gaps</span><span class="op">(</span><span class="va">rc_raw_dt</span>, method <span class="op">=</span> <span class="st">"midpoint"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 16:14:50] Checked 1 junction(s): 1 gap(s) flagged.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 16:14:50] Junction 1 (limbs 1/2, stage 10): gap 37.66 -&gt; 32.66 | agreed Q = 35.16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 20:12:27] Checked 1 junction(s): 1 gap(s) flagged.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 20:12:27] Junction 1 (limbs 1/2, stage 10): gap 37.66 -&gt; 32.66 | agreed Q = 35.16</span>
 <span class="r-in"><span><span class="va">rc_matched_dt</span> <span class="op">&lt;-</span> <span class="fu">resolve_rc_gaps</span><span class="op">(</span><span class="va">rc_raw_dt</span>, method <span class="op">=</span> <span class="st">"match_upper_to_lower"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 16:14:50] Checked 1 junction(s): 1 gap(s) flagged.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 16:14:50] Junction 1 (limbs 1/2, stage 10): matching upper start 32.66 -&gt; 37.66</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 20:12:27] Checked 1 junction(s): 1 gap(s) flagged.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 20:12:27] Junction 1 (limbs 1/2, stage 10): matching upper start 32.66 -&gt; 37.66</span>
 <span class="r-in"><span><span class="va">rc_extended_dt</span> <span class="op">&lt;-</span> <span class="fu">resolve_rc_gaps</span><span class="op">(</span><span class="va">rc_raw_dt</span>, method <span class="op">=</span> <span class="st">"extend_lower_to_upper"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 16:14:50] Checked 1 junction(s): 1 gap(s) flagged.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 16:14:50] Junction 1 (limbs 1/2, stage 10): extending lower limb by a factor of 0.867233 to reach 32.66</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 20:12:27] Checked 1 junction(s): 1 gap(s) flagged.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 20:12:27] Junction 1 (limbs 1/2, stage 10): extending lower limb by a factor of 0.867233 to reach 32.66</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

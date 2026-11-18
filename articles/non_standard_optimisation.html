@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">reach.rate</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -290,14 +290,16 @@ open in <a href="https://github.com/JonPayneEA/reach.rate/issues/9" class="exter
 <span>  gauging_datetime <span class="op">=</span> <span class="va">gauging_datetime</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/rating_evidence.html">rating_evidence</a></span><span class="op">(</span><span class="va">fit_dated</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    gauging_datetime stage_m discharge_cms  limb</span></span>
-<span><span class="co">#&gt;              &lt;Date&gt;   &lt;num&gt;         &lt;num&gt; &lt;int&gt;</span></span>
-<span><span class="co">#&gt; 1:       2015-01-21    0.20     0.4559383     1</span></span>
-<span><span class="co">#&gt; 2:       2015-02-10    0.23     0.5280606     1</span></span>
-<span><span class="co">#&gt; 3:       2015-03-02    0.26     0.7262610     1</span></span>
-<span><span class="co">#&gt; 4:       2015-03-22    0.29     0.9342280     1</span></span>
-<span><span class="co">#&gt; 5:       2015-04-11    0.32     0.9999470     1</span></span>
-<span><span class="co">#&gt; 6:       2015-05-01    0.35     1.1565643     1</span></span></code></pre></div>
+<span><span class="co">#&gt; &lt;FlodeEvidence&gt; 6 row(s), 6 included, source type(s): gauging</span></span>
+<span><span class="co">#&gt; Note: Converted from a plain table; filled evidence_id, site_id, observation_time, source_type, source_name, source_version, quality_code, exclusion_reason, notes, included, weight, source_row, metadata. source_type assumed 'gauging', included assumed TRUE, weight assumed 1. </span></span>
+<span><span class="co">#&gt;    evidence_id stage_m discharge_cms observation_time source_type included</span></span>
+<span><span class="co">#&gt;         &lt;char&gt;   &lt;num&gt;         &lt;num&gt;           &lt;Date&gt;      &lt;char&gt;   &lt;lgcl&gt;</span></span>
+<span><span class="co">#&gt; 1:        G001    0.20     0.4559383       2015-01-21     gauging     TRUE</span></span>
+<span><span class="co">#&gt; 2:        G002    0.23     0.5280606       2015-02-10     gauging     TRUE</span></span>
+<span><span class="co">#&gt; 3:        G003    0.26     0.7262610       2015-03-02     gauging     TRUE</span></span>
+<span><span class="co">#&gt; 4:        G004    0.29     0.9342280       2015-03-22     gauging     TRUE</span></span>
+<span><span class="co">#&gt; 5:        G005    0.32     0.9999470       2015-04-11     gauging     TRUE</span></span>
+<span><span class="co">#&gt; 6:        G006    0.35     1.1565643       2015-05-01     gauging     TRUE</span></span></code></pre></div>
 <p><code>age_halflife</code> is left <code>NULL</code> by default, so
 supplying <code>gauging_datetime</code> alone – as above – still changes
 nothing about the fit; <code>fit_dated</code>’s coefficients are

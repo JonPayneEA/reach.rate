@@ -18,9 +18,11 @@ and
 
 ``` r
 FlodeRatingBase(
-  gaugings = data.table(),
+  gaugings = FlodeEvidence(),
   fit_starts = NULL,
-  status = "independently_fitted",
+  fit_origin = "independently_fitted",
+  lifecycle = "draft",
+  schema_version = 2L,
   provenance = list(),
   previous = NULL
 )
@@ -30,24 +32,38 @@ FlodeRatingBase(
 
 - gaugings:
 
-  Data.table with `discharge_cms` and `stage_m` columns – the gaugings
-  the fit was built from. May optionally include a `gauging_datetime`
-  column (`Date` or `POSIXct`) recording when each spot gauging was
-  taken. Nothing in the package currently reads this column – it's
-  groundwork for a future age-aware fitting option (see issue \#9). A
-  gauging's own measurement method (current- meter, ADCP, salt-dilution,
-  index-velocity, ...) is not currently recorded either – every gauging
-  is treated identically regardless of source.
+  A
+  [FlodeEvidence](https://jonpayneea.github.io/reach.rate/reference/FlodeEvidence.md)
+  table of the observations the fit was built from. A plain `data.table`
+  with `discharge_cms` and `stage_m` columns is accepted and converted
+  by
+  [`as_flode_evidence()`](https://jonpayneea.github.io/reach.rate/reference/as_flode_evidence.md),
+  which generates evidence IDs and records what it assumed. A
+  `gauging_datetime` column (`Date` or `POSIXct`) becomes
+  `observation_time` and is used for age weighting.
 
 - fit_starts:
 
   Data.table of multi-start fitting attempts, or `NULL` if the fit
   wasn't produced with `multi_start = TRUE`.
 
-- status:
+- fit_origin:
 
-  Character. One of `"independently_fitted"`, `"post_fit_aligned"`, or
-  `"constrained_refit"`.
+  Character. How the fit came to be: one of `"independently_fitted"`,
+  `"post_fit_aligned"` or `"constrained_refit"`. Read-only `@status`
+  returns the same value.
+
+- lifecycle:
+
+  Character. Where the rating stands in review: `"draft"` (default),
+  `"under_review"`, `"approved"`, `"superseded"` or `"withdrawn"`. The
+  package never sets `"approved"`; that is a decision for a person.
+
+- schema_version:
+
+  Integer. The layout version the object was made under; see
+  [`rating_schema_version()`](https://jonpayneea.github.io/reach.rate/reference/rating_schema_version.md).
+  Leave at the default.
 
 - provenance:
 

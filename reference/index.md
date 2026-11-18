@@ -177,6 +177,14 @@ to how they are built.
   parameterisation (S7)
 - [`FlodeRatingTable()`](https://jonpayneea.github.io/reach.rate/reference/FlodeRatingTable.md)
   : A rating equation table (S7), gap_check's native representation
+- [`FlodeEvidence()`](https://jonpayneea.github.io/reach.rate/reference/FlodeEvidence.md)
+  : Evidence a rating rests on (S7)
+- [`as_flode_evidence()`](https://jonpayneea.github.io/reach.rate/reference/as_flode_evidence.md)
+  : Make evidence from a plain table
+- [`evidence_source_types()`](https://jonpayneea.github.io/reach.rate/reference/evidence_source_types.md)
+  : The controlled vocabulary for where evidence came from
+- [`rating_schema_version()`](https://jonpayneea.github.io/reach.rate/reference/rating_schema_version.md)
+  : The schema version of rating objects
 
 ## Teaching tools
 

@@ -205,14 +205,16 @@ fit_dated <- rate_optimise(
   gauging_datetime = gauging_datetime
 )
 head(rating_evidence(fit_dated))
-#>    gauging_datetime stage_m discharge_cms  limb
-#>              <Date>   <num>         <num> <int>
-#> 1:       2015-01-21    0.20     0.4559383     1
-#> 2:       2015-02-10    0.23     0.5280606     1
-#> 3:       2015-03-02    0.26     0.7262610     1
-#> 4:       2015-03-22    0.29     0.9342280     1
-#> 5:       2015-04-11    0.32     0.9999470     1
-#> 6:       2015-05-01    0.35     1.1565643     1
+#> <FlodeEvidence> 6 row(s), 6 included, source type(s): gauging
+#> Note: Converted from a plain table; filled evidence_id, site_id, observation_time, source_type, source_name, source_version, quality_code, exclusion_reason, notes, included, weight, source_row, metadata. source_type assumed 'gauging', included assumed TRUE, weight assumed 1. 
+#>    evidence_id stage_m discharge_cms observation_time source_type included
+#>         <char>   <num>         <num>           <Date>      <char>   <lgcl>
+#> 1:        G001    0.20     0.4559383       2015-01-21     gauging     TRUE
+#> 2:        G002    0.23     0.5280606       2015-02-10     gauging     TRUE
+#> 3:        G003    0.26     0.7262610       2015-03-02     gauging     TRUE
+#> 4:        G004    0.29     0.9342280       2015-03-22     gauging     TRUE
+#> 5:        G005    0.32     0.9999470       2015-04-11     gauging     TRUE
+#> 6:        G006    0.35     1.1565643       2015-05-01     gauging     TRUE
 ```
 
 `age_halflife` is left `NULL` by default, so supplying
