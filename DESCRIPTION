@@ -42,6 +42,9 @@ Collate:
     'rating_curve_demo.R'
     'rating_curve_explorer_app.R'
     'reach.rate-package.R'
+    'read_helpers.R'
+    'read_gaugings.R'
+    'read_operational_ratings.R'
     'weir_equations.R'
     'zzz.R'
 Depends:
