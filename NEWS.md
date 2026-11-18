@@ -1,5 +1,34 @@
 # reach.rate (development)
 
+* Tranche B4 of the improvement plan: `rating_sensitivity()`. It refits a
+  rating with something changed and reports the consequence in **discharge**,
+  at stages you can name, in m3/s and as a percentage, linked to the
+  `evidence_id`s concerned. Four tests: `leave_one_out` (each gauging in turn,
+  with its leverage and Cook's distance alongside, so the influence diagnostic
+  and the actual effect can be compared), `leave_high_out` (the top 5%, 10%
+  and 20% of gaugings, which shows how far the top of the curve depends on the
+  few gaugings taken there), `starting_values` (every other valid starting
+  point the optimiser tried, from the record the fit kept, with no refit) and
+  `boundary_shift` (each breakpoint moved up and down by a fraction of the
+  gauged range, then refitted).
+
+  Each refit reproduces the settings the rating recorded (objective, bounds,
+  breakpoints, recency weighting and its reference time, multi-start), so the
+  only difference is the change under test; every variant is tested against a
+  refit made by hand. A refit that cannot be made, because a limb would be left
+  with fewer than three gaugings for instance, is reported with its reason and
+  never dropped. A rating that has been amended since it was fitted cannot be
+  refitted faithfully and is refused; so is an equation table. A segmented fit
+  supports leave-one-out, leave-high-out and (with fixed breakpoints) boundary
+  shift. `leave_one_out` refuses more than `max_refits` (200) refits unless
+  restricted with `evidence_ids`.
+
+  The result is a `FlodeSensitivity`, with `sensitivity_summary()` (one row per
+  variant: the largest change and the stage it happens at) and
+  `sensitivity_results()` (every variant at every stage). `print()` gives the
+  worst case for each test in words, and `plot()` draws the change in
+  discharge against stage.
+
 * Tranche B3 of the improvement plan: support and extrapolation.
   `apply_rating()` gains a **`support`** column saying what each stage rests
   on: `interpolation_observed` (inside the gaugings), `interpolation_mixed`
