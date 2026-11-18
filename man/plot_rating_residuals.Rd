@@ -17,3 +17,21 @@ Residual (observed minus fitted discharge) against stage, one facet
 per limb. Not an S7 generic method -- \link{FlodeSegmentedRating} has no
 equivalent yet -- so this takes a plain \code{inherits()} check.
 }
+\examples{
+set.seed(42)
+stage_m <- seq(0.3, 3.2, by = 0.06)
+discharge_cms <- ifelse(stage_m < 1.5, 3.2 * stage_m^1.6,
+                        3.2 * 1.5^1.6 * (stage_m / 1.5)^2.1) *
+  exp(rnorm(length(stage_m), sd = 0.04))
+fit <- rate_optimise(discharge_cms, stage_m, control = 1.5)
+
+# Residuals scatter around zero when a limb fits well; a curve or a fan
+# in one facet says that limb's equation is wrong or its spread grows
+# with flow.
+plot_rating_residuals(fit)
+
+}
+\seealso{
+\code{\link[=rating_plot]{rating_plot()}} for the curve against the gaugings,
+\code{\link[=plot_rating_leverage]{plot_rating_leverage()}} for which gaugings steer the fit.
+}

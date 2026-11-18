@@ -54,6 +54,28 @@ respecting \code{min_gap}. Not a claim that a statistically-supported
 breakpoint corresponds to a real physical control change -- that
 judgement remains yours.
 }
+\examples{
+# Gaugings whose rating changes character above about 2.4 m
+set.seed(7)
+stage_m <- seq(0.3, 3.5, by = 0.05)
+discharge_cms <- 4 * pmax(stage_m - 0.1, 0)^1.55 * (pmax(stage_m - 1.6, 0) + 1)^0.9 *
+  (pmax(stage_m - 2.4, 0) + 1)^1.1 * exp(rnorm(length(stage_m), sd = 0.03))
+
+candidates <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
+
+# The candidate each round adopted, and how much it improved the fit
+candidates[selected == TRUE, c("round", "candidate_stage", "improvement")]
+
+# The stages themselves, ready to pass to rate_optimise()
+breaks <- sort(candidates[selected == TRUE, candidate_stage])
+breaks
+fit <- rate_optimise(discharge_cms, stage_m, control = breaks)
+rating_limbs(fit)
+
+# These are statistical suggestions only. Whether a stage marks a real
+# change of hydraulic control is a judgement for you, not the data.
+
+}
 \seealso{
 \code{\link[=rate_optimise]{rate_optimise()}}
 }

@@ -768,7 +768,7 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
       } else {
         NULL
       },
-      tool_version = "rating_curves 1.0"
+      tool_version = .tool_version()
     )
   )
 }
@@ -826,6 +826,32 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
 #'
 #' @seealso [rate_optimise()], `align_limb_equations()` (in the
 #'   `gap_check` module) for the closed-form, no-refit alternative
+#'
+#' @examples
+#' set.seed(42)
+#' stage_m <- seq(0.3, 3.2, by = 0.06)
+#' discharge_cms <- ifelse(stage_m < 1.5, 3.2 * stage_m^1.6,
+#'                         3.2 * 1.5^1.6 * (stage_m / 1.5)^2.1) *
+#'   exp(rnorm(length(stage_m), sd = 0.04))
+#'
+#' # Fitted independently, the two limbs disagree about the discharge at
+#' # their shared boundary (1.5 m); fitted with the junction constraint,
+#' # they agree exactly.
+#' independent <- rate_optimise(discharge_cms, stage_m, control = 1.5)
+#' constrained <- rate_optimise_constrained(discharge_cms, stage_m, control = 1.5)
+#'
+#' junction_discharge <- function(fit) {
+#'   limbs <- rating_limbs(fit)
+#'   h <- limbs$upper_stage_m[1]
+#'   c(below = limbs$C[1] * (h - limbs$a[1])^limbs$n[1],
+#'     above = limbs$C[2] * (h - limbs$a[2])^limbs$n[2])
+#' }
+#' rbind(independent = junction_discharge(independent),
+#'       constrained = junction_discharge(constrained))
+#'
+#' # The anchor limb is untouched; the others were refitted (aligned = TRUE)
+#' rating_limbs(constrained, all_columns = TRUE)[, c("limb", "C", "a", "n", "aligned")]
+#' rating_history(constrained)
 #'
 #' @export
 rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, anchor_limb = 1L,
@@ -1034,7 +1060,8 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
 #' number of points used to draw each limb's curve.
 #'
 #' @return `NULL`, invisibly.
-#' @export
+#' @noRd
+# User-facing documentation lives on the generic (see ?rating_plot).
 method(rating_plot, FlodeRating) <- function(fit, colours = NULL, n_points = 200L) {
   if (n_points <= 0) stop("n_points must be a positive integer")
 
@@ -1076,6 +1103,23 @@ method(rating_plot, FlodeRating) <- function(fit, colours = NULL, n_points = 200
 #'
 #' @param fit A [FlodeRating] instance.
 #' @return A `ggplot` object, invisibly.
+#'
+#' @seealso [rating_plot()] for the curve against the gaugings,
+#'   [plot_rating_leverage()] for which gaugings steer the fit.
+#'
+#' @examples
+#' set.seed(42)
+#' stage_m <- seq(0.3, 3.2, by = 0.06)
+#' discharge_cms <- ifelse(stage_m < 1.5, 3.2 * stage_m^1.6,
+#'                         3.2 * 1.5^1.6 * (stage_m / 1.5)^2.1) *
+#'   exp(rnorm(length(stage_m), sd = 0.04))
+#' fit <- rate_optimise(discharge_cms, stage_m, control = 1.5)
+#'
+#' # Residuals scatter around zero when a limb fits well; a curve or a fan
+#' # in one facet says that limb's equation is wrong or its spread grows
+#' # with flow.
+#' plot_rating_residuals(fit)
+#'
 #' @export
 plot_rating_residuals <- function(fit) {
   if (!S7_inherits(fit, FlodeRating)) {
@@ -1124,6 +1168,28 @@ plot_rating_residuals <- function(fit) {
 #'   `upper_unsupported_frac`, `extrapolates_below_range`/
 #'   `extrapolates_above_range` (identical on every row -- a whole-fit
 #'   property, not per-limb), and `doubtful`.
+#'
+#' @seealso [rating_support()] for the same unsupported extents without a
+#'   tolerance applied.
+#'
+#' @examples
+#' set.seed(42)
+#' stage_m <- seq(0.3, 3.2, by = 0.06)
+#' discharge_cms <- ifelse(stage_m < 1.5, 3.2 * stage_m^1.6,
+#'                         3.2 * 1.5^1.6 * (stage_m / 1.5)^2.1) *
+#'   exp(rnorm(length(stage_m), sd = 0.04))
+#'
+#' # No gaugings between 1.2 and 1.8 m, where the limbs meet
+#' keep <- !(stage_m > 1.2 & stage_m < 1.8)
+#' fit <- rate_optimise(discharge_cms[keep], stage_m[keep], control = 1.5)
+#'
+#' # Each limb stretches well beyond its nearest gauging at the junction,
+#' # and the operational range (to 4 m) is above the highest gauging
+#' flagged <- flag_extrapolated_limbs(fit, operational_upper_m = 4)
+#' rating_limbs(flagged, all_columns = TRUE)[,
+#'   c("limb", "lower_unsupported_frac", "upper_unsupported_frac",
+#'     "extrapolates_above_range", "doubtful")]
+#'
 #' @export
 flag_extrapolated_limbs <- function(fit, tol_frac = 0.05,
                                      operational_lower_m = NULL, operational_upper_m = NULL) {
@@ -1333,6 +1399,25 @@ flag_influential_gaugings <- function(fit, cooks_mult = 4, leverage_mult = 2) {
 #' @return A `ggplot` object, invisibly.
 #'
 #' @seealso [flag_influential_gaugings()], [plot_rating_residuals()].
+#'
+#' @examples
+#' set.seed(42)
+#' stage_m <- seq(0.3, 3.2, by = 0.06)
+#' discharge_cms <- ifelse(stage_m < 1.5, 3.2 * stage_m^1.6,
+#'                         3.2 * 1.5^1.6 * (stage_m / 1.5)^2.1) *
+#'   exp(rnorm(length(stage_m), sd = 0.04))
+#' # One gauging recorded 70 per cent too high
+#' discharge_cms[40] <- discharge_cms[40] * 1.7
+#' fit <- rate_optimise(discharge_cms, stage_m, control = 1.5)
+#'
+#' # Gaugings in the top-right of a facet combine high leverage with high
+#' # influence on the fit
+#' plot_rating_leverage(fit)
+#'
+#' # The same gaugings as a table
+#' flagged <- flag_influential_gaugings(fit)
+#' rating_evidence(flagged)[influential == TRUE, c("stage_m", "discharge_cms", "cooks_distance")]
+#'
 #' @export
 plot_rating_leverage <- function(fit, cooks_mult = 4, leverage_mult = 2) {
   if (!S7_inherits(fit, FlodeRating)) {
@@ -1394,6 +1479,27 @@ plot_rating_leverage <- function(fit, cooks_mult = 4, leverage_mult = 2) {
 #'   under ordinary data.table operations, so prefer the column.
 #'
 #' @seealso [rate_optimise()]
+#'
+#' @examples
+#' # Gaugings whose rating changes character above about 2.4 m
+#' set.seed(7)
+#' stage_m <- seq(0.3, 3.5, by = 0.05)
+#' discharge_cms <- 4 * pmax(stage_m - 0.1, 0)^1.55 * (pmax(stage_m - 1.6, 0) + 1)^0.9 *
+#'   (pmax(stage_m - 2.4, 0) + 1)^1.1 * exp(rnorm(length(stage_m), sd = 0.03))
+#'
+#' candidates <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
+#'
+#' # The candidate each round adopted, and how much it improved the fit
+#' candidates[selected == TRUE, c("round", "candidate_stage", "improvement")]
+#'
+#' # The stages themselves, ready to pass to rate_optimise()
+#' breaks <- sort(candidates[selected == TRUE, candidate_stage])
+#' breaks
+#' fit <- rate_optimise(discharge_cms, stage_m, control = breaks)
+#' rating_limbs(fit)
+#'
+#' # These are statistical suggestions only. Whether a stage marks a real
+#' # change of hydraulic control is a judgement for you, not the data.
 #'
 #' @export
 suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
@@ -1541,6 +1647,19 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
 #'
 #' @param candidates_dt The data.table returned by [suggest_breakpoints()].
 #' @return A numeric vector, sorted ascending.
+#' @examples
+#' set.seed(7)
+#' stage_m <- seq(0.3, 3.5, by = 0.05)
+#' discharge_cms <- 4 * pmax(stage_m - 0.1, 0)^1.55 * (pmax(stage_m - 1.6, 0) + 1)^0.9 *
+#'   (pmax(stage_m - 2.4, 0) + 1)^1.1 * exp(rnorm(length(stage_m), sd = 0.03))
+#' candidates <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
+#'
+#' # The replacement: read the `selected` column.
+#' sort(candidates[selected == TRUE, candidate_stage])
+#'
+#' # The deprecated function gives the same stages, with a warning.
+#' suppressWarnings(suggested_breakpoints_vector(candidates))
+#'
 #' @keywords internal
 #' @export
 suggested_breakpoints_vector <- function(candidates_dt) {

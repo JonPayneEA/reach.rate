@@ -437,7 +437,7 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = N
       } else {
         NULL
       },
-      tool_version = "rating_curves 1.0"
+      tool_version = .tool_version()
     )
   )
 }
@@ -494,7 +494,8 @@ method(apply_rating, FlodeSegmentedRating) <- function(fit, stage_dt, stage_col 
 #' `300L`) is the number of points used to draw the curve.
 #'
 #' @return A `ggplot` object, invisibly.
-#' @export
+#' @noRd
+# User-facing documentation lives on the generic (see ?rating_plot).
 method(rating_plot, FlodeSegmentedRating) <- function(fit, n_points = 300L) {
   coefs <- fit@coefficients
   k <- fit@n_segments

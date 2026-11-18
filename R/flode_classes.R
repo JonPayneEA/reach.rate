@@ -80,6 +80,19 @@
 #'   class as this instance), or `NULL` (default) for a fit with no such
 #'   history -- an independently-fitted result, for instance. Mirrors
 #'   [FlodeRatingTable]'s own `@previous` audit chain.
+#' @examples
+#' # FlodeRatingBase is abstract: it holds what a FlodeRating and a
+#' # FlodeSegmentedRating have in common, and is never built directly.
+#' try(FlodeRatingBase())
+#'
+#' # Every fit is one underneath.
+#' set.seed(1)
+#' stage_m <- seq(0.5, 3, by = 0.1)
+#' fit <- rate_optimise(3.2 * stage_m^1.6 * exp(rnorm(length(stage_m), sd = 0.03)), stage_m)
+#' S7::S7_inherits(fit, FlodeRatingBase)
+#' S7::S7_inherits(fit, FlodeRating)
+#' S7::S7_inherits(fit, FlodeSegmentedRating)
+#'
 #' @export
 FlodeRatingBase <- new_class(
   "FlodeRatingBase",
@@ -156,6 +169,24 @@ FlodeRatingBase <- new_class(
 #' @param previous The exact pre-amendment `FlodeRating` this was built
 #'   from (e.g. by `align_limb_equations()`/`align_limb_boundaries()`),
 #'   or `NULL` (default) for an independently-fitted result.
+#' @examples
+#' # A FlodeRating normally comes from rate_optimise(); read it through
+#' # the accessors.
+#' set.seed(1)
+#' stage_m <- seq(0.5, 3, by = 0.1)
+#' discharge_cms <- 3.2 * stage_m^1.6 * exp(rnorm(length(stage_m), sd = 0.03))
+#' fit <- rate_optimise(discharge_cms, stage_m)
+#' fit
+#' rating_limbs(fit)
+#' head(rating_evidence(fit))
+#'
+#' # The constructor checks its input, so a malformed object cannot exist:
+#' # here the limb table is missing its stage bounds.
+#' try(FlodeRating(
+#'   limbs = data.table::data.table(limb = 1, C = 1, a = 0, n = 1),
+#'   gaugings = data.table::data.table(discharge_cms = 1, stage_m = 1)
+#' ))
+#'
 #' @export
 FlodeRating <- new_class(
   "FlodeRating",
@@ -196,7 +227,7 @@ FlodeRating <- new_class(
 #' @param x A [FlodeRating] instance.
 #' @param ... Unused; present for consistency with the `print` generic.
 #' @return `x`, invisibly.
-#' @export
+#' @noRd
 method(print, FlodeRating) <- function(x, ...) {
   cat(sprintf("<FlodeRating> %d limb(s), status: %s\n", nrow(x@limbs), x@status))
   print(x@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared)])
@@ -239,6 +270,17 @@ method(print, FlodeRating) <- function(x, ...) {
 #'   was built from, or `NULL` (default) for an independently-fitted
 #'   result. Nothing in the package currently produces an amended
 #'   `FlodeSegmentedRating` -- this exists for parity with [FlodeRating].
+#' @examples
+#' # Three multiplicative segments, so there is no junction to reconcile.
+#' set.seed(7)
+#' stage_m <- seq(0.3, 3.5, by = 0.05)
+#' discharge_cms <- 4 * pmax(stage_m - 0.1, 0)^1.55 * (pmax(stage_m - 1.6, 0) + 1)^0.9 *
+#'   (pmax(stage_m - 2.4, 0) + 1)^1.1 * exp(rnorm(length(stage_m), sd = 0.03))
+#' fit <- rate_optimise_segmented(discharge_cms, stage_m, control = c(1.6, 2.4))
+#' fit
+#' rating_coefficients(fit)[, c("parameter", "estimate", "unit")]
+#' apply_rating(fit, c(0.5, 1.5, 3))
+#'
 #' @export
 FlodeSegmentedRating <- new_class(
   "FlodeSegmentedRating",
@@ -267,7 +309,7 @@ FlodeSegmentedRating <- new_class(
 #' @param x A [FlodeSegmentedRating] instance.
 #' @param ... Unused; present for consistency with the `print` generic.
 #' @return `x`, invisibly.
-#' @export
+#' @noRd
 method(print, FlodeSegmentedRating) <- function(x, ...) {
   cat(sprintf(
     "<FlodeSegmentedRating> %d segment(s), status: %s, R\u00b2 = %.4f\n",
@@ -298,6 +340,21 @@ method(print, FlodeSegmentedRating) <- function(x, ...) {
 #'   `"post_fit_aligned"`.
 #' @param previous The exact pre-amendment [FlodeRatingTable] this one
 #'   was built from, or `NULL` if it has no such prior identity.
+#' @examples
+#' # Two limbs that meet in discharge at stage 1.2
+#' rating_table <- FlodeRatingTable(table = data.table::data.table(
+#'   lower_level = c(0, 1.2), upper_level = c(1.2, 3),
+#'   C = c(2.5, 2.410481), a = 0, n = c(1.5, 1.7)
+#' ))
+#' rating_table
+#' apply_rating(rating_table, c(0.5, 1.5, 2.5))
+#' rating_history(rating_table)
+#'
+#' # Limbs must be contiguous, so a gap between them is refused.
+#' try(FlodeRatingTable(table = data.table::data.table(
+#'   lower_level = c(0, 1.5), upper_level = c(1.2, 3), C = 2, a = 0, n = 1.5
+#' )))
+#'
 #' @export
 FlodeRatingTable <- new_class(
   "FlodeRatingTable",
@@ -333,7 +390,7 @@ FlodeRatingTable <- new_class(
 #' @param x A [FlodeRatingTable] instance.
 #' @param ... Unused; present for consistency with the `print` generic.
 #' @return `x`, invisibly.
-#' @export
+#' @noRd
 method(print, FlodeRatingTable) <- function(x, ...) {
   cat(sprintf("<FlodeRatingTable> %d limb(s), status: %s\n", nrow(x@table), x@status))
   print(x@table)
@@ -352,12 +409,54 @@ method(print, FlodeRatingTable) <- function(x, ...) {
 #' Plot a fitted rating curve (S7 generic)
 #'
 #' @description
-#' Dispatches on the fit's class: [FlodeRating] and
-#' [FlodeSegmentedRating] each provide their own method, so the same
-#' call works regardless of which model architecture produced the fit.
+#' Draws a rating with discharge on the horizontal axis and stage on the
+#' vertical. Dispatches on the class of `fit`, so the same call works
+#' whichever model produced the rating:
 #'
-#' @param fit A `FlodeRating` or `FlodeSegmentedRating` object.
-#' @param ... Passed to the class-specific method.
+#' * [FlodeRating]: the gauged points with each limb's fitted curve drawn
+#'   over them, one colour per limb, in base graphics.
+#' * [FlodeSegmentedRating]: the gauged points and the single joint curve,
+#'   with dashed horizontal lines where each segment's factor turns on
+#'   (`bp1` to `bpk`), as a ggplot2 figure.
+#' * [FlodeRatingTable]: each limb's curve in its own colour, so a kink or
+#'   overlap at a junction can be seen, as a ggplot2 figure. A table holds
+#'   no gaugings, so there are no points.
+#'
+#' @param fit A [FlodeRating], [FlodeSegmentedRating] or
+#'   [FlodeRatingTable].
+#' @param ... Options for the class-specific method:
+#'   * `colours` ([FlodeRating] only): plotting colours, one per limb, or
+#'     `NULL` (default) for a single colour. A vector of the wrong length
+#'     is ignored with a warning.
+#'   * `n_points`: how many points are used to draw each limb's curve (the
+#'     whole curve, for a segmented rating). Defaults to `200L`, or `300L`
+#'     for a [FlodeSegmentedRating].
+#'
+#' @return `NULL`, invisibly, for a [FlodeRating], which draws in base
+#'   graphics. For a [FlodeSegmentedRating] or a [FlodeRatingTable], the
+#'   ggplot2 figure, invisibly, as well as drawing it.
+#'
+#' @seealso [plot_rating_residuals()] for how well each limb fits,
+#'   [plot_rating_curves()] to overlay several ratings, and
+#'   [plot_rc_gaps()] for a before and after view of a closed junction.
+#'
+#' @examples
+#' set.seed(42)
+#' stage_m <- seq(0.3, 3.2, by = 0.06)
+#' discharge_cms <- ifelse(stage_m < 1.5, 3.2 * stage_m^1.6,
+#'                         3.2 * 1.5^1.6 * (stage_m / 1.5)^2.1) *
+#'   exp(rnorm(length(stage_m), sd = 0.04))
+#'
+#' # Two independent limbs: points, with each limb's curve over them
+#' fit <- rate_optimise(discharge_cms, stage_m, control = 1.5)
+#' rating_plot(fit)
+#'
+#' # The same rating as an equation table: just the curves, one colour per limb
+#' rating_plot(as_rating_table(fit))
+#'
+#' # A joint segmented fit
+#' fit_seg <- rate_optimise_segmented(discharge_cms, stage_m, control = 1.5)
+#' rating_plot(fit_seg)
 #'
 #' @export
 rating_plot <- new_generic("rating_plot", "fit")
@@ -505,12 +604,35 @@ apply_rating <- new_generic("apply_rating", "fit")
 #' Convert a fit to gap_check's equation-table representation (S7 generic)
 #'
 #' @description
-#' Replaces `fitted_rating_to_table()`. Dispatches on the fit's class.
+#' Turns a fitted [FlodeRating] into the equation table (`lower_level`,
+#' `upper_level`, `C`, `a`, `n`, one row per limb) that
+#' [expand_rating_table()], the gap-checking functions, [compare_ratings()]
+#' and [apply_rating_inverse()] work with. Replaces
+#' `fitted_rating_to_table()`.
 #'
-#' @param fit A `FlodeRating` or `FlodeSegmentedRating` object.
-#' @param ... Passed to the class-specific method.
+#' There is a method for [FlodeRating] only. A [FlodeSegmentedRating] is
+#' one joint model with no independent limbs, so it has no table form; a
+#' [FlodeRatingTable] is already one.
 #'
-#' @return A [FlodeRatingTable].
+#' @param fit A [FlodeRating].
+#' @param ... Passed to the class-specific method; none are used.
+#'
+#' @return A [FlodeRatingTable] with status `"independently_fitted"` and no
+#'   previous version, ready for [expand_rating_table()]. A `doubtful`
+#'   column, if [flag_extrapolated_limbs()] has added one, is kept.
+#'
+#' @seealso [rating_limbs()] for the same equations as a plain table
+#'   without the class.
+#'
+#' @examples
+#' set.seed(1)
+#' stage_m <- seq(0.5, 2.5, by = 0.05)
+#' discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.02)
+#' fit <- rate_optimise(discharge_cms, stage_m)
+#'
+#' rating_table <- as_rating_table(fit)
+#' rating_table
+#' apply_rating(rating_table, c(0.8, 1.6, 2.4))
 #'
 #' @export
 as_rating_table <- new_generic("as_rating_table", "fit")

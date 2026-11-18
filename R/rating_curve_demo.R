@@ -60,14 +60,10 @@ NULL
 #' @return A [FlodeRatingTable] with `@status` `"independently_fitted"`
 #'   and `@previous` `NULL`, ready for `expand_rating_table()`.
 #'
-#' @examples
-#' set.seed(1)
-#' stage_seq <- seq(0.5, 2.5, by = 0.05)
-#' discharge_seq <- 5 * stage_seq^1.6 + rnorm(length(stage_seq), sd = 0.02)
-#' fit <- rate_optimise(discharge_seq, stage_seq)
-#' as_rating_table(fit)
-#'
-#' @export
+#' @noRd
+# User-facing documentation for this method lives on the generic's block in
+# flode_classes.R (see ?as_rating_table): roxygen cannot name a
+# `method(...) <-` call, so a block written here is silently dropped.
 method(as_rating_table, FlodeRating) <- function(fit) {
   limbs_dt <- fit@limbs
   out_dt <- data.table(

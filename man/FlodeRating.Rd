@@ -52,3 +52,22 @@ alignment provenance), the raw gaugings in \verb{@gaugings}, and
 bootstrap draws in \verb{@bootstrap} when \code{rate_optimise(..., n_boot = )}
 was used.
 }
+\examples{
+# A FlodeRating normally comes from rate_optimise(); read it through
+# the accessors.
+set.seed(1)
+stage_m <- seq(0.5, 3, by = 0.1)
+discharge_cms <- 3.2 * stage_m^1.6 * exp(rnorm(length(stage_m), sd = 0.03))
+fit <- rate_optimise(discharge_cms, stage_m)
+fit
+rating_limbs(fit)
+head(rating_evidence(fit))
+
+# The constructor checks its input, so a malformed object cannot exist:
+# here the limb table is missing its stage bounds.
+try(FlodeRating(
+  limbs = data.table::data.table(limb = 1, C = 1, a = 0, n = 1),
+  gaugings = data.table::data.table(discharge_cms = 1, stage_m = 1)
+))
+
+}

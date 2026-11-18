@@ -25,8 +25,9 @@ Requires the \pkg{shiny} package (Suggests, not a hard dependency of
 this package).
 }
 \examples{
-\dontrun{
-rating_curve_explorer()
+# A Shiny app, so it only starts in an interactive session.
+if (interactive()) {
+  rating_curve_explorer()
 }
 
 }

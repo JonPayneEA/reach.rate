@@ -1,5 +1,15 @@
 # reach.rate (development)
 
+* Every exported function and class now has a runnable example, and the
+  examples render on the reference site. They use one small simulated
+  two-limb rating, so each runs in well under a second. A new test fails if
+  an export is added without one. The interactive explorer's example is
+  guarded by `interactive()`.
+
+* A fit's provenance now records `reach.rate` and its version in
+  `tool_version`. It recorded the package's old name, `rating_curves 1.0`,
+  whatever the version.
+
 * Tranche A3 of the improvement plan: eight accessors read a rating without
   touching its S7 properties. `rating_limbs()` gives the stage range and
   equation of each limb; `rating_coefficients()` every parameter in long

@@ -66,6 +66,33 @@ does. The constraint is enforced by reparameterising the model:
 \code{H = brk} for any \code{a}/\code{n}, so \code{nlsLM} is free to optimise both over
 the limb's own gaugings while continuity holds automatically.
 }
+\examples{
+set.seed(42)
+stage_m <- seq(0.3, 3.2, by = 0.06)
+discharge_cms <- ifelse(stage_m < 1.5, 3.2 * stage_m^1.6,
+                        3.2 * 1.5^1.6 * (stage_m / 1.5)^2.1) *
+  exp(rnorm(length(stage_m), sd = 0.04))
+
+# Fitted independently, the two limbs disagree about the discharge at
+# their shared boundary (1.5 m); fitted with the junction constraint,
+# they agree exactly.
+independent <- rate_optimise(discharge_cms, stage_m, control = 1.5)
+constrained <- rate_optimise_constrained(discharge_cms, stage_m, control = 1.5)
+
+junction_discharge <- function(fit) {
+  limbs <- rating_limbs(fit)
+  h <- limbs$upper_stage_m[1]
+  c(below = limbs$C[1] * (h - limbs$a[1])^limbs$n[1],
+    above = limbs$C[2] * (h - limbs$a[2])^limbs$n[2])
+}
+rbind(independent = junction_discharge(independent),
+      constrained = junction_discharge(constrained))
+
+# The anchor limb is untouched; the others were refitted (aligned = TRUE)
+rating_limbs(constrained, all_columns = TRUE)[, c("limb", "C", "a", "n", "aligned")]
+rating_history(constrained)
+
+}
 \seealso{
 \code{\link[=rate_optimise]{rate_optimise()}}, \code{align_limb_equations()} (in the
 \code{gap_check} module) for the closed-form, no-refit alternative
