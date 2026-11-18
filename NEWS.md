@@ -25,6 +25,23 @@
   (`.github/workflows/c-core.yaml`). The package now needs a C compiler to
   install from source. No mathematical changes.
 
+* New `match_stations()` and `check_operational_ratings()`: the whole check of
+  an operational ratings export against a gauging archive in two calls.
+  `match_stations()` links each rating station to its gauging stations with
+  a table you supply (rating station id and gauging reference), and by
+  direct id match, ignoring case and spaces, for stations the table does not
+  cover. It reports what did not match on each side, and any row of the
+  table that could not be used and why. `check_operational_ratings()` builds
+  each rating as a table, compares it with the gaugings of its matched
+  station through `compare_gaugings_to_rating()`, and returns one row per
+  rating and one row per limb (with the export's `flag` and `open_ended`
+  carried alongside, so you can see whether `Flag` lines up with limbs that
+  have no gaugings), plus the ratings that are not valid tables and the
+  unmatched stations. Nothing is excluded for being odd. `use_dates = TRUE`
+  restricts each rating to gaugings taken while it was in force. About 70
+  seconds for 3,000 ratings against a million gaugings. No mathematical
+  changes.
+
 * New `read_gaugings()`, `read_operational_ratings()` and
   `operational_rating_tables()`: bring a spot-gauging archive and an
   operational power-law ratings export into R without cleaning them.
