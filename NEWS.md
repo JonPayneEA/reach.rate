@@ -1,5 +1,25 @@
 # reach.rate (development)
 
+* New `read_gaugings()`, `read_operational_ratings()` and
+  `operational_rating_tables()`: bring a spot-gauging archive and an
+  operational power-law ratings export into R without cleaning them.
+  Everything is read as text and parsed explicitly, placeholder text such
+  as `---` becomes a missing value, and nothing is dropped: each row that
+  did not parse cleanly carries a `read_issue` note saying why. Dates are
+  detected (day-first ahead of month-first, with a warning only when the
+  two readings genuinely differ) and the format used is reported.
+  `read_operational_ratings()` renames the export's `A`, `B` and `C` to the
+  package's `a`, `n` and `C` for `Q = C(H - a)^n`, marks open-ended top
+  limbs, carries `Flag` through without interpreting it, and omits
+  grid-to-grid model ratings (`G2G` is `TRUE`) unless asked.
+  `operational_rating_tables()` builds one `FlodeRatingTable` per rating and
+  lists any rating that cannot form a valid table (gap, overlap, missing
+  value) with its reason, instead of failing the whole export. The defaults
+  match the Environment Agency gauging and ratings export headers; every
+  column can be remapped. A million-row archive reads in about 11 seconds.
+  Reading, not yet the guided `read_gaugings()` of the improvement plan:
+  no evidence class or station matching yet. No mathematical changes.
+
 * New `compare_gaugings_to_rating()`: checks a rating against a set of spot
   gaugings that need not be the ones it was fitted to, such as an
   operational rating against a full gauging archive. It returns the

@@ -127,6 +127,8 @@ ggplot(plot_dt, aes(stage_m, residual_pct, colour = limb, shape = extrapolated))
 
 }
 \seealso{
+\code{\link[=read_gaugings]{read_gaugings()}} and \code{\link[=read_operational_ratings]{read_operational_ratings()}} to bring in
+a gauging archive and a ratings export;
 \code{\link[=compare_ratings]{compare_ratings()}} to compare two ratings with each other;
 \code{\link[=flag_extrapolated_limbs]{flag_extrapolated_limbs()}} and \code{\link[=plot_rating_residuals]{plot_rating_residuals()}} for a fit
 against the gaugings it was fitted to.

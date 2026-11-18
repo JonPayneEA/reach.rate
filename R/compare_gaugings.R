@@ -80,7 +80,9 @@ NULL
 #' and by the share of gaugings within tolerance, none of which a single
 #' extreme row can move. The row itself stays visible in `gaugings`.
 #'
-#' @seealso [compare_ratings()] to compare two ratings with each other;
+#' @seealso [read_gaugings()] and [read_operational_ratings()] to bring in
+#'   a gauging archive and a ratings export;
+#'   [compare_ratings()] to compare two ratings with each other;
 #'   [flag_extrapolated_limbs()] and [plot_rating_residuals()] for a fit
 #'   against the gaugings it was fitted to.
 #'
