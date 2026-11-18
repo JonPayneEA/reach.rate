@@ -1,5 +1,36 @@
 # reach.rate (development)
 
+* Tranche A9 of the improvement plan: convergence and identifiability.
+  Every limb of a fit (and the segmented fit's coefficients) now records,
+  in stable columns, how the optimiser ended and whether the data pin the
+  parameters down: `converged`, `convergence_code`, `convergence_message`,
+  `iterations`, `objective_value`, `bound_hits` (any parameter on a bound,
+  not only `n`), `multi_start_spread`, `parameter_correlation` and
+  `condition_number`. `NA` means not assessed. `rating_diagnostics()` shows
+  them. In `@fit_starts`, `converged` is now the optimiser's own report and
+  a new `valid` column holds the domain and monotonicity check that
+  `converged` used to mean. Amending a limb clears the columns, since they
+  described the fit it came from.
+
+  A fit that did not converge is returned with a warning, as before in
+  substance but no longer silently. This closes the limitation the
+  mathematical contract described: the optimiser stopping at its limit used
+  to be invisible. The single-start path (`multi_start = FALSE`) warns too,
+  and on awkward data it often needs to.
+
+  The attempt kept is still the valid one with the lowest objective, not the
+  one that converged. On a worked case the only converged attempt sat on a
+  bound with an objective ten times worse than five that had crept along a
+  flat valley, so preferring convergence would have chosen the worse fit.
+
+  The optimiser's default limit of 400 function calls bound before the
+  documented 100 iterations, at about 94, so it is raised to twenty times
+  the iteration limit. **No result changed.** On twelve simulated datasets
+  the fitted coefficients and the breakpoints `suggest_breakpoints()`
+  proposes were identical before and after, in every column.
+  `suggest_breakpoints()` still scores candidates from a single start and no
+  longer repeats the single-start warning for each one.
+
 * Tranche A7 of the improvement plan: `vignette("mathematical_contract")`
   states what the package computes, exactly. It gives the equation
   `Q = C(H - a)^n`, the units, how a limb is chosen when fitting and when

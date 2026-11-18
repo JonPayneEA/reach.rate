@@ -109,7 +109,12 @@ bounds, coefficients \code{C}/\code{a}/\code{n}, fit diagnostics -- including
 parameter standard errors from the fit's own NLS covariance matrix,
 always computed, \code{NA} if that covariance matrix is singular --
 distinct from the bootstrap-only \code{C_se}/\code{a_se}/\code{n_se} columns below)
--- and multi-start bookkeeping. When \code{n_boot > 0}, \verb{@bootstrap} holds
+-- and multi-start bookkeeping. Nine columns record how the fit ended and
+whether the data pin it down: \code{converged}, \code{convergence_code},
+\code{convergence_message} and \code{iterations} (the optimiser's own report),
+\code{objective_value}, \code{bound_hits} (parameters on a bound),
+\code{multi_start_spread}, \code{parameter_correlation} and \code{condition_number};
+\code{NA} means not assessed. When \code{n_boot > 0}, \verb{@bootstrap} holds
 every draw and \verb{@limbs} gains \code{C_se}/\code{a_se}/\code{n_se}/percentile/
 success-count columns; prefer these over \verb{*_se_asymp} when present,
 since they don't rely on the NLS asymptotic approximation.
