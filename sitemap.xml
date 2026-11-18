@@ -20,6 +20,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/authors.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/index.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/news/index.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/FlodeAssessment.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/FlodeEvidence.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/FlodeRating.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/FlodeRatingBase.html</loc></url>
@@ -33,6 +34,8 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/apply_rating_versioned.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/as_flode_evidence.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/as_rating_table.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/assessment_checks.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/assessment_status.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/bootstrap_to_table.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/check_operational_ratings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/compare_gaugings_to_rating.html</loc></url>
@@ -80,6 +83,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/station_gaugings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/suggest_breakpoints.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/suggested_breakpoints_vector.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/weir_discharge_cipoletti.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/weir_discharge_rectangular.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/weir_discharge_vnotch.html</loc></url>

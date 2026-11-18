@@ -265,12 +265,14 @@ removed. Prints the brief’s summary, backed by a structured table. *Done
 when* the 18 input cases in P0.5 of the brief each have a test fixture
 under `tests/testthat/fixtures/`.
 
-**A6. `validate_gaugings()` and `FlodeAssessment`** (#41). Introduce the
-check-table schema here: `check_id`, `domain`, `severity`, `status`
-(`pass`, `warning`, `fail`, `not_assessed`), `message`,
-`affected_evidence`, `affected_stage_min_m`, `affected_stage_max_m`,
-`recommendation`. Technical checks fail; hydrometric checks warn and
-never exclude. [`print()`](https://rdrr.io/r/base/print.html) and
+**A6.
+[`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md)
+and `FlodeAssessment`** (#41). Introduce the check-table schema here:
+`check_id`, `domain`, `severity`, `status` (`pass`, `warning`, `fail`,
+`not_assessed`), `message`, `affected_evidence`, `affected_stage_min_m`,
+`affected_stage_max_m`, `recommendation`. Technical checks fail;
+hydrometric checks warn and never exclude.
+[`print()`](https://rdrr.io/r/base/print.html) and
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods. *Done
 when* each check has its own pass and fail test, and `assess_rating()`
 can reuse the class unchanged.

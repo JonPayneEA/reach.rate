@@ -23,6 +23,22 @@ read_summary() reports what it found as a table.
 - [`check_operational_ratings()`](https://jonpayneea.github.io/reach.rate/reference/check_operational_ratings.md)
   : Check every operational rating against its gaugings
 
+## Checking evidence
+
+Ask whether a set of gaugings can be used and whether it looks right for
+a river. Technical checks fail; hydrometric checks only warn, and
+nothing is removed. The result is a FlodeAssessment, a table of checks
+that a fitted rating’s assessment will reuse.
+
+- [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md)
+  : Check a set of gaugings
+- [`FlodeAssessment()`](https://jonpayneea.github.io/reach.rate/reference/FlodeAssessment.md)
+  : The outcome of a set of checks (S7)
+- [`assessment_checks()`](https://jonpayneea.github.io/reach.rate/reference/assessment_checks.md)
+  : Read the checks of an assessment
+- [`assessment_status()`](https://jonpayneea.github.io/reach.rate/reference/assessment_status.md)
+  : The overall status of an assessment
+
 ## Using a rating
 
 Apply a fitted rating to a stage record, invert it, and compare it with

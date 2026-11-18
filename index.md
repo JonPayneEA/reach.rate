@@ -46,7 +46,7 @@ target is six functions:
 | Step | Function | Status |
 |----|----|----|
 | Import your gaugings | [`read_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/read_gaugings.md) | planned |
-| Check them | `validate_gaugings()` | planned |
+| Check them | [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md) | planned |
 | Fit a candidate rating | `fit_rating()` | planned |
 | Assess it | `assess_rating()` | planned |
 | Compare with the current rating | [`compare_ratings()`](https://jonpayneea.github.io/reach.rate/reference/compare_ratings.md) | available |

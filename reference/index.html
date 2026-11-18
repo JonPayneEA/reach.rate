@@ -105,6 +105,43 @@
         </dt>
         <dd>Check every operational rating against its gaugings</dd>
       </dl></div><div class="section level2">
+      <h2 id="checking-evidence">Checking evidence<a class="anchor" aria-label="anchor" href="#checking-evidence"></a></h2>
+
+      <div class="section-desc"><p>Ask whether a set of gaugings can be used and whether it looks right for a river. Technical checks fail; hydrometric checks only warn, and nothing is removed. The result is a FlodeAssessment, a table of checks that a fitted rating’s assessment will reuse.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="validate_gaugings.html">validate_gaugings()</a></code>
+
+        </dt>
+        <dd>Check a set of gaugings</dd>
+
+        <dt>
+
+          <code><a href="FlodeAssessment.html">FlodeAssessment()</a></code>
+
+        </dt>
+        <dd>The outcome of a set of checks (S7)</dd>
+
+        <dt>
+
+          <code><a href="assessment_checks.html">assessment_checks()</a></code>
+
+        </dt>
+        <dd>Read the checks of an assessment</dd>
+
+        <dt>
+
+          <code><a href="assessment_status.html">assessment_status()</a></code>
+
+        </dt>
+        <dd>The overall status of an assessment</dd>
+      </dl></div><div class="section level2">
       <h2 id="using-a-rating">Using a rating<a class="anchor" aria-label="anchor" href="#using-a-rating"></a></h2>
 
       <div class="section-desc"><p>Apply a fitted rating to a stage record, invert it, and compare it with the rating it replaces. The guided workflow (read_gaugings(), validate_gaugings(), fit_rating(), assess_rating(), export_rating()) is planned; see IMPROVEMENT_PLAN.md.</p></div>
