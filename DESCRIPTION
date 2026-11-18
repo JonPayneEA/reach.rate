@@ -1,6 +1,6 @@
 Package: reach.rate
 Title: Fit, Diagnose, and Apply Hydrometric Rating Curves
-Version: 0.1.0
+Version: 0.2.0
 Authors@R:
     person("Jonathan", "Payne", , "jonathan.payne1988@gmail.com", role = c("aut", "cre"))
 Description: Tools for fitting multi-limb power-law stage-discharge rating
@@ -25,6 +25,7 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Collate:
+    'flode_evidence.R'
     'flode_classes.R'
     'accessors.R'
     'apply_rating.R'

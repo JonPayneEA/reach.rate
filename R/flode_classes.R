@@ -61,19 +61,22 @@
 #' earlier fit of the same class. Never constructed directly -- see
 #' [FlodeRating] and [FlodeSegmentedRating].
 #'
-#' @param gaugings Data.table with `discharge_cms` and `stage_m`
-#'   columns -- the gaugings the fit was built from. May optionally
-#'   include a `gauging_datetime` column (`Date` or `POSIXct`) recording
-#'   when each spot gauging was taken. Nothing in the package currently
-#'   reads this column -- it's groundwork for a future age-aware fitting
-#'   option (see issue #9). A gauging's own measurement method (current-
-#'   meter, ADCP, salt-dilution, index-velocity, ...) is not currently
-#'   recorded either -- every gauging is treated identically regardless
-#'   of source.
+#' @param gaugings A [FlodeEvidence] table of the observations the fit was
+#'   built from. A plain `data.table` with `discharge_cms` and `stage_m`
+#'   columns is accepted and converted by [as_flode_evidence()], which
+#'   generates evidence IDs and records what it assumed. A
+#'   `gauging_datetime` column (`Date` or `POSIXct`) becomes
+#'   `observation_time` and is used for age weighting.
 #' @param fit_starts Data.table of multi-start fitting attempts, or
 #'   `NULL` if the fit wasn't produced with `multi_start = TRUE`.
-#' @param status Character. One of `"independently_fitted"`,
-#'   `"post_fit_aligned"`, or `"constrained_refit"`.
+#' @param fit_origin Character. How the fit came to be: one of
+#'   `"independently_fitted"`, `"post_fit_aligned"` or `"constrained_refit"`.
+#'   Read-only `@status` returns the same value.
+#' @param lifecycle Character. Where the rating stands in review: `"draft"`
+#'   (default), `"under_review"`, `"approved"`, `"superseded"` or `"withdrawn"`.
+#'   The package never sets `"approved"`; that is a decision for a person.
+#' @param schema_version Integer. The layout version the object was made
+#'   under; see [rating_schema_version()]. Leave at the default.
 #' @param provenance List recording how the fit was made (fitting
 #'   method, controls, bounds, tool version).
 #' @param previous The exact pre-amendment fit this was built from (same
@@ -93,6 +96,7 @@
 #' S7::S7_inherits(fit, FlodeRating)
 #' S7::S7_inherits(fit, FlodeSegmentedRating)
 #'
+#' @include flode_evidence.R
 #' @export
 FlodeRatingBase <- new_class(
   "FlodeRatingBase",
@@ -105,9 +109,28 @@ FlodeRatingBase <- new_class(
     # fails on the mismatch. An empty data.table() deparses the same way
     # everywhere; the validator still rejects it, so a fit cannot be
     # built without real data.
-    gaugings = new_property(new_S3_class(c("data.table", "data.frame")), default = quote(data.table())),
+    # A FlodeEvidence, but a plain data.table is accepted and converted on
+    # the way in (generated IDs, assumptions recorded in the table's
+    # conversion_note), so code that builds a rating from a bare table
+    # keeps working.
+    gaugings = new_property(
+      FlodeEvidence, default = quote(FlodeEvidence()),
+      setter = function(self, value) {
+        self@gaugings <- as_flode_evidence(value)
+        self
+      }
+    ),
     fit_starts = new_property(class_any, default = NULL),
-    status = new_property(class_character, default = "independently_fitted"),
+    # How the fit came to be: "independently_fitted", "post_fit_aligned"
+    # or "constrained_refit". Called `status` before schema version 2.
+    fit_origin = new_property(class_character, default = "independently_fitted"),
+    # Where the rating stands in review. The package never sets it past
+    # "draft": approval is a decision for a person.
+    lifecycle = new_property(class_character, default = "draft"),
+    schema_version = new_property(class_integer, default = 2L),
+    # Read-only alias for fit_origin, kept so code that reads `@status`
+    # still works.
+    status = new_property(class_character, getter = function(self) self@fit_origin),
     # default = quote(list()), not default = list(): S7 evaluates a
     # scalar/quoted-call default once per instance, but a literal list()
     # would be one shared, mutable object handed to every instance --
@@ -126,12 +149,33 @@ FlodeRatingBase <- new_class(
         !inherits(self@gaugings$gauging_datetime, c("Date", "POSIXct"))) {
       return("gaugings$gauging_datetime, if present, must be a Date or POSIXct vector")
     }
-    if (!self@status %in% c("independently_fitted", "post_fit_aligned", "constrained_refit")) {
-      return("status must be one of: independently_fitted, post_fit_aligned, constrained_refit")
+    if (!self@fit_origin %in% c("independently_fitted", "post_fit_aligned", "constrained_refit")) {
+      return("fit_origin must be one of: independently_fitted, post_fit_aligned, constrained_refit")
     }
-    NULL
+    .rating_common_problems(self)
   }
 )
+
+# Checks shared by every rating class: the review state is one of the
+# known values, and the schema version is present and not from the future.
+.lifecycle_values <- c("draft", "under_review", "approved", "superseded", "withdrawn")
+
+.rating_common_problems <- function(self) {
+  if (length(self@lifecycle) != 1L || !self@lifecycle %in% .lifecycle_values) {
+    return(sprintf("lifecycle must be one of: %s", paste(.lifecycle_values, collapse = ", ")))
+  }
+  v <- self@schema_version
+  if (length(v) != 1L || is.na(v)) {
+    return("schema_version is missing; this object was saved by a version of reach.rate that predates schema versions and cannot be trusted as it stands. Refit it.")
+  }
+  if (v > .rating_schema_version) {
+    return(sprintf(
+      "schema_version %d is newer than this reach.rate understands (%d); update the package before using this object",
+      v, .rating_schema_version
+    ))
+  }
+  NULL
+}
 
 # ---------------------------------------------------------------------------
 # FlodeRating -- rate_optimise()'s independent-limb fit
@@ -147,19 +191,22 @@ FlodeRatingBase <- new_class(
 #' bootstrap draws in `@bootstrap` when `rate_optimise(..., n_boot = )`
 #' was used.
 #'
-#' @param gaugings Data.table with `discharge_cms` and `stage_m`
-#'   columns -- the gaugings the fit was built from. May optionally
-#'   include a `gauging_datetime` column (`Date` or `POSIXct`) recording
-#'   when each spot gauging was taken. Nothing in the package currently
-#'   reads this column -- it's groundwork for a future age-aware fitting
-#'   option (see issue #9). A gauging's own measurement method (current-
-#'   meter, ADCP, salt-dilution, index-velocity, ...) is not currently
-#'   recorded either -- every gauging is treated identically regardless
-#'   of source.
+#' @param gaugings A [FlodeEvidence] table of the observations the fit was
+#'   built from. A plain `data.table` with `discharge_cms` and `stage_m`
+#'   columns is accepted and converted by [as_flode_evidence()], which
+#'   generates evidence IDs and records what it assumed. A
+#'   `gauging_datetime` column (`Date` or `POSIXct`) becomes
+#'   `observation_time` and is used for age weighting.
 #' @param fit_starts Data.table of multi-start fitting attempts, or
 #'   `NULL` if the fit wasn't produced with `multi_start = TRUE`.
-#' @param status Character. One of `"independently_fitted"`,
-#'   `"post_fit_aligned"`, or `"constrained_refit"`.
+#' @param fit_origin Character. How the fit came to be: one of
+#'   `"independently_fitted"`, `"post_fit_aligned"` or `"constrained_refit"`.
+#'   Read-only `@status` returns the same value.
+#' @param lifecycle Character. Where the rating stands in review: `"draft"`
+#'   (default), `"under_review"`, `"approved"`, `"superseded"` or `"withdrawn"`.
+#'   The package never sets `"approved"`; that is a decision for a person.
+#' @param schema_version Integer. The layout version the object was made
+#'   under; see [rating_schema_version()]. Leave at the default.
 #' @param provenance List recording how the fit was made (fitting
 #'   method, controls, bounds, tool version).
 #' @param limbs Data.table, one row per limb: bounds, coefficients
@@ -229,7 +276,7 @@ FlodeRating <- new_class(
 #' @return `x`, invisibly.
 #' @noRd
 method(print, FlodeRating) <- function(x, ...) {
-  cat(sprintf("<FlodeRating> %d limb(s), status: %s\n", nrow(x@limbs), x@status))
+  cat(sprintf("<FlodeRating> %d limb(s), origin: %s, lifecycle: %s\n", nrow(x@limbs), x@fit_origin, x@lifecycle))
   print(x@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared)])
   invisible(x)
 }
@@ -245,19 +292,22 @@ method(print, FlodeRating) <- function(x, ...) {
 #' rather than independent limbs, so `@coefficients` is one row (`C`,
 #' `bp1..bpk`, `n1..nk`, diagnostics), not one row per segment.
 #'
-#' @param gaugings Data.table with `discharge_cms` and `stage_m`
-#'   columns -- the gaugings the fit was built from. May optionally
-#'   include a `gauging_datetime` column (`Date` or `POSIXct`) recording
-#'   when each spot gauging was taken. Nothing in the package currently
-#'   reads this column -- it's groundwork for a future age-aware fitting
-#'   option (see issue #9). A gauging's own measurement method (current-
-#'   meter, ADCP, salt-dilution, index-velocity, ...) is not currently
-#'   recorded either -- every gauging is treated identically regardless
-#'   of source.
+#' @param gaugings A [FlodeEvidence] table of the observations the fit was
+#'   built from. A plain `data.table` with `discharge_cms` and `stage_m`
+#'   columns is accepted and converted by [as_flode_evidence()], which
+#'   generates evidence IDs and records what it assumed. A
+#'   `gauging_datetime` column (`Date` or `POSIXct`) becomes
+#'   `observation_time` and is used for age weighting.
 #' @param fit_starts Data.table of multi-start fitting attempts, or
 #'   `NULL` if the fit wasn't produced with `multi_start = TRUE`.
-#' @param status Character. One of `"independently_fitted"`,
-#'   `"post_fit_aligned"`, or `"constrained_refit"`.
+#' @param fit_origin Character. How the fit came to be: one of
+#'   `"independently_fitted"`, `"post_fit_aligned"` or `"constrained_refit"`.
+#'   Read-only `@status` returns the same value.
+#' @param lifecycle Character. Where the rating stands in review: `"draft"`
+#'   (default), `"under_review"`, `"approved"`, `"superseded"` or `"withdrawn"`.
+#'   The package never sets `"approved"`; that is a decision for a person.
+#' @param schema_version Integer. The layout version the object was made
+#'   under; see [rating_schema_version()]. Leave at the default.
 #' @param provenance List recording how the fit was made (fitting
 #'   method, controls, bounds, tool version).
 #' @param coefficients Single-row data.table: `C`, `bp1..bpk`,
@@ -312,8 +362,8 @@ FlodeSegmentedRating <- new_class(
 #' @noRd
 method(print, FlodeSegmentedRating) <- function(x, ...) {
   cat(sprintf(
-    "<FlodeSegmentedRating> %d segment(s), status: %s, R\u00b2 = %.4f\n",
-    x@n_segments, x@status, x@coefficients$r_squared[1]
+    "<FlodeSegmentedRating> %d segment(s), origin: %s, lifecycle: %s, R\u00b2 = %.4f\n",
+    x@n_segments, x@fit_origin, x@lifecycle, x@coefficients$r_squared[1]
   ))
   print(x@coefficients)
   invisible(x)
@@ -336,8 +386,14 @@ method(print, FlodeSegmentedRating) <- function(x, ...) {
 #' @param table Data.table with `lower_level`, `upper_level`, `C`, `a`,
 #'   `n` columns, one row per limb, contiguous. Same names and sign
 #'   convention as [FlodeRating]'s `@limbs` (`Q = C(H - a)^n`).
-#' @param status Character. One of `"independently_fitted"`,
-#'   `"post_fit_aligned"`.
+#' @param fit_origin Character. How the table came to be, for example
+#'   `"independently_fitted"`, `"post_fit_aligned"`, `"extended_low"` or
+#'   `"grafted"`. Read-only `@status` returns the same value.
+#' @param lifecycle Character. `"draft"` (default), `"under_review"`,
+#'   `"approved"`, `"superseded"` or `"withdrawn"`. The package never sets
+#'   `"approved"`.
+#' @param schema_version Integer. The layout version the object was made
+#'   under; see [rating_schema_version()]. Leave at the default.
 #' @param previous The exact pre-amendment [FlodeRatingTable] this one
 #'   was built from, or `NULL` if it has no such prior identity.
 #' @examples
@@ -360,7 +416,12 @@ FlodeRatingTable <- new_class(
   "FlodeRatingTable",
   properties = list(
     table = new_property(new_S3_class(c("data.table", "data.frame")), default = quote(data.table())),
-    status = new_property(class_character, default = "independently_fitted"),
+    # Unlike a fit, a table can come from an extension or a graft, so
+    # fit_origin is not restricted to the three fitter values.
+    fit_origin = new_property(class_character, default = "independently_fitted"),
+    lifecycle = new_property(class_character, default = "draft"),
+    schema_version = new_property(class_integer, default = 2L),
+    status = new_property(class_character, getter = function(self) self@fit_origin),
     previous = new_property(class_any, default = NULL)
   ),
   validator = function(self) {
@@ -375,7 +436,7 @@ FlodeRatingTable <- new_class(
       contiguous <- all(abs(self@table$upper_level[-n] - self@table$lower_level[-1L]) < 1e-8)
       if (!contiguous) return("limbs must be contiguous (upper_level[i] == lower_level[i+1])")
     }
-    NULL
+    .rating_common_problems(self)
   }
 )
 
@@ -392,7 +453,7 @@ FlodeRatingTable <- new_class(
 #' @return `x`, invisibly.
 #' @noRd
 method(print, FlodeRatingTable) <- function(x, ...) {
-  cat(sprintf("<FlodeRatingTable> %d limb(s), status: %s\n", nrow(x@table), x@status))
+  cat(sprintf("<FlodeRatingTable> %d limb(s), origin: %s, lifecycle: %s\n", nrow(x@table), x@fit_origin, x@lifecycle))
   print(x@table)
   invisible(x)
 }

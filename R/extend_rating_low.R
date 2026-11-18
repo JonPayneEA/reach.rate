@@ -209,7 +209,7 @@ extend_rating_low <- function(rating, lower_stage = NULL) {
 
   FlodeRatingTable(
     table = combined_dt[],
-    status = "extended_low",
+    fit_origin = "extended_low",
     previous = original
   )
 }

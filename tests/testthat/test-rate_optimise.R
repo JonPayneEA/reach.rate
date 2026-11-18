@@ -196,7 +196,7 @@ test_that("rate_optimise objective = 'relative' fits and reports cms-scale diagn
   expect_equal(fit_rel@limbs$rmse_cms, fit_abs@limbs$rmse_cms, tolerance = 0.5)
 
   # residuals recomputed from C/a/n reproduce rmse_cms exactly
-  gaugings_dt <- fit_rel@gaugings
+  gaugings_dt <- data.table::copy(fit_rel@gaugings)
   gaugings_dt[fit_rel@limbs, on = "limb", fitted_cms := i.C * (stage_m - i.a)^i.n]
   manual_rmse <- gaugings_dt[, sqrt(mean((discharge_cms - fitted_cms)^2)), by = limb]$V1
   expect_equal(fit_rel@limbs$rmse_cms, manual_rmse, tolerance = 1e-8)

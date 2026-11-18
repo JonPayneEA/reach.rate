@@ -74,7 +74,7 @@
 #' @importFrom S7 new_class new_property new_generic new_S3_class
 #' @importFrom S7 class_any class_list class_character class_logical
 #' @importFrom S7 class_integer class_double method method<- S7_object
-#' @importFrom S7 S7_inherits S7_dispatch
+#' @importFrom S7 S7_inherits S7_dispatch new_object
 #' @importFrom minpack.lm nlsLM nls.lm.control
 #' @importFrom logger log_info log_threshold INFO
 #' @importFrom gridExtra grid.arrange arrangeGrob

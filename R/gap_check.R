@@ -416,7 +416,7 @@ expand_rating_table <- function(rating_dt,
     gaugings = gaugings_dt[],
     bootstrap = NULL,
     fit_starts = NULL,
-    status = "post_fit_aligned",
+    fit_origin = "post_fit_aligned",
     provenance = c(original_fit@provenance, provenance_extra),
     previous = original_fit
   )
@@ -657,7 +657,7 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
   # place -- align_limb_equations() always returns a new object.
   FlodeRatingTable(
     table = out_dt[],
-    status = "post_fit_aligned",
+    fit_origin = "post_fit_aligned",
     previous = previous_table
   )
 }
@@ -900,7 +900,7 @@ align_limb_boundaries <- function(rating_dt, junctions = NULL) {
 
   FlodeRatingTable(
     table = out_dt[],
-    status = "post_fit_aligned",
+    fit_origin = "post_fit_aligned",
     previous = previous_table
   )
 }
@@ -1617,7 +1617,7 @@ method(rating_plot, FlodeRatingTable) <- function(fit, n_points = 200L) {
     labs(
       title = sprintf(
         "Rating Table (%d limb%s, status: %s)",
-        n_limbs, if (n_limbs > 1L) "s" else "", fit@status
+        n_limbs, if (n_limbs > 1L) "s" else "", fit@fit_origin
       ),
       x = "Discharge (m\u00b3/s)", y = "Stage (m)", colour = "Limb"
     ) +

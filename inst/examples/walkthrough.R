@@ -25,7 +25,7 @@
 #               directly rather than manually-selected column subsets.
 #               Step 11 now explicitly demonstrates the audit chain
 #               align_limb_equations() gained from being an S7 class
-#               (status and previous-version chain) rather than a column
+#               (fit origin, lifecycle and previous-version chain) rather than a column
 #               to remember to check.
 # Modified:     2026-08-25 - JP: moved from rating_curves/walkthrough.R
 #               (a box module script) into inst/examples/walkthrough.R

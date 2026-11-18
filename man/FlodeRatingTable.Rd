@@ -6,7 +6,9 @@
 \usage{
 FlodeRatingTable(
   table = data.table(),
-  status = "independently_fitted",
+  fit_origin = "independently_fitted",
+  lifecycle = "draft",
+  schema_version = 2L,
   previous = NULL
 )
 }
@@ -15,8 +17,16 @@ FlodeRatingTable(
 \code{n} columns, one row per limb, contiguous. Same names and sign
 convention as \link{FlodeRating}'s \verb{@limbs} (\code{Q = C(H - a)^n}).}
 
-\item{status}{Character. One of \code{"independently_fitted"},
-\code{"post_fit_aligned"}.}
+\item{fit_origin}{Character. How the table came to be, for example
+\code{"independently_fitted"}, \code{"post_fit_aligned"}, \code{"extended_low"} or
+\code{"grafted"}. Read-only \verb{@status} returns the same value.}
+
+\item{lifecycle}{Character. \code{"draft"} (default), \code{"under_review"},
+\code{"approved"}, \code{"superseded"} or \code{"withdrawn"}. The package never sets
+\code{"approved"}.}
+
+\item{schema_version}{Integer. The layout version the object was made
+under; see \code{\link[=rating_schema_version]{rating_schema_version()}}. Leave at the default.}
 
 \item{previous}{The exact pre-amendment \link{FlodeRatingTable} this one
 was built from, or \code{NULL} if it has no such prior identity.}

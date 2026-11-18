@@ -106,9 +106,10 @@ When you add something to a class, add it here and to an accessor.
 | per-limb bounds and equation | `FlodeRating`, `FlodeRatingTable` | `rating_limbs()` |
 | per-limb diagnostics and uncertainty | `FlodeRating` | `rating_diagnostics()`, `rating_coefficients()` |
 | joint coefficients | `FlodeSegmentedRating` | `rating_coefficients()` |
-| gaugings | `FlodeRating`, `FlodeSegmentedRating` | `rating_evidence()`, `rating_support()` |
+| evidence (a `FlodeEvidence`: stable `evidence_id`, source, inclusion, weight) | `FlodeRating`, `FlodeSegmentedRating` | `rating_evidence()`, `rating_support()` |
 | bootstrap draws | `FlodeRating` | `rating_bootstrap()` |
-| status and previous version | all three | `rating_history()` |
+| `fit_origin`, `lifecycle` and previous version | all three | `rating_history()` |
+| `schema_version` | all three | `rating_provenance()` |
 | provenance | `FlodeRating`, `FlodeSegmentedRating` | `rating_provenance()` |
 | per-attempt multi-start record | `FlodeRating`, `FlodeSegmentedRating` | summarised in `rating_diagnostics()` |
 
@@ -162,8 +163,10 @@ object itself, so there is no string to get wrong.
 
 # The amendment chain
 
-Every class carries a status and a link to the version it was amended
-from, so amending a rating never silently loses what it was amended from.
+Every class carries how it came to be (`fit_origin`), where it stands in
+review (`lifecycle`, which the package leaves at `"draft"`: approval is a
+person's decision) and a link to the version it was amended from, so
+amending a rating never silently loses what it was amended from.
 Users read the whole chain with `rating_history()`:
 
 ```{r audit-chain}
