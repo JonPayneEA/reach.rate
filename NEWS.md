@@ -1,5 +1,30 @@
 # reach.rate (development)
 
+* The rating arithmetic now lives in a small C library, `src/reach_core.c`
+  and `src/reach_core.h`, so that other languages can use exactly the same
+  code. It covers stage to discharge, discharge to stage, which limb a stage
+  falls on and whether it was extrapolated, the discharge on each side of
+  each junction, and the tangent limb used by `extend_rating_low()`. It
+  uses the C standard library only, allocates nothing, keeps no global state
+  and is thread safe. The header is the specification: it fixes how the
+  edges of a limb, missing values, extrapolation and errors behave. R calls
+  it through a thin binding (`src/reach_r.c`); a binding for another
+  language would load the same source, so the two could not drift apart. `apply_rating()`,
+  `apply_rating_inverse()` and `extend_rating_low()` use it. Results are
+  unchanged: the old R arithmetic is kept in the tests as an oracle, and the
+  kernel is compared against it on random ratings, on every limb edge and
+  offset, and on missing and infinite values. The arithmetic is about 4.7
+  times faster; `apply_rating()` end to end about 1.5 times, since most of
+  the remaining time is R's own overhead. Two small differences: a rating
+  with a non-finite value, a limb whose upper level is not above its lower
+  level, or (for the inverse) a non-positive `C` or `n` is now refused with a
+  clear message, where before it gave `NaN` or a meaningless answer; and a
+  `NaN` at a limb junction is reported as a discharge gap by
+  `apply_rating_inverse()`. Standalone C tests run on Linux and macOS with
+  gcc and clang, and under the address and undefined-behaviour sanitizers
+  (`.github/workflows/c-core.yaml`). The package now needs a C compiler to
+  install from source. No mathematical changes.
+
 * New `match_stations()` and `check_operational_ratings()`: the whole check of
   an operational ratings export against a gauging archive in two calls.
   `match_stations()` links each rating station to its gauging stations with
