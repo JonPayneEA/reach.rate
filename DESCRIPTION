@@ -42,6 +42,7 @@ Collate:
     'gap_check.R'
     'globals.R'
     'graft_rating.R'
+    'invariants.R'
     'kernel.R'
     'offset_convention.R'
     'plot_rating_curves.R'

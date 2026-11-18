@@ -292,6 +292,55 @@ its coefficients are not.
 two parameters trade off against each other. Neither is a verdict; they say
 where to look first.
 
+# Checks on the equations, and when a rating is refused
+
+After a fit, `rating_invariants()` checks the rating's own equations,
+without reference to its gaugings, and returns a `FlodeAssessment`. It
+answers whether the equations are mathematically usable. It does not say
+whether the rating is a good one.
+
+A **technical** check can fail:
+
+* every $C$, $a$ and $n$ is finite, and $C$ and $n$ are positive;
+* limb stage ranges are finite, ascending and contiguous;
+* discharge is finite and not negative at 25 stages in each limb;
+* discharge does not decrease as stage rises within a limb;
+* the discharge at the top of each limb is no lower than at the top of the
+  limb before, so each discharge belongs to one limb;
+* discharge to stage and back reproduces the discharge to within
+  $10^{-6}$ (relative);
+* where bootstrap draws exist, each parameter's lower, median and upper
+  bounds are in order;
+* for a fit made directly by the optimiser, each parameter is inside the
+  bounds it was given.
+
+A **hydrometric** check can only warn: no gap or overlap between adjacent
+limbs' stage ranges, discharge continuous across each junction (within 1%
+by default), and each limb's zero-flow stage at or below its lower stage.
+That last one is a warning because discharge is zero at and below $a$, so a
+limb that starts below it is a legitimate way to write a table, but part of
+the limb then carries no flow.
+
+**A failure stops the operation it makes meaningless.** `apply_rating()`
+refuses a rating that fails any technical check except the two that concern
+the inverse, and says which check failed. `apply_rating_inverse()` refuses
+any failure. A drop in discharge at the top of a limb, for example, leaves
+stage to discharge well defined, so forward application proceeds, but makes
+the inverse ambiguous, so the inverse is refused. A warning never blocks.
+
+The checks are evaluated when asked for, not stored on the object, so they
+always describe the rating as it now stands, including after a change to it.
+The same two facts are on the printed rating, as separate lines, because a fit
+can converge to an invalid equation and a valid equation can come from a fit
+that did not converge:
+
+```{r print-state}
+set.seed(7)
+h <- seq(0.4, 3, by = 0.05)
+q <- 3.2 * h^1.6 * exp(rnorm(length(h), sd = 0.03))
+print(rate_optimise(q, h, control = 1.5))
+```
+
 # What the intervals mean
 
 **Asymptotic standard errors** (`C_se_asymp`, `a_se_asymp`, `n_se_asymp`) are

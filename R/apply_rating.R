@@ -105,6 +105,7 @@ log_threshold(INFO)
 # flode_classes.R (see ?apply_rating): roxygen cannot name a
 # `method(...) <-` call, so a block written here is silently dropped.
 method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "stage", out_col = "discharge") {
+  .require_valid_rating(fit, "apply_rating()")
   stage_dt <- .coerce_stage_input(stage_dt, stage_col)
   if (!stage_col %in% names(stage_dt)) stop("stage_col must be a column of stage_dt")
 
@@ -148,6 +149,9 @@ method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "s
 # one implementation of the stage-to-discharge arithmetic, not two.
 # User-facing documentation lives on the generic's block in flode_classes.R.
 method(apply_rating, FlodeRating) <- function(fit, stage_dt, stage_col = "stage", out_col = "discharge") {
+  # Checked on the fit itself, which can fail things its equation table
+  # cannot show (bootstrap interval order, parameter bounds).
+  .require_valid_rating(fit, "apply_rating()")
   apply_rating(as_rating_table(fit), stage_dt, stage_col = stage_col, out_col = out_col)
 }
 
@@ -458,8 +462,11 @@ apply_rating_versioned <- function(stage_dt, rating_history_dt,
 #' @export
 apply_rating_inverse <- function(fit, discharge_dt, discharge_col = "discharge", out_col = "stage",
                                   tol_abs = 0.5, tol_rel = 0.02) {
+  if (!(S7_inherits(fit, FlodeRating) || S7_inherits(fit, FlodeRatingTable))) {
+    stop("apply_rating_inverse(): fit must be a FlodeRating or FlodeRatingTable")
+  }
+  .require_valid_rating(fit, "apply_rating_inverse()", operation = "inverse")
   if (S7_inherits(fit, FlodeRating)) fit <- as_rating_table(fit)
-  if (!S7_inherits(fit, FlodeRatingTable)) stop("apply_rating_inverse(): fit must be a FlodeRating or FlodeRatingTable")
   if (!is.data.frame(discharge_dt)) stop("discharge_dt must be a data.frame or data.table")
   if (!discharge_col %in% names(discharge_dt)) stop("discharge_col must be a column of discharge_dt")
 
