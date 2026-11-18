@@ -57,7 +57,8 @@ q3 <- (pmax(stage_seg_m - 2.4, 0) + 1)^1.1
 discharge_seg_cms <- q1 * q2 * q3 * exp(rnorm(length(stage_seg_m), sd = 0.03))
 
 fit_seg <- rate_optimise_segmented(discharge_seg_cms, stage_seg_m, control = c(1.6, 2.4))
-co <- fit_seg@coefficients
+coef_dt <- rating_coefficients(fit_seg)
+co <- as.list(setNames(coef_dt$estimate, coef_dt$parameter))
 
 stage_seq <- seq(0.2, 3.5, by = 0.01)
 factors_dt <- rbind(
@@ -99,8 +100,8 @@ prone approach), once as the segmented joint model -- and overlay both:
 ```{r gap-comparison, fig.alt="Independent-limb fit shown with a visible discontinuity at each breakpoint, segmented fit shown smooth through the same points"}
 fit_independent <- rate_optimise(discharge_seg_cms, stage_seg_m, control = c(1.6, 2.4))
 
-curve_independent <- rbindlist(lapply(seq_len(nrow(fit_independent@limbs)), function(i) {
-  L <- fit_independent@limbs[i]
+curve_independent <- rbindlist(lapply(seq_len(nrow(rating_limbs(fit_independent))), function(i) {
+  L <- rating_limbs(fit_independent)[i]
   h <- seq(L$lower_stage_m, L$upper_stage_m, length.out = 100)
   data.table(stage_m = h, discharge_cms = L$C * (h - L$a)^L$n)
 }))

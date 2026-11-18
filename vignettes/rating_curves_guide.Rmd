@@ -57,19 +57,19 @@ Each regime approximates a different power law. The standard response is a multi
 
 # The objects
 
-The toolkit represents its results as three S7 classes rather than bare tables. The practical consequence for you as a user is small: you access contents with `@` rather than `$`, and the objects carry more than numbers.
+The toolkit represents its results as three S7 classes rather than bare tables. You read them through accessor functions, so your code never depends on where the package stores something, and the objects carry more than numbers.
 
-`FlodeRating` is the result of `rate_optimise()`. `@limbs` holds one row per limb (bounds, coefficients, diagnostics), `@gaugings` holds the data it was fitted to, `@bootstrap` and `@fit_starts` hold uncertainty and fitting bookkeeping when produced, `@status` records whether the fit is as fitted or has been amended, and `@provenance` records how it was made.
+`FlodeRating` is the result of `rate_optimise()`. `rating_limbs()` gives one row per limb (stage range and equation), `rating_coefficients()` the parameters with their uncertainty, `rating_diagnostics()` how well each limb fits, `rating_evidence()` the gaugings it was fitted to, `rating_support()` how much of each limb rests on gaugings, `rating_bootstrap()` the bootstrap draws when produced, `rating_history()` whether the fit is as fitted or has been amended, and `rating_provenance()` how it was made.
 
 `FlodeSegmentedRating` is the result of `rate_optimise_segmented()`, a structurally different model covered in section 9.
 
-`FlodeRatingTable` is the equation-table representation used for gap checking and application: `lower_level`, `upper_level`, `C`, `a`, `n` per limb, same names and sign convention as `FlodeRating`'s `@limbs`. It carries `@status` and `@previous`, so an amended table references the exact object it was amended from. This is an audit trail by construction rather than by discipline: you cannot end up holding an aligned table with no record of what it was aligned from.
+`FlodeRatingTable` is the equation-table representation used for gap checking and application: `lower_level`, `upper_level`, `C`, `a`, `n` per limb, the same equation and sign convention as a `FlodeRating`. An amended table keeps the exact object it was amended from, and `rating_history()` lists the chain. This is an audit trail by construction rather than by discipline: you cannot end up holding an aligned table with no record of what it was aligned from.
 
 Three shared generics work across the classes: `rating_plot()` draws whichever fit you hand it, `apply_rating()` converts stage to discharge with whichever representation you hold, and `as_rating_table()` converts a fit to the table form. The class system chooses the right implementation; you use one name.
 
 A note on why the fit remembers its own gaugings. Every diagnostic, residual plot, and bootstrap in this toolkit needs the original data, and a rating separated from its gaugings is a rating you can no longer question. Keeping them together is deliberate.
 
-This section is deliberately brief -- `vignette("s7_objects_guide")` covers `@`-access, `print()`, `S7_inherits()`, and the `@status`/`@previous` audit chain in full, including a validator actually catching a malformed construction.
+This section is deliberately brief -- `vignette("s7_objects_guide")` (written for maintainers) covers how the classes are built: properties, `print()`, `S7_inherits()`, the amendment chain, and a validator actually catching a malformed construction.
 
 ## A running example
 
@@ -96,7 +96,7 @@ range(stage_m)
 
 ```{r fit}
 fit <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2))
-fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
+rating_limbs(fit, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
 ```
 
 ## The method
@@ -117,13 +117,13 @@ The fit is constrained so that $C > 0$, $n > 0$, and $H - a > 0$ for every gaugi
 
 ## Multiple starting points
 
-Nonlinear least squares is iterative: it starts from a guess and improves it. A poor guess can strand the optimiser in a local minimum, a fit that no small adjustment improves but that a very different set of coefficients would beat. By default (`multi_start = TRUE`), each limb is fitted from several starting combinations: a few plausible exponents, a data-driven estimate from a quick log-log regression, a data-scaled $C$. Each converged result is checked for validity (finite, non-decreasing discharge across the limb) and the best valid result wins. Every attempt is recorded in `@fit_starts`, so you can see whether the starts agreed (reassuring) or scattered (a sign the data constrain the fit weakly).
+Nonlinear least squares is iterative: it starts from a guess and improves it. A poor guess can strand the optimiser in a local minimum, a fit that no small adjustment improves but that a very different set of coefficients would beat. By default (`multi_start = TRUE`), each limb is fitted from several starting combinations: a few plausible exponents, a data-driven estimate from a quick log-log regression, a data-scaled $C$. Each converged result is checked for validity (finite, non-decreasing discharge across the limb) and the best valid result wins. Every attempt is recorded with the fit, and `rating_diagnostics()` reports how many starts were tried, how many converged and which one won: many failures, or an unusual winner, is a sign the data constrain the fit weakly.
 
 The `near_bound` column flags a fit whose $n$ or $a$ finished pressed against its lower bound. That is worth a second look: it can mean a degenerate, nearly-flat fit, or an offset being forced against the lowest gauging, either of which suggests the limb or its data need attention.
 
 ## Reading the diagnostics
 
-`@limbs` reports, per limb: `rmse_cms`, `r_squared`, `n_obs`, `n_unique_stage`, `mean_error_cms`, `median_abs_error_cms`, `max_abs_error_cms`, and `residual_df`.
+`rating_diagnostics()` reports, per limb: `rmse_cms`, `r_squared`, `n_obs`, `n_unique_stage`, `mean_error_cms`, `median_abs_error_cms`, `max_abs_error_cms`, and `residual_df`.
 
 Three points of guidance. First, `r_squared` close to 1 is necessary but weak: a limb spanning a large discharge range can post an excellent $R^2$ over a mediocre fit, because the variance being explained is mostly the range itself. Compare limbs against each other; the one sitting noticeably below its neighbours is the signal, not any fixed threshold. Second, `rmse_cms` is in the units of your gaugings, so compare it to the gauging uncertainty you would expect at that site, typically 5 to 10% of flow for a good current-meter gauging (WMO 2010). An RMSE well inside gauging uncertainty is as good as the data can support. Third, `n_obs` of three fits three parameters exactly, with no residual degrees of freedom (`residual_df = 0`) and therefore no ability to say whether the equation form suits the data at all. Treat single-figure `n_obs` as provisional.
 
@@ -174,7 +174,7 @@ What you are looking for: a curved trend within a panel means the power law is t
 
 ```{r flag-extrapolated}
 fit <- flag_extrapolated_limbs(fit)
-fit@limbs[, .(limb, doubtful)]
+rating_limbs(fit, all_columns = TRUE)[, .(limb, doubtful)]
 ```
 
 A limb's declared range comes from the breakpoints you chose, not from where the gaugings reached. The top limb of most stations is declared up to some design level while its highest actual gauging sits well below: everything between is extrapolation, however good the fit statistics look. Extrapolating a rating is sometimes unavoidable, particularly for flood forecasting, but it should never be invisible.
@@ -207,7 +207,7 @@ xs_theoretical <- data.table(
 theoretical_fit <- rate_from_cross_section(
   xs_theoretical, slope = 0.001, roughness = 0.035, n_points = 60
 )
-theoretical_fit@provenance$source
+rating_provenance(theoretical_fit)$source
 
 plot_rating_cross_section(theoretical_fit, xs_theoretical)
 ```
@@ -258,19 +258,18 @@ This is fast and needs nothing but the table. Its limitation is fundamental: the
 
 ```{r align-equations}
 aligned_result <- align_limb_equations(rating_table, anchor_limb = 1L)
-aligned_result@status
-identical(aligned_result@previous, rating_table)
+rating_history(aligned_result)
 ```
 
 Fixes the equations themselves, using only the equations. Hold one limb fixed (the anchor, by default the lowest, usually the best gauged), then for each neighbouring limb solve for the $C$ that forces an exact match at the junction:
 
 $$C_{\text{new}} = \frac{Q_{\text{target}}}{(H_b - a)^{n}}$$
 
-where $Q_{\text{target}}$ is the already-corrected neighbour's discharge at the junction stage $H_b$. The correction propagates outward from the anchor, so every junction along the chain closes exactly, and $a$ and $n$ (the curve's datum and shape) are untouched. The original $C$ is kept alongside the scale factor and percentage change, and the result is a new `FlodeRatingTable` whose `@previous` references the exact pre-alignment object: an auditable amendment, not a silent overwrite.
+where $Q_{\text{target}}$ is the already-corrected neighbour's discharge at the junction stage $H_b$. The correction propagates outward from the anchor, so every junction along the chain closes exactly, and $a$ and $n$ (the curve's datum and shape) are untouched. The original $C$ is kept alongside the scale factor and percentage change, and the result is a new `FlodeRatingTable` that keeps the exact pre-alignment object, listed by `rating_history()` above: an auditable amendment, not a silent overwrite.
 
 The cost is honest: the rescaled $C$ is no longer the least-squares optimum for that limb's own gaugings. You have traded a small amount of within-limb fit for continuity, holding shape fixed. When only the equations survive (a legacy rating, an imported table), this is the best available move.
 
-Call it on a `FlodeRating` directly (`align_limb_equations(fit, anchor_limb = 1L)`) instead of on a table, and the result stays a `FlodeRating` rather than downgrading to a `FlodeRatingTable`: gaugings carry through unchanged (equations are rescaled, not boundaries, so which limb a gauging belongs to never changes here), `@limbs` diagnostics are recomputed against the rescaled $C$ rather than left describing the pre-alignment fit, and `rating_plot()`/`plot_rating_residuals()` work on the result immediately, since it is the same class they were always written for.
+Call it on a `FlodeRating` directly (`align_limb_equations(fit, anchor_limb = 1L)`) instead of on a table, and the result stays a `FlodeRating` rather than downgrading to a `FlodeRatingTable`: gaugings carry through unchanged (equations are rescaled, not boundaries, so which limb a gauging belongs to never changes here), the per-limb diagnostics are recomputed against the rescaled $C$ rather than left describing the pre-alignment fit, and `rating_plot()`/`plot_rating_residuals()` work on the result immediately, since it is the same class they were always written for.
 
 ## `align_limb_boundaries()`: relocate the junction
 
@@ -278,7 +277,7 @@ Rather than change $C$ at a fixed junction stage, `align_limb_boundaries()` leav
 
 ```{r align-boundaries}
 aligned_boundaries <- align_limb_boundaries(fit)
-aligned_boundaries@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs, boundary_adjusted)]
+rating_limbs(aligned_boundaries, all_columns = TRUE)[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs, boundary_adjusted)]
 ```
 
 Called on a `FlodeRating`, as here, the result stays a `FlodeRating`: gaugings are reassigned to whichever limb the new boundary puts them in (a relocation can shift gaugings across the junction, in either direction), and every limb's diagnostics are recomputed from that reassignment -- never left describing the pre-alignment gauging split.
@@ -291,7 +290,7 @@ Junction 1 relocated from 1.6 m down to about 0.58 m -- a genuine crossing, but 
 
 ```{r constrained-refit}
 fit_constrained <- rate_optimise_constrained(discharge_cms, stage_m, control = c(1.6, 2.2))
-fit_constrained@limbs[, .(limb, C, a, n, rmse_cms, r_squared, aligned)]
+rating_limbs(fit_constrained, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared, aligned)]
 ```
 
 When the raw gaugings are available, the job can be done properly. Rather than adjusting an already-fitted equation, each non-anchor limb is refitted against its own gaugings subject to matching its neighbour exactly at the junction. The constraint is built into the model by reparameterisation:
@@ -335,7 +334,7 @@ q3 <- (pmax(stage_seg_m - 2.4, 0) + 1)^1.1
 discharge_seg_cms <- q1 * q2 * q3 * exp(rnorm(length(stage_seg_m), sd = 0.03))
 
 fit_seg <- rate_optimise_segmented(discharge_seg_cms, stage_seg_m, control = c(1.6, 2.4))
-fit_seg@coefficients
+rating_coefficients(fit_seg)
 rating_plot(fit_seg)
 apply_rating(fit_seg, data.table(stage = c(0.5, 1.5, 3.0)))
 ```
@@ -348,7 +347,7 @@ What this implementation deliberately does not reproduce: Hodson et al. fit by f
 
 ```{r bootstrap, fig.alt = "Rating curve with a shaded bootstrap prediction interval"}
 fit_boot <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2), n_boot = 200L, boot_seed = 11L)
-fit_boot@limbs[, .(limb, C, C_se, n, n_se)]
+rating_limbs(fit_boot, all_columns = TRUE)[, .(limb, C, C_se, n, n_se)]
 plot_rating_interval(fit_boot)
 ```
 
@@ -356,11 +355,11 @@ plot_rating_interval(fit_boot)
 
 A fitted $C$, $a$, $n$ are point estimates. Had the gauging programme gone slightly differently, a visit missed, a flood caught, the coefficients would differ. The bootstrap (Efron 1979) estimates that sensitivity directly: resample each limb's gaugings with replacement, refit, and repeat a few hundred times. The spread of the refitted coefficients approximates the spread you would see across alternative gauging histories. `rate_optimise(n_boot = )` does this per limb, warm-starting each refit from the point estimate, and reports standard errors and 2.5/50/97.5 percentile columns.
 
-Two engineering details matter for trust. A resample can land, by chance, on too few distinct stage values to identify three parameters; such draws are rejected before fitting, recorded with a reason, and if the successful fraction falls below `min_boot_success` a warning is raised. And every draw is recorded in `@bootstrap`, failures included, because a bootstrap where 40% of draws quietly failed is a different (and less trustworthy) object than one where they all converged.
+Two engineering details matter for trust. A resample can land, by chance, on too few distinct stage values to identify three parameters; such draws are rejected before fitting, recorded with a reason, and if the successful fraction falls below `min_boot_success` a warning is raised. And every draw is recorded, failures included (`rating_bootstrap(fit, successful_only = FALSE)`), because a bootstrap where 40% of draws quietly failed is a different (and less trustworthy) object than one where they all converged.
 
 ## What the interval means, and what it does not
 
-`bootstrap_to_table()` bridges the draws to `apply_rating_interval()`, which computes, per stage value, the mean, median, and a prediction interval across draws, plus the geometric standard error
+`rating_bootstrap()` returns the draws in the shape `apply_rating_interval()` takes, and, which computes, per stage value, the mean, median, and a prediction interval across draws, plus the geometric standard error
 
 $$\mathrm{GSE} = \exp\!\bigl(\mathrm{sd}(\ln Q_{\text{draws}})\bigr)$$
 
@@ -442,8 +441,8 @@ When you amend a rating, the question that matters is not whether the coefficien
 `align_limb_equations()`/`align_limb_boundaries()` both reconcile a junction *within* one already-built table. A different situation: this station is only gauged up to stage 3.5, but an existing rating, from an earlier survey, already covers the reach above that -- there is nothing to refit against up there, only a rating already in force. `graft_rating()` joins the two, finding the stage where `aligned_result`'s own top limb and the existing rating's lowest limb actually cross:
 
 ```{r graft}
-top <- aligned_result@table[.N]
-q_at_top <- top$C * (top$upper_level - top$a)^top$n
+top <- rating_limbs(aligned_result)[.N]
+q_at_top <- top$C * (top$upper_stage_m - top$a)^top$n
 
 existing_rating <- data.table(
   lower_level = 3.5, upper_level = 6.0,
@@ -451,14 +450,14 @@ existing_rating <- data.table(
 )
 
 grafted <- graft_rating(aligned_result, existing_rating)
-grafted@table[, .(lower_level, upper_level, C, a, n, source)]
+rating_limbs(grafted, all_columns = TRUE)[, .(lower_stage_m, upper_stage_m, C, a, n, source)]
 ```
 
-The two curves happened to start about 15% apart at stage 3.5 -- exactly the kind of small discontinuity `align_limb_equations()` closes *within* a table -- but here it resolves the same way `align_limb_boundaries()` does: the boundary itself moves, out to `r round(grafted@table$upper_level[3], 3)`, where the (unchanged) equations on both sides already agree. `source` marks which limb came from where; `@previous` references `aligned_result` directly, so the join is still an amendment with an audit trail, not a table built once and forgotten. The result is always a `FlodeRatingTable`, even here where `aligned_result` was one already -- `existing_rating` carries no gaugings of its own, so nothing genuinely new is being merged into `@gaugings`; `aligned_result` itself remains the object to go to for this station's own diagnostics.
+The two curves happened to start about 15% apart at stage 3.5 -- exactly the kind of small discontinuity `align_limb_equations()` closes *within* a table -- but here it resolves the same way `align_limb_boundaries()` does: the boundary itself moves, out to `r round(rating_limbs(grafted)$upper_stage_m[3], 3)`, where the (unchanged) equations on both sides already agree. `source` marks which limb came from where; `rating_history()` lists `aligned_result` directly, so the join is still an amendment with an audit trail, not a table built once and forgotten. The result is always a `FlodeRatingTable`, even here where `aligned_result` was one already -- `existing_rating` carries no gaugings of its own, so nothing genuinely new is being merged into the evidence; `aligned_result` itself remains the object to go to for this station's own diagnostics.
 
 # Guidance: reading a fit, in order
 
-When a fit lands on your desk, look at things in this order. First the residual plot: shape problems announce themselves there before any statistic. Second, `n_obs` and `residual_df` per limb: a limb fitted on a handful of points is a hypothesis, not a rating. Third, `rmse_cms` against the gauging uncertainty you would expect at the site; then `r_squared`, comparatively across limbs rather than against a threshold. Fourth, `near_bound` and the `@fit_starts` record: did the optimiser find one clear answer or many mediocre ones? Fifth, the `doubtful` flags: where is this rating extrapolating, and does your operational range depend on those stages? Sixth, the junctions: `detect_rc_gaps()` before and after whatever closure strategy you chose. Last, if the rating will be used for anything where uncertainty matters, run the bootstrap and look at where the band widens, remembering it is a floor on the true uncertainty, not the whole of it.
+When a fit lands on your desk, look at things in this order. First the residual plot: shape problems announce themselves there before any statistic. Second, `n_obs` and `residual_df` per limb: a limb fitted on a handful of points is a hypothesis, not a rating. Third, `rmse_cms` against the gauging uncertainty you would expect at the site; then `r_squared`, comparatively across limbs rather than against a threshold. Fourth, `near_bound` and the multi-start counts in `rating_diagnostics()`: did the optimiser find one clear answer or many mediocre ones? Fifth, the `doubtful` flags: where is this rating extrapolating, and does your operational range depend on those stages? Sixth, the junctions: `detect_rc_gaps()` before and after whatever closure strategy you chose. Last, if the rating will be used for anything where uncertainty matters, run the bootstrap and look at where the band widens, remembering it is a floor on the true uncertainty, not the whole of it.
 
 None of this replaces the walk along the reach. Every statistical signal in this document is a prompt for a physical question.
 
@@ -472,9 +471,9 @@ the following goes deeper on one part of it:
 - `vignette("rating_methods_overview")` -- two flow diagrams: which of
   the five ways to build a rating fits your data, and what genuinely
   differs downstream between a `FlodeRating` and a `FlodeSegmentedRating`.
-- `vignette("s7_objects_guide")` -- `@`-access, `print()`,
-  `S7_inherits()`, and the `@status`/`@previous` audit chain, with a
-  validator actually catching a mistake.
+- `vignette("s7_objects_guide")` -- how the S7 classes are built (for maintainers): properties,
+  `print()`, `S7_inherits()`, the amendment chain, and a validator
+  actually catching a mistake.
 - `vignette("rating_curve_walkthrough")` -- one continuous worked
   example, spot gaugings to a checked, junction-aligned,
   physically-constrained multi-limb rating.
@@ -494,7 +493,7 @@ the following goes deeper on one part of it:
 - `vignette("segmented_model_guide")` -- how `rate_optimise_segmented()`'s
   multiplicative factors actually compose, with diagrams.
 
-Every function used above also has its own roxygen documentation with a fuller `@description` and a runnable `@examples` block -- see `?rate_optimise`, `?flode_classes` (for the class hierarchy: `FlodeRatingBase`, `FlodeRating`, `FlodeSegmentedRating`, `FlodeRatingTable`, and the three shared generics), and so on. `system.file("examples", "walkthrough.R", package = "reach.rate")` is a linear, section-by-section script covering the same ground as this vignette plus the cross-section demonstration (`demo_cross_section_rating()`) and the interactive explorer (`rating_curve_explorer()`), meant to be run a section at a time rather than sourced in one go. The testthat files under `tests/testthat/` in the package sources are a third source of worked examples, each tied to a specific behaviour being checked.
+Every function used above also has its own roxygen documentation with a fuller description and a runnable examples block -- see `?rate_optimise`, `?flode_classes` (for the class hierarchy: `FlodeRatingBase`, `FlodeRating`, `FlodeSegmentedRating`, `FlodeRatingTable`, and the three shared generics), and so on. `system.file("examples", "walkthrough.R", package = "reach.rate")` is a linear, section-by-section script covering the same ground as this vignette plus the cross-section demonstration (`demo_cross_section_rating()`) and the interactive explorer (`rating_curve_explorer()`), meant to be run a section at a time rather than sourced in one go. The testthat files under `tests/testthat/` in the package sources are a third source of worked examples, each tied to a specific behaviour being checked.
 
 # References
 

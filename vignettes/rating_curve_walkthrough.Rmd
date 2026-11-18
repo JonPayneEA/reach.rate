@@ -76,7 +76,7 @@ The obvious first move: one power law across the whole range.
 
 ```{r single-fit}
 fit_single <- rate_optimise(discharge_cms, stage_m)
-fit_single@limbs[, .(C, a, n, rmse_cms, r_squared)]
+rating_limbs(fit_single, all_columns = TRUE)[, .(C, a, n, rmse_cms, r_squared)]
 ```
 
 `r_squared` above 0.95 looks respectable at a glance -- and that is
@@ -127,7 +127,7 @@ berm, bank top, or control feature.
 
 ```{r multi-fit}
 fit_multi <- rate_optimise(discharge_cms, stage_m, control = breaks)
-fit_multi@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs)]
+rating_limbs(fit_multi, all_columns = TRUE)[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs)]
 ```
 
 Night and day next to the single curve. Limb 1's `rmse_cms` alone dropped
@@ -172,12 +172,12 @@ a `FlodeRating` too, not a bare equation table with no data behind it:
 
 ```{r align-boundaries}
 aligned <- align_limb_boundaries(fit_multi)
-aligned@limbs[, .(limb, lower_stage_m, upper_stage_m, lower_stage_m_original, upper_stage_m_original, boundary_adjusted)]
+rating_limbs(aligned, all_columns = TRUE)[, .(limb, lower_stage_m, upper_stage_m, lower_stage_m_original, upper_stage_m_original, boundary_adjusted)]
 ```
 
 (The warning about bootstrap uncertainty and multi-start bookkeeping
 being dropped is expected here -- `fit_multi` was fitted with the
-default `multi_start = TRUE`, so it carries `@fit_starts`, and that
+default `multi_start = TRUE`, so it carries multi-start bookkeeping, and that
 bookkeeping describes the *pre*-alignment equations. It's discarded
 rather than left around implying it still applies.)
 
@@ -219,15 +219,15 @@ limb that needs more than a boundary relocation.
 
 There's a second payoff to staying inside `FlodeRating`: relocating
 junction 1 moved some gaugings from limb 1's territory into limb 2's (a
-boundary shift can do that on either side), and `aligned@gaugings`
+boundary shift can do that on either side), and `rating_evidence(aligned)`
 reflects the reassignment -- `n_obs` per limb, and every diagnostic
 below, describe the *amended* rating, not the one before alignment:
 
 ```{r aligned-limbs}
-aligned@limbs[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
+rating_limbs(aligned, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
 ```
 
-Compare `n_obs` above against `fit_multi@limbs$n_obs` (44, 40, 12):
+Compare `n_obs` above against `rating_limbs(fit_multi, all_columns = TRUE)$n_obs` (44, 40, 12):
 limb 1 lost gaugings to limb 2 across the relocated boundary, limb 3 is
 untouched (its own junction never moved), and `rating_plot()`/
 `plot_rating_residuals()` -- unchanged functions, written only for
@@ -247,7 +247,7 @@ too:
 
 ```{r align-equations}
 aligned_equations <- align_limb_equations(aligned, anchor_limb = 1L)
-aligned_equations@limbs[, .(limb, C, C_original, aligned, pct_change, rmse_cms, r_squared, n_obs)]
+rating_limbs(aligned_equations, all_columns = TRUE)[, .(limb, C, C_original, aligned, pct_change, rmse_cms, r_squared, n_obs)]
 ```
 
 Limb 1 is the anchor (`aligned` is `FALSE`, nothing changes). Limb 2's
@@ -266,10 +266,13 @@ rc_final_dt <- expand_rating_table(aligned_equations, step = 0.01)
 detect_rc_gaps(rc_final_dt)[, .(junction, gap_abs, gap_rel, gap_flagged)]
 ```
 
-Both junctions are closed now, and the audit chain runs two deep:
-`aligned_equations@previous` is `aligned`, and `aligned@previous` is
-`fit_multi` -- the exact sequence of amendments is recoverable from the
-object alone, not from remembering which vignette chunk produced what.
+Both junctions are closed now, and the audit chain runs two deep. The
+exact sequence of amendments is recoverable from the object alone, not
+from remembering which vignette chunk produced what:
+
+```{r audit-chain}
+rating_history(aligned_equations)
+```
 
 # A rare flood gauging, and an anchored top limb
 
@@ -295,7 +298,7 @@ top_stage <- c(stage_hi, extreme_stage)
 top_discharge <- c(discharge_cms[stage_m >= 2.6], extreme_q)
 
 fit_top_unconstrained <- rate_optimise(top_discharge, top_stage)
-fit_top_unconstrained@limbs[, .(C, a, n, r_squared, n_obs)]
+rating_limbs(fit_top_unconstrained, all_columns = TRUE)[, .(C, a, n, r_squared, n_obs)]
 ```
 
 `r_squared` is *higher* than before (0.99) -- and `n` has been dragged
@@ -310,7 +313,7 @@ the evidence is this thin:
 
 ```{r extreme-constrained}
 fit_top_constrained <- rate_optimise(top_discharge, top_stage, n_bounds = c(1.5, 2.0))
-fit_top_constrained@limbs[, .(C, a, n, r_squared, n_obs, near_bound)]
+rating_limbs(fit_top_constrained, all_columns = TRUE)[, .(C, a, n, r_squared, n_obs, near_bound)]
 ```
 
 `r_squared` is essentially unchanged (0.991 either way -- the data cannot

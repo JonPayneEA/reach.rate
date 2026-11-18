@@ -59,6 +59,22 @@ reference:
   - compare_ratings
   - plot_rating_comparison
 
+- title: Accessors
+  desc: >
+    Read a rating without reaching inside it. Each accessor works on every
+    rating class that holds the information, returns a copy as a data.table
+    with unit-suffixed columns (or a documented list), and says plainly
+    when a class does not hold it.
+  contents:
+  - rating_limbs
+  - rating_coefficients
+  - rating_evidence
+  - rating_diagnostics
+  - rating_support
+  - rating_bootstrap
+  - rating_history
+  - rating_provenance
+
 - title: Advanced modelling
   desc: >
     Direct control over fitting. Until fit_rating() arrives,
@@ -94,7 +110,6 @@ reference:
   contents:
   - apply_rating_interval
   - plot_rating_interval
-  - bootstrap_to_table
 
 - title: Plotting
   contents:
@@ -127,8 +142,9 @@ reference:
 
 - title: Rating objects
   desc: >
-    The S7 classes behind every fit. Accessor functions (planned) will
-    replace direct property access in user code.
+    The S7 classes behind every fit. Read them through the accessors
+    above, not by property; vignette("s7_objects_guide") is the
+    maintainer's guide to how they are built.
   contents:
   - FlodeRatingBase
   - FlodeRating
@@ -149,3 +165,4 @@ reference:
   desc: Still working, but scheduled for removal. Each page names its replacement.
   contents:
   - suggested_breakpoints_vector
+  - bootstrap_to_table

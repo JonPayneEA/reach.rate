@@ -88,6 +88,11 @@ method(as_rating_table, FlodeRating) <- function(fit) {
 #' Convert a fit's bootstrap draws into apply_rating_interval()'s input
 #'
 #' @description
+#' **Deprecated.** Use [rating_bootstrap()], which returns the same draws
+#' with unit-suffixed stage columns, and which [apply_rating_interval()]
+#' accepts directly. This function still works, with a warning, and will
+#' be removed in a later release.
+#'
 #' Bridges `rate_optimise(..., n_boot = )`'s per-draw coefficient samples
 #' (`fit@bootstrap`, which records every requested draw including failed
 #' or rejected ones) to the shape `apply_rating_interval()` expects: one
@@ -114,6 +119,14 @@ method(as_rating_table, FlodeRating) <- function(fit) {
 #'
 #' @export
 bootstrap_to_table <- function(fit) {
+  .Deprecated(
+    new = "rating_bootstrap", package = "reach.rate",
+    msg = paste(
+      "bootstrap_to_table() is deprecated and will be removed in a later release.",
+      "Use rating_bootstrap(), which gives the same draws with lower_stage_m and",
+      "upper_stage_m in place of lower_level and upper_level."
+    )
+  )
   if (!S7_inherits(fit, FlodeRating)) {
     stop("fit must be a FlodeRating object from rate_optimise()")
   }
@@ -155,7 +168,7 @@ bootstrap_to_table <- function(fit) {
 #'
 #' @return A `ggplot` object, invisibly. Printed as a side effect.
 #'
-#' @seealso [rate_optimise()], [bootstrap_to_table()],
+#' @seealso [rate_optimise()], [rating_bootstrap()],
 #'   `apply_rating_interval()` (in the `apply_rating` module)
 #'
 #' @examples
@@ -176,7 +189,7 @@ plot_rating_interval <- function(fit, conf_level = 0.95, n_points = 150L) {
 
   gaugings_dt <- fit@gaugings
   limbs_dt <- fit@limbs
-  rating_boot_dt <- bootstrap_to_table(fit)
+  rating_boot_dt <- rating_bootstrap(fit)
 
   # A dense stage sequence spanning every limb, so the ribbon and mean
   # line are drawn continuously across the whole fitted range.

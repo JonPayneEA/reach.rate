@@ -282,8 +282,8 @@ fit_unconstrained <- rate_optimise(discharge_cms, stage_m)
 fit_bounded <- rate_optimise(discharge_cms, stage_m, n_bounds = c(1.4, 1.6))
 
 rbind(
-  data.table(fit = "unconstrained", fit_unconstrained@limbs[, .(C, a, n, rmse_cms, r_squared)]),
-  data.table(fit = "n_bounds = c(1.4, 1.6)", fit_bounded@limbs[, .(C, a, n, rmse_cms, r_squared)])
+  data.table(fit = "unconstrained", rating_limbs(fit_unconstrained, all_columns = TRUE)[, .(C, a, n, rmse_cms, r_squared)]),
+  data.table(fit = "n_bounds = c(1.4, 1.6)", rating_limbs(fit_bounded, all_columns = TRUE)[, .(C, a, n, rmse_cms, r_squared)])
 )
 ```
 

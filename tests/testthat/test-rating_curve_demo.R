@@ -73,7 +73,7 @@ test_that("bootstrap_to_table copies coefficients unchanged per draw (shared sig
   discharge_seq <- 5 * (stage_seq - 0.3)^1.6 + rnorm(length(stage_seq), sd = 0.01)
 
   fit <- rate_optimise(discharge_seq, stage_seq, n_boot = 20L, boot_seed = 1L)
-  boot_table_dt <- bootstrap_to_table(fit)
+  boot_table_dt <- suppressWarnings(bootstrap_to_table(fit))
   boot_ok_dt <- fit@bootstrap[fit@bootstrap$success == TRUE]
 
   expect_true(is.data.table(boot_table_dt))
@@ -93,11 +93,11 @@ test_that("bootstrap_to_table errors when fit has no bootstrap draws", {
   discharge_seq <- 5 * stage_seq^1.6 + rnorm(length(stage_seq), sd = 0.01)
   fit <- rate_optimise(discharge_seq, stage_seq)
 
-  expect_error(bootstrap_to_table(fit), "no bootstrap draws")
+  expect_error(suppressWarnings(bootstrap_to_table(fit)), "no bootstrap draws")
 })
 
 test_that("bootstrap_to_table rejects a non-FlodeRating object", {
-  expect_error(bootstrap_to_table(data.table(a = 1)), "FlodeRating")
+  expect_error(suppressWarnings(bootstrap_to_table(data.table(a = 1))), "FlodeRating")
 })
 
 test_that("plot_rating_interval returns a ggplot object built from the interval band", {

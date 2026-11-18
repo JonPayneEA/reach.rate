@@ -26,6 +26,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Collate:
     'flode_classes.R'
+    'accessors.R'
     'apply_rating.R'
     'read_helpers.R'
     'read_operational_ratings.R'

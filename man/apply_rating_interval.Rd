@@ -16,8 +16,10 @@ apply_rating_interval(
 
 \item{rating_boot_dt}{Data.table of per-draw coefficients, one row per
 (limb, draw): columns \code{limb}, \code{draw}, \code{lower_level}, \code{upper_level},
-\code{C}, \code{a}, \code{n}. See \code{\link[=bootstrap_to_table]{bootstrap_to_table()}} (in \code{rating_curve_demo})
-for building this from a \code{rate_optimise(..., n_boot = )} fit.}
+\code{C}, \code{a}, \code{n}. \code{\link[=rating_bootstrap]{rating_bootstrap()}} builds this from a
+\code{rate_optimise(..., n_boot = )} fit; its \code{lower_stage_m} and
+\code{upper_stage_m} are accepted in place of \code{lower_level} and
+\code{upper_level}.}
 
 \item{stage_col}{Character. Default \code{"stage"}.}
 
@@ -32,7 +34,7 @@ Default \code{0.95}.}
 \description{
 Like \code{\link[=apply_rating]{apply_rating()}}, but propagates per-limb bootstrap coefficient
 draws (from \code{rate_optimise(..., n_boot = )}, bridged through
-\code{bootstrap_to_table()}) to a discharge \emph{prediction interval} at each
+\code{rating_bootstrap()}) to a discharge \emph{prediction interval} at each
 stage, rather than a single point value. For each stage row, discharge
 is computed once per bootstrap draw using that draw's limb assignment
 and \code{C}/\code{a}/\code{n}, and the draws are summarised into a mean, median, and
