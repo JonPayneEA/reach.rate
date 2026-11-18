@@ -171,7 +171,9 @@ extreme row can move. The row itself stays visible in <code>gaugings</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="compare_ratings.html">compare_ratings()</a></code> to compare two ratings with each other;
+    <div class="dont-index"><p><code><a href="read_gaugings.html">read_gaugings()</a></code> and <code><a href="read_operational_ratings.html">read_operational_ratings()</a></code> to bring in
+a gauging archive and a ratings export;
+<code><a href="compare_ratings.html">compare_ratings()</a></code> to compare two ratings with each other;
 <code><a href="flag_extrapolated_limbs.html">flag_extrapolated_limbs()</a></code> and <code><a href="plot_rating_residuals.html">plot_rating_residuals()</a></code> for a fit
 against the gaugings it was fitted to.</p></div>
     </div>
@@ -195,7 +197,7 @@ against the gaugings it was fitted to.</p></div>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">11</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">stage_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">0.28</span>, <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">60</span>, <span class="fl">0.3</span>, <span class="fl">2.3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">predicted</span> <span class="op">&lt;-</span> <span class="fu"><a href="apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">rating</span>, <span class="va">stage_m</span><span class="op">)</span><span class="op">$</span><span class="va">discharge</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 09:52:41] apply_rating(): 2 of 62 stage value(s) fell outside the rating and were extrapolated.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 10:01:12] apply_rating(): 2 of 62 stage value(s) fell outside the rating and were extrapolated.</span>
 <span class="r-in"><span><span class="va">truth_factor</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">stage_m</span> <span class="op">&gt;=</span> <span class="fl">1.7</span>, <span class="fl">0.85</span>, <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">gaugings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  stage_m <span class="op">=</span> <span class="va">stage_m</span>,</span></span>

@@ -1,5 +1,19 @@
 # Package index
 
+## Reading data
+
+Bring a gauging archive and an operational ratings export into R without
+cleaning them. Every row is kept; what did not parse is noted on the
+row. The guided read_gaugings() workflow in the improvement plan will
+build on these.
+
+- [`read_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/read_gaugings.md)
+  : Read a spot-gauging archive
+- [`read_operational_ratings()`](https://jonpayneea.github.io/reach.rate/reference/read_operational_ratings.md)
+  : Read an operational ratings export
+- [`operational_rating_tables()`](https://jonpayneea.github.io/reach.rate/reference/operational_rating_tables.md)
+  : Turn operational rating limbs into rating tables
+
 ## Using a rating
 
 Apply a fitted rating to a stage record, invert it, and compare it with

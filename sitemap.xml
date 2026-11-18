@@ -43,6 +43,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/flume_discharge_parshall.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/graft_rating.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/index.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/operational_rating_tables.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rating_comparison.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rating_cross_section.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/plot_rating_curves.html</loc></url>
@@ -57,6 +58,8 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rating_curve_explorer.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rating_plot.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/reach.rate-package.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/read_gaugings.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/read_operational_ratings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/resolve_rc_gaps.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/run_demo.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/station_gaugings.html</loc></url>

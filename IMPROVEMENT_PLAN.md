@@ -134,7 +134,8 @@ These were settled before writing. Each tranche assumes them.
     `ubuntu-latest`, each on R release and oldrel-1, plus coverage on
     Linux. Support below oldrel-1 is either proven or stated as
     untested.
-6.  **Spreadsheets through `readxl` in Suggests.** `read_gaugings()`
+6.  **Spreadsheets through `readxl` in Suggests.**
+    [`read_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/read_gaugings.md)
     fails with an instruction to install it when given an `.xlsx`
     without it.
 7.  **Old roadmap frozen as P3.** Issues \#9, \#10 and \#11 stay open,
@@ -246,7 +247,9 @@ diagnostics, [`saveRDS()`](https://rdrr.io/r/base/readRDS.html) and
 [`readRDS()`](https://rdrr.io/r/base/readRDS.html), and the validator
 rejects a read-back object with a missing or future schema version.
 
-**A5. `read_gaugings()`** (#40). CSV and delimited text through
+**A5.
+[`read_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/read_gaugings.md)**
+(#40). CSV and delimited text through
 [`data.table::fread()`](https://rdrr.io/pkg/data.table/man/fread.html),
 spreadsheets through `readxl`. Explicit column mapping; original names,
 values and row numbers kept; problem rows returned with reasons; nothing

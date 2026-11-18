@@ -120,7 +120,7 @@ stage_dt <- data.table::data.table(
 )
 
 flow_dt <- apply_rating(my_fit, stage_dt)
-#> INFO [2026-11-18 09:52:39] apply_rating(): 35 of 193 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-18 10:01:10] apply_rating(): 35 of 193 stage value(s) fell outside the rating and were extrapolated.
 head(flow_dt)
 #>               datetime     stage discharge extrapolated
 #>                 <POSc>     <num>     <num>       <lgcl>

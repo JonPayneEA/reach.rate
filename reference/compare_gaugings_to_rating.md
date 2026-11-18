@@ -94,6 +94,10 @@ move. The row itself stays visible in `gaugings`.
 
 ## See also
 
+[`read_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/read_gaugings.md)
+and
+[`read_operational_ratings()`](https://jonpayneea.github.io/reach.rate/reference/read_operational_ratings.md)
+to bring in a gauging archive and a ratings export;
 [`compare_ratings()`](https://jonpayneea.github.io/reach.rate/reference/compare_ratings.md)
 to compare two ratings with each other;
 [`flag_extrapolated_limbs()`](https://jonpayneea.github.io/reach.rate/reference/flag_extrapolated_limbs.md)
@@ -121,7 +125,7 @@ rating <- FlodeRatingTable(table = rating_dt)
 set.seed(11)
 stage_m <- c(0.25, 0.28, sort(runif(60, 0.3, 2.3)))
 predicted <- apply_rating(rating, stage_m)$discharge
-#> INFO [2026-11-18 09:52:41] apply_rating(): 2 of 62 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-18 10:01:12] apply_rating(): 2 of 62 stage value(s) fell outside the rating and were extrapolated.
 truth_factor <- ifelse(stage_m >= 1.7, 0.85, 1)
 gaugings <- data.frame(
   stage_m = stage_m,
