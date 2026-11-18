@@ -28,6 +28,25 @@ than collapsed to one flag. See \code{vignette("leverage_influence_guide")}
 for how to read this plot without the statistics background the
 terms usually assume.
 }
+\examples{
+set.seed(42)
+stage_m <- seq(0.3, 3.2, by = 0.06)
+discharge_cms <- ifelse(stage_m < 1.5, 3.2 * stage_m^1.6,
+                        3.2 * 1.5^1.6 * (stage_m / 1.5)^2.1) *
+  exp(rnorm(length(stage_m), sd = 0.04))
+# One gauging recorded 70 per cent too high
+discharge_cms[40] <- discharge_cms[40] * 1.7
+fit <- rate_optimise(discharge_cms, stage_m, control = 1.5)
+
+# Gaugings in the top-right of a facet combine high leverage with high
+# influence on the fit
+plot_rating_leverage(fit)
+
+# The same gaugings as a table
+flagged <- flag_influential_gaugings(fit)
+rating_evidence(flagged)[influential == TRUE, c("stage_m", "discharge_cms", "cooks_distance")]
+
+}
 \seealso{
 \code{\link[=flag_influential_gaugings]{flag_influential_gaugings()}}, \code{\link[=plot_rating_residuals]{plot_rating_residuals()}}.
 }

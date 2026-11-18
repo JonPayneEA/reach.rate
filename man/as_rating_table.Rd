@@ -7,13 +7,38 @@
 as_rating_table(fit, ...)
 }
 \arguments{
-\item{fit}{A \code{FlodeRating} or \code{FlodeSegmentedRating} object.}
+\item{fit}{A \link{FlodeRating}.}
 
-\item{...}{Passed to the class-specific method.}
+\item{...}{Passed to the class-specific method; none are used.}
 }
 \value{
-A \link{FlodeRatingTable}.
+A \link{FlodeRatingTable} with status \code{"independently_fitted"} and no
+previous version, ready for \code{\link[=expand_rating_table]{expand_rating_table()}}. A \code{doubtful}
+column, if \code{\link[=flag_extrapolated_limbs]{flag_extrapolated_limbs()}} has added one, is kept.
 }
 \description{
-Replaces \code{fitted_rating_to_table()}. Dispatches on the fit's class.
+Turns a fitted \link{FlodeRating} into the equation table (\code{lower_level},
+\code{upper_level}, \code{C}, \code{a}, \code{n}, one row per limb) that
+\code{\link[=expand_rating_table]{expand_rating_table()}}, the gap-checking functions, \code{\link[=compare_ratings]{compare_ratings()}}
+and \code{\link[=apply_rating_inverse]{apply_rating_inverse()}} work with. Replaces
+\code{fitted_rating_to_table()}.
+
+There is a method for \link{FlodeRating} only. A \link{FlodeSegmentedRating} is
+one joint model with no independent limbs, so it has no table form; a
+\link{FlodeRatingTable} is already one.
+}
+\examples{
+set.seed(1)
+stage_m <- seq(0.5, 2.5, by = 0.05)
+discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.02)
+fit <- rate_optimise(discharge_cms, stage_m)
+
+rating_table <- as_rating_table(fit)
+rating_table
+apply_rating(rating_table, c(0.8, 1.6, 2.4))
+
+}
+\seealso{
+\code{\link[=rating_limbs]{rating_limbs()}} for the same equations as a plain table
+without the class.
 }

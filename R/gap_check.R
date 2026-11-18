@@ -1592,7 +1592,8 @@ plot_rc_gaps <- function(rc_before_dt,
 #'   `resolve_rc_gaps()` correction specifically; [plot_rating_curves()]
 #'   for overlaying several fitted ratings (in any mix of classes,
 #'   including this one) for comparison.
-#' @export
+#' @noRd
+# User-facing documentation lives on the generic (see ?rating_plot).
 method(rating_plot, FlodeRatingTable) <- function(fit, n_points = 200L) {
   if (!is.numeric(n_points) || length(n_points) != 1L || n_points <= 0) {
     stop("n_points must be a single positive integer")

@@ -363,3 +363,9 @@ test_that("all_columns changes nothing for a rating that carries nothing extra, 
   out$rmse_cms <- 0
   expect_equal(hand_fit()@limbs$rmse_cms, c(0.1, 0.2))
 })
+
+test_that("provenance records this package's name and version, for both fit types", {
+  expect_match(rating_provenance(build_fit())$tool_version, "^reach\\.rate [0-9]+\\.[0-9]+")
+  expect_match(rating_provenance(build_segmented())$tool_version, "^reach\\.rate [0-9]+\\.[0-9]+")
+  expect_false(grepl("rating_curves", rating_provenance(build_fit())$tool_version))
+})

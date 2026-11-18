@@ -29,3 +29,19 @@ its own audit chain directly: \verb{@status} and \verb{@previous} let
 pre-alignment table it was built from, rather than mutating a table
 in place and relying on a column someone has to remember to check.
 }
+\examples{
+# Two limbs that meet in discharge at stage 1.2
+rating_table <- FlodeRatingTable(table = data.table::data.table(
+  lower_level = c(0, 1.2), upper_level = c(1.2, 3),
+  C = c(2.5, 2.410481), a = 0, n = c(1.5, 1.7)
+))
+rating_table
+apply_rating(rating_table, c(0.5, 1.5, 2.5))
+rating_history(rating_table)
+
+# Limbs must be contiguous, so a gap between them is refused.
+try(FlodeRatingTable(table = data.table::data.table(
+  lower_level = c(0, 1.5), upper_level = c(1.2, 3), C = 2, a = 0, n = 1.5
+)))
+
+}

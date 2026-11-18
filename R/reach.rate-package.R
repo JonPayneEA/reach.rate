@@ -49,6 +49,20 @@
 #' full walkthrough and the hydrological reasoning behind the toolkit's
 #' design choices.
 #'
+#' @examples
+#' # The core route: gaugings in, a rating out, discharge from stage.
+#' set.seed(1)
+#' stage_m <- seq(0.3, 3, by = 0.06)
+#' discharge_cms <- 3.2 * stage_m^1.6 * exp(rnorm(length(stage_m), sd = 0.04))
+#'
+#' fit <- rate_optimise(discharge_cms, stage_m)
+#' rating_limbs(fit)                 # the equation, Q = C (H - a)^n
+#' rating_diagnostics(fit)           # how well it fits
+#' rating_support(fit)               # how much rests on gaugings
+#'
+#' apply_rating(fit, c(0.8, 1.6, 2.4))
+#' rating_plot(fit)
+#'
 #' @keywords internal
 "_PACKAGE"
 

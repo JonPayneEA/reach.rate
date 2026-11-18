@@ -98,3 +98,10 @@ NULL
 
 # ABI version of the compiled kernel, for tests and bug reports.
 .kernel_abi_version <- function() .Call(C_reach_r_version)
+
+# The package name and version recorded in a fit's provenance, e.g.
+# "reach.rate 0.1.0". Before this, a hard-coded "rating_curves 1.0" from
+# the package's old name was recorded.
+.tool_version <- function() {
+  paste("reach.rate", as.character(utils::packageVersion("reach.rate")))
+}

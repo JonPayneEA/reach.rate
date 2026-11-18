@@ -47,3 +47,17 @@ version), and a \code{previous} chain for amendments produced from an
 earlier fit of the same class. Never constructed directly -- see
 \link{FlodeRating} and \link{FlodeSegmentedRating}.
 }
+\examples{
+# FlodeRatingBase is abstract: it holds what a FlodeRating and a
+# FlodeSegmentedRating have in common, and is never built directly.
+try(FlodeRatingBase())
+
+# Every fit is one underneath.
+set.seed(1)
+stage_m <- seq(0.5, 3, by = 0.1)
+fit <- rate_optimise(3.2 * stage_m^1.6 * exp(rnorm(length(stage_m), sd = 0.03)), stage_m)
+S7::S7_inherits(fit, FlodeRatingBase)
+S7::S7_inherits(fit, FlodeRating)
+S7::S7_inherits(fit, FlodeSegmentedRating)
+
+}

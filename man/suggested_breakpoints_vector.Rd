@@ -19,4 +19,18 @@ drop the attribute this function reads. Use
 \code{sort(candidates_dt[selected == TRUE, candidate_stage])} instead.
 This function will be removed in the release after next.
 }
+\examples{
+set.seed(7)
+stage_m <- seq(0.3, 3.5, by = 0.05)
+discharge_cms <- 4 * pmax(stage_m - 0.1, 0)^1.55 * (pmax(stage_m - 1.6, 0) + 1)^0.9 *
+  (pmax(stage_m - 2.4, 0) + 1)^1.1 * exp(rnorm(length(stage_m), sd = 0.03))
+candidates <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
+
+# The replacement: read the `selected` column.
+sort(candidates[selected == TRUE, candidate_stage])
+
+# The deprecated function gives the same stages, with a warning.
+suppressWarnings(suggested_breakpoints_vector(candidates))
+
+}
 \keyword{internal}

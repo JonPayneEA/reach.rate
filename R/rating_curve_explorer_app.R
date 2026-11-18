@@ -61,8 +61,9 @@ LIMB_COLOURS <- c("#2E7D6B", "#B5541A", "#5B3B7A")
 #'   the console); pass it to [shiny::runApp()] explicitly otherwise.
 #'
 #' @examples
-#' \dontrun{
-#' rating_curve_explorer()
+#' # A Shiny app, so it only starts in an interactive session.
+#' if (interactive()) {
+#'   rating_curve_explorer()
 #' }
 #'
 #' @export
