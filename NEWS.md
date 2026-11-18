@@ -1,5 +1,28 @@
 # reach.rate (development)
 
+* Tranche B6 of the improvement plan: `check_limb_continuity()`. At each
+  junction between two limbs it measures how far the equations are apart at
+  the stage they share, from the equations themselves and not from a
+  discretised table (which is what `detect_rc_gaps()` scans): the
+  **discharge gap** in m3/s and as a fraction, the **stage gap** (how far the
+  upper limb would have to move sideways to meet the lower one, the number a
+  gauge reader sees as the rating jumping), and the **change of slope**. A
+  junction is `continuous` when the discharge gap and the stage gap are within
+  tolerance. The discharge gap passes if within `tol_abs` **or** `tol_rel`, so
+  a tiny flow is not failed on a percentage and a large one does not need a
+  fraction of a cumec. The slope change is reported but judged only if you
+  give `tol_slope`, because a change of slope at a breakpoint is what a
+  breakpoint is for. A gap exactly on a tolerance passes; comparisons carry a
+  1e-9 relative allowance so that floating-point representation error cannot
+  fail them.
+
+  With `after =`, it reports the same measures before and after an alignment
+  (`align_limb_equations()` or `align_limb_boundaries()`), with the junction
+  stage for both, since boundaries can move, and an `improved` flag, so the
+  effect of an amendment is on the table and not only claimed. A single limb
+  and a segmented fit (continuous by construction) have no junction and give
+  an empty table.
+
 * Tranche B5 of the improvement plan: breakpoint candidates.
   `suggest_breakpoints()` now reads as what it is: **candidates for a person to
   review, not findings**. A statistical search sees only the gaugings and cannot
