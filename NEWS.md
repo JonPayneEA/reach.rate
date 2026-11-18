@@ -1,5 +1,35 @@
 # reach.rate (development)
 
+* Tranche A7 of the improvement plan: `vignette("mathematical_contract")`
+  states what the package computes, exactly. It gives the equation
+  `Q = C(H - a)^n`, the units, how a limb is chosen when fitting and when
+  applying, both objectives as equations (absolute and relative) with a
+  hand-worked example, the age-weight formula, which values are accepted or
+  refused, the parameter bounds, the six starting points, the multi-start
+  selection rule, the convergence settings, what each interval does and
+  does not cover, the segmented model, and a list of what the package does
+  not do. Each statement is held by a test in `test-contract.R`.
+
+  `convert_offset_convention()` changes the sign of `a` between this
+  package's `Q = C(H - a)^n` and the `Q = C(H + a)^n` some systems use. It
+  round-trips in both directions and does not change a stage datum.
+
+  Two limitations are written down and not hidden. A gauging exactly on a
+  breakpoint is fitted into the lower limb but applied with the upper one.
+  And `converged` in `@fit_starts` means an attempt passed the validity
+  check, not that the optimiser reported convergence: when the iteration
+  limit is reached `nlsLM` returns its last estimate with a warning that the
+  package suppresses. The convergence columns planned for tranche A9 will
+  expose it.
+
+* Fixed: with age weighting, the multi-start ranked its attempts on the
+  unweighted sum of squares although each attempt had minimised the
+  weighted one, so a choice between local optima used a criterion nobody
+  had optimised. It now ranks on the weighted sum on the objective's own
+  scale, for `rate_optimise()` and `rate_optimise_segmented()`. Fits
+  without age weighting are unchanged, because every weight is 1. The
+  `rss` column of `@fit_starts` is now that weighted sum.
+
 * Tranche A6 of the improvement plan. `validate_gaugings()` checks a set
   of gaugings (evidence, a plain table, or the output of
   `read_gaugings()`) and returns a `FlodeAssessment`: one row per check

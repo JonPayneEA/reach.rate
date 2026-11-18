@@ -150,7 +150,9 @@ NULL
     }
 
     resid_vals <- residuals(fit_attempt)
-    rss <- sum(resid_vals^2)
+    # Ranked on the age-weighted sum of squares the fit minimised, not the
+    # raw residuals' (see the same comment in .fit_limb_multi_start()).
+    rss <- sum(gaugings_dt$age_weight * resid_vals^2)
 
     q_check <- tryCatch(
       predict(fit_attempt, newdata = data.table(stage_m = stage_check)),

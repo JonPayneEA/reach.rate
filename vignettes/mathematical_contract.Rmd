@@ -1,0 +1,372 @@
+---
+title: "The Mathematical Contract: What reach.rate Computes, Exactly"
+author: "Jonathan Payne, Environment Agency Flood Forecasting"
+date: "November 2026"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{The Mathematical Contract: What reach.rate Computes, Exactly}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  eval = TRUE, echo = TRUE, collapse = TRUE, comment = "#>",
+  fig.width = 7, fig.height = 5
+)
+library(reach.rate)
+library(data.table)
+```
+
+This is the document to check a rating against. It states every equation
+the package fits and applies, the units, the rules for awkward values, how a
+fit is chosen, what "converged" means, and what each interval does and does
+not cover. Where the package does something a reader might not expect, this
+says so plainly, in a section called what the package does not do.
+
+Each statement here is held by a test in `tests/testthat/test-contract.R`,
+which fails if the code and this document disagree.
+
+# The equation
+
+A rating limb is
+
+$$Q = C\,(H - a)^{n}, \qquad H > a,$$
+
+and zero for $H \le a$.
+
+| symbol | meaning | unit |
+|---|---|---|
+| $Q$ | discharge | m$^3$/s |
+| $H$ | stage | m |
+| $a$ | the stage at which flow ceases | m |
+| $n$ | the exponent | none |
+| $C$ | the coefficient | m$^{3-n}$/s |
+
+$C$ carries units that depend on $n$, so a $C$ is only comparable with
+another $C$ when the exponents are close.
+
+The offset is **subtracted**: $(H - a)$. Some systems write $(H + a)$, in
+which the same offset has the opposite sign. Using one system's value in
+the other's equation moves the curve by twice the offset and gives no error.
+`convert_offset_convention()` changes the sign of `a` and nothing else,
+because $C(H + a')^n = C(H - a)^n$ exactly when $a' = -a$. Converting there
+and back returns the original values. It does not change a stage datum.
+
+```{r offset}
+external <- data.frame(lower_level = 0.5, upper_level = 3, C = 4.1, a = -0.35, n = 1.6)
+internal <- convert_offset_convention(external)   # from "add" to "subtract"
+internal$a
+# Both tables describe one curve:
+external$C * (1.8 + external$a)^external$n
+internal$C * (1.8 - internal$a)^internal$n
+```
+
+# Limbs
+
+A rating is a set of limbs, each with its own $C$, $a$ and $n$ and a stage
+range. `rate_optimise()` fits each limb independently to the gaugings that
+fall in its range. It does not impose continuity at a breakpoint, and
+`detect_rc_gaps()` and `align_limb_equations()` exist to find and close any
+gap. `rate_optimise_segmented()` fits one joint model in which continuity is
+automatic (see the section on the segmented model).
+
+**Which limb a gauging belongs to.** When fitting, a gauging is assigned to
+the limb whose range contains it, with the range closed on the *upper* side:
+limb 1 is $[h_0, h_1]$ and later limbs are $(h_{j-1}, h_j]$. A gauging
+exactly on a breakpoint is fitted into the lower limb.
+
+When applying a rating the rule is the other way round. A stage is assigned
+by the half-open ranges $[h_{j-1}, h_j)$, with the last limb closed, so a
+stage exactly on a breakpoint is applied with the upper limb. For a
+continuous rating the discharge is the same either way. For a rating with a
+gap at the breakpoint it is not, and the gap check is what reveals it.
+
+**Outside the range.** A stage below the first limb or above the last is
+computed with the nearest limb and flagged `extrapolated`. The equation is
+continued, not bounded.
+
+# Applying a rating
+
+For a stage $H$ in limb $j$,
+
+$$Q = \begin{cases} C_j\,(H - a_j)^{n_j} & H > a_j \\ 0 & H \le a_j \end{cases}$$
+
+A stage of `NA` gives `NA`. The inverse, from discharge to stage, is
+
+$$H = a_j + (Q / C_j)^{1/n_j},$$
+
+for $Q > 0$, with the limb chosen by comparing $Q$ with the discharge at
+each limb's bounds. A discharge of zero, a negative discharge or `NA` gives
+`NA` stage, because zero discharge corresponds to every stage at or below
+$a$ and has no single answer. The inverse is only defined where discharge
+rises across the limbs; it refuses a rating where it does not.
+
+# The two objectives
+
+Each limb is fitted by minimising a weighted sum of squares over its $m$
+gaugings $(H_i, Q_i)$ with weights $w_i$ (all 1 unless age weighting is on).
+
+**Absolute** (`objective = "absolute"`, the default of `rate_optimise()`
+and of the other fitters today):
+
+$$\min_{C,a,n}\ \sum_{i=1}^{m} w_i\,\big(Q_i - C\,(H_i - a)^{n}\big)^2 .$$
+
+**Relative** (`objective = "relative"`; the planned guided workflow will
+make this its default):
+
+$$\min_{C,a,n}\ \sum_{i=1}^{m} w_i\,\big(\ln Q_i - \ln C - n\,\ln(H_i - a)\big)^2 .$$
+
+The relative objective is a fit in log space. It needs every $Q_i > 0$ and
+every $H_i > a$. For small relative errors it is close to minimising
+$\sum w_i\,\big((Q_i - \hat Q_i)/\hat Q_i\big)^2$, which is why it suits
+gaugings whose error scales with the reading.
+
+The two give the same answer when the data lie exactly on a curve and
+different answers otherwise. Neither is "right". The choice is a statement
+about how gauging error behaves, and the objectives vignette
+(`vignette("objective_guide")`) works through when they diverge.
+
+**Diagnostics are always on the discharge scale**, whichever objective was
+used: `rmse_cms`, `r_squared`, `rmse_pct` and the error columns are
+recomputed from the fitted coefficients as $Q_i - C(H_i - a)^n$, so the two
+objectives' results can be compared directly. `rmse_cms` is the unweighted
+root mean square, $\sqrt{\tfrac1m \sum (Q_i - \hat Q_i)^2}$.
+
+Here is the absolute objective for three gaugings, worked by hand and then
+by the package's own equation.
+
+```{r hand-objective}
+H <- c(1.5, 2.5, 3.5)
+Q <- c(2.1, 5.5, 10.6)
+C <- 2; a <- 0.5; n <- 1.5
+modelled <- C * (H - a)^n
+modelled
+residual <- Q - modelled
+round(residual, 4)
+sum(residual^2)                       # the absolute objective, weights 1
+sum((log(Q) - log(C) - n * log(H - a))^2)   # the relative objective
+```
+
+# Weighting by age
+
+Age weighting is opt-in. With `age_halflife` set, a gauging of age $t$ days
+has weight
+
+$$w = w_{\min} + (1 - w_{\min})\;0.5^{\,t / t_{1/2}},$$
+
+where $t_{1/2}$ is `age_halflife`, $w_{\min}$ is `age_min_weight` (default
+0.1) and age is measured back from `reference_datetime` (default: the most
+recent gauging in the data). Age is clamped at zero, so a gauging dated after
+the reference has weight 1, not more. Weights are not normalised.
+
+The floor exists so that an old gauging is never weighted to nothing. It is
+not magnitude-aware: an old extreme flood and an old ordinary gauging decay
+identically.
+
+```{r age-weight}
+age_days <- c(0, 365, 730, 3650)
+0.1 + 0.9 * 0.5^(age_days / 365)      # half-life one year, floor 0.1
+```
+
+Without `age_halflife` every weight is 1 and a supplied `gauging_datetime`
+changes nothing about the fit.
+
+# Zero and negative values
+
+| input | absolute objective | relative objective |
+|---|---|---|
+| negative discharge | refused | refused |
+| zero discharge | accepted | refused (log of zero) |
+| `NA`, `NaN`, infinite stage or discharge | refused | refused |
+| negative stage | accepted (stage is relative to a datum) | accepted |
+| stage with no spread | refused | refused |
+
+A limb needs at least 3 gaugings, because it has three parameters. The
+check that returns advice and not an error, `validate_gaugings()`, warns about
+zero discharge and treats a negative discharge as a technical failure.
+
+# Bounds on the parameters
+
+For each limb the three parameters are box-constrained:
+
+$$C \ge 10^{-6}, \qquad a \le h_{\min} - 10^{-6}, \qquad n \ge 10^{-6},$$
+
+where $h_{\min}$ is the lowest stage among that limb's gaugings. The bound
+on $a$ keeps every gauging above the zero-flow stage, so $(H_i - a) > 0$ for
+all of them. `n_bounds = c(lower, upper)` replaces the bounds on $n$, and
+`lower == upper` fixes it. A limb is flagged `near_bound` when $n$ is
+within 0.01 of either bound, or $a$ is within 1% of the limb's stage width
+of its upper bound.
+
+A fit that sits on a bound is a fit the data did not decide. The flag exists
+so that this is visible.
+
+# Starting values and the multi-start rule
+
+With `multi_start = TRUE` (the default) each limb is fitted from six
+starting points, then the best valid result is kept. With
+$a_0 = 0$ unless the upper bound of $a$ is negative, in which case
+$a_0 = $ that bound $- 0.01$, the starts are:
+
+1. $C = 1,\ a = a_0,\ n = 1$
+2. $C = 1,\ a = a_0,\ n = 1.5$
+3. $C = 1,\ a = a_0,\ n = 2$
+4. $C = \operatorname{median}(Q)/(\operatorname{median}(H) - a_0)^{1.5},\ a = a_0,\ n = 1.5$
+5. $C = 1,\ a = a_0 - 0.25\,(h_{\max} - h_{\min}),\ n = 1$
+6. a log-log estimate: regress $\ln Q$ on $\ln(H - h_{\min} + 0.1)$ for the
+   exponent and coefficient, with $a = h_{\min} - 0.1$, the coefficient
+   floored at 0.01 and the exponent at 0.1. This is omitted if the
+   regression fails.
+
+Each start is clipped into the bounds. An attempt is **valid** if the fitted
+equation is finite and does not decrease across a grid of 20 stages spanning
+the limb (30 across the range for the segmented model); a decrease of more
+than $10^{-9}$ fails. Among the valid
+attempts the one with the smallest **weighted sum of squares on the
+objective's own scale** is kept: the weighted absolute sum for the absolute
+objective, the weighted log-scale sum for the relative one. If no attempt is
+valid the fit stops with an error. Every attempt, selected or not, is
+recorded in `@fit_starts`.
+
+This ranks attempts on the quantity each one minimised. Earlier versions
+ranked them on the unweighted sum of squares even when age weights were
+used, which chose between local optima by a criterion nobody had optimised.
+The two agree when there are no weights.
+
+# Convergence
+
+Each fit is a Levenberg-Marquardt least-squares fit (`minpack.lm::nlsLM`)
+with at most 100 iterations (300 for the segmented model) and the
+optimiser's default tolerances: it stops when the relative change in the sum
+of squares, or in the parameters, falls below $\sqrt{\epsilon} \approx
+1.5 \times 10^{-8}$, with $\epsilon$ the machine epsilon.
+
+The `converged` column in `@fit_starts` means that an attempt returned a
+fit **and that the fit passed the validity check above**. It does not mean
+the optimiser reported convergence. When the iteration limit is reached,
+`nlsLM` returns its last estimate with a warning; the package suppresses
+that warning, and such an attempt counts as converged if it is valid.
+
+That is a limitation, stated here so it is not discovered by accident. The
+planned convergence columns (the optimiser's own code and message, the
+iteration count, and the final objective) will expose it per limb.
+
+# What the intervals mean
+
+**Asymptotic standard errors** (`C_se_asymp`, `a_se_asymp`, `n_se_asymp`) are
+the square roots of the diagonal of the fit's estimated covariance matrix
+under the usual linearised least-squares theory. They are always computed,
+and are `NA` when that matrix is singular. They assume the model is correct,
+errors are independent with constant variance on the fitted scale, and the
+sample is large enough for the linear approximation to hold. A limb with few
+gaugings, or whose parameters sit on a bound, does not meet that.
+
+**Bootstrap draws** (`n_boot > 0`). Within each limb, gaugings are resampled
+with replacement, and the limb is refitted to the resample with the same
+objective, weights and bounds, starting from the original fitted values. A
+resample with fewer than 3 distinct stages or no stage spread is rejected. A
+refit that errors is recorded as a failed draw with its reason. Standard
+errors are the standard deviation of the successful draws, and the 2.5%,
+50% and 97.5% points are their percentiles. A warning is issued when the
+successful fraction falls below `min_boot_success` (default 0.8).
+
+Limb boundaries are held fixed across draws. A draw is not checked for the
+validity conditions that select the main fit, and because each starts from
+the fitted values, draws tend to stay near the selected solution and may
+understate how far another solution is.
+
+**`apply_rating_interval()`** applies every successful bootstrap draw to a
+stage, using that draw's coefficients and the original limb boundaries, and
+reports for each stage the mean, the median, a geometric standard error and
+the lower and upper percentiles at `conf_level`.
+
+```{r interval-by-hand}
+set.seed(3)
+stage_m <- seq(0.5, 3, length.out = 25)
+discharge_cms <- 3 * (stage_m - 0.2)^1.6 * exp(rnorm(25, sd = 0.04))
+fit <- rate_optimise(discharge_cms, stage_m, n_boot = 100, boot_seed = 1)
+draws <- rating_bootstrap(fit)
+at <- data.frame(stage = 2)
+by_package <- apply_rating_interval(at, draws)
+by_hand <- draws$C * (2 - draws$a)^draws$n
+c(package = by_package$discharge_lower, by_hand = quantile(by_hand, 0.025, names = FALSE))
+```
+
+What this interval covers is **uncertainty in the fitted coefficients that
+comes from the finite set of gaugings**. It does not cover:
+
+* error in the stage measurement, or in the gaugings' own discharge beyond
+  what shows up as scatter;
+* a shift in the rating over time;
+* the choice of equation form, or of where the breakpoints are;
+* the spread of a *new* gauging around the curve. It is an interval for the
+  rating's discharge at that stage, not a prediction interval for the next
+  gauging.
+
+Treat it as the width the data support, which is a lower bound on the width
+a user should plan for.
+
+# The segmented model
+
+`rate_optimise_segmented()` fits one joint equation over the whole range,
+adapted from Hodson et al. (2024):
+
+$$Q = C\,\max(H - b_1,\,0)^{n_1}\ \prod_{j \ge 2} \big(\max(H - b_j,\,0) + 1\big)^{n_j}.$$
+
+$b_1$ is the stage of zero flow. Each later factor is exactly 1 at and below
+its own breakpoint $b_j$, so continuity is automatic. Above $b_j$ the local
+exponent of the curve changes. It is fitted by the same least squares and
+objectives as above, not by the full Bayesian inference of the original
+paper, so there are no priors and no posterior. The interior breakpoints are
+held at `control` unless `estimate_breakpoints = TRUE`, in which case the
+loss surface is not convex and results can depend on the start. Multi-start
+selection and the weighting are as for `rate_optimise()`.
+
+# What the package does not do
+
+These are the places where the package is narrower than a reader might
+assume. They are collected here so none is found by surprise.
+
+* Limbs from `rate_optimise()` are not forced to meet. A gap or overlap at a
+  breakpoint is reported by the gap tools, not prevented.
+* A gauging on a breakpoint is fitted with the lower limb and applied with
+  the upper one.
+* `converged` does not report the optimiser's own convergence (see above).
+* Bootstrap draws start from the fitted solution and are not validity
+  checked.
+* No interval includes stage error, rating shift or equation-form error.
+* The offset convention is the only one handled. A stage datum shift is not.
+* Breakpoints are supplied or suggested, not estimated, except in the
+  segmented model with `estimate_breakpoints = TRUE`.
+
+# Checking this against the package
+
+The equations printed in a fit's provenance are the ones in this document.
+
+```{r provenance}
+absolute <- rate_optimise(discharge_cms, stage_m)
+relative <- rate_optimise(discharge_cms, stage_m, objective = "relative")
+rating_provenance(absolute)$fitting_equation
+rating_provenance(relative)$fitting_equation
+```
+
+And the fitted coefficients minimise the objective written above. At a
+minimum the objective cannot be reduced by moving any coefficient, so every
+small step away gives a larger value.
+
+```{r optimality}
+limb <- rating_limbs(absolute)
+objective <- function(par) sum((discharge_cms - par[1] * (stage_m - par[2])^par[3])^2)
+here <- c(limb$C, limb$a, limb$n)
+steps <- c(1e-3, 1e-3, 1e-3)
+worse <- vapply(1:3, function(k) {
+  up <- here; up[k] <- up[k] + steps[k]
+  down <- here; down[k] <- down[k] - steps[k]
+  min(objective(up), objective(down)) > objective(here)
+}, logical(1))
+worse
+```
