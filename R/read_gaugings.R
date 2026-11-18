@@ -69,7 +69,8 @@ NULL
 #' a discharge with no stage are not noted: they parse, and whether they
 #' are acceptable is a hydrometric judgement for a later check.
 #'
-#' @seealso [read_operational_ratings()] for the matching ratings export.
+#' @seealso [read_operational_ratings()] for the matching ratings export;
+#'   [compare_gaugings_to_rating()] to check a rating against the result.
 #'
 #' @examples
 #' # A small archive as it might arrive: placeholder text, a blank

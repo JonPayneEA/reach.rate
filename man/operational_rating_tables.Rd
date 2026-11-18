@@ -46,5 +46,5 @@ result$problems
 
 }
 \seealso{
-\code{\link[=read_operational_ratings]{read_operational_ratings()}}, \code{\link[=apply_rating]{apply_rating()}}.
+\code{\link[=read_operational_ratings]{read_operational_ratings()}}, \code{\link[=compare_gaugings_to_rating]{compare_gaugings_to_rating()}}, \code{\link[=apply_rating]{apply_rating()}}.
 }

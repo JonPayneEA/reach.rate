@@ -96,5 +96,6 @@ gaugings[!is.na(gaugings$read_issue), c("source_row", "read_issue")]
 
 }
 \seealso{
-\code{\link[=read_operational_ratings]{read_operational_ratings()}} for the matching ratings export.
+\code{\link[=read_operational_ratings]{read_operational_ratings()}} for the matching ratings export;
+\code{\link[=compare_gaugings_to_rating]{compare_gaugings_to_rating()}} to check a rating against the result.
 }

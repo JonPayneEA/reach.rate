@@ -20,6 +20,21 @@
   Reading, not yet the guided `read_gaugings()` of the improvement plan:
   no evidence class or station matching yet. No mathematical changes.
 
+* New `compare_gaugings_to_rating()`: checks a rating against a set of spot
+  gaugings that need not be the ones it was fitted to, such as an
+  operational rating against a full gauging archive. It returns the
+  residual of every gauging and a per-limb summary: how many gaugings sit
+  on the limb, over what stage range, the median and interquartile range of
+  the percentage residual, and the share within a tolerance. A limb with no
+  gaugings is reported as such, which is what a limb modelled for high flows
+  looks like. Gaugings outside the rating are flagged and kept out of each
+  limb's statistics. Summaries are medians because a percentage residual is
+  unstable where the rating predicts almost nothing; a single archive row
+  with a measured flow at stage zero would otherwise dominate a mean. Rows
+  with missing values are kept, never dropped. First step towards merging
+  the gauging archive with the operational ratings. Accepts a `FlodeRating`,
+  a `FlodeRatingTable` or a plain table. No mathematical changes.
+
 * `apply_rating()` now accepts a `FlodeRating` directly, so a fit from
   `rate_optimise()` or `rate_optimise_constrained()` no longer needs
   `as_rating_table()` first. Before, `apply_rating(fit, stage_dt)` failed

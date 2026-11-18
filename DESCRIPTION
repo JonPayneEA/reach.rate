@@ -27,6 +27,7 @@ RoxygenNote: 7.3.2
 Collate:
     'flode_classes.R'
     'apply_rating.R'
+    'compare_gaugings.R'
     'compare_ratings.R'
     'cross_section_rating_dual_plot.R'
     'data.R'

@@ -243,7 +243,7 @@ read_operational_ratings <- function(x, rating_id = "ID", station_id = "FFFSLocI
 #'   rating: the `group_by` value, `station_id` (when present), `n_limbs`
 #'   and `reason`.
 #'
-#' @seealso [read_operational_ratings()], [apply_rating()].
+#' @seealso [read_operational_ratings()], [compare_gaugings_to_rating()], [apply_rating()].
 #'
 #' @examples
 #' limbs <- data.frame(
