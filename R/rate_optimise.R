@@ -1052,6 +1052,15 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
     fifelse(depth <= 0, 0, C * depth^n)
   }
 
+  # Limbs that could not be refitted under the junction constraint keep
+  # their unconstrained fit. That is recorded in the rating's provenance
+  # (and shown by rating_history()), not only warned about, so it is still
+  # there after the warning has scrolled away.
+  fallbacks <- data.table(limb = integer(0), reason = character(0))
+  record_fallback <- function(limb, reason) {
+    fallbacks <<- rbind(fallbacks, data.table(limb = as.integer(limb), reason = reason))
+  }
+
   refit_constrained_limb <- function(lb, brk, target_q, start_a, start_n) {
     limb_dt <- gaugings_dt[limb == lb]
     # gaugings_dt is fit@gaugings here -- age_weight only survives on it
@@ -1089,6 +1098,7 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
         "rate_optimise_constrained(): limb %s failed to converge under the junction constraint; keeping its unconstrained fit.",
         lb
       ))
+      record_fallback(lb, "the refit failed to converge under the junction constraint")
       return(NULL)
     }
 
@@ -1110,6 +1120,7 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
         "rate_optimise_constrained(): limb %s converged to a non-finite or non-positive C under the junction constraint; keeping its unconstrained fit.",
         lb
       ))
+      record_fallback(lb, "the refit gave a non-finite or non-positive C under the junction constraint")
       return(NULL)
     }
 
@@ -1198,7 +1209,7 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
     bootstrap = bootstrap_out,
     fit_starts = fit_starts_out,
     fit_origin = "constrained_refit",
-    provenance = c(fit@provenance, list(anchor_limb = anchor_limb))
+    provenance = c(fit@provenance, list(anchor_limb = anchor_limb, constrained_fallbacks = fallbacks))
   )
 }
 

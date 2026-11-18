@@ -367,7 +367,12 @@ method(rating_history, class_any) <- function(x) .accessor_not_a_rating("rating_
   n_limbs <- if (S7_inherits(x, FlodeRating)) nrow(x@limbs)
     else if (S7_inherits(x, FlodeSegmentedRating)) as.integer(x@n_segments)
     else nrow(x@table)
-  data.table(class = .rating_class_label(x), fit_origin = x@fit_origin, lifecycle = x@lifecycle, n_limbs = as.integer(n_limbs))
+  fb <- if (!S7_inherits(x, FlodeRatingTable)) x@provenance$constrained_fallbacks else NULL
+  note <- if (!is.null(fb) && nrow(fb)) {
+    sprintf("%s kept the unconstrained fit: %s", .limbs_text(fb$limb), paste(unique(fb$reason), collapse = "; "))
+  } else NA_character_
+  data.table(class = .rating_class_label(x), fit_origin = x@fit_origin, lifecycle = x@lifecycle,
+             n_limbs = as.integer(n_limbs), note = note)
 }
 
 .rating_history <- function(x) {

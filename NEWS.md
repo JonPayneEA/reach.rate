@@ -1,5 +1,39 @@
 # reach.rate (development)
 
+* Tranche A8 of the improvement plan: post-fit invariants.
+  `rating_invariants()` checks a rating's own equations and returns a
+  `FlodeAssessment` (subject `"rating"`) reusing the class from A6. Eight
+  technical checks can fail: finite and positive coefficients, ordered and
+  contiguous limbs, finite non-negative discharge, monotonic discharge
+  within a limb, limb-top discharge that rises from limb to limb, an inverse
+  that undoes the forward rating, bootstrap bounds in order, and fitted
+  parameters inside their bounds. Three hydrometric checks only warn: gaps
+  or overlaps between limbs, a step in discharge at a junction, and a limb
+  that starts below its own zero-flow stage. Works on `FlodeRating`,
+  `FlodeSegmentedRating` and `FlodeRatingTable`.
+
+  **A rating that fails a technical check is not applied.** `apply_rating()`
+  and `apply_rating_inverse()` stop and name the check, because a number
+  from such a rating would look like any other. A failure stops the
+  operation it makes meaningless: a drop in discharge at the top of a limb
+  does not stop `apply_rating()` (stage to discharge is still well defined)
+  but does stop the inverse. Warnings never block. The gate evaluates only
+  the technical checks and adds about a millisecond to a call.
+
+  Printing a rating now shows `converged:` and `valid:` as separate lines,
+  since a fit can converge to an invalid equation and a valid equation can
+  come from a fit that did not converge.
+
+  `rate_optimise_constrained()` records, in the rating's provenance
+  (`constrained_fallbacks`) and in a new `note` column of `rating_history()`,
+  any limb that could not be refitted under the junction constraint and kept
+  its unconstrained fit. It was a warning only.
+
+  **A deliberate departure from the plan:** the plan says the results are
+  stored on the fit. They are computed when asked for instead, so they
+  cannot go stale when a rating is amended, nothing has to be migrated, and
+  the schema version is unchanged. Say if a stored record is wanted.
+
 * Tranche A9 of the improvement plan: convergence and identifiability.
   Every limb of a fit (and the segmented fit's coefficients) now records,
   in stable columns, how the optimiser ended and whether the data pin the
