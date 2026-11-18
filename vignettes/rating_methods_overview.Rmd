@@ -35,7 +35,7 @@ Throughout both diagrams: **grey** boxes are the data you start with,
 **amber** boxes check or fix something, and **purple** boxes are what you
 do with a finished rating. Nothing here replaces the vignette on any
 individual box -- every box names the function whose own documentation
-and `@examples` you'd actually run.
+and runnable examples you'd actually run.
 
 # Three ways to start
 
@@ -117,7 +117,7 @@ preference:
 derives a theoretical rating from channel geometry alone via Manning's
 equation, then hands the resulting synthetic `(stage, discharge)` series
 to `rate_optimise()` internally -- which is why its output is an ordinary
-`FlodeRating`, distinguished only by `@provenance$source`. Useful at an
+`FlodeRating`, distinguished only by `rating_provenance()$source`. Useful at an
 ungauged or newly-installed site, or as a physically-grounded sanity
 check on what a surveyed section implies about curve shape. See
 `vignette("weir_flume_guide")`'s sibling discussion and `?rate_from_cross_section`.
@@ -237,16 +237,16 @@ registered for `FlodeSegmentedRating`), or, downstream of that,
 `apply_rating_inverse()`, `apply_rating_versioned()`, or
 `compare_ratings()`, all of which expect a `FlodeRatingTable`. If you
 need any of those on a segmented fit today, the practical workaround is
-evaluating the fit's own equation (`fit@coefficients`,
+evaluating the fit's own equation (`rating_coefficients(fit)`,
 `vignette("segmented_model_guide")`'s multiplicative-factor formula)
 across a stage sequence by hand and working from the resulting table
 directly.
 
 **Coefficient uncertainty runs beside this diagram, not through it.**
-`bootstrap_to_table()` and `apply_rating_interval()` (or, for a quick
+`rating_bootstrap()` and `apply_rating_interval()` (or, for a quick
 closed-form alternative, the `C_se_asymp`/`a_se_asymp`/`n_se_asymp`
 columns `rate_optimise()` always populates) work directly from a
-`FlodeRating`'s own `@bootstrap`/refit machinery, independent of whether
+`FlodeRating`'s own bootstrap and refit machinery, independent of whether
 the table above is gap-free yet -- `rating_curves_guide.Rmd`'s
 "Coefficient uncertainty" section covers that pipeline on its own terms.
 
@@ -271,6 +271,6 @@ it. Depending on which box you're standing at:
 - `vignette("objective_guide")` and `vignette("recency_weighting_guide")`
   -- two ways `rate_optimise()`'s own fit can be steered, beyond
   `n_bounds`: `objective = "relative"`, and `age_halflife`.
-- `vignette("s7_objects_guide")` -- what `@`-access, `S7_inherits()`, and
-  the `@status`/`@previous` audit chain actually buy you, for every green
-  box in both diagrams above.
+- `vignette("s7_objects_guide")` -- how the S7 classes are built, and what
+  `S7_inherits()` and the amendment chain actually buy you, for every
+  green box in both diagrams above.

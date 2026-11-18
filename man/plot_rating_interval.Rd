@@ -36,6 +36,6 @@ plot_rating_interval(fit)
 
 }
 \seealso{
-\code{\link[=rate_optimise]{rate_optimise()}}, \code{\link[=bootstrap_to_table]{bootstrap_to_table()}},
+\code{\link[=rate_optimise]{rate_optimise()}}, \code{\link[=rating_bootstrap]{rating_bootstrap()}},
 \code{apply_rating_interval()} (in the \code{apply_rating} module)
 }

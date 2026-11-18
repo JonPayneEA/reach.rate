@@ -156,7 +156,7 @@ method(apply_rating, FlodeRating) <- function(fit, stage_dt, stage_col = "stage"
 #' @description
 #' Like [apply_rating()], but propagates per-limb bootstrap coefficient
 #' draws (from `rate_optimise(..., n_boot = )`, bridged through
-#' `bootstrap_to_table()`) to a discharge *prediction interval* at each
+#' `rating_bootstrap()`) to a discharge *prediction interval* at each
 #' stage, rather than a single point value. For each stage row, discharge
 #' is computed once per bootstrap draw using that draw's limb assignment
 #' and `C`/`a`/`n`, and the draws are summarised into a mean, median, and
@@ -176,8 +176,10 @@ method(apply_rating, FlodeRating) <- function(fit, stage_dt, stage_col = "stage"
 #' @param stage_dt Data.frame or data.table with a stage column.
 #' @param rating_boot_dt Data.table of per-draw coefficients, one row per
 #'   (limb, draw): columns `limb`, `draw`, `lower_level`, `upper_level`,
-#'   `C`, `a`, `n`. See [bootstrap_to_table()] (in `rating_curve_demo`)
-#'   for building this from a `rate_optimise(..., n_boot = )` fit.
+#'   `C`, `a`, `n`. [rating_bootstrap()] builds this from a
+#'   `rate_optimise(..., n_boot = )` fit; its `lower_stage_m` and
+#'   `upper_stage_m` are accepted in place of `lower_level` and
+#'   `upper_level`.
 #' @param stage_col Character. Default `"stage"`.
 #' @param conf_level Numeric in (0, 1). Width of the prediction interval.
 #'   Default `0.95`.
@@ -207,13 +209,22 @@ apply_rating_interval <- function(stage_dt, rating_boot_dt, stage_col = "stage",
     stop("conf_level must be a number strictly between 0 and 1")
   }
 
+  # Accept rating_bootstrap()'s unit-suffixed names (lower_stage_m,
+  # upper_stage_m) as well as the equation table's (lower_level,
+  # upper_level), on a copy so the caller's table is left alone.
+  rating_boot_dt <- copy(as.data.table(rating_boot_dt))
+  for (pair in list(c("lower_stage_m", "lower_level"), c("upper_stage_m", "upper_level"))) {
+    if (pair[1L] %in% names(rating_boot_dt) && !pair[2L] %in% names(rating_boot_dt)) {
+      setnames(rating_boot_dt, pair[1L], pair[2L])
+    }
+  }
+
   required <- c("limb", "draw", "lower_level", "upper_level", "C", "a", "n")
   missing <- setdiff(required, names(rating_boot_dt))
   if (length(missing)) {
     stop("apply_rating_interval(): rating_boot_dt is missing column(s): ", paste(missing, collapse = ", "))
   }
 
-  rating_boot_dt <- as.data.table(rating_boot_dt)
   bounds_dt <- unique(rating_boot_dt[, .(limb, lower_level, upper_level)])
   setorder(bounds_dt, lower_level)
   n_limbs <- nrow(bounds_dt)

@@ -15,6 +15,11 @@ A \code{data.table} with columns \code{limb}, \code{draw}, \code{lower_level},
 draw. Errors if no draws succeeded.
 }
 \description{
+\strong{Deprecated.} Use \code{\link[=rating_bootstrap]{rating_bootstrap()}}, which returns the same draws
+with unit-suffixed stage columns, and which \code{\link[=apply_rating_interval]{apply_rating_interval()}}
+accepts directly. This function still works, with a warning, and will
+be removed in a later release.
+
 Bridges \code{rate_optimise(..., n_boot = )}'s per-draw coefficient samples
 (\code{fit@bootstrap}, which records every requested draw including failed
 or rejected ones) to the shape \code{apply_rating_interval()} expects: one

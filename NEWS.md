@@ -1,5 +1,35 @@
 # reach.rate (development)
 
+* Tranche A3 of the improvement plan: eight accessors read a rating without
+  touching its S7 properties. `rating_limbs()` gives the stage range and
+  equation of each limb; `rating_coefficients()` every parameter in long
+  form with its asymptotic and bootstrap uncertainty (`NA` where it was not
+  computed, never zero); `rating_evidence()` the gaugings used;
+  `rating_diagnostics()` the fit diagnostics; `rating_support()` how much of
+  each limb rests on gaugings; `rating_bootstrap()` the bootstrap draws;
+  `rating_history()` the whole chain of amended versions, oldest first; and
+  `rating_provenance()` how the fit was made. Each is a generic with
+  methods for `FlodeRating`, `FlodeSegmentedRating` and `FlodeRatingTable`
+  where the class holds the information, and an error that names the class
+  and says what to use instead where it does not. Each returns a copy, so
+  editing the result cannot change the rating. `rating_limbs(all_columns =
+  TRUE)` returns everything a rating carries per limb, including the
+  columns that `flag_extrapolated_limbs()`, `align_limb_equations()` and
+  `align_limb_boundaries()` add.
+
+* `bootstrap_to_table()` is deprecated in favour of `rating_bootstrap()`,
+  which returns the same draws with `lower_stage_m` and `upper_stage_m` in
+  place of `lower_level` and `upper_level`. `apply_rating_interval()` now
+  accepts either naming, on a copy of the table it is given. The old
+  function still works, with a warning, and will be removed in a later
+  release.
+
+* The README, every vignette and the walkthrough script now use the
+  accessors in place of `@` property access; `grep '@[a-z]'` over them
+  finds none. `vignette("s7_objects_guide")` is rewritten as a maintainer
+  guide: how the classes are built, how to read properties with
+  `S7::prop()`, and how to add an accessor. No mathematical changes.
+
 * Two more pieces of the rating arithmetic moved into the C kernel
   (`src/reach_core.c`), so another language can share them: the stage where
   two limb equations cross, and the geometry of a surveyed cross-section.

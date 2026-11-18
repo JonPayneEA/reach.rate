@@ -13,7 +13,7 @@
 #               here rather than repeated in full.
 # Modified:     2026-08-19 - JP: updated throughout for the S7
 #               conversion. Fits are now FlodeRating/FlodeSegmentedRating
-#               instances (@-property access, e.g. fit@limbs, not
+#               instances (read through S7 properties, not through
 #               fit[, ...] or fit$col); fitted_rating_to_table() is gone,
 #               replaced by as_rating_table() (returns a
 #               FlodeRatingTable); apply_segmented_rating()/plot_
@@ -25,8 +25,8 @@
 #               directly rather than manually-selected column subsets.
 #               Step 11 now explicitly demonstrates the audit chain
 #               align_limb_equations() gained from being an S7 class
-#               (@status/@previous) rather than a column to remember to
-#               check.
+#               (status and previous-version chain) rather than a column
+#               to remember to check.
 # Modified:     2026-08-25 - JP: moved from rating_curves/walkthrough.R
 #               (a box module script) into inst/examples/walkthrough.R
 #               now that the toolkit is the reach.rate package. Every
@@ -61,7 +61,8 @@
 #
 # Fits are S7 objects (FlodeRating, FlodeSegmentedRating,
 # FlodeRatingTable -- see flode_classes.R): access their contents with
-# `@`, e.g. `fit@limbs`, not `fit[, ...]` or `fit$limbs`.
+# the accessor functions, e.g. `rating_limbs(fit)`, not `fit[, ...]`
+# or `fit$limbs`.
 #
 # Every number below is synthetic. The point is the shape of the
 # workflow, not these particular coefficients.
@@ -96,7 +97,7 @@ print(suggested_breaks)
 cat("\n== 3. Fit the rating curve =====================================\n")
 
 fit <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2))
-print(fit@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs)])
+print(rating_limbs(fit, all_columns = TRUE)[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs)])
 
 cat("\n== 4. Check fit diagnostics visually ===========================\n")
 
@@ -105,7 +106,7 @@ plot_rating_residuals(fit)
 cat("\n== 5. Flag any limb extrapolating beyond its own gaugings ====\n")
 
 fit <- flag_extrapolated_limbs(fit)
-print(fit@limbs[, .(limb, lower_stage_m, upper_stage_m, doubtful)])
+print(rating_limbs(fit, all_columns = TRUE)[, .(limb, lower_stage_m, upper_stage_m, doubtful)])
 
 cat("\n== 6. Plot the fitted rating against the gaugings =============\n")
 
@@ -140,11 +141,7 @@ cat("\n== 11. Align the equations themselves (survives re-expansion) =\n")
 # equations() returns a NEW FlodeRatingTable with a genuine audit chain.
 aligned_result <- align_limb_equations(rating_table, anchor_limb = 1L)
 print(aligned_result)
-cat(sprintf("aligned_result@status: %s\n", aligned_result@status))
-cat(sprintf(
-  "aligned_result@previous is the exact pre-alignment object: %s\n",
-  identical(aligned_result@previous, rating_table)
-))
+print(rating_history(aligned_result))   # the chain: the original table, then the aligned one
 
 rc_from_aligned_dt <- expand_rating_table(aligned_result)
 gaps_after_align_dt <- detect_rc_gaps(rc_from_aligned_dt)
@@ -191,7 +188,7 @@ cat("\n== 15. Same pipeline, one call (rating_curve_demo::run_demo) ===\n")
 demo_result <- run_demo(plot = FALSE)
 cat(sprintf(
   "run_demo(): %d limb(s), %d junction gap(s) flagged before resolution\n",
-  nrow(demo_result$fit@limbs), sum(demo_result$gaps$gap_flagged)
+  nrow(rating_limbs(demo_result$fit)), sum(demo_result$gaps$gap_flagged)
 ))
 
 cat("\n== 16. Bootstrap uncertainty ====================================\n")
@@ -200,9 +197,9 @@ set.seed(99)
 stage_boot_m <- seq(0.5, 3.0, by = 0.08)
 discharge_boot_cms <- 4 * stage_boot_m^1.55 + rnorm(length(stage_boot_m), sd = 0.08)
 fit_boot <- rate_optimise(discharge_boot_cms, stage_boot_m, n_boot = 200L, boot_seed = 11L)
-print(fit_boot@limbs[, .(limb, C, C_se, a, a_se, n, n_se)])
+print(rating_limbs(fit_boot, all_columns = TRUE)[, .(limb, C, C_se, a, a_se, n, n_se)])
 
-rating_boot_dt <- bootstrap_to_table(fit_boot)
+rating_boot_dt <- rating_bootstrap(fit_boot)
 cat(sprintf("%d bootstrap draws across %d limb(s)\n", nrow(rating_boot_dt), length(unique(rating_boot_dt$limb))))
 
 interval_dt <- apply_rating_interval(
@@ -250,7 +247,7 @@ cat("\n== 19. Launch the interactive explorer =========================\n")
 cat("\n== 20. A genuinely optimised alternative to step 11's rescale ===\n")
 
 fit_constrained <- rate_optimise_constrained(discharge_cms, stage_m, control = c(1.6, 2.2))
-print(fit_constrained@limbs[, .(limb, C, a, n, rmse_cms, r_squared, aligned)])
+print(rating_limbs(fit_constrained, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared, aligned)])
 
 rating_constrained_table <- as_rating_table(fit_constrained)
 method_comparison <- compare_ratings(aligned_result, rating_constrained_table)
@@ -271,7 +268,7 @@ q3 <- (pmax(stage_seg_m - 2.4, 0) + 1)^1.1
 discharge_seg_cms <- q1 * q2 * q3 * exp(rnorm(length(stage_seg_m), sd = 0.03))
 
 fit_seg <- rate_optimise_segmented(discharge_seg_cms, stage_seg_m, control = c(1.6, 2.4))
-print(fit_seg@coefficients)
+print(rating_coefficients(fit_seg))
 
 # rating_plot() again -- the same generic used in step 6, now dispatching
 # to FlodeSegmentedRating's method instead of FlodeRating's.
@@ -298,8 +295,8 @@ xs_dt <- data.table(
   elevation_m = c(2.4, 0, 0, 2.4)
 )
 fit_xs <- rate_from_cross_section(xs_dt, slope = 0.001, roughness = 0.035, n_points = 30)
-cat(sprintf("fit_xs@provenance$source: %s\n", fit_xs@provenance$source))
-print(fit_xs@limbs[, .(limb, C, a, n, rmse_cms, r_squared)])
+cat(sprintf("rating_provenance(fit_xs)$source: %s\n", rating_provenance(fit_xs)$source))
+print(rating_limbs(fit_xs, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared)])
 
 # The plot is the point here: overlay the derived rating on the very
 # geometry that produced it, as a sanity check that the curve's shape
@@ -328,11 +325,11 @@ print(flume_discharge_parshall(
 cat("\n== 24. Which gaugings are quietly steering the fit? ============\n")
 
 # Reuses `fit` from step 3. flag_influential_gaugings() adds leverage/
-# Cook's distance columns to @gaugings; plot_rating_leverage() shows the
+# Cook's distance columns to the evidence; plot_rating_leverage() shows the
 # same two quantities behind the influential flag, one facet per limb.
 fit_flagged <- flag_influential_gaugings(fit)
 cat("Gaugings flagged as influential:\n")
-print(fit_flagged@gaugings[influential == TRUE])
+print(rating_evidence(fit_flagged)[influential == TRUE])
 
 plot_rating_leverage(fit)
 
@@ -358,7 +355,7 @@ fit_weighted <- rate_optimise(
 )
 cat(sprintf(
   "Unweighted C: %.2f | Age-weighted C (60-day half-life): %.2f | True recent C: 6\n",
-  fit_unweighted@limbs$C[1], fit_weighted@limbs$C[1]
+  rating_limbs(fit_unweighted)$C[1], rating_limbs(fit_weighted)$C[1]
 ))
 
 cat("\n== 26. Inverting a rating: discharge back to stage =============\n")
@@ -382,7 +379,7 @@ cat("\n== Done. ========================================================\n")
 # WHERE TO GO NEXT
 #
 # Every function used above has its own roxygen documentation with a
-# fuller @description and a runnable @examples block. flode_classes.R
+# fuller description and a runnable examples block. flode_classes.R
 # documents the class hierarchy itself (FlodeRatingBase, FlodeRating,
 # FlodeSegmentedRating, FlodeRatingTable) and the three shared generics.
 # The testthat files under tests/testthat/ are a second source of

@@ -65,11 +65,11 @@ Each regime approximates a different power law. The standard response is a multi
 
 ### The objects
 
-The toolkit represents its results as three [S7](https://rconsortium.github.io/S7/) classes rather than bare tables. The practical consequence for you as a user is small: you access contents with `@` rather than `$`, and the objects carry more than numbers.
+The toolkit represents its results as three [S7](https://rconsortium.github.io/S7/) classes rather than bare tables. You read them through accessor functions, so your code never depends on where the package stores something, and the objects carry more than numbers.
 
-- `FlodeRating` is the result of `rate_optimise()`. `@limbs` holds one row per limb (bounds, coefficients, diagnostics), `@gaugings` holds the data it was fitted to, `@bootstrap` and `@fit_starts` hold uncertainty and fitting bookkeeping when produced, `@status` records whether the fit is as fitted or has been amended, and `@provenance` records how it was made.
+- `FlodeRating` is the result of `rate_optimise()`. `rating_limbs()` gives one row per limb (stage range and equation), `rating_coefficients()` the parameters with their uncertainty, `rating_diagnostics()` how well each limb fits, `rating_evidence()` the gaugings it was fitted to, `rating_support()` how much of each limb rests on gaugings, `rating_bootstrap()` the bootstrap draws when produced, `rating_history()` whether the fit is as fitted or has been amended, and `rating_provenance()` how it was made.
 - `FlodeSegmentedRating` is the result of `rate_optimise_segmented()`, a structurally different joint model with no junction gap to reconcile (see the full guide).
-- `FlodeRatingTable` is the equation-table representation used for gap checking and application: `lower_level`, `upper_level`, `C`, `a`, `n` per limb, same names and sign convention as `FlodeRating`'s `@limbs`. It carries `@status` and `@previous`, so an amended table references the exact object it was amended from -- an audit trail by construction, not by discipline.
+- `FlodeRatingTable` is the equation-table representation used for gap checking and application: `lower_level`, `upper_level`, `C`, `a`, `n` per limb, the same equation and sign convention as a `FlodeRating`. An amended table keeps the exact object it was amended from, and `rating_history()` lists the chain -- an audit trail by construction, not by discipline.
 
 Three shared generics work across the classes: `rating_plot()` draws whichever fit you hand it, `apply_rating()` converts stage to discharge with whichever representation you hold, and `as_rating_table()` converts a fit to the table form. The class system chooses the right implementation; you use one name.
 
@@ -81,7 +81,7 @@ A fit remembers its own gaugings deliberately: every diagnostic, residual plot, 
 
 Why not just take logs and fit a straight line by ordinary regression? Because the two minimise different things. Log-space regression minimises relative error, which treats a 10% miss at 2 m³/s and a 10% miss at 200 m³/s as equally bad. Least squares in real space minimises absolute error, so the high-flow gaugings dominate the fit -- for flood forecasting, where the cost of error is concentrated at high flows, real-space fitting is usually the right default, but be aware of the choice you are inheriting: your low-flow fit is being traded for your high-flow fit.
 
-The fit is constrained so that $C > 0$, $n > 0$, and $H - a > 0$ for every gauging in the limb, fencing off territory where no valid rating exists. By default (`multi_start = TRUE`) each limb is fitted from several starting combinations rather than one, since a poor guess can strand the optimiser in a local minimum; every attempt is recorded in `@fit_starts`, and the `near_bound` column flags a fit whose `n` or `a` finished pressed against its bound, worth a second look.
+The fit is constrained so that $C > 0$, $n > 0$, and $H - a > 0$ for every gauging in the limb, fencing off territory where no valid rating exists. By default (`multi_start = TRUE`) each limb is fitted from several starting combinations rather than one, since a poor guess can strand the optimiser in a local minimum; every attempt is recorded with the fit (summarised by `n_starts_attempted`, `n_starts_converged` and `selected_start_id` in `rating_diagnostics()`), and the `near_bound` column flags a fit whose `n` or `a` finished pressed against its bound, worth a second look.
 
 ## Getting started
 
@@ -106,7 +106,7 @@ discharge_cms <- true_coefs$C[true_limb] *
 
 # Fit a multi-limb power-law rating curve: Q = C(H - a)^n per limb
 fit <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2))
-fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared)]
+rating_limbs(fit, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared)]
 
 rating_plot(fit)
 
@@ -185,7 +185,7 @@ For how `rate_optimise_segmented()`'s multiplicative factors actually compose, w
 vignette("segmented_model_guide", package = "reach.rate")
 ```
 
-For working with the package's S7 classes -- `@`-access, validators, `S7_inherits()`, the `@status`/`@previous` audit chain -- see:
+For how the S7 classes are built, for anyone maintaining or extending the package -- properties, validators, `S7_inherits()` and the amendment chain -- see:
 
 ```r
 vignette("s7_objects_guide", package = "reach.rate")
