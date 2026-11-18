@@ -48,6 +48,18 @@ reference:
   - match_stations
   - check_operational_ratings
 
+- title: Checking evidence
+  desc: >
+    Ask whether a set of gaugings can be used and whether it looks right
+    for a river. Technical checks fail; hydrometric checks only warn, and
+    nothing is removed. The result is a FlodeAssessment, a table of checks
+    that a fitted rating's assessment will reuse.
+  contents:
+  - validate_gaugings
+  - FlodeAssessment
+  - assessment_checks
+  - assessment_status
+
 - title: Using a rating
   desc: >
     Apply a fitted rating to a stage record, invert it, and compare it
