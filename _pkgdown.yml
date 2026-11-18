@@ -38,10 +38,11 @@ reference:
     on the row. match_stations() links the two files' station ids, with a
     table you supply where the ids differ, and check_operational_ratings()
     compares every rating with its gaugings and lists what could not be
-    compared. The guided read_gaugings() workflow in the improvement plan
-    will build on these.
+    compared. read_gaugings() takes delimited text, a spreadsheet or a
+    data.frame, and read_summary() reports what it found as a table.
   contents:
   - read_gaugings
+  - read_summary
   - read_operational_ratings
   - operational_rating_tables
   - match_stations

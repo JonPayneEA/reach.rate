@@ -19,20 +19,80 @@
 # Reading everything as text keeps every original value, including
 # placeholders such as "---", and leaves parsing to explicit, reportable
 # steps instead of fread()'s column-type guess.
-.read_text_table <- function(x, fn) {
+.read_text_table <- function(x, fn, sep = "auto", encoding = "unknown", sheet = 1L) {
   if (is.data.frame(x)) {
     dt <- copy(as.data.table(x))
     for (col in names(dt)) {
       if (!is.character(dt[[col]])) set(dt, j = col, value = as.character(dt[[col]]))
     }
-    return(dt)
+    return(.unique_names(dt))
   }
   if (!is.character(x) || length(x) != 1L || is.na(x)) {
     stop(fn, ": x must be a single file path or a data.frame")
   }
   if (!file.exists(x)) stop(fn, ": file not found: ", x)
-  fread(x, colClasses = "character", na.strings = NULL, strip.white = TRUE,
-        showProgress = FALSE, data.table = TRUE)
+  if (grepl("\\.(xlsx|xlsm|xls)$", x, ignore.case = TRUE)) {
+    if (!.has_readxl()) {
+      stop(fn, ": reading a spreadsheet needs the 'readxl' package. Install it with install.packages(\"readxl\"), ",
+           "or save the sheet as a CSV file.", call. = FALSE)
+    }
+    # Everything as text, so a number keeps the digits it was stored with
+    # and a placeholder such as "---" survives. Date cells arrive as Excel
+    # serial numbers; the date and time parsers know about those.
+    raw <- readxl::read_excel(x, sheet = sheet, col_types = "text", .name_repair = "minimal")
+    return(.unique_names(as.data.table(as.data.frame(raw, stringsAsFactors = FALSE))))
+  }
+  dt <- fread(x, colClasses = "character", na.strings = NULL, strip.white = TRUE,
+              showProgress = FALSE, data.table = TRUE, sep = sep, encoding = encoding,
+              blank.lines.skip = TRUE)
+  .unique_names(dt)
+}
+
+.has_readxl <- function() requireNamespace("readxl", quietly = TRUE)
+
+# A repeated header would make a column impossible to name. Keep every
+# column and make the repeats distinct (a, a.1) so none is lost.
+.unique_names <- function(dt) {
+  nm <- names(dt)
+  if (anyDuplicated(nm)) setnames(dt, make.unique(nm))
+  dt
+}
+
+# Excel stores a date as days since 1899-12-30 and a time as a fraction of
+# a day. TRUE where every present value is a plain number in a believable
+# range for a date (about 1900 to 2100).
+.looks_like_excel_serial <- function(x) {
+  x <- x[!is.na(x)]
+  if (!length(x)) return(FALSE)
+  v <- suppressWarnings(as.numeric(x))
+  !anyNA(v) && all(v >= 1 & v < 73415)
+}
+
+.excel_serial_to_date <- function(x) {
+  as.Date(floor(suppressWarnings(as.numeric(x))), origin = "1899-12-30")
+}
+
+# Seconds since midnight from an Excel time cell (a fraction of a day).
+.excel_fraction_to_seconds <- function(x) {
+  v <- suppressWarnings(as.numeric(x))
+  ifelse(!is.na(v) & v >= 0 & v < 1, round(v * 86400), NA_real_)
+}
+
+# Seconds since 1970 (read as UTC wall-clock) to a POSIXct whose clock
+# reading in `tz` is that same wall-clock time. A file's times carry no
+# zone, so the clock reading is kept as it stands; as.POSIXct(n, tz = tz)
+# would move it by the zone's offset instead. A wall-clock time that does
+# not exist in `tz` (the hour skipped when clocks go forward) becomes NA.
+.clock_to_posixct <- function(seconds, tz) {
+  utc <- as.POSIXct(seconds, origin = "1970-01-01", tz = "UTC")
+  if (identical(tz, "UTC")) return(utc)
+  txt <- format(utc, "%Y-%m-%d %H:%M:%S")
+  out <- as.POSIXct(txt, format = "%Y-%m-%d %H:%M:%S", tz = tz)
+  # Some platforms move a non-existent time forward instead of refusing
+  # it; a value that does not read back as it was written is not that time.
+  moved <- !is.na(out) & format(out, "%Y-%m-%d %H:%M:%S") != txt
+  out[moved] <- NA
+  out
 }
 
 # Stop with the list of available columns if a requested one is missing.
@@ -55,7 +115,10 @@
 }
 
 # Parse numbers; report text that was present but not a number.
-.parse_numeric <- function(x) {
+.parse_numeric <- function(x, dec = ".") {
+  # A decimal comma is read as a point. Thousands separators are not
+  # guessed at: "1,234.5" with dec = "." is reported, not reinterpreted.
+  if (identical(dec, ",")) x <- sub(",", ".", x, fixed = TRUE)
   value <- suppressWarnings(as.numeric(x))
   list(value = value, unparsed = !is.na(x) & is.na(value))
 }

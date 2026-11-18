@@ -1,16 +1,18 @@
 # ============================================================ #
 # Tool:         read_gaugings
-# Description:  Read a spot-gauging archive from a CSV file or a
-#               data.frame into one row per gauging with standard column
-#               names, a parsed observation time, and a per-row note of
-#               anything that did not parse. Removes nothing.
+# Description:  Read a spot-gauging archive from delimited text, a
+#               spreadsheet or a data.frame into one row per gauging with
+#               standard column names, a parsed observation time, and a
+#               per-row note of anything that did not parse. Removes
+#               nothing. read_summary() reports what was found.
 # Author:       Jonathan Payne
 # Created:      2026-11-18
 # Tier:         3
-# Inputs:       A file path or data.frame with a station id, a date, a
-#               stage and a discharge (and optionally a time of day).
+# Inputs:       A file path (text or .xlsx/.xls) or data.frame with a
+#               station id, a date, a stage and a discharge (and
+#               optionally a time of day, or one date-time column).
 # Outputs:      A data.table. See ?read_gaugings.
-# Dependencies: data.table
+# Dependencies: data.table; readxl (Suggests) for spreadsheets
 # ============================================================ #
 
 #' @include read_helpers.R
@@ -19,13 +21,15 @@ NULL
 #' Read a spot-gauging archive
 #'
 #' @description
-#' Reads gaugings from a CSV file (or a data.frame) into a table with
-#' standard column names, whatever the original headers were called. It
-#' cleans nothing and removes nothing: every row of the file is returned,
-#' in order. What it does is read every column as text, turn placeholder
-#' text such as `---` into a missing value, parse stage, discharge, date
-#' and time explicitly, and record in `read_issue` anything that did not
-#' parse, so a bad row is visible and not silently lost or changed.
+#' Reads gaugings from delimited text (comma, semicolon, tab or pipe), a
+#' spreadsheet (`.xlsx`, `.xls`) or a data.frame into a table with standard
+#' column names, whatever the original headers were called. It cleans
+#' nothing and removes nothing: every row of the file is returned, in
+#' order. What it does is read every column as text, turn placeholder text
+#' such as `---` into a missing value, parse stage, discharge, date and
+#' time explicitly, and record in `read_issue` anything that did not parse,
+#' so a bad row is visible and not silently lost or changed. The values as
+#' they were written are kept beside the parsed ones.
 #'
 #' The defaults match the column names of the Environment Agency
 #' WISKI-style gauging export (`Station number`, `Date`, `Time`, `Stage`,
@@ -35,31 +39,56 @@ NULL
 #' is used, day-first ahead of month-first when both fit (`04/05/1970` is
 #' read as 4 May). The format chosen is reported in the message, with a
 #' warning when the choice was a default and could be wrong. Pass
-#' `date_format` (for example `"%d/%m/%Y"`) to settle it.
+#' `date_format` (for example `"%d/%m/%Y"`) to settle it. A spreadsheet's
+#' date cells arrive as Excel serial numbers and are recognised as such.
 #'
-#' @param x A file path to a delimited text file, or a data.frame.
+#' Reading a spreadsheet needs the `readxl` package. Without it the
+#' function stops and says so; saving the sheet as a CSV is the alternative.
+#'
+#' @param x A file path to a delimited text file or a spreadsheet, or a
+#'   data.frame.
 #' @param station_id,station_name Character. Columns holding the station
 #'   identifier and name. The name is optional: it is skipped if the file
 #'   has no column called `Station name`, or if `station_name = NULL`.
 #' @param date,time Character. Columns holding the date and the time of
 #'   day. `time = NULL` if there is none; a missing time is then
 #'   midnight, with no note.
+#' @param datetime Character, or `NULL` (default). The name of a single
+#'   column holding date and time together, such as `2020-03-04 12:30:00`.
+#'   When given, `date` and `time` are not used.
 #' @param stage,discharge Character. Columns holding stage (m) and
 #'   discharge (cumecs).
-#' @param date_format A [strptime()] format for the date column, or `NULL`
-#'   (default) to detect it.
+#' @param date_format A [strptime()] format for the date column (or the
+#'   date-time column), or `NULL` (default) to detect it.
 #' @param tz Time zone label for `observation_time`. Default `"UTC"`. The
-#'   clock time in the file is used as it stands, with no daylight-saving
-#'   adjustment, so it is only as good as the file's own convention.
+#'   clock time in the file is used as it stands: 12:00 in the file is
+#'   12:00 in `tz`, with no daylight-saving adjustment, so it is only as
+#'   good as the file's own convention. A clock time that does not exist in
+#'   `tz` (the hour skipped when clocks go forward) becomes `NA`.
+#' @param sep The field separator for a text file. `"auto"` (default)
+#'   detects it.
+#' @param dec The decimal mark in stage and discharge: `"."` (default) or
+#'   `","`. A thousands separator is not guessed at; a value that does not
+#'   parse is noted, not reinterpreted.
+#' @param sheet The sheet to read from a spreadsheet, by name or number.
+#'   Ignored for text.
+#' @param encoding The encoding of a text file: `"unknown"` (default),
+#'   `"UTF-8"` or `"Latin-1"`.
+#' @param keep_original Logical. `TRUE` (default) keeps the text of each
+#'   mapped column as it was written, in `station_id_original`,
+#'   `stage_original`, `discharge_original`, `date_original` and, where
+#'   they exist, `time_original` and `datetime_original`.
 #' @param quiet Logical. `TRUE` suppresses the summary message.
 #'
 #' @return A data.table, one row per row of the input, with these columns
-#'   first: `source_row` (row of the data, header excluded), `station_id`,
-#'   `station_name`, `observation_time` (POSIXct), `stage_m`,
-#'   `discharge_cms` and `read_issue` (`NA` when the row parsed cleanly,
-#'   otherwise the problems separated by semicolons). Every other column
-#'   of the input follows unchanged, as text. The columns you mapped are
-#'   not repeated; the file still has their original values.
+#'   first: `source_row` (row of the data, header and blank lines
+#'   excluded), `station_id`, `station_name`, `observation_time` (POSIXct),
+#'   `stage_m`, `discharge_cms` and `read_issue` (`NA` when the row parsed
+#'   cleanly, otherwise the problems separated by semicolons). The
+#'   `*_original` columns follow, then every other column of the input
+#'   unchanged, as text. A repeated header is kept and made distinct
+#'   (`Flag`, `Flag.1`). The structured summary is attached; read it with
+#'   [read_summary()].
 #'
 #' @section Notes the function can add:
 #' `station id missing`, `stage missing`, `discharge missing`,
@@ -69,7 +98,9 @@ NULL
 #' a discharge with no stage are not noted: they parse, and whether they
 #' are acceptable is a hydrometric judgement for a later check.
 #'
-#' @seealso [read_operational_ratings()] for the matching ratings export;
+#' @seealso [read_summary()] for the structured summary,
+#'   [as_flode_evidence()] to turn the result into evidence,
+#'   [read_operational_ratings()] for the matching ratings export;
 #'   [compare_gaugings_to_rating()] to check a rating against the result.
 #'
 #' @examples
@@ -88,16 +119,35 @@ NULL
 #' gaugings
 #' gaugings[!is.na(gaugings$read_issue), c("source_row", "read_issue")]
 #'
+#' # A semicolon file with decimal commas, as a continental export writes it.
+#' path <- tempfile(fileext = ".csv")
+#' writeLines(c(
+#'   "Station number;Date;Time;Stage;Flow",
+#'   "10250;03/02/1970;12:47:00;1,6;53,3371",
+#'   "10250;05/05/1970;13:02:00;0,85;6,6824"
+#' ), path)
+#' read_gaugings(path, dec = ",", quiet = TRUE)[, .(stage_m, discharge_cms)]
+#'
+#' # What was found, as a table.
+#' read_summary(gaugings)
+#'
 #' @export
 read_gaugings <- function(x, station_id = "Station number", station_name = "Station name",
                           date = "Date", time = "Time", stage = "Stage", discharge = "Flow",
-                          date_format = NULL, tz = "UTC", quiet = FALSE) {
+                          datetime = NULL, date_format = NULL, tz = "UTC",
+                          sep = "auto", dec = ".", sheet = 1L, encoding = "unknown",
+                          keep_original = TRUE, quiet = FALSE) {
   fn <- "read_gaugings()"
-  dt <- .read_text_table(x, fn)
+  if (!dec %in% c(".", ",")) stop(fn, ": dec must be \".\" or \",\"", call. = FALSE)
+  dt <- .read_text_table(x, fn, sep = sep, encoding = encoding, sheet = sheet)
   # The station name is optional: if it is absent under its default name,
   # skip it; a name you gave yourself must exist.
   if (identical(station_name, "Station name") && !"Station name" %in% names(dt)) station_name <- NULL
-  mapped <- c(station_id, station_name, date, time, stage, discharge)
+  if (!is.null(datetime)) {
+    date <- NULL
+    time <- NULL
+  }
+  mapped <- c(station_id, station_name, date, time, datetime, stage, discharge)
   .require_columns(dt, mapped, fn)
   n <- nrow(dt)
 
@@ -105,21 +155,54 @@ read_gaugings <- function(x, station_id = "Station number", station_name = "Stat
   name <- if (is.null(station_name)) rep(NA_character_, n) else .clean_text(dt[[station_name]])
   stage_txt <- .clean_text(dt[[stage]])
   flow_txt <- .clean_text(dt[[discharge]])
-  date_txt <- .clean_text(dt[[date]])
+  date_txt <- if (is.null(date)) rep(NA_character_, n) else .clean_text(dt[[date]])
   time_txt <- if (is.null(time)) rep(NA_character_, n) else .clean_text(dt[[time]])
+  datetime_txt <- if (is.null(datetime)) rep(NA_character_, n) else .clean_text(dt[[datetime]])
 
-  stage_p <- .parse_numeric(stage_txt)
-  flow_p <- .parse_numeric(flow_txt)
+  stage_p <- .parse_numeric(stage_txt, dec)
+  flow_p <- .parse_numeric(flow_txt, dec)
 
   detected <- NULL
-  if (is.null(date_format)) {
-    detected <- .detect_format(date_txt, .date_formats)
-    date_format <- detected$format
+  date_label <- NULL
+  if (!is.null(datetime)) {
+    present_txt <- datetime_txt
+    if (is.null(date_format) && .looks_like_excel_serial(present_txt)) {
+      serial <- suppressWarnings(as.numeric(present_txt))
+      parsed_date <- .excel_serial_to_date(serial)
+      clock <- round((serial - floor(serial)) * 86400)
+      date_label <- "Excel serial"
+    } else {
+      if (is.null(date_format)) {
+        detected <- .detect_format(present_txt, .datetime_formats)
+        date_format <- detected$format
+      }
+      lt <- strptime(present_txt, date_format, tz = "UTC")
+      parsed_date <- as.Date(lt)
+      clock <- lt$hour * 3600 + lt$min * 60 + lt$sec
+      date_label <- date_format
+    }
+    date_txt <- datetime_txt
+    seconds <- clock
+  } else {
+    if (is.null(date_format) && .looks_like_excel_serial(date_txt)) {
+      parsed_date <- .excel_serial_to_date(date_txt)
+      date_label <- "Excel serial"
+    } else {
+      if (is.null(date_format)) {
+        detected <- .detect_format(date_txt, .date_formats)
+        date_format <- detected$format
+      }
+      parsed_date <- as.Date(strptime(date_txt, date_format, tz = "UTC"))
+      date_label <- date_format
+    }
+    clock <- .parse_clock(time_txt)
+    # A spreadsheet time cell is a fraction of a day.
+    fraction <- .excel_fraction_to_seconds(time_txt)
+    use_fraction <- is.na(clock) & !is.na(fraction)
+    clock[use_fraction] <- fraction[use_fraction]
+    seconds <- fifelse(is.na(time_txt) & !is.na(parsed_date), 0, clock)
   }
-  parsed_date <- as.Date(strptime(date_txt, date_format, tz = "UTC"))
-  clock <- .parse_clock(time_txt)
-  seconds <- fifelse(is.na(time_txt) & !is.na(parsed_date), 0, clock)
-  observation_time <- as.POSIXct(as.numeric(parsed_date) * 86400 + seconds, origin = "1970-01-01", tz = tz)
+  observation_time <- .clock_to_posixct(as.numeric(parsed_date) * 86400 + seconds, tz)
 
   this_year <- as.integer(format(Sys.Date(), "%Y"))
   year <- as.integer(format(parsed_date, "%Y"))
@@ -143,26 +226,109 @@ read_gaugings <- function(x, station_id = "Station number", station_name = "Stat
     observation_time = observation_time, stage_m = stage_p$value,
     discharge_cms = flow_p$value, read_issue = notes
   )
+  if (keep_original) {
+    set(out, j = "station_id_original", value = dt[[station_id]])
+    set(out, j = "stage_original", value = dt[[stage]])
+    set(out, j = "discharge_original", value = dt[[discharge]])
+    if (!is.null(date)) set(out, j = "date_original", value = dt[[date]])
+    if (!is.null(time)) set(out, j = "time_original", value = dt[[time]])
+    if (!is.null(datetime)) set(out, j = "datetime_original", value = dt[[datetime]])
+  }
   keep <- setdiff(names(dt), mapped)
   for (col in keep) {
     new_name <- if (col %in% names(out)) paste0(col, "_original") else col
     set(out, j = new_name, value = dt[[col]])
   }
 
+  info <- list(
+    source = if (is.character(x)) basename(x) else "data.frame",
+    rows = n, stations = length(unique(station[!is.na(station)])),
+    date_format = date_label, rows_with_note = sum(!is.na(notes)),
+    issues = .issue_table(notes, n)
+  )
+  attr(out, "read_info") <- info
+
   if (!is.null(detected) && isTRUE(detected$ambiguous)) {
     warning(sprintf(
       paste0("read_gaugings(): every date fits both day-first and month-first, so %s was used by default. ",
              "If the file is month-first, pass date_format = \"%%m/%%d/%%Y\"."),
-      date_format
+      date_label
     ), call. = FALSE)
   }
   if (!quiet) {
-    n_issue <- sum(!is.na(notes))
     message(sprintf(
       "read_gaugings(): %s rows, %s stations, date format %s.\n  Rows with a note: %s. Most common: %s.",
-      format(n, big.mark = ","), format(length(unique(station[!is.na(station)])), big.mark = ","),
-      date_format, format(n_issue, big.mark = ","), .summarise_notes(notes)
+      format(n, big.mark = ","), format(info$stations, big.mark = ","),
+      date_label, format(info$rows_with_note, big.mark = ","), .summarise_notes(notes)
     ))
   }
   out[]
+}
+
+# One row per kind of note, with how many rows carry it.
+.issue_table <- function(notes, n) {
+  if (all(is.na(notes))) {
+    return(data.table(issue = character(0), n_rows = integer(0), share_of_rows = numeric(0)))
+  }
+  parts <- unlist(strsplit(notes[!is.na(notes)], "; ", fixed = TRUE))
+  counts <- sort(table(parts), decreasing = TRUE)
+  data.table(
+    issue = names(counts), n_rows = as.integer(counts),
+    share_of_rows = as.integer(counts) / n
+  )
+}
+
+#' What a read found, as a table
+#'
+#' @description
+#' The structured form of the summary [read_gaugings()] prints: one row for
+#' each kind of problem noted, with how many rows carry it and what share of
+#' the file that is. Counts are of rows, and a row with two problems counts
+#' once under each. The table carries the headline figures as attributes:
+#' `source`, `rows`, `stations`, `date_format` and `rows_with_note`.
+#'
+#' The information is attached to the table as it was read and describes
+#' that table. If rows have since been added or removed, so that the count
+#' no longer matches, `read_summary()` stops and says so, because the
+#' figures would no longer describe what is left. Read the summary before
+#' filtering.
+#'
+#' @param x A table returned by [read_gaugings()].
+#'
+#' @return A data.table with columns `issue`, `n_rows` and `share_of_rows`,
+#'   most common first, and no rows when nothing was noted.
+#'
+#' @seealso [read_gaugings()]
+#'
+#' @examples
+#' raw <- data.frame(
+#'   `Station number` = c("10250", "10250", ""),
+#'   Date = c("03/02/1970", "05/05/1970", "29/05/1970"),
+#'   Time = c("12:47:00", "13:02:00", ""),
+#'   Stage = c("1.6", "---", "0.85"), Flow = c("53.3", "9.7", "6.7"),
+#'   check.names = FALSE
+#' )
+#' gaugings <- read_gaugings(raw, quiet = TRUE)
+#' summary_table <- read_summary(gaugings)
+#' summary_table
+#' attr(summary_table, "rows")
+#'
+#' @export
+read_summary <- function(x) {
+  info <- attr(x, "read_info", exact = TRUE)
+  if (is.null(info)) {
+    stop("read_summary(): this table has no read summary. Use the table exactly as read_gaugings() returned it; ",
+         "use a table that came from read_gaugings().", call. = FALSE)
+  }
+  if (!identical(info$rows, nrow(x))) {
+    stop(sprintf(
+      "read_summary(): the summary describes %s rows as read, but this table now has %s, so it no longer matches. Read the summary before filtering.",
+      info$rows, nrow(x)
+    ), call. = FALSE)
+  }
+  out <- copy(info$issues)
+  for (nm in c("source", "rows", "stations", "date_format", "rows_with_note")) {
+    attr(out, nm) <- info[[nm]]
+  }
+  out
 }

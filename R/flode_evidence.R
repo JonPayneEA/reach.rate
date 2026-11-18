@@ -177,9 +177,14 @@ FlodeEvidence <- new_class(
 #' * `evidence_id` is generated as `G001`, `G002` and so on, in row order.
 #' * `observation_time` is taken from `gauging_datetime` when that column
 #'   exists, and is otherwise `NA`.
-#' * `source_type` is `"gauging"`, `included` is `TRUE`, `weight` is 1 and
-#'   `source_row` is the row position.
-#' * The text columns are `NA`, and `metadata` is empty for each row.
+#' * A table from [read_gaugings()] is recognised: its `station_id` becomes
+#'   `site_id`, the file name becomes `source_name`, and a row whose stage
+#'   or discharge could not be read becomes `included = FALSE` with its
+#'   `read_issue` as the `exclusion_reason`. Nothing is dropped.
+#' * `source_type` is `"gauging"`, `weight` is 1 and `source_row` is the row
+#'   position. `included` is `TRUE` unless the stage or discharge is
+#'   missing, in which case it is `FALSE` and `exclusion_reason` says why.
+#' * The remaining text columns are `NA`, and `metadata` is empty for each row.
 #'
 #' A table that is already a `FlodeEvidence` is returned as it is.
 #'
@@ -214,7 +219,7 @@ as_flode_evidence <- function(x) {
   }
   width <- max(3L, nchar(as.character(n)))
   fill("evidence_id", if (n) sprintf(paste0("G%0", width, "d"), seq_len(n)) else character(0))
-  fill("site_id", rep(NA_character_, n))
+  fill("site_id", if ("station_id" %in% names(dt)) as.character(dt$station_id) else rep(NA_character_, n))
   obs <- if ("gauging_datetime" %in% names(dt) && inherits(dt$gauging_datetime, c("Date", "POSIXct"))) {
     dt$gauging_datetime
   } else {
@@ -222,17 +227,26 @@ as_flode_evidence <- function(x) {
   }
   fill("observation_time", obs)
   fill("source_type", rep("gauging", n))
-  for (col in c("source_name", "source_version", "quality_code", "exclusion_reason", "notes")) {
+  src <- attr(x, "read_info", exact = TRUE)$source
+  fill("source_name", rep(if (is.null(src)) NA_character_ else src, n))
+  for (col in c("source_version", "quality_code", "notes")) {
     fill(col, rep(NA_character_, n))
   }
-  fill("included", rep(TRUE, n))
+  # A row whose stage or discharge could not be read cannot be fitted.
+  unusable <- is.na(dt$stage_m) | is.na(dt$discharge_cms)
+  if ("read_issue" %in% names(dt)) {
+    fill("exclusion_reason", ifelse(unusable, as.character(dt$read_issue), NA_character_))
+  } else {
+    fill("exclusion_reason", ifelse(unusable, "stage or discharge missing", NA_character_))
+  }
+  fill("included", !unusable)
   fill("weight", rep(1, n))
   fill("source_row", seq_len(n))
   fill("metadata", vector("list", n))
   setcolorder(dt, c(names(.evidence_columns), setdiff(names(dt), names(.evidence_columns))))
   note <- if (length(filled)) {
     sprintf(
-      "Converted from a plain table; filled %s. source_type assumed 'gauging', included assumed TRUE, weight assumed 1.",
+      "Converted from a plain table; filled %s. source_type assumed 'gauging', weight assumed 1, included TRUE unless stage or discharge is missing.",
       paste(filled, collapse = ", ")
     )
   } else {
