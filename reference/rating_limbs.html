@@ -34,6 +34,7 @@ uncertainty (see rating_coefficients())."></head><body>
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
+    <li><a class="dropdown-item" href="../articles/mathematical_contract.html">The Mathematical Contract: What reach.rate Computes, Exactly</a></li>
     <li><a class="dropdown-item" href="../articles/s7_objects_guide.html">Maintaining reach.rate's S7 classes</a></li>
     <li><a class="dropdown-item" href="../articles/rating_curve_walkthrough.html">A Rating Curve Walkthrough: From Spot Gaugings to a Constrained Curve</a></li>
     <li><a class="dropdown-item" href="../articles/non_standard_optimisation.html">Non-Standard Rating Optimisation: When and Why</a></li>
@@ -116,9 +117,9 @@ and then the rest. A copy: changing it does not change the rating.</p>
 <span class="r-in"><span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fl">5</span> <span class="op">*</span> <span class="va">stage_m</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">rating_limbs</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     limb lower_stage_m upper_stage_m        C            a        n</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;         &lt;num&gt;         &lt;num&gt;    &lt;num&gt;        &lt;num&gt;    &lt;num&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1           0.5           2.5 4.991305 -0.001447794 1.600899</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     limb lower_stage_m upper_stage_m        C           a        n</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;         &lt;num&gt;         &lt;num&gt;    &lt;num&gt;       &lt;num&gt;    &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1           0.5           2.5 4.991305 -0.00144775 1.600899</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

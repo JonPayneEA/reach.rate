@@ -138,7 +138,7 @@ rbind(
 #>                       fit        C           a     n rmse_cms
 #>                    <char>    <num>       <num> <num>    <num>
 #> 1:      flat (unweighted) 4.504656 0.001083338   1.5 3.149609
-#> 2: age_halflife = 3 years 5.674177 0.003926952   1.5 4.519751
+#> 2: age_halflife = 3 years 5.674177 0.003927015   1.5 4.519751
 ```
 
 The flat fit lands close to 4.5 – the simple average of the four

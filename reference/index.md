@@ -173,6 +173,8 @@ gaps at table level, and apply ratings that changed over time.
 - [`as_rating_table()`](https://jonpayneea.github.io/reach.rate/reference/as_rating_table.md)
   : Convert a fit to gap_check's equation-table representation (S7
   generic)
+- [`convert_offset_convention()`](https://jonpayneea.github.io/reach.rate/reference/convert_offset_convention.md)
+  : Convert a rating's offset between the two sign conventions
 - [`expand_rating_table()`](https://jonpayneea.github.io/reach.rate/reference/expand_rating_table.md)
   : Expand a rating equation table into a stage-discharge data.table
 - [`resolve_rc_gaps()`](https://jonpayneea.github.io/reach.rate/reference/resolve_rc_gaps.md)

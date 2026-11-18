@@ -52,14 +52,14 @@ stage_m <- seq(0.5, 2.5, by = 0.05)
 discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.02)
 fit <- rate_optimise(discharge_cms, stage_m, n_boot = 50L, boot_seed = 1L)
 rating_coefficients(fit)
-#>     limb parameter     estimate        unit se_asymptotic se_bootstrap
-#>    <int>    <char>        <num>      <char>         <num>        <num>
-#> 1:     1         C  4.991304846 cms per m^n   0.033148401  0.029635009
-#> 2:     1         a -0.001447794           m   0.004272320  0.003844284
-#> 3:     1         n  1.600898687           1   0.004548673  0.004024947
+#>     limb parameter    estimate        unit se_asymptotic se_bootstrap
+#>    <int>    <char>       <num>      <char>         <num>        <num>
+#> 1:     1         C  4.99130515 cms per m^n   0.033147599  0.029634924
+#> 2:     1         a -0.00144775           m   0.004272234  0.003844260
+#> 3:     1         n  1.60089865           1   0.004548600  0.004024928
 #>            q025          q50        q975
 #>           <num>        <num>       <num>
-#> 1:  4.932304052  4.987080365 5.031973540
-#> 2: -0.008904214 -0.001792388 0.004936101
-#> 3:  1.596019343  1.601228745 1.609215849
+#> 1:  4.932304029  4.987083468 5.031973553
+#> 2: -0.008904218 -0.001792158 0.004936103
+#> 3:  1.596019204  1.601228358 1.609215851
 ```

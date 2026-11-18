@@ -56,11 +56,11 @@ fit <- rate_optimise(discharge_cms, stage_m)
 rating_diagnostics(fit)
 #>     limb   rmse_cms  rmse_pct r_squared n_obs n_unique_stage mean_error_cms
 #>    <int>      <num>     <num>     <num> <int>          <int>          <num>
-#> 1:     1 0.01726577 0.3547021 0.9999917    41             41  -5.693273e-05
+#> 1:     1 0.01726577 0.3547017 0.9999917    41             41  -5.689045e-05
 #>    median_abs_error_cms max_abs_error_cms residual_df n_starts_attempted
 #>                   <num>             <num>       <int>              <int>
-#> 1:            0.0103407        0.04679095          38                  6
+#> 1:           0.01034068        0.04679091          38                  6
 #>    n_starts_converged selected_start_id near_bound
 #>                 <int>             <int>     <lgcl>
-#> 1:                  6                 6      FALSE
+#> 1:                  6                 3      FALSE
 ```

@@ -55,17 +55,17 @@ fit <- rate_optimise(discharge_cms, stage_m)
 rating_limbs(fit)                 # the equation, Q = C (H - a)^n
 #>     limb lower_stage_m upper_stage_m        C           a        n
 #>    <int>         <num>         <num>    <num>       <num>    <num>
-#> 1:     1           0.3             3 3.239461 0.003172732 1.588281
+#> 1:     1           0.3             3 3.239463 0.003173067 1.588281
 rating_diagnostics(fit)           # how well it fits
 #>     limb rmse_cms rmse_pct r_squared n_obs n_unique_stage mean_error_cms
 #>    <int>    <num>    <num>     <num> <int>          <int>          <num>
-#> 1:     1 0.276629 3.402612  0.997422    46             46   2.241056e-05
+#> 1:     1 0.276629 3.402609  0.997422    46             46   2.225893e-05
 #>    median_abs_error_cms max_abs_error_cms residual_df n_starts_attempted
 #>                   <num>             <num>       <int>              <int>
-#> 1:            0.1435385          0.670075          43                  6
+#> 1:            0.1435385         0.6700753          43                  6
 #>    n_starts_converged selected_start_id near_bound
 #>                 <int>             <int>     <lgcl>
-#> 1:                  6                 6      FALSE
+#> 1:                  6                 1      FALSE
 rating_support(fit)               # how much rests on gaugings
 #>     limb lower_stage_m upper_stage_m n_gaugings gauged_min_stage_m
 #>    <int>         <num>         <num>      <int>              <num>
@@ -82,7 +82,7 @@ apply_rating(fit, c(0.8, 1.6, 2.4))
 #>    <num>     <num>       <lgcl>
 #> 1:   0.8  2.258455        FALSE
 #> 2:   1.6  6.812454        FALSE
-#> 3:   2.4 12.985022        FALSE
+#> 3:   2.4 12.985023        FALSE
 rating_plot(fit)
 
 ```

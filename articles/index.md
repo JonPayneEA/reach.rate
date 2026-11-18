@@ -6,6 +6,8 @@
   Guidance](https://jonpayneea.github.io/reach.rate/articles/rating_curves_guide.md):
 - [Rating Methods: How the Pieces Fit
   Together](https://jonpayneea.github.io/reach.rate/articles/rating_methods_overview.md):
+- [The Mathematical Contract: What reach.rate Computes,
+  Exactly](https://jonpayneea.github.io/reach.rate/articles/mathematical_contract.md):
 - [Maintaining reach.rate's S7
   classes](https://jonpayneea.github.io/reach.rate/articles/s7_objects_guide.md):
 - [A Rating Curve Walkthrough: From Spot Gaugings to a Constrained

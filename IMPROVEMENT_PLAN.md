@@ -283,10 +283,10 @@ convention), units of `C`, `a`, `n`, both objective functions written as
 equations, weighting (including age weighting), zero and negative
 handling, starting-value strategy, multi-start selection rule,
 convergence criteria, and what each interval means. Add
-`convert_offset_convention()` if an external system uses `H + a`. *Done
-when* printed equations match the implemented ones by test, conversion
-round-trips in both directions, and each objective has a hand-checkable
-test.
+[`convert_offset_convention()`](https://jonpayneea.github.io/reach.rate/reference/convert_offset_convention.md)
+if an external system uses `H + a`. *Done when* printed equations match
+the implemented ones by test, conversion round-trips in both directions,
+and each objective has a hand-checkable test.
 
 **A8. Post-fit invariants** (#43). One internal `.check_invariants()`
 run after every fitter: finite coefficients and predictions, domain
