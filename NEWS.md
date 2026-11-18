@@ -1,5 +1,37 @@
 # reach.rate (development)
 
+* Tranche A6 of the improvement plan. `validate_gaugings()` checks a set
+  of gaugings (evidence, a plain table, or the output of
+  `read_gaugings()`) and returns a `FlodeAssessment`: one row per check
+  with `check_id`, `domain`, `severity`, `status`, `message`, the
+  `evidence_id`s affected, the stage range affected and a recommendation.
+  Six technical checks can fail (missing or non-finite stage or
+  discharge, negative discharge, fewer than four usable rows, a repeated
+  evidence id, a row that could not be read). Ten hydrometric checks can
+  only warn (zero discharge, exact duplicates, stage-discharge inversion,
+  an outlier, a gap in stage coverage, thin support at the top of the
+  range, few gaugings, no recent gauging, rows already excluded, assumed
+  times of day). A check that lacks what it needs is `not_assessed`, never
+  `pass`. No row is ever removed or changed. The thresholds are arguments.
+
+  `FlodeAssessment` does not know what was checked, so `assess_rating()`
+  can reuse it unchanged. It holds each check to its domain: a technical
+  check cannot warn and a hydrometric check cannot fail. `print()` lists
+  what did not pass, worst first, and `plot()` draws every check by
+  status with the status written in each tile. `assessment_checks()` and
+  `assessment_status()` read it.
+
+  The inversion check blames the gauging that sits in the most inverted
+  pairs, so one high gauging is reported alone and not the gaugings above
+  it. It is skipped beyond 10,000 usable rows; validate one station at a
+  time. The outlier check compares each gauging with a cubic through its
+  neighbours and scales by the prediction's own noise; in simulation it
+  warned on 3 to 7 per cent of clean sets and found a doubled discharge
+  nine times in ten.
+
+* Fixed: `as_flode_evidence()` on an empty table gave an `exclusion_reason`
+  column of the wrong class.
+
 * Tranche A5 of the improvement plan: `read_gaugings()` is complete.
   It reads delimited text (comma, semicolon, tab, pipe, detected or set
   with `sep`), spreadsheets (`.xlsx`, `.xls`, through `readxl`, which is in

@@ -234,11 +234,9 @@ as_flode_evidence <- function(x) {
   }
   # A row whose stage or discharge could not be read cannot be fitted.
   unusable <- is.na(dt$stage_m) | is.na(dt$discharge_cms)
-  if ("read_issue" %in% names(dt)) {
-    fill("exclusion_reason", ifelse(unusable, as.character(dt$read_issue), NA_character_))
-  } else {
-    fill("exclusion_reason", ifelse(unusable, "stage or discharge missing", NA_character_))
-  }
+  reason <- rep(NA_character_, n)
+  reason[unusable] <- if ("read_issue" %in% names(dt)) as.character(dt$read_issue)[unusable] else "stage or discharge missing"
+  fill("exclusion_reason", reason)
   fill("included", !unusable)
   fill("weight", rep(1, n))
   fill("source_row", seq_len(n))

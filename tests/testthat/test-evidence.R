@@ -261,3 +261,11 @@ test_that("adding a column by reference to a copy keeps it evidence", {
   expect_true("extra" %in% names(ev))
   expect_equal(ev@conversion_note, as_flode_evidence(plain_gaugings(4))@conversion_note)
 })
+
+test_that("an empty table converts to valid, correctly typed evidence", {
+  ev <- as_flode_evidence(data.table::data.table(stage_m = numeric(0), discharge_cms = numeric(0)))
+  expect_equal(nrow(ev), 0L)
+  expect_equal(names(ev), canonical)
+  expect_silent(S7::validate(ev))
+  expect_type(ev$exclusion_reason, "character")
+})

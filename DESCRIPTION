@@ -38,6 +38,7 @@ Collate:
     'cross_section_rating_dual_plot.R'
     'data.R'
     'extend_rating_low.R'
+    'flode_assessment.R'
     'gap_check.R'
     'globals.R'
     'graft_rating.R'
@@ -51,6 +52,7 @@ Collate:
     'rating_curve_explorer_app.R'
     'reach.rate-package.R'
     'read_gaugings.R'
+    'validate_gaugings.R'
     'weir_equations.R'
     'zzz.R'
 Depends:
