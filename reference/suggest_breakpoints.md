@@ -87,17 +87,18 @@ candidates <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
 candidates[selected == TRUE, c("round", "candidate_stage", "improvement")]
 #>    round candidate_stage improvement
 #>    <int>           <num>       <num>
-#> 1:     1            2.45   0.8679386
+#> 1:     1            2.45   0.8679528
 
 # The stages themselves, ready to pass to rate_optimise()
 breaks <- sort(candidates[selected == TRUE, candidate_stage])
 breaks
 #> [1] 2.45
 fit <- rate_optimise(discharge_cms, stage_m, control = breaks)
+#> Warning: rate_optimise(): limb 1 -- the best fit found did not converge (Number of iterations has reached `maxiter' == 100.). It has the lowest objective of the 6 starts, but the optimiser stopped before settling, so treat the limb with caution.
 rating_limbs(fit)
 #>     limb lower_stage_m upper_stage_m           C          a        n
 #>    <int>         <num>         <num>       <num>      <num>    <num>
-#> 1:     1          0.30          2.45 0.001049196 -2.5527229 6.292979
+#> 1:     1          0.30          2.45 0.001006872 -2.5641810 6.309658
 #> 2:     2          2.45          3.50 1.871309888  0.4782094 4.017815
 
 # These are statistical suggestions only. Whether a stage marks a real

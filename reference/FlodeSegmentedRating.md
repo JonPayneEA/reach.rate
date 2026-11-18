@@ -103,6 +103,18 @@ fit
 #>    r_squared n_obs n_starts_attempted n_starts_converged selected_start_id
 #>        <num> <int>              <int>              <int>             <int>
 #> 1:  0.999443    65                  4                  4                 1
+#>    converged convergence_code
+#>       <lgcl>            <int>
+#> 1:      TRUE                1
+#>                                        convergence_message iterations
+#>                                                     <char>      <int>
+#> 1: Relative error in the sum of squares is at most `ftol'.         27
+#>    objective_value bound_hits multi_start_spread parameter_correlation
+#>              <num>     <char>              <num>                 <num>
+#> 1:        63.63311       <NA>                 NA             0.9919157
+#>    condition_number
+#>               <num>
+#> 1:         1124.155
 rating_coefficients(fit)[, c("parameter", "estimate", "unit")]
 #>    parameter   estimate         unit
 #>       <char>      <num>       <char>

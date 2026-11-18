@@ -218,7 +218,12 @@ bounds, coefficients <code>C</code>/<code>a</code>/<code>n</code>, fit diagnosti
 parameter standard errors from the fit's own NLS covariance matrix,
 always computed, <code>NA</code> if that covariance matrix is singular –
 distinct from the bootstrap-only <code>C_se</code>/<code>a_se</code>/<code>n_se</code> columns below)
-– and multi-start bookkeeping. When <code>n_boot &gt; 0</code>, <code>@bootstrap</code> holds
+– and multi-start bookkeeping. Nine columns record how the fit ended and
+whether the data pin it down: <code>converged</code>, <code>convergence_code</code>,
+<code>convergence_message</code> and <code>iterations</code> (the optimiser's own report),
+<code>objective_value</code>, <code>bound_hits</code> (parameters on a bound),
+<code>multi_start_spread</code>, <code>parameter_correlation</code> and <code>condition_number</code>;
+<code>NA</code> means not assessed. When <code>n_boot &gt; 0</code>, <code>@bootstrap</code> holds
 every draw and <code>@limbs</code> gains <code>C_se</code>/<code>a_se</code>/<code>n_se</code>/percentile/
 success-count columns; prefer these over <code>*_se_asymp</code> when present,
 since they don't rely on the NLS asymptotic approximation.

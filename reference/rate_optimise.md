@@ -151,11 +151,16 @@ computed regardless of `objective`) and
 standard errors from the fit's own NLS covariance matrix, always
 computed, `NA` if that covariance matrix is singular – distinct from the
 bootstrap-only `C_se`/`a_se`/`n_se` columns below) – and multi-start
-bookkeeping. When `n_boot > 0`, `@bootstrap` holds every draw and
-`@limbs` gains `C_se`/`a_se`/`n_se`/percentile/ success-count columns;
-prefer these over `*_se_asymp` when present, since they don't rely on
-the NLS asymptotic approximation. `@gaugings` holds the input data with
-a `limb` column (and `gauging_datetime` if supplied, and `age_weight` if
+bookkeeping. Nine columns record how the fit ended and whether the data
+pin it down: `converged`, `convergence_code`, `convergence_message` and
+`iterations` (the optimiser's own report), `objective_value`,
+`bound_hits` (parameters on a bound), `multi_start_spread`,
+`parameter_correlation` and `condition_number`; `NA` means not assessed.
+When `n_boot > 0`, `@bootstrap` holds every draw and `@limbs` gains
+`C_se`/`a_se`/`n_se`/percentile/ success-count columns; prefer these
+over `*_se_asymp` when present, since they don't rely on the NLS
+asymptotic approximation. `@gaugings` holds the input data with a `limb`
+column (and `gauging_datetime` if supplied, and `age_weight` if
 `age_halflife` was supplied). `@fit_starts` holds every multi-start
 attempt when `multi_start = TRUE`. `@status` is
 `"independently_fitted"`.

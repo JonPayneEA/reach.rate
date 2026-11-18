@@ -61,6 +61,10 @@ The obvious first move: one power law across the whole range.
 ``` r
 
 fit_single <- rate_optimise(discharge_cms, stage_m)
+#> Warning: rate_optimise(): limb 1 -- the best fit found did not converge (Number
+#> of iterations has reached `maxiter' == 100.). It has the lowest objective of
+#> the 6 starts, but the optimiser stopped before settling, so treat the limb with
+#> caution.
 rating_limbs(fit_single, all_columns = TRUE)[, .(C, a, n, rmse_cms, r_squared)]
 #>               C         a        n rmse_cms r_squared
 #>           <num>     <num>    <num>    <num>     <num>
@@ -115,11 +119,11 @@ candidates_dt <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 2L)
 candidates_dt[fit_status == "ok"]
 #>      candidate_stage     score improvement n_obs_lower n_obs_upper fit_status
 #>                <num>     <num>       <num>       <int>       <int>     <char>
-#>   1:           2.590 325.30506   0.9682891          84          12         ok
-#>   2:           2.560 255.11902   0.9341246          83          13         ok
-#>   3:           2.530 182.47311   0.8596002          82          14         ok
-#>   4:           2.500 145.98939   0.7946877          81          15         ok
-#>   5:           2.470 121.80453   0.7358656          80          16         ok
+#>   1:           2.590 325.28529   0.9682826          84          12         ok
+#>   2:           2.560 255.09925   0.9341110          83          13         ok
+#>   3:           2.530 182.45334   0.8595713          82          14         ok
+#>   4:           2.500 145.96962   0.7946454          81          15         ok
+#>   5:           2.470 121.78476   0.7358112          80          16         ok
 #>  ---                                                                         
 #> 160:           1.250 -74.39940  -1.0390698          39          45         ok
 #> 161:           1.275 -75.69474  -1.0667697          40          44         ok
@@ -196,7 +200,7 @@ at the breakpoints.
 rating_table <- as_rating_table(fit_multi)
 rc_raw_dt <- expand_rating_table(rating_table, step = 0.01)
 gaps_dt <- detect_rc_gaps(rc_raw_dt)
-#> INFO [2026-11-18 21:49:48] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-18 22:19:33] Checked 2 junction(s): 2 gap(s) flagged.
 gaps_dt[, .(junction, stage_break, q_lower_end, q_upper_start, gap_abs, gap_rel, gap_flagged)]
 #>    junction stage_break q_lower_end q_upper_start   gap_abs   gap_rel
 #>       <int>       <num>       <num>         <num>     <num>     <num>
@@ -282,7 +286,7 @@ takes `aligned` directly too:
 
 rc_aligned_dt <- expand_rating_table(aligned, step = 0.01)
 gaps_after_dt <- detect_rc_gaps(rc_aligned_dt)
-#> INFO [2026-11-18 21:49:49] Checked 2 junction(s): 1 gap(s) flagged.
+#> INFO [2026-11-18 22:19:33] Checked 2 junction(s): 1 gap(s) flagged.
 gaps_after_dt[, .(junction, gap_abs, gap_rel, gap_flagged)]
 #>    junction      gap_abs      gap_rel gap_flagged
 #>       <int>        <num>        <num>      <lgcl>
@@ -293,7 +297,7 @@ gaps_after_dt[, .(junction, gap_abs, gap_rel, gap_flagged)]
 ``` r
 
 plot_rc_gaps(rc_raw_dt, rc_aligned_dt)
-#> INFO [2026-11-18 21:49:49] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-18 22:19:33] Checked 2 junction(s): 2 gap(s) flagged.
 ```
 
 ![Before and after comparison of the rating curve at each junction,
@@ -379,7 +383,7 @@ is visible here rather than hidden.
 
 rc_final_dt <- expand_rating_table(aligned_equations, step = 0.01)
 detect_rc_gaps(rc_final_dt)[, .(junction, gap_abs, gap_rel, gap_flagged)]
-#> INFO [2026-11-18 21:49:50] Checked 2 junction(s): 0 gap(s) flagged.
+#> INFO [2026-11-18 22:19:35] Checked 2 junction(s): 0 gap(s) flagged.
 #>    junction gap_abs gap_rel gap_flagged
 #>       <int>   <num>   <num>      <lgcl>
 #> 1:        1       0       0       FALSE

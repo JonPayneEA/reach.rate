@@ -132,7 +132,16 @@ fit_seg@coefficients
 #>           C        bp1    n1        n2       n3   bp2   bp3 rmse_cms r_squared
 #>       <num>      <num> <num>     <num>    <num> <num> <num>    <num>     <num>
 #> 1: 1.750914 -0.3204674 2.266 0.6593678 1.030696   1.6   2.4 1.394804 0.9987926
-#>    n_obs n_starts_attempted n_starts_converged selected_start_id
-#>    <int>              <int>              <int>             <int>
-#> 1:   107                  4                  4                 1
+#>    n_obs n_starts_attempted n_starts_converged selected_start_id converged
+#>    <int>              <int>              <int>             <int>    <lgcl>
+#> 1:   107                  4                  4                 1      TRUE
+#>    convergence_code                                     convergence_message
+#>               <int>                                                  <char>
+#> 1:                1 Relative error in the sum of squares is at most `ftol'.
+#>    iterations objective_value bound_hits multi_start_spread
+#>         <int>           <num>     <char>              <num>
+#> 1:         11        208.1663       <NA>                 NA
+#>    parameter_correlation condition_number
+#>                    <num>            <num>
+#> 1:             0.9913189         1281.849
 ```

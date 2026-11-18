@@ -60,7 +60,16 @@ rating_diagnostics(fit)
 #>    median_abs_error_cms max_abs_error_cms residual_df n_starts_attempted
 #>                   <num>             <num>       <int>              <int>
 #> 1:           0.01034068        0.04679091          38                  6
-#>    n_starts_converged selected_start_id near_bound
-#>                 <int>             <int>     <lgcl>
-#> 1:                  6                 3      FALSE
+#>    n_starts_converged selected_start_id near_bound converged convergence_code
+#>                 <int>             <int>     <lgcl>    <lgcl>            <int>
+#> 1:                  6                 3      FALSE      TRUE                1
+#>                                        convergence_message iterations
+#>                                                     <char>      <int>
+#> 1: Relative error in the sum of squares is at most `ftol'.          7
+#>    objective_value bound_hits multi_start_spread parameter_correlation
+#>              <num>     <char>              <num>                 <num>
+#> 1:      0.01222238                  2.214858e-08             0.9938354
+#>    condition_number
+#>               <num>
+#> 1:         59.04693
 ```

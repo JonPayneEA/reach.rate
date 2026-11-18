@@ -362,9 +362,10 @@ regression fails.</li>
 decrease across a grid of 20 stages spanning the limb (30 across the
 range for the segmented model); a decrease of more than <span class="math inline">\(10^{-9}\)</span> fails. Among the valid attempts
 the one with the smallest <strong>weighted sum of squares on the
-objective’s own scale</strong> is kept: the weighted absolute sum for
-the absolute objective, the weighted log-scale sum for the relative one.
-If no attempt is valid the fit stops with an error. Every attempt,
+objective’s own scale</strong> is kept, whether or not the optimiser
+reported convergence (see the next section): the weighted absolute sum
+for the absolute objective, the weighted log-scale sum for the relative
+one. If no attempt is valid the fit stops with an error. Every attempt,
 selected or not, is recorded in <code>@fit_starts</code>.</p>
 <p>This ranks attempts on the quantity each one minimised. Earlier
 versions ranked them on the unweighted sum of squares even when age
@@ -372,24 +373,102 @@ weights were used, which chose between local optima by a criterion
 nobody had optimised. The two agree when there are no weights.</p>
 </div>
 <div class="section level2">
-<h2 id="convergence">Convergence<a class="anchor" aria-label="anchor" href="#convergence"></a>
+<h2 id="convergence-and-identifiability">Convergence and identifiability<a class="anchor" aria-label="anchor" href="#convergence-and-identifiability"></a>
 </h2>
 <p>Each fit is a Levenberg-Marquardt least-squares fit
 (<code><a href="https://rdrr.io/pkg/minpack.lm/man/nlsLM.html" class="external-link">minpack.lm::nlsLM</a></code>) with at most 100 iterations (300 for
-the segmented model) and the optimiser’s default tolerances: it stops
+the segmented model) and the optimiser’s default tolerances. It stops
 when the relative change in the sum of squares, or in the parameters,
 falls below <span class="math inline">\(\sqrt{\epsilon} \approx
-1.5 \times 10^{-8}\)</span>, with <span class="math inline">\(\epsilon\)</span> the machine epsilon.</p>
-<p>The <code>converged</code> column in <code>@fit_starts</code> means
-that an attempt returned a fit <strong>and that the fit passed the
-validity check above</strong>. It does not mean the optimiser reported
-convergence. When the iteration limit is reached, <code>nlsLM</code>
-returns its last estimate with a warning; the package suppresses that
-warning, and such an attempt counts as converged if it is valid.</p>
-<p>That is a limitation, stated here so it is not discovered by
-accident. The planned convergence columns (the optimiser’s own code and
-message, the iteration count, and the final objective) will expose it
-per limb.</p>
+1.5 \times 10^{-8}\)</span>, with <span class="math inline">\(\epsilon\)</span> the machine epsilon. The
+optimiser’s default limit of 400 function calls would stop a fit at
+about 94 iterations, before the iteration limit, so the call limit is
+raised to twenty times the iteration limit and the documented limit is
+the one in force.</p>
+<p>Every limb of a fit records what happened, in stable columns of
+<code>@limbs</code> (and of <code>@coefficients</code> for the segmented
+model). Where the optimiser does not supply a value the column is
+<code>NA</code>, meaning not assessed, never a guess.</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>column</th>
+<th>meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>converged</code></td>
+<td>the optimiser reports convergence (stop codes 1 to 4)</td>
+</tr>
+<tr class="even">
+<td>
+<code>convergence_code</code>, <code>convergence_message</code>
+</td>
+<td>its own stop code and message; <code>-1</code> is the iteration
+limit</td>
+</tr>
+<tr class="odd">
+<td><code>iterations</code></td>
+<td>iterations used by the fit that was kept</td>
+</tr>
+<tr class="even">
+<td><code>objective_value</code></td>
+<td>the weighted objective of Section “The two objectives”, at the kept
+fit</td>
+</tr>
+<tr class="odd">
+<td><code>bound_hits</code></td>
+<td>parameters on a bound: <code>C_lower</code>, <code>a_upper</code>,
+<code>n_lower</code>, <code>n_upper</code>, comma separated;
+<code>""</code> for none</td>
+</tr>
+<tr class="even">
+<td><code>multi_start_spread</code></td>
+<td>how far near-optimal starts disagree in discharge (see below)</td>
+</tr>
+<tr class="odd">
+<td><code>parameter_correlation</code></td>
+<td>the largest absolute correlation between two parameter
+estimates</td>
+</tr>
+<tr class="even">
+<td><code>condition_number</code></td>
+<td>the condition number of the Jacobian with columns scaled to unit
+length</td>
+</tr>
+</tbody>
+</table>
+<p>In <code>@fit_starts</code>, an attempt has <code>converged</code>
+(the optimiser’s own report) and <code>valid</code> (the domain and
+monotonicity check above) as separate columns, together with its stop
+code, message and iteration count.</p>
+<p><strong>Converged does not mean good, and unconverged does not mean
+bad.</strong> Among the valid attempts the package keeps the one with
+the lowest objective, whether or not it converged. A flat valley in the
+objective lets the optimiser creep for the whole iteration limit while
+the fit is already practically optimal, and a converged attempt can sit
+on a bound with a much worse objective. Ranking on convergence would
+sometimes choose the worse fit. So the choice is made on the objective,
+and the report says whether the kept attempt converged. When it did not,
+<code><a href="../reference/rate_optimise.html">rate_optimise()</a></code> and <code><a href="../reference/rate_optimise_segmented.html">rate_optimise_segmented()</a></code>
+warn, and say how the optimiser stopped.</p>
+<p><code>multi_start_spread</code> makes the difference visible. It is
+the largest difference in fitted discharge, across the limb, between the
+chosen solution and any other valid attempt whose objective is within 5%
+of it, as a fraction of the limb’s peak discharge. It is 0 when no other
+attempt is that close and <code>NA</code> when fewer than two attempts
+were valid or only one start was used. A large value means two almost
+equally good fits predict different discharges: the data do not choose
+between them. A small value alongside wandering parameters means the
+opposite: the curve is well determined though its coefficients are
+not.</p>
+<p><code>parameter_correlation</code> near 1, or a
+<code>condition_number</code> in the thousands, says two parameters
+trade off against each other. Neither is a verdict; they say where to
+look first.</p>
 </div>
 <div class="section level2">
 <h2 id="what-the-intervals-mean">What the intervals mean<a class="anchor" aria-label="anchor" href="#what-the-intervals-mean"></a>
@@ -477,9 +556,9 @@ gap or overlap at a breakpoint is reported by the gap tools, not
 prevented.</li>
 <li>A gauging on a breakpoint is fitted with the lower limb and applied
 with the upper one.</li>
-<li>
-<code>converged</code> does not report the optimiser’s own
-convergence (see above).</li>
+<li>A fit that did not converge is still returned, with a warning and
+<code>converged = FALSE</code>, when it has the lowest objective. It is
+not an error.</li>
 <li>Bootstrap draws start from the fitted solution and are not validity
 checked.</li>
 <li>No interval includes stage error, rating shift or equation-form
