@@ -58,7 +58,7 @@ test_that("suggested breakpoints are recorded as a statistical candidate and fla
     expect_equal(bp$source, "statistical_candidate")
     expect_true(bp$advisory)
     expect_equal(nrow(fit@limbs), length(bp$stages) + 1L)
-    expect_match(paste(capture.output(print(fit)), collapse = "\n"), "suggested: advisory, needs review")
+    expect_match(paste(capture.output(print(fit)), collapse = "\n"), "statistical_candidate: advisory, needs review")
     expect_s3_class(rating_provenance(fit)$fit_rating$candidates, "data.table")
   } else {
     expect_equal(bp$source, "none")
@@ -258,7 +258,7 @@ test_that("a rating from rate_optimise is not restricted: an expert calling it d
 test_that("printing shows the breakpoints, the evidence count and the operational limits", {
   fit <- fit_quiet(two_limb(), controls = 1.6)
   out <- capture.output(print(fit))
-  expect_match(paste(out, collapse = "\n"), "breakpoints: 1.6 \\(supplied\\)")
+  expect_match(paste(out, collapse = "\n"), "breakpoints: 1.6 \\(user_judgement\\)")
   expect_match(paste(out, collapse = "\n"), "evidence: 40 of 40 rows used")
   expect_match(paste(out, collapse = "\n"), "operational limits: not set; applies only within the gauged range 0.3 to 3.4 m")
   limited <- set_operational_limits(fit, 0.2, 3.6, basis = "x")

@@ -7,6 +7,7 @@
 fit_rating(
   evidence,
   controls = NULL,
+  breakpoint_origin = "user_judgement",
   limbs = c("one", "suggest"),
   model = c("independent", "segmented"),
   objective = c("relative", "absolute"),
@@ -28,6 +29,11 @@ returns.}
 \item{controls}{Numeric vector of breakpoint stages, or \code{NULL} (default)
 for one limb. Each must lie inside the stage range of the evidence
 used.}
+
+\item{breakpoint_origin}{Where the breakpoints in \code{controls} came from:
+one value from \code{\link[=breakpoint_origins]{breakpoint_origins()}} for all of them, or one per
+breakpoint. Default \code{"user_judgement"}. Ignored for \code{limbs = "suggest"},
+whose breakpoints are always \code{"statistical_candidate"}.}
 
 \item{limbs}{\code{"one"} (default) or \code{"suggest"}. \code{"suggest"} finds
 breakpoints with \code{\link[=suggest_breakpoints]{suggest_breakpoints()}} and uses those it selects,
@@ -82,7 +88,10 @@ decision and is never made silently.
 function uses \code{\link[=suggest_breakpoints]{suggest_breakpoints()}}, records that the breakpoints
 came from a statistical search and not from field evidence, and says
 so each time the rating is printed. They are candidates for a person
-to review. Breakpoints you give in \code{controls} are recorded as yours.
+to review. Breakpoints you give in \code{controls} are recorded with the
+origin you state in \code{breakpoint_origin} (\code{"user_judgement"} if you do
+not), so a reviewer can tell a surveyed change of control from a
+better AIC. See \code{\link[=breakpoint_origins]{breakpoint_origins()}}.
 \item \strong{The relative objective.} Gauging error is typically proportional to
 the reading, so the fit minimises error in log discharge. Use
 \code{objective = "absolute"} for \code{\link[=rate_optimise]{rate_optimise()}}'s own default. See

@@ -34,25 +34,45 @@ and thinned if exceeded. Default \code{200L}.}
 }
 \value{
 A \code{data.table}, one row per candidate evaluated across every
-round, with \code{candidate_stage}, \code{score}, \code{improvement},
-\code{n_obs_lower}, \code{n_obs_upper}, \code{round}, \code{fit_status}, \code{rank} and
-\code{selected}. \code{selected} is \code{TRUE} for the candidate each round
-adopted; extract the selected stages with
+round. For each candidate:
+\itemize{
+\item \code{candidate_stage}, and the \code{round} it was considered in;
+\item \code{score}, the improvement in AIC over the simpler model (positive is
+better), and \code{improvement}, the fraction by which the residual sum of
+squares falls;
+\item the evidence on each side: \code{n_obs_lower} and \code{n_obs_upper} (how many
+gaugings), and \code{lower_min_m}, \code{lower_max_m}, \code{upper_min_m} and
+\code{upper_max_m} (the stage range they cover). A candidate resting on a few
+gaugings crowded at one end is weak however good its score;
+\item \code{fit_status}: \code{"ok"}, \code{"failed"} (the two-limb fit raised an error) or
+\code{"insufficient_obs"} (too few gaugings on one side), and
+\code{failure_reason} saying why when it is not \code{"ok"}. A candidate that
+could not be fitted is listed, not dropped, because the stage where
+fits fail can itself be informative;
+\item \code{rank} within its round, and \code{selected}, \code{TRUE} for the candidate each
+round put forward. Extract those stages with
 \code{sort(result[selected == TRUE, candidate_stage])}. The same stages
-remain attached as the \code{"selected_breaks"} attribute for code
-written against earlier versions, but an attribute can be lost
-under ordinary data.table operations, so prefer the column.
+remain attached as the \code{"selected_breaks"} attribute for code written
+against earlier versions, but an attribute can be lost under ordinary
+data.table operations, so prefer the column.
+}
 }
 \description{
-A heuristic aid for choosing \code{control} in \code{\link[=rate_optimise]{rate_optimise()}}. Reuses
-\code{rate_optimise()} directly: for each candidate stage, fits a two-limb
-rating there and compares its AIC against the current best model
-(penalising the extra parameters, unlike raw RSS). A candidate must
-also clear \code{min_improvement}, a minimum relative RSS reduction, to be
-eligible. Multiple breakpoints are found iteratively and greedily,
-respecting \code{min_gap}. Not a claim that a statistically-supported
-breakpoint corresponds to a real physical control change -- that
-judgement remains yours.
+Puts forward \strong{candidates} for a breakpoint, for a person to review. It
+is not a finding. A statistical search sees only the gaugings; it cannot
+know where a channel control changes, a weir drowns or a bank is overtopped.
+A candidate that fits better has not thereby been shown to be a real change
+of hydraulic control, and one the search does not put forward may still be
+real. Use the table to decide where to look, then say where a breakpoint
+came from when you adopt it (see the \code{breakpoint_origin} argument of
+\code{\link[=fit_rating]{fit_rating()}}).
+
+For each candidate stage the function fits a two-limb rating there with
+\code{\link[=rate_optimise]{rate_optimise()}} and compares its AIC against the current best model
+(penalising the extra parameters, unlike raw RSS). A candidate must also
+clear \code{min_improvement}, a minimum relative RSS reduction, to be put
+forward. Multiple breakpoints are found iteratively and greedily,
+respecting \code{min_gap}.
 }
 \examples{
 # Gaugings whose rating changes character above about 2.4 m
@@ -63,8 +83,9 @@ discharge_cms <- 4 * pmax(stage_m - 0.1, 0)^1.55 * (pmax(stage_m - 1.6, 0) + 1)^
 
 candidates <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
 
-# The candidate each round adopted, and how much it improved the fit
-candidates[selected == TRUE, c("round", "candidate_stage", "improvement")]
+# The candidate each round put forward, how much it improved the fit, and
+# how many gaugings stand on each side of it
+candidates[selected == TRUE, c("round", "candidate_stage", "improvement", "n_obs_lower", "n_obs_upper")]
 
 # The stages themselves, ready to pass to rate_optimise()
 breaks <- sort(candidates[selected == TRUE, candidate_stage])
@@ -72,10 +93,11 @@ breaks
 fit <- rate_optimise(discharge_cms, stage_m, control = breaks)
 rating_limbs(fit)
 
-# These are statistical suggestions only. Whether a stage marks a real
-# change of hydraulic control is a judgement for you, not the data.
+# These are candidates only. Whether a stage marks a real change of
+# hydraulic control is a judgement for you, not the data.
 
 }
 \seealso{
-\code{\link[=rate_optimise]{rate_optimise()}}
+\code{\link[=rate_optimise]{rate_optimise()}}, \code{\link[=fit_rating]{fit_rating()}} and \code{\link[=breakpoint_origins]{breakpoint_origins()}} to
+record where an adopted breakpoint came from
 }

@@ -1,5 +1,29 @@
 # reach.rate (development)
 
+* Tranche B5 of the improvement plan: breakpoint candidates.
+  `suggest_breakpoints()` now reads as what it is: **candidates for a person to
+  review, not findings**. A statistical search sees only the gaugings and cannot
+  know where a channel control changes, and the documentation says so. Each
+  candidate now carries the evidence on each side: the stage range
+  (`lower_min_m`, `lower_max_m`, `upper_min_m`, `upper_max_m`) alongside the
+  counts it already had, so a candidate resting on a few crowded gaugings is
+  visible whatever its score. A candidate that could not be fitted, or has too
+  few gaugings on a side, is listed with a `failure_reason` (the fitter's own
+  message, or the counts) and not dropped. The existing columns and the
+  `selected` flag are unchanged.
+
+  **Accepted breakpoints record where they came from.** `fit_rating()` takes a
+  `breakpoint_origin`, one value or one per breakpoint, from the new
+  `breakpoint_origins()`: `field_evidence`, `cross_section`,
+  `structure_geometry`, `user_judgement` (the default for `controls`),
+  `statistical_candidate` (always the origin of `limbs = "suggest"`),
+  `existing_rating` and `other`. It is kept with its stage in
+  `rating_provenance()$fit_rating$breakpoints$origin`, shown when the rating is
+  printed and in the fit message, and a rating with any statistical candidate
+  among its breakpoints is marked advisory. An unknown origin is refused with
+  the list of valid ones. The printed word for supplied breakpoints changes from
+  "supplied" to the origin, for example `user_judgement`.
+
 * Tranche B4 of the improvement plan: `rating_sensitivity()`. It refits a
   rating with something changed and reports the consequence in **discharge**,
   at stages you can name, in m3/s and as a percentage, linked to the

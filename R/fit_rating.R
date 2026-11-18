@@ -42,6 +42,41 @@ NULL
   reason
 }
 
+# Where an adopted breakpoint came from. A breakpoint is a modelling decision,
+# and what it rests on differs a great deal: a surveyed change of control is
+# not the same kind of reason as a better AIC.
+.breakpoint_origins <- c("field_evidence", "cross_section", "structure_geometry", "user_judgement",
+                         "statistical_candidate", "existing_rating", "other")
+
+#' Where a breakpoint can come from
+#'
+#' @description
+#' The controlled vocabulary for the origin of a breakpoint, recorded by
+#' [fit_rating()]. A breakpoint is a modelling decision, and what it rests on
+#' matters to anyone who reviews the rating:
+#'
+#' * `field_evidence`: observed at the site, for example a change of control
+#'   seen during a gauging visit;
+#' * `cross_section`: read from a surveyed cross-section (bankfull, a change in
+#'   channel shape);
+#' * `structure_geometry`: from the geometry of a structure (a weir crest, an
+#'   overtopping level);
+#' * `user_judgement`: the analyst's decision, without a recorded basis;
+#' * `statistical_candidate`: put forward by [suggest_breakpoints()] and not
+#'   otherwise supported;
+#' * `existing_rating`: carried over from a rating already in use;
+#' * `other`.
+#'
+#' @return A character vector.
+#'
+#' @seealso [fit_rating()], [suggest_breakpoints()]
+#'
+#' @examples
+#' breakpoint_origins()
+#'
+#' @export
+breakpoint_origins <- function() .breakpoint_origins
+
 #' Fit a rating from evidence
 #'
 #' @description
@@ -61,7 +96,10 @@ NULL
 #'   function uses [suggest_breakpoints()], records that the breakpoints
 #'   came from a statistical search and not from field evidence, and says
 #'   so each time the rating is printed. They are candidates for a person
-#'   to review. Breakpoints you give in `controls` are recorded as yours.
+#'   to review. Breakpoints you give in `controls` are recorded with the
+#'   origin you state in `breakpoint_origin` (`"user_judgement"` if you do
+#'   not), so a reviewer can tell a surveyed change of control from a
+#'   better AIC. See [breakpoint_origins()].
 #' * **The relative objective.** Gauging error is typically proportional to
 #'   the reading, so the fit minimises error in log discharge. Use
 #'   `objective = "absolute"` for [rate_optimise()]'s own default. See
@@ -87,6 +125,10 @@ NULL
 #' @param controls Numeric vector of breakpoint stages, or `NULL` (default)
 #'   for one limb. Each must lie inside the stage range of the evidence
 #'   used.
+#' @param breakpoint_origin Where the breakpoints in `controls` came from:
+#'   one value from [breakpoint_origins()] for all of them, or one per
+#'   breakpoint. Default `"user_judgement"`. Ignored for `limbs = "suggest"`,
+#'   whose breakpoints are always `"statistical_candidate"`.
 #' @param limbs `"one"` (default) or `"suggest"`. `"suggest"` finds
 #'   breakpoints with [suggest_breakpoints()] and uses those it selects,
 #'   marked as advisory. Not allowed together with `controls`.
@@ -135,7 +177,7 @@ NULL
 #' str(rating_provenance(fit)$fit_rating[c("call", "model", "objective", "n_used")])
 #'
 #' @export
-fit_rating <- function(evidence, controls = NULL, limbs = c("one", "suggest"),
+fit_rating <- function(evidence, controls = NULL, breakpoint_origin = "user_judgement", limbs = c("one", "suggest"),
                        model = c("independent", "segmented"), objective = c("relative", "absolute"),
                        age_halflife = NULL, age_min_weight = 0.1, reference_time = NULL,
                        n_boot = 0L, seed = NULL, operational_limits = NULL,
@@ -160,6 +202,14 @@ fit_rating <- function(evidence, controls = NULL, limbs = c("one", "suggest"),
   }
   if (!is.null(seed) && (!is.numeric(seed) || length(seed) != 1L)) stop(fn, ": seed must be NULL or one number", call. = FALSE)
   .check_limits(operational_limits, fn)
+  if (!is.null(controls)) {
+    bad <- setdiff(breakpoint_origin, .breakpoint_origins)
+    if (length(bad) || !length(breakpoint_origin) || !(length(breakpoint_origin) %in% c(1L, length(controls)))) {
+      stop(sprintf("%s: breakpoint_origin must be one value, or one per breakpoint, from: %s.%s", fn,
+                   paste(.breakpoint_origins, collapse = ", "),
+                   if (length(bad)) sprintf(" Not recognised: %s.", paste(bad, collapse = ", ")) else ""), call. = FALSE)
+    }
+  }
 
   reason <- .fit_exclusions(ev, objective)
   used <- which(is.na(reason))
@@ -183,9 +233,12 @@ fit_rating <- function(evidence, controls = NULL, limbs = c("one", "suggest"),
 
   source <- "none"
   stages <- numeric(0)
+  origin <- character(0)
   candidates <- NULL
   if (!is.null(controls)) {
-    stages <- sort(controls)
+    ord <- order(controls)
+    stages <- controls[ord]
+    origin <- rep_len(breakpoint_origin, length(controls))[ord]
     source <- "user"
     if (any(stages <= min(h) | stages >= max(h))) {
       stop(sprintf("%s: controls must lie strictly inside the stage range of the evidence used (%.3g to %.3g m).",
@@ -195,6 +248,7 @@ fit_rating <- function(evidence, controls = NULL, limbs = c("one", "suggest"),
     candidates <- suggest_breakpoints(q, h)
     stages <- sort(candidates[selected == TRUE]$candidate_stage)
     source <- if (length(stages)) "statistical_candidate" else "none"
+    origin <- rep("statistical_candidate", length(stages))
   }
   ctl <- if (length(stages)) stages else NULL
 
@@ -229,7 +283,7 @@ fit_rating <- function(evidence, controls = NULL, limbs = c("one", "suggest"),
     call = paste(deparse(cl), collapse = " "), version = .tool_version(), seed = seed,
     model = model, objective = objective, n_evidence = nrow(ev), n_used = length(used),
     excluded = excluded, gauged_range = range(h),
-    breakpoints = list(stages = stages, source = source, advisory = identical(source, "statistical_candidate")),
+    breakpoints = list(stages = stages, origin = origin, source = source, advisory = any(origin == "statistical_candidate")),
     candidates = candidates
   )
   fit@provenance <- c(fit@provenance, list(fit_rating = guided, operational_limits = limits))
@@ -239,7 +293,7 @@ fit_rating <- function(evidence, controls = NULL, limbs = c("one", "suggest"),
                     length(used), nrow(ev), objective, model,
                     if (!length(stages)) "one limb" else sprintf("%d limbs (breakpoints %s, %s)", length(stages) + 1L,
                       paste(format(stages, digits = 4), collapse = ", "),
-                      if (source == "user") "yours" else "suggested, advisory")))
+                      paste(unique(origin), collapse = ", "))))
     if (nrow(excluded)) {
       short <- sub(":.*$", "", sub("^marked as excluded: ", "", excluded$reason))
       tab <- sort(table(short), decreasing = TRUE)
@@ -357,7 +411,7 @@ set_operational_limits <- function(x, lower_stage_m, upper_stage_m, basis = NA_c
   bp <- guided$breakpoints
   bp_line <- if (!length(bp$stages)) "one limb" else sprintf(
     "%s (%s)", paste(format(bp$stages, digits = 4), collapse = ", "),
-    if (identical(bp$source, "user")) "supplied" else "suggested: advisory, needs review"
+    paste(ifelse(bp$origin == "statistical_candidate", "statistical_candidate: advisory, needs review", bp$origin), collapse = "; ")
   )
   lim <- x@provenance$operational_limits
   lim_line <- if (is.null(lim)) {
