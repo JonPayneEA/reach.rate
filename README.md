@@ -28,14 +28,14 @@ A rating should be built from evidence, checked, and only then applied. The pack
 
 | Step | Function | Status |
 |---|---|---|
-| Import your gaugings | `read_gaugings()` | planned |
-| Check them | `validate_gaugings()` | planned |
-| Fit a candidate rating | `fit_rating()` | planned |
+| Import your gaugings | `read_gaugings()` | available |
+| Check them | `validate_gaugings()` | available |
+| Fit a candidate rating | `fit_rating()` | available |
 | Assess it | `assess_rating()` | planned |
 | Compare with the current rating | `compare_ratings()` | available |
 | Export it | `export_rating()` | planned |
 
-Until the planned functions land, the route runs through the advanced API: fit with `rate_optimise()`, diagnose with `plot_rating_residuals()`, `flag_extrapolated_limbs()` and `flag_influential_gaugings()`, then apply with `apply_rating()`. That route stays available afterwards for anyone who needs direct control. The [function reference](https://jonpayneea.github.io/reach.rate/reference/) groups every export by the job it does.
+Until `assess_rating()` and `export_rating()` land, diagnose a fit with `rating_invariants()`, `plot_rating_residuals()`, `flag_extrapolated_limbs()` and `flag_influential_gaugings()`, then apply it with `apply_rating()`. A rating made by `fit_rating()` is applied only within the range it was gauged over until you state the range it may be used over with `set_operational_limits()`. Anyone who wants direct control can fit with `rate_optimise()` instead. That route stays available afterwards for anyone who needs direct control. The [function reference](https://jonpayneea.github.io/reach.rate/reference/) groups every export by the job it does.
 
 ## Rating curve essentials
 

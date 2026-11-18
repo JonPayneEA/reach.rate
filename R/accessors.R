@@ -371,6 +371,13 @@ method(rating_history, class_any) <- function(x) .accessor_not_a_rating("rating_
   note <- if (!is.null(fb) && nrow(fb)) {
     sprintf("%s kept the unconstrained fit: %s", .limbs_text(fb$limb), paste(unique(fb$reason), collapse = "; "))
   } else NA_character_
+  # A note recorded when a rating was amended (for example, operational limits
+  # set) belongs to the step that introduced it. Later amendments copy the
+  # provenance, so show it only where it differs from the step before.
+  if (is.na(note) && !S7_inherits(x, FlodeRatingTable) && !is.null(x@provenance$amendment_note)) {
+    before <- if (!is.null(x@previous) && !S7_inherits(x@previous, FlodeRatingTable)) x@previous@provenance$amendment_note else NULL
+    if (!identical(before, x@provenance$amendment_note)) note <- x@provenance$amendment_note
+  }
   data.table(class = .rating_class_label(x), fit_origin = x@fit_origin, lifecycle = x@lifecycle,
              n_limbs = as.integer(n_limbs), note = note)
 }
