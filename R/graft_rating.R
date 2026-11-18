@@ -172,7 +172,7 @@ graft_rating <- function(new_rating, existing_rating, search_range = NULL,
 
   FlodeRatingTable(
     table = combined_dt[],
-    status = "grafted",
+    fit_origin = "grafted",
     previous = new_rating_original
   )
 }

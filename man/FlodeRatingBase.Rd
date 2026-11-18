@@ -5,29 +5,36 @@
 \title{Abstract base class for a fitted rating (S7)}
 \usage{
 FlodeRatingBase(
-  gaugings = data.table(),
+  gaugings = FlodeEvidence(),
   fit_starts = NULL,
-  status = "independently_fitted",
+  fit_origin = "independently_fitted",
+  lifecycle = "draft",
+  schema_version = 2L,
   provenance = list(),
   previous = NULL
 )
 }
 \arguments{
-\item{gaugings}{Data.table with \code{discharge_cms} and \code{stage_m}
-columns -- the gaugings the fit was built from. May optionally
-include a \code{gauging_datetime} column (\code{Date} or \code{POSIXct}) recording
-when each spot gauging was taken. Nothing in the package currently
-reads this column -- it's groundwork for a future age-aware fitting
-option (see issue #9). A gauging's own measurement method (current-
-meter, ADCP, salt-dilution, index-velocity, ...) is not currently
-recorded either -- every gauging is treated identically regardless
-of source.}
+\item{gaugings}{A \link{FlodeEvidence} table of the observations the fit was
+built from. A plain \code{data.table} with \code{discharge_cms} and \code{stage_m}
+columns is accepted and converted by \code{\link[=as_flode_evidence]{as_flode_evidence()}}, which
+generates evidence IDs and records what it assumed. A
+\code{gauging_datetime} column (\code{Date} or \code{POSIXct}) becomes
+\code{observation_time} and is used for age weighting.}
 
 \item{fit_starts}{Data.table of multi-start fitting attempts, or
 \code{NULL} if the fit wasn't produced with \code{multi_start = TRUE}.}
 
-\item{status}{Character. One of \code{"independently_fitted"},
-\code{"post_fit_aligned"}, or \code{"constrained_refit"}.}
+\item{fit_origin}{Character. How the fit came to be: one of
+\code{"independently_fitted"}, \code{"post_fit_aligned"} or \code{"constrained_refit"}.
+Read-only \verb{@status} returns the same value.}
+
+\item{lifecycle}{Character. Where the rating stands in review: \code{"draft"}
+(default), \code{"under_review"}, \code{"approved"}, \code{"superseded"} or \code{"withdrawn"}.
+The package never sets \code{"approved"}; that is a decision for a person.}
+
+\item{schema_version}{Integer. The layout version the object was made
+under; see \code{\link[=rating_schema_version]{rating_schema_version()}}. Leave at the default.}
 
 \item{provenance}{List recording how the fit was made (fitting
 method, controls, bounds, tool version).}

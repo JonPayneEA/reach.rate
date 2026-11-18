@@ -748,7 +748,7 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
     gaugings = gaugings_dt,
     bootstrap = bootstrap_out,
     fit_starts = fit_starts_out,
-    status = "independently_fitted",
+    fit_origin = "independently_fitted",
     provenance = list(
       fitting_equation = if (objective == "relative") {
         "log(Q) = log(C) + n*log(H - a)"
@@ -873,7 +873,7 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
     return(FlodeRating(
       limbs = limbs_dt[], gaugings = gaugings_dt,
       bootstrap = fit@bootstrap, fit_starts = fit@fit_starts,
-      status = fit@status, provenance = fit@provenance
+      fit_origin = fit@fit_origin, provenance = fit@provenance
     ))
   }
 
@@ -1040,7 +1040,7 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
     gaugings = gaugings_dt,
     bootstrap = bootstrap_out,
     fit_starts = fit_starts_out,
-    status = "constrained_refit",
+    fit_origin = "constrained_refit",
     provenance = c(fit@provenance, list(anchor_limb = anchor_limb))
   )
 }
@@ -1240,7 +1240,7 @@ flag_extrapolated_limbs <- function(fit, tol_frac = 0.05,
   FlodeRating(
     limbs = limbs_dt[], gaugings = gaugings_dt,
     bootstrap = fit@bootstrap, fit_starts = fit@fit_starts,
-    status = fit@status, provenance = fit@provenance
+    fit_origin = fit@fit_origin, provenance = fit@provenance
   )
 }
 
@@ -1379,7 +1379,7 @@ flag_influential_gaugings <- function(fit, cooks_mult = 4, leverage_mult = 2) {
   FlodeRating(
     limbs = fit@limbs, gaugings = gaugings_dt[],
     bootstrap = fit@bootstrap, fit_starts = fit@fit_starts,
-    status = fit@status, provenance = fit@provenance
+    fit_origin = fit@fit_origin, provenance = fit@provenance
   )
 }
 

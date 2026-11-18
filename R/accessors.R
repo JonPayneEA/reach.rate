@@ -244,7 +244,7 @@ method(rating_evidence, class_any) <- function(x) .accessor_not_a_rating("rating
 
 .evidence_table <- function(gaugings) {
   g <- copy(gaugings)
-  first <- intersect(c("gauging_datetime", "stage_m", "discharge_cms", "limb", "age_weight"), names(g))
+  first <- intersect(c(names(.evidence_columns), "limb", "age_weight"), names(g))
   setcolorder(g, c(first, setdiff(names(g), first)))
   g[]
 }
@@ -365,7 +365,7 @@ method(rating_history, class_any) <- function(x) .accessor_not_a_rating("rating_
   n_limbs <- if (S7_inherits(x, FlodeRating)) nrow(x@limbs)
     else if (S7_inherits(x, FlodeSegmentedRating)) as.integer(x@n_segments)
     else nrow(x@table)
-  data.table(class = .rating_class_label(x), status = x@status, n_limbs = as.integer(n_limbs))
+  data.table(class = .rating_class_label(x), fit_origin = x@fit_origin, lifecycle = x@lifecycle, n_limbs = as.integer(n_limbs))
 }
 
 .rating_history <- function(x) {
@@ -416,11 +416,15 @@ rating_provenance <- new_generic("rating_provenance", "x", function(x) S7_dispat
 
 method(rating_provenance, class_any) <- function(x) .accessor_not_a_rating("rating_provenance", x)
 
-method(rating_provenance, FlodeRating) <- function(x) x@provenance
-method(rating_provenance, FlodeSegmentedRating) <- function(x) x@provenance
+.provenance_with_state <- function(x) {
+  c(x@provenance, list(fit_origin = x@fit_origin, lifecycle = x@lifecycle, schema_version = x@schema_version))
+}
+
+method(rating_provenance, FlodeRating) <- function(x) .provenance_with_state(x)
+method(rating_provenance, FlodeSegmentedRating) <- function(x) .provenance_with_state(x)
 
 method(rating_provenance, FlodeRatingTable) <- function(x) {
-  list(status = x@status, has_previous = !is.null(x@previous))
+  list(fit_origin = x@fit_origin, lifecycle = x@lifecycle, schema_version = x@schema_version, has_previous = !is.null(x@previous))
 }
 
 # ---------------------------------------------------------------------------

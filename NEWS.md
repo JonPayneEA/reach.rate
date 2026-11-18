@@ -1,5 +1,40 @@
 # reach.rate (development)
 
+* Tranche A4 of the improvement plan, version 0.2.0. This changes what a
+  rating stores. Ratings saved with 0.1.0 do not validate under 0.2.0
+  (they carry no schema version); refit them.
+
+  * `FlodeEvidence` is a new class: a `data.table` with fixed columns
+    (`evidence_id`, `site_id`, `stage_m`, `discharge_cms`,
+    `observation_time`, `source_type`, `source_name`, `source_version`,
+    `quality_code`, `included`, `exclusion_reason`, `weight`, `notes`,
+    `source_row` and a `metadata` list column) and a validator. Ordinary
+    data.table use works on it unchanged. `source_type` is one of
+    `evidence_source_types()`: `gauging`, `operational_rating`,
+    `modelled`, `cross_section`, `structure_equation` or `other`. That
+    vocabulary is this package's own default and is one line to extend.
+  * A rating's `@gaugings` is now a `FlodeEvidence`. A plain table given
+    to a rating, which is what every fitter does, is converted by
+    `as_flode_evidence()`: ids `G001`, `G002` and so on in row order,
+    `gauging_datetime` becoming `observation_time`, and a note on the
+    table saying what was assumed. Evidence ids survive fitting,
+    flagging, the diagnostics and `saveRDS()`/`readRDS()`.
+    `rating_evidence()` now returns the canonical columns first.
+  * `@status` splits in two. `@fit_origin` keeps the old values
+    (`independently_fitted`, `post_fit_aligned`, `constrained_refit`, and
+    on a rating table also `extended_low` and `grafted`). `@lifecycle` is
+    new: `draft`, `under_review`, `approved`, `superseded` or
+    `withdrawn`. It starts at `draft`, an amendment returns to `draft`,
+    and the package never sets `approved`. `@status` remains as a
+    read-only alias for `@fit_origin`. `rating_history()` now reports
+    `fit_origin` and `lifecycle` columns in place of `status`;
+    `rating_provenance()` of a rating table reports the same two.
+  * Every rating records a `schema_version` (`rating_schema_version()`),
+    shown by `rating_provenance()`. A rating whose version is missing or
+    newer than the installed package fails validation with a message that
+    says so.
+  * `tool_version` in a fit's provenance is now `reach.rate <version>`.
+
 * Every exported function and class now has a runnable example, and the
   examples render on the reference site. They use one small simulated
   two-limb rating, so each runs in well under a second. A new test fails if

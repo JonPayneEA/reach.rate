@@ -208,7 +208,7 @@ rate_from_cross_section <- function(cross_section, slope, roughness,
     gaugings = fit@gaugings,
     bootstrap = fit@bootstrap,
     fit_starts = fit@fit_starts,
-    status = fit@status,
+    fit_origin = fit@fit_origin,
     provenance = c(fit@provenance, list(
       source = "cross_section_theoretical",
       slope = slope,

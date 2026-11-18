@@ -150,6 +150,10 @@ reference:
   - FlodeRating
   - FlodeSegmentedRating
   - FlodeRatingTable
+  - FlodeEvidence
+  - as_flode_evidence
+  - evidence_source_types
+  - rating_schema_version
 
 - title: Teaching tools
   desc: >

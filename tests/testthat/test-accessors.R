@@ -137,19 +137,24 @@ test_that("rating_coefficients of a segmented rating lists C, then each breakpoi
 
 test_that("rating_evidence returns the gaugings with the leading columns in a fixed order", {
   out <- rating_evidence(hand_fit())
-  expect_equal(names(out), c("stage_m", "discharge_cms", "limb"))
+  canonical <- c("evidence_id", "site_id", "stage_m", "discharge_cms", "observation_time",
+                 "source_type", "source_name", "source_version", "quality_code", "included",
+                 "exclusion_reason", "weight", "notes", "source_row", "metadata")
+  expect_equal(names(out), c(canonical, "limb"))
   expect_equal(out$stage_m, c(0.2, 0.8, 1.5, 2.0))
 
   fit <- build_fit()
   expect_equal(nrow(rating_evidence(fit)), nrow(fit@gaugings))
 })
 
-test_that("rating_evidence puts a gauging date first when the fit has one", {
+test_that("rating_evidence carries a gauging date into observation_time", {
   set.seed(2)
   stage_m <- seq(0.5, 2.5, by = 0.05)
   fit <- rate_optimise(5 * stage_m^1.6, stage_m,
                        gauging_datetime = as.Date("2020-01-01") + seq_along(stage_m))
-  expect_equal(names(rating_evidence(fit))[1], "gauging_datetime")
+  out <- rating_evidence(fit)
+  expect_equal(out$observation_time, fit@gaugings$gauging_datetime)
+  expect_false(anyNA(out$observation_time))
 })
 
 test_that("rating_evidence works for a segmented fit and is refused for a table", {
@@ -184,7 +189,8 @@ test_that("a rating with no earlier version has a one-row history", {
   out <- rating_history(build_fit())
   expect_equal(out$step, 1L)
   expect_equal(out$class, "FlodeRating")
-  expect_equal(out$status, "independently_fitted")
+  expect_equal(out$fit_origin, "independently_fitted")
+  expect_equal(out$lifecycle, "draft")
   expect_equal(out$n_limbs, 1L)
 })
 
@@ -195,7 +201,7 @@ test_that("history follows the chain of amended versions, oldest first", {
   aligned <- align_limb_equations(gap)
   out <- rating_history(aligned)
   expect_equal(out$step, 1:2)
-  expect_equal(out$status, c("independently_fitted", "post_fit_aligned"))
+  expect_equal(out$fit_origin, c("independently_fitted", "post_fit_aligned"))
   expect_equal(out$class, c("FlodeRatingTable", "FlodeRatingTable"))
 
   again <- align_limb_equations(aligned)
@@ -208,7 +214,7 @@ test_that("history of a grafted rating records the rating it was grafted onto", 
   old <- data.table::data.table(lower_level = 3.41, upper_level = 6, C = 0.3128, a = 0, n = 4.095)
   out <- rating_history(graft_rating(FlodeRatingTable(table = new), old))
   expect_equal(nrow(out), 2L)
-  expect_equal(out$status[2], "grafted")
+  expect_equal(out$fit_origin[2], "grafted")
 })
 
 test_that("history works for a segmented fit and counts its segments", {
@@ -228,7 +234,11 @@ test_that("rating_provenance returns the recorded settings as a list", {
 })
 
 test_that("rating_provenance of a table says only what it knows", {
-  expect_equal(rating_provenance(table_rating()), list(status = "independently_fitted", has_previous = FALSE))
+  expect_equal(
+    rating_provenance(table_rating()),
+    list(fit_origin = "independently_fitted", lifecycle = "draft",
+         schema_version = rating_schema_version(), has_previous = FALSE)
+  )
   amended <- align_limb_equations(table_rating())
   expect_true(rating_provenance(amended)$has_previous)
 })
