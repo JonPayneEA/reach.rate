@@ -21,9 +21,14 @@ result says what it assumed in its \code{conversion_note}:
 \item \code{evidence_id} is generated as \code{G001}, \code{G002} and so on, in row order.
 \item \code{observation_time} is taken from \code{gauging_datetime} when that column
 exists, and is otherwise \code{NA}.
-\item \code{source_type} is \code{"gauging"}, \code{included} is \code{TRUE}, \code{weight} is 1 and
-\code{source_row} is the row position.
-\item The text columns are \code{NA}, and \code{metadata} is empty for each row.
+\item A table from \code{\link[=read_gaugings]{read_gaugings()}} is recognised: its \code{station_id} becomes
+\code{site_id}, the file name becomes \code{source_name}, and a row whose stage
+or discharge could not be read becomes \code{included = FALSE} with its
+\code{read_issue} as the \code{exclusion_reason}. Nothing is dropped.
+\item \code{source_type} is \code{"gauging"}, \code{weight} is 1 and \code{source_row} is the row
+position. \code{included} is \code{TRUE} unless the stage or discharge is
+missing, in which case it is \code{FALSE} and \code{exclusion_reason} says why.
+\item The remaining text columns are \code{NA}, and \code{metadata} is empty for each row.
 }
 
 A table that is already a \code{FlodeEvidence} is returned as it is.

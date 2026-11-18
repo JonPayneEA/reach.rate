@@ -1,5 +1,33 @@
 # reach.rate (development)
 
+* Tranche A5 of the improvement plan: `read_gaugings()` is complete.
+  It reads delimited text (comma, semicolon, tab, pipe, detected or set
+  with `sep`), spreadsheets (`.xlsx`, `.xls`, through `readxl`, which is in
+  Suggests; without it the function says to install it or save a CSV),
+  and data.frames. New arguments: `datetime` for a single date-time column,
+  `dec` for a decimal comma, `sheet`, `encoding`, and `keep_original`,
+  which keeps each mapped column's text as written (`stage_original` and
+  so on). A spreadsheet's Excel date and time cells are recognised. A
+  repeated header is kept and made distinct. A file with only a header
+  returns an empty table.
+
+  `read_summary()` returns what a read found as a table: one row per kind
+  of problem with the rows affected and their share, and the headline
+  figures as attributes. It stops if rows have since been removed.
+  `as_flode_evidence()` recognises a `read_gaugings()` table: `station_id`
+  becomes `site_id`, the file name becomes `source_name`, and a row whose
+  stage or discharge could not be read becomes `included = FALSE` with
+  its `read_issue` as the reason. Nothing is dropped.
+
+  Twenty fixtures under `tests/testthat/fixtures/gaugings/` each stand for
+  a way real exports differ, with one test per file. The set is the
+  package's own, not taken from an external specification.
+
+* Fixed: `read_gaugings(tz = )` shifted the clock time by the zone's offset
+  (12:00 in the file read as 13:00 in `Europe/London` during summer time).
+  It now keeps the time as written, and a time that does not exist in the
+  zone (the hour skipped when clocks go forward) is `NA`.
+
 * Tranche A4 of the improvement plan, version 0.2.0. This changes what a
   rating stores. Ratings saved with 0.1.0 do not validate under 0.2.0
   (they carry no schema version); refit them.

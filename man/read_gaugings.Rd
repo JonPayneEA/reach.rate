@@ -12,13 +12,20 @@ read_gaugings(
   time = "Time",
   stage = "Stage",
   discharge = "Flow",
+  datetime = NULL,
   date_format = NULL,
   tz = "UTC",
+  sep = "auto",
+  dec = ".",
+  sheet = 1L,
+  encoding = "unknown",
+  keep_original = TRUE,
   quiet = FALSE
 )
 }
 \arguments{
-\item{x}{A file path to a delimited text file, or a data.frame.}
+\item{x}{A file path to a delimited text file or a spreadsheet, or a
+data.frame.}
 
 \item{station_id, station_name}{Character. Columns holding the station
 identifier and name. The name is optional: it is skipped if the file
@@ -31,32 +38,60 @@ midnight, with no note.}
 \item{stage, discharge}{Character. Columns holding stage (m) and
 discharge (cumecs).}
 
-\item{date_format}{A \code{\link[=strptime]{strptime()}} format for the date column, or \code{NULL}
-(default) to detect it.}
+\item{datetime}{Character, or \code{NULL} (default). The name of a single
+column holding date and time together, such as \verb{2020-03-04 12:30:00}.
+When given, \code{date} and \code{time} are not used.}
+
+\item{date_format}{A \code{\link[=strptime]{strptime()}} format for the date column (or the
+date-time column), or \code{NULL} (default) to detect it.}
 
 \item{tz}{Time zone label for \code{observation_time}. Default \code{"UTC"}. The
-clock time in the file is used as it stands, with no daylight-saving
-adjustment, so it is only as good as the file's own convention.}
+clock time in the file is used as it stands: 12:00 in the file is
+12:00 in \code{tz}, with no daylight-saving adjustment, so it is only as
+good as the file's own convention. A clock time that does not exist in
+\code{tz} (the hour skipped when clocks go forward) becomes \code{NA}.}
+
+\item{sep}{The field separator for a text file. \code{"auto"} (default)
+detects it.}
+
+\item{dec}{The decimal mark in stage and discharge: \code{"."} (default) or
+\code{","}. A thousands separator is not guessed at; a value that does not
+parse is noted, not reinterpreted.}
+
+\item{sheet}{The sheet to read from a spreadsheet, by name or number.
+Ignored for text.}
+
+\item{encoding}{The encoding of a text file: \code{"unknown"} (default),
+\code{"UTF-8"} or \code{"Latin-1"}.}
+
+\item{keep_original}{Logical. \code{TRUE} (default) keeps the text of each
+mapped column as it was written, in \code{station_id_original},
+\code{stage_original}, \code{discharge_original}, \code{date_original} and, where
+they exist, \code{time_original} and \code{datetime_original}.}
 
 \item{quiet}{Logical. \code{TRUE} suppresses the summary message.}
 }
 \value{
 A data.table, one row per row of the input, with these columns
-first: \code{source_row} (row of the data, header excluded), \code{station_id},
-\code{station_name}, \code{observation_time} (POSIXct), \code{stage_m},
-\code{discharge_cms} and \code{read_issue} (\code{NA} when the row parsed cleanly,
-otherwise the problems separated by semicolons). Every other column
-of the input follows unchanged, as text. The columns you mapped are
-not repeated; the file still has their original values.
+first: \code{source_row} (row of the data, header and blank lines
+excluded), \code{station_id}, \code{station_name}, \code{observation_time} (POSIXct),
+\code{stage_m}, \code{discharge_cms} and \code{read_issue} (\code{NA} when the row parsed
+cleanly, otherwise the problems separated by semicolons). The
+\verb{*_original} columns follow, then every other column of the input
+unchanged, as text. A repeated header is kept and made distinct
+(\code{Flag}, \code{Flag.1}). The structured summary is attached; read it with
+\code{\link[=read_summary]{read_summary()}}.
 }
 \description{
-Reads gaugings from a CSV file (or a data.frame) into a table with
-standard column names, whatever the original headers were called. It
-cleans nothing and removes nothing: every row of the file is returned,
-in order. What it does is read every column as text, turn placeholder
-text such as \verb{---} into a missing value, parse stage, discharge, date
-and time explicitly, and record in \code{read_issue} anything that did not
-parse, so a bad row is visible and not silently lost or changed.
+Reads gaugings from delimited text (comma, semicolon, tab or pipe), a
+spreadsheet (\code{.xlsx}, \code{.xls}) or a data.frame into a table with standard
+column names, whatever the original headers were called. It cleans
+nothing and removes nothing: every row of the file is returned, in
+order. What it does is read every column as text, turn placeholder text
+such as \verb{---} into a missing value, parse stage, discharge, date and
+time explicitly, and record in \code{read_issue} anything that did not parse,
+so a bad row is visible and not silently lost or changed. The values as
+they were written are kept beside the parsed ones.
 
 The defaults match the column names of the Environment Agency
 WISKI-style gauging export (\verb{Station number}, \code{Date}, \code{Time}, \code{Stage},
@@ -66,7 +101,11 @@ Dates are detected, not assumed. The format that parses the most values
 is used, day-first ahead of month-first when both fit (\code{04/05/1970} is
 read as 4 May). The format chosen is reported in the message, with a
 warning when the choice was a default and could be wrong. Pass
-\code{date_format} (for example \code{"\%d/\%m/\%Y"}) to settle it.
+\code{date_format} (for example \code{"\%d/\%m/\%Y"}) to settle it. A spreadsheet's
+date cells arrive as Excel serial numbers and are recognised as such.
+
+Reading a spreadsheet needs the \code{readxl} package. Without it the
+function stops and says so; saving the sheet as a CSV is the alternative.
 }
 \section{Notes the function can add}{
 
@@ -94,8 +133,22 @@ gaugings <- read_gaugings(raw)
 gaugings
 gaugings[!is.na(gaugings$read_issue), c("source_row", "read_issue")]
 
+# A semicolon file with decimal commas, as a continental export writes it.
+path <- tempfile(fileext = ".csv")
+writeLines(c(
+  "Station number;Date;Time;Stage;Flow",
+  "10250;03/02/1970;12:47:00;1,6;53,3371",
+  "10250;05/05/1970;13:02:00;0,85;6,6824"
+), path)
+read_gaugings(path, dec = ",", quiet = TRUE)[, .(stage_m, discharge_cms)]
+
+# What was found, as a table.
+read_summary(gaugings)
+
 }
 \seealso{
+\code{\link[=read_summary]{read_summary()}} for the structured summary,
+\code{\link[=as_flode_evidence]{as_flode_evidence()}} to turn the result into evidence,
 \code{\link[=read_operational_ratings]{read_operational_ratings()}} for the matching ratings export;
 \code{\link[=compare_gaugings_to_rating]{compare_gaugings_to_rating()}} to check a rating against the result.
 }

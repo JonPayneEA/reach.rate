@@ -116,6 +116,8 @@ test_that("a byte-order mark, quoted commas and a data.frame all read the same",
   writeBin(c(as.raw(c(0xef, 0xbb, 0xbf)), charToRaw(paste0(paste(archive_lines, collapse = "\n"), "\n"))), path)
   from_file <- read_gaugings(path, quiet = TRUE)
   from_frame <- read_gaugings(data.table::fread(text = paste(archive_lines, collapse = "\n"), colClasses = "character"), quiet = TRUE)
+  # Only the label of where the data came from differs.
+  attr(from_file, "read_info") <- attr(from_frame, "read_info") <- NULL
   expect_equal(from_file, from_frame)
   expect_equal(names(from_file)[2], "station_id")
 })
