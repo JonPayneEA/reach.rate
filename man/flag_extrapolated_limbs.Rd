@@ -54,5 +54,9 @@ rating_limbs(flagged, all_columns = TRUE)[,
 }
 \seealso{
 \code{\link[=rating_support]{rating_support()}} for the same unsupported extents without a
-tolerance applied.
+tolerance applied. The \code{support} column of \code{\link[=apply_rating]{apply_rating()}} supersedes
+this function's single flag for deciding how far to trust a stage: it
+separates stages inside the gaugings from those resting on modelled
+evidence, on the equations alone, or on extrapolation. This function
+remains for marking doubtful limbs.
 }

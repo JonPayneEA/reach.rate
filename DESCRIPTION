@@ -57,6 +57,7 @@ Collate:
     'rating_curve_explorer_app.R'
     'reach.rate-package.R'
     'read_gaugings.R'
+    'support.R'
     'weir_equations.R'
     'zzz.R'
 Depends:

@@ -25,8 +25,10 @@ test_that("apply_rating accepts a FlodeRating directly and matches the table rou
   direct <- apply_rating(fit, stage_dt)
   via_table <- apply_rating(as_rating_table(fit), stage_dt)
 
-  expect_equal(direct, via_table)
-  expect_true(all(c("stage", "discharge", "extrapolated") %in% names(direct)))
+  # The discharge is the same. The support class is not, by design: a fit
+  # knows its evidence and the table holds only equations.
+  expect_equal(direct[, .(stage, discharge, extrapolated)], via_table[, .(stage, discharge, extrapolated)])
+  expect_true(all(c("stage", "discharge", "extrapolated", "support") %in% names(direct)))
 })
 
 test_that("a FlodeRating from rate_optimise_constrained works with stage_col", {
@@ -37,7 +39,7 @@ test_that("a FlodeRating from rate_optimise_constrained works with stage_col", {
   dt <- data.table::data.table(stage_n = c(0.9, 1.4, 2.0))
 
   out <- apply_rating(fit_aligned, dt, stage_col = "stage_n")
-  expect_equal(names(out), c("stage_n", "discharge", "extrapolated"))
+  expect_equal(names(out), c("stage_n", "discharge", "extrapolated", "support"))
   expect_true(all(out$discharge > 0))
 })
 
@@ -47,7 +49,7 @@ test_that("a numeric vector is accepted by all three methods", {
   for (fit in list(build_table_fit(), build_flode_rating(), build_segmented_fit())) {
     out <- apply_rating(fit, stage)
     expect_s3_class(out, "data.table")
-    expect_equal(names(out), c("stage", "discharge", "extrapolated"))
+    expect_equal(names(out), c("stage", "discharge", "extrapolated", "support"))
     expect_equal(out$stage, stage)
     # Same answer as the equivalent one-column table
     expect_equal(out, apply_rating(fit, data.table::data.table(stage = stage)))
@@ -56,7 +58,7 @@ test_that("a numeric vector is accepted by all three methods", {
 
 test_that("with a vector, stage_col names the stage column of the result", {
   out <- apply_rating(build_table_fit(), c(0.5, 1.5), stage_col = "stage_n", out_col = "flow")
-  expect_equal(names(out), c("stage_n", "flow", "extrapolated"))
+  expect_equal(names(out), c("stage_n", "flow", "extrapolated", "support"))
 })
 
 test_that("a vector gives the same discharge as the hand calculation", {

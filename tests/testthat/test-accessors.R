@@ -246,7 +246,7 @@ test_that("rating_provenance of a table says only what it knows", {
 # ---- rating_support ---------------------------------------------------------
 
 test_that("rating_support is correct by hand", {
-  out <- rating_support(hand_fit())
+  out <- rating_support(hand_fit(), by = "limb")
   expect_equal(out$n_gaugings, c(2L, 2L))
   expect_equal(out$gauged_min_stage_m, c(0.2, 1.5))
   expect_equal(out$gauged_max_stage_m, c(0.8, 2.0))
@@ -260,7 +260,7 @@ test_that("rating_support is correct by hand", {
 test_that("a limb with no gaugings is reported as such, not hidden", {
   fit <- hand_fit()
   fit <- FlodeRating(limbs = fit@limbs, gaugings = fit@gaugings[fit@gaugings$limb == 1L])
-  out <- rating_support(fit)
+  out <- rating_support(fit, by = "limb")
   expect_equal(out$n_gaugings, c(2L, 0L))
   expect_true(all(is.na(out[2, c("gauged_min_stage_m", "gauged_max_stage_m", "lower_unsupported_m")])))
 })
@@ -268,17 +268,17 @@ test_that("a limb with no gaugings is reported as such, not hidden", {
 test_that("rating_support agrees with flag_extrapolated_limbs on a real fit", {
   fit <- build_fit(control = 1.5)
   flagged <- flag_extrapolated_limbs(fit)@limbs
-  out <- rating_support(fit)
+  out <- rating_support(fit, by = "limb")
   expect_equal(out$gauged_min_stage_m, flagged$gauged_min_stage_m)
   expect_equal(out$upper_unsupported_m, flagged$upper_unsupported_m)
   expect_equal(out$lower_unsupported_frac, flagged$lower_unsupported_frac)
 })
 
 test_that("rating_support of a segmented fit is one row, and a table cannot give one", {
-  out <- rating_support(build_segmented())
+  out <- rating_support(build_segmented(), by = "limb")
   expect_equal(out$gauged_min_stage_m, 0.3)
   expect_equal(out$gauged_max_stage_m, 3.48)
-  expect_error(rating_support(table_rating()), "no gaugings to measure support against")
+  expect_error(rating_support(table_rating(), by = "limb"), "no gaugings to measure support against")
 })
 
 # ---- rating_bootstrap -------------------------------------------------------

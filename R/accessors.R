@@ -445,30 +445,57 @@ method(rating_provenance, FlodeRatingTable) <- function(x) {
 # rating_support
 # ---------------------------------------------------------------------------
 
-#' Gauged support for a rating
+#' What a rating rests on
 #'
 #' @description
-#' How much of each limb rests on gaugings: how many fall inside it, the
-#' stage range they cover, and how far the limb extends beyond them at
-#' either end. A limb that stretches well past its highest gauging is an
-#' extrapolation there, whatever its fit statistics say.
+#' The stage ranges a rating rests on, and which of them are evidence and
+#' which are decision. There are five:
 #'
-#' @param x A [FlodeRating] or [FlodeSegmentedRating]. A
-#'   [FlodeRatingTable] holds equations only, with no gaugings to measure
-#'   support against.
+#' * **observed**: the stage range of the gaugings (evidence of source type
+#'   `gauging`), with how many there are;
+#' * **modelled**: the stage range of evidence that is not a measurement (a
+#'   modelled value, a cross-section or structure computation, or a point read
+#'   off another rating);
+#' * **fitted**: the stage range the equations are declared over, which can be
+#'   wider than the evidence after [extend_rating_low()] or [graft_rating()];
+#' * **operational**: the range the rating may be used over, if stated (see
+#'   [set_operational_limits()]); `NA` if not;
+#' * **numerical**: where the equations give a finite discharge. Beyond it
+#'   [apply_rating()] fails.
 #'
-#' @return A data.table. For a [FlodeRating], one row per limb:
-#'   `limb`, `lower_stage_m`, `upper_stage_m`, `n_gaugings`,
-#'   `gauged_min_stage_m`, `gauged_max_stage_m`, `lower_unsupported_m` and
-#'   `upper_unsupported_m` (how far the limb extends below its lowest and
-#'   above its highest gauging, m), and the same as a fraction of the
-#'   limb's width, `lower_unsupported_frac` and `upper_unsupported_frac`.
-#'   A limb with no gaugings has `n_gaugings` 0 and `NA` elsewhere. For a
-#'   [FlodeSegmentedRating], one row with `n_gaugings`,
-#'   `gauged_min_stage_m` and `gauged_max_stage_m`.
+#' [apply_rating()] uses the same ranges to say, for every stage it
+#' computes, how well supported that stage is (its `support` column).
 #'
-#' @seealso [flag_extrapolated_limbs()] for the same measures with a
-#'   tolerance applied; [rating_evidence()]
+#' With `by = "limb"` it gives instead how much of each limb rests on
+#' gaugings: how many fall inside it, the stage range they cover, and how far
+#' the limb extends beyond them at either end. A limb that stretches well past
+#' its highest gauging is an extrapolation there, whatever its fit statistics
+#' say.
+#'
+#' @param x A [FlodeRating], [FlodeSegmentedRating] or [FlodeRatingTable].
+#'   A table holds equations only, so it has no observed or modelled range.
+#' @param by `"range"` (default) for the five ranges, or `"limb"` for the
+#'   per-limb table. `"limb"` needs gaugings, so a [FlodeRatingTable] is
+#'   refused.
+#'
+#' @return With `by = "range"`, a data.table of five rows with `range`,
+#'   `lower_stage_m`, `upper_stage_m`, `n_evidence` (gaugings or modelled
+#'   points, `NA` for the ranges that are not evidence) and `basis`, a
+#'   sentence on what the range is. A range that does not exist is `NA`.
+#'
+#'   With `by = "limb"`, for a [FlodeRating], one row per limb: `limb`,
+#'   `lower_stage_m`, `upper_stage_m`, `n_gaugings`, `gauged_min_stage_m`,
+#'   `gauged_max_stage_m`, `lower_unsupported_m` and `upper_unsupported_m`
+#'   (how far the limb extends below its lowest and above its highest
+#'   gauging, m), and the same as a fraction of the limb's width,
+#'   `lower_unsupported_frac` and `upper_unsupported_frac`. A limb with no
+#'   gaugings has `n_gaugings` 0 and `NA` elsewhere. For a
+#'   [FlodeSegmentedRating], one row with `n_gaugings`, `gauged_min_stage_m`
+#'   and `gauged_max_stage_m`.
+#'
+#' @seealso [apply_rating()] for the `support` column; [set_operational_limits()];
+#'   [flag_extrapolated_limbs()], which the support classes supersede;
+#'   [rating_evidence()]
 #'
 #' @examples
 #' set.seed(1)
@@ -476,13 +503,14 @@ method(rating_provenance, FlodeRatingTable) <- function(x) {
 #' discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.02)
 #' fit <- rate_optimise(discharge_cms, stage_m)
 #' rating_support(fit)
+#' rating_support(fit, by = "limb")
 #'
 #' @export
-rating_support <- new_generic("rating_support", "x", function(x) S7_dispatch())
+rating_support <- new_generic("rating_support", "x", function(x, by = "range") S7_dispatch())
 
-method(rating_support, class_any) <- function(x) .accessor_not_a_rating("rating_support", x)
+method(rating_support, class_any) <- function(x, by = "range") .accessor_not_a_rating("rating_support", x)
 
-method(rating_support, FlodeRating) <- function(x) {
+.support_by_limb_fit <- function(x) {
   limbs <- x@limbs
   g <- x@gaugings
   n_limbs <- nrow(limbs)
@@ -508,7 +536,7 @@ method(rating_support, FlodeRating) <- function(x) {
   out[]
 }
 
-method(rating_support, FlodeSegmentedRating) <- function(x) {
+.support_by_limb_segmented <- function(x) {
   s <- x@gaugings$stage_m
   s <- s[!is.na(s)]
   data.table(
@@ -518,11 +546,25 @@ method(rating_support, FlodeSegmentedRating) <- function(x) {
   )
 }
 
-method(rating_support, FlodeRatingTable) <- function(x) {
-  .accessor_not_held(
-    "rating_support", x, "holds equations only, with no gaugings to measure support against",
-    "Use a fit from rate_optimise() or rate_optimise_segmented()."
-  )
+method(rating_support, FlodeRating) <- function(x, by = "range") {
+  by <- match.arg(by, c("range", "limb"))
+  if (by == "limb") .support_by_limb_fit(x) else .support_ranges(x)
+}
+
+method(rating_support, FlodeSegmentedRating) <- function(x, by = "range") {
+  by <- match.arg(by, c("range", "limb"))
+  if (by == "limb") .support_by_limb_segmented(x) else .support_ranges(x)
+}
+
+method(rating_support, FlodeRatingTable) <- function(x, by = "range") {
+  by <- match.arg(by, c("range", "limb"))
+  if (by == "limb") {
+    .accessor_not_held(
+      "rating_support", x, "holds equations only, with no gaugings to measure support against",
+      "Use a fit from rate_optimise() or rate_optimise_segmented(), or ask for by = \"range\"."
+    )
+  }
+  .support_ranges(x)
 }
 
 # ---------------------------------------------------------------------------

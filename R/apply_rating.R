@@ -122,6 +122,7 @@ method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "s
 
   out_dt <- copy(as.data.table(stage_dt))
   stage_vals <- out_dt[[stage_col]]
+  .require_numerical_range(fit, stage_vals)
 
   # The arithmetic lives in the C kernel (src/reach_core.c), shared with the
   # Python package: limb lookup, Q = C (H - a)^n, and zero at or below a.
@@ -131,6 +132,7 @@ method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "s
 
   set(out_dt, j = out_col, value = discharge)
   set(out_dt, j = "extrapolated", value = extrapolated)
+  set(out_dt, j = "support", value = .support_class(fit, stage_vals))
 
   n_extrap <- sum(extrapolated, na.rm = TRUE)
   if (n_extrap > 0L) {
@@ -153,7 +155,11 @@ method(apply_rating, FlodeRating) <- function(fit, stage_dt, stage_col = "stage"
   # cannot show (bootstrap interval order, parameter bounds).
   .require_valid_rating(fit, "apply_rating()")
   .require_operational_range(fit, stage_dt, stage_col)
-  apply_rating(as_rating_table(fit), stage_dt, stage_col = stage_col, out_col = out_col)
+  out <- apply_rating(as_rating_table(fit), stage_dt, stage_col = stage_col, out_col = out_col)
+  # The table method classifies against the equations alone. A fit knows its
+  # evidence, so its stages are classified against that.
+  set(out, j = "support", value = .support_class(fit, out[[stage_col]]))
+  out[]
 }
 
 #' Apply a rating with bootstrap uncertainty to a stage series
