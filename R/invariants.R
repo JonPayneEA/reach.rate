@@ -320,7 +320,22 @@ NULL
   which <- match.arg(which)
   if (S7_inherits(x, FlodeSegmentedRating)) {
     res <- .segmented_technical_checks(x)
+    # The same checks as for any rating, so that an independent and a
+    # segmented fit are assessed alike. Those that do not apply to one joint
+    # equation say why, and are not assessed.
+    res$monotone_across_junctions <- .inv("monotone_across_junctions", "technical", TRUE,
+      "A single joint equation has no junctions between limbs.", "", blocks = "inverse")
+    res$inverse_consistent <- .inv("inverse_consistent", "technical", NA, "",
+      "A segmented fit has no inverse in this package.", not_assessed = TRUE, blocks = "inverse")
+    res$interval_ordering <- .inv("interval_ordering", "technical", NA, "",
+      "A segmented fit has no bootstrap draws.", not_assessed = TRUE)
+    res$bounds_respected <- .inv("bounds_respected", "technical", NA, "",
+      "A segmented fit has no box bounds on its parameters.", not_assessed = TRUE)
     if (which == "all") {
+      res$domain_valid <- .inv("domain_valid", "hydrometric", NA, "",
+        "A segmented fit has no per-limb zero-flow stage; its zero-flow stage is bp1.", not_assessed = TRUE)
+      res$stage_gaps_overlaps <- .inv("stage_gaps_overlaps", "hydrometric", TRUE,
+        "A single joint equation has no limb boundaries to leave a gap or overlap.", "")
       res$limb_continuity <- .inv("limb_continuity", "hydrometric", TRUE,
         "Continuous by construction: every later factor of the joint equation equals 1 at its breakpoint.", "")
     }

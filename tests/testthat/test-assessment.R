@@ -17,8 +17,8 @@ test_that("an assessment holds checks, a subject and a row count", {
 })
 
 test_that("a technical check cannot warn and a hydrometric check cannot fail", {
-  expect_error(FlodeAssessment(checks = chk_row("a", "technical", "warning")), "technical check can pass or fail")
-  expect_error(FlodeAssessment(checks = chk_row("a", "hydrometric", "fail")), "hydrometric check can warn")
+  expect_error(FlodeAssessment(checks = chk_row("a", "technical", "warning")), "severity 'error' can pass or fail")
+  expect_error(FlodeAssessment(checks = chk_row("a", "hydrometric", "fail")), "severity 'warning' can warn")
 })
 
 test_that("the validator names each other way a check table can be wrong", {

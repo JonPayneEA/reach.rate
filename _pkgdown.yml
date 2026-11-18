@@ -71,6 +71,7 @@ reference:
     apply_rating() from using one that cannot give a meaningful discharge.
   contents:
   - validate_gaugings
+  - assess_rating
   - rating_invariants
   - FlodeAssessment
   - assessment_checks
