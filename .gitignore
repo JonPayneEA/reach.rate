@@ -7,3 +7,15 @@ inst/doc
 Rplots.pdf
 docs
 pkgdown
+
+# Compiled code
+src/*.o
+src/*.so
+src/*.dll
+src/*.dylib
+tests/c/test_core
+python/build/
+python/dist/
+python/**/*.so
+python/**/__pycache__/
+python/*.egg-info/

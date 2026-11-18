@@ -1,0 +1,43 @@
+# Tests the C evaluation kernel (src/reach_core.c) on its own, with no R in
+# the loop, across compilers and operating systems. The kernel is shared by
+# the R and Python packages, so it has to stay portable C99. R CMD check
+# (R-CMD-check.yaml) separately builds it as part of the R package, on
+# Windows as well.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+name: c-core.yaml
+
+permissions: read-all
+
+jobs:
+  c-core:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} (${{ matrix.cc }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-latest, cc: gcc}
+          - {os: ubuntu-latest, cc: clang}
+          - {os: macos-latest, cc: clang}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and run the kernel tests (strict C99, warnings as errors)
+        run: make -C tests/c check CC=${{ matrix.cc }}
+
+  c-core-sanitizers:
+    runs-on: ubuntu-latest
+    name: ubuntu-latest (sanitizers)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run under address and undefined-behaviour sanitizers
+        run: |
+          cc -std=c99 -Wall -Wextra -Wpedantic -Werror -O1 -g \
+            -fsanitize=address,undefined -fno-sanitize-recover=all \
+            -o tests/c/test_core_san tests/c/test_core.c src/reach_core.c -lm
+          ./tests/c/test_core_san

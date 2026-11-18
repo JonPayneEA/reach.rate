@@ -122,18 +122,11 @@ method(apply_rating, FlodeRatingTable) <- function(fit, stage_dt, stage_col = "s
   out_dt <- copy(as.data.table(stage_dt))
   stage_vals <- out_dt[[stage_col]]
 
-  breaks <- c(rating_dt$lower_level[1], rating_dt$upper_level)
-  limb_idx_raw <- findInterval(stage_vals, breaks, rightmost.closed = TRUE)
-
-  extrapolated <- limb_idx_raw == 0L | limb_idx_raw == (n_limbs + 1L)
-  limb_idx <- pmin(pmax(limb_idx_raw, 1L), n_limbs)
-
-  C <- rating_dt$C[limb_idx]
-  a <- rating_dt$a[limb_idx]
-  n <- rating_dt$n[limb_idx]
-
-  discharge <- C * (stage_vals - a)^n
-  discharge[!is.na(stage_vals) & stage_vals <= a] <- 0
+  # The arithmetic lives in the C kernel (src/reach_core.c), shared with the
+  # Python package: limb lookup, Q = C (H - a)^n, and zero at or below a.
+  evaluated <- .kernel_forward(rating_dt, stage_vals)
+  discharge <- evaluated$discharge
+  extrapolated <- evaluated$extrapolated
 
   set(out_dt, j = out_col, value = discharge)
   set(out_dt, j = "extrapolated", value = extrapolated)
@@ -470,23 +463,19 @@ apply_rating_inverse <- function(fit, discharge_dt, discharge_col = "discharge",
     }
   }
 
-  eval_q <- function(C, a, n, H) C * (H - a)^n
-
-  # Junction gap check, computed directly from the equations at their
-  # exact shared boundary stage -- not via expand_rating_table()'s
-  # discretisation, so there's no step-size approximation to worry about.
+  # Junction gap check, from the equations at their exact shared boundary
+  # stage (not via expand_rating_table()'s discretisation, so there is no
+  # step-size approximation). The kernel evaluates each side of each
+  # junction; the tolerances and the message stay here. A NaN on either
+  # side means a limb whose offset lies above the junction, which is
+  # flagged like any other gap.
   if (n_limbs > 1L) {
-    flagged_junctions <- integer(0)
-    for (j in seq_len(n_limbs - 1L)) {
-      brk <- rating_dt$upper_level[j]
-      q_low <- eval_q(rating_dt$C[j], rating_dt$a[j], rating_dt$n[j], brk)
-      q_high <- eval_q(rating_dt$C[j + 1L], rating_dt$a[j + 1L], rating_dt$n[j + 1L], brk)
-      gap_abs <- q_high - q_low
-      gap_rel <- if (abs(q_low) > 1e-9) gap_abs / q_low else NA_real_
-      if (abs(gap_abs) > tol_abs || (!is.na(gap_rel) && abs(gap_rel) > tol_rel)) {
-        flagged_junctions <- c(flagged_junctions, j)
-      }
-    }
+    junction <- .kernel_junctions(rating_dt)
+    gap_abs <- junction$above - junction$below
+    gap_rel <- ifelse(abs(junction$below) > 1e-9, gap_abs / junction$below, NA_real_)
+    flagged_junctions <- which(
+      is.na(gap_abs) | abs(gap_abs) > tol_abs | (!is.na(gap_rel) & abs(gap_rel) > tol_rel)
+    )
     if (length(flagged_junctions) > 0L) {
       stop(sprintf(
         paste(
@@ -501,19 +490,8 @@ apply_rating_inverse <- function(fit, discharge_dt, discharge_col = "discharge",
     }
   }
 
-  # The discharge-axis equivalent of apply_rating()'s stage-axis breaks --
-  # each limb's own equation evaluated at its own bounds, monotonic
-  # increasing across limbs since the junction check above just confirmed
-  # adjacent limbs' ranges connect rather than overlap or gap.
-  q_lo <- eval_q(rating_dt$C, rating_dt$a, rating_dt$n, rating_dt$lower_level)
-  q_hi <- eval_q(rating_dt$C, rating_dt$a, rating_dt$n, rating_dt$upper_level)
-  q_breaks <- c(q_lo[1], q_hi)
-
   out_dt <- copy(as.data.table(discharge_dt))
   discharge_vals <- out_dt[[discharge_col]]
-
-  stage <- rep(NA_real_, nrow(out_dt))
-  extrapolated <- rep(NA, nrow(out_dt))
 
   non_positive <- !is.na(discharge_vals) & discharge_vals <= 0
   if (any(non_positive)) {
@@ -526,20 +504,13 @@ apply_rating_inverse <- function(fit, discharge_dt, discharge_col = "discharge",
     ))
   }
 
-  valid_idx <- !is.na(discharge_vals) & discharge_vals > 0
-  if (any(valid_idx)) {
-    q_valid <- discharge_vals[valid_idx]
-    limb_idx_raw <- findInterval(q_valid, q_breaks, rightmost.closed = TRUE)
-    extrap_valid <- limb_idx_raw == 0L | limb_idx_raw == (n_limbs + 1L)
-    limb_idx <- pmin(pmax(limb_idx_raw, 1L), n_limbs)
-
-    C <- rating_dt$C[limb_idx]
-    a <- rating_dt$a[limb_idx]
-    n <- rating_dt$n[limb_idx]
-
-    stage[valid_idx] <- a + (q_valid / C)^(1 / n)
-    extrapolated[valid_idx] <- extrap_valid
-  }
+  # The inversion itself is in the C kernel: it picks the limb by each
+  # limb's discharge range (each equation at its own bounds, increasing
+  # across limbs once the junction check above has passed) and applies
+  # H = a + (Q / C)^(1 / n). Q <= 0 and missing Q give NA.
+  inverted <- .kernel_inverse(rating_dt, discharge_vals)
+  stage <- inverted$stage
+  extrapolated <- inverted$extrapolated
 
   set(out_dt, j = out_col, value = stage)
   set(out_dt, j = "extrapolated", value = extrapolated)

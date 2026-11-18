@@ -171,8 +171,12 @@ extend_rating_low <- function(rating, lower_stage = NULL) {
     ))
   }
 
-  slope <- lowest$n * lowest$C * depth^(lowest$n - 1)
-  zero_stage <- h - depth / lowest$n
+  # The tangent line is computed by the C kernel (src/reach_core.c), the
+  # same code the Python package calls: slope n C (h - a)^(n - 1), and the
+  # stage h - (h - a) / n where the line reaches zero discharge.
+  tangent <- .kernel_tangent(lowest$C, lowest$a, lowest$n, h)
+  slope <- tangent[1L]
+  zero_stage <- tangent[2L]
 
   if (is.null(lower_stage)) lower_stage <- zero_stage
   if (!is.numeric(lower_stage) || length(lower_stage) != 1L || !is.finite(lower_stage)) {
