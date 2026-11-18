@@ -7,17 +7,59 @@
 apply_rating(fit, ...)
 }
 \arguments{
-\item{fit}{A \code{FlodeRating} or \code{FlodeSegmentedRating} object.}
+\item{fit}{A \link{FlodeRating}, \link{FlodeRatingTable} or
+\link{FlodeSegmentedRating}.}
 
-\item{...}{Passed to the class-specific method -- typically
-\code{stage_dt} (a data.frame or data.table with a stage column) plus
-\code{stage_col}/\code{out_col}; see the individual methods' examples.}
+\item{...}{Arguments for the class-specific method, which are the same
+for all three:
+\itemize{
+\item \code{stage_dt}: a data.frame or data.table with a stage column, or a
+numeric vector of stage values. Any other columns, such as
+\code{datetime}, are carried through unchanged. A vector is wrapped in a
+one-column table named by \code{stage_col}.
+\item \code{stage_col}: name of the stage column in \code{stage_dt}. Default
+\code{"stage"}. With a vector it names the stage column of the result.
+\item \code{out_col}: name of the discharge column to add. Default
+\code{"discharge"}.
+}}
+}
+\value{
+\code{stage_dt} as a data.table (or, for a vector input, a table
+holding the stage values) with two columns added: \code{out_col} (the
+computed discharge) and \code{extrapolated} (logical; \code{TRUE} where the
+stage fell outside the range the rating covers, as defined for each
+class above).
 }
 \description{
-Dispatches on the fit's class: \link{FlodeRating} and
-\link{FlodeSegmentedRating} each provide their own method. Replaces the
-previous separate \code{apply_rating()}/\code{apply_segmented_rating()} pair --
-one name, dispatched by what you're holding.
+Converts a stage record to discharge. Dispatches on the class of \code{fit}:
+\link{FlodeRating}, \link{FlodeRatingTable} and \link{FlodeSegmentedRating} each
+provide a method. Replaces the previous separate
+\code{apply_rating()}/\code{apply_segmented_rating()} pair -- one name,
+dispatched by what you're holding.
+
+The stage record can be a table with a stage column, or simply a
+numeric vector of stage values.
+}
+\details{
+\strong{\link{FlodeRating} method.} What \code{\link[=rate_optimise]{rate_optimise()}} and
+\code{\link[=rate_optimise_constrained]{rate_optimise_constrained()}} return. It is converted with
+\code{\link[=as_rating_table]{as_rating_table()}} and then handled exactly as below, so the two give
+identical results.
+
+\strong{\link{FlodeRatingTable} method.} Each stage value is assigned to the limb
+whose \verb{[lower_level, upper_level]} band contains it, and discharge is
+that limb's \code{Q = C(H - a)^n}. Limbs must be contiguous
+(\code{upper_level[i] == lower_level[i + 1]}), or the call stops. Stage at or
+below a limb's \code{a} gives zero discharge. Stage below the lowest limb or
+above the highest is evaluated by extrapolating the nearest limb's
+equation, and flagged \code{extrapolated = TRUE}. Where stage may fall below
+the lowest gauged stage, \code{\link[=extend_rating_low]{extend_rating_low()}} adds an explicit linear
+limb there instead.
+
+\strong{\link{FlodeSegmentedRating} method.} Discharge comes from the joint
+segmented formula. Stage at or below the zero-flow stage \code{bp1} gives zero
+discharge, which falls out of the formula itself. Only stage above the
+highest gauged stage is flagged \code{extrapolated = TRUE}.
 }
 \examples{
 # A rating typed in by hand, e.g. from a station's published rating
@@ -92,5 +134,17 @@ ggplot(long_dt, aes(datetime, value)) +
   theme_minimal() +
   theme(strip.placement = "outside")
 
+# A plain vector of stage values works too, and a fit from
+# rate_optimise() can be used directly
+apply_rating(my_fit, c(0.5, 1.5, 3.0))
+gaugings <- station_gaugings
+fit <- rate_optimise(gaugings$discharge_cms, gaugings$stage_m)
+apply_rating(fit, quantile(gaugings$stage_m, c(0.25, 0.5, 0.75)))
 
+}
+\seealso{
+\code{\link[=apply_rating_interval]{apply_rating_interval()}} for a bootstrap prediction interval,
+\code{\link[=apply_rating_versioned]{apply_rating_versioned()}} for a rating that changed over time,
+\code{\link[=apply_rating_inverse]{apply_rating_inverse()}} for discharge back to stage, and
+\code{\link[=extend_rating_low]{extend_rating_low()}} for stage below the lowest limb.
 }

@@ -459,9 +459,12 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = N
 #' @return `stage_dt` as a data.table with `out_col` and an
 #'   `extrapolated` logical column added (`TRUE` above the highest
 #'   gauged stage).
-#' @export
+#' @noRd
+# User-facing documentation for this method lives on the generic's block in
+# flode_classes.R (see ?apply_rating): roxygen cannot name a
+# `method(...) <-` call, so a block written here is silently dropped.
 method(apply_rating, FlodeSegmentedRating) <- function(fit, stage_dt, stage_col = "stage", out_col = "discharge") {
-  if (!is.data.frame(stage_dt)) stop("stage_dt must be a data.frame or data.table")
+  stage_dt <- .coerce_stage_input(stage_dt, stage_col)
   if (!stage_col %in% names(stage_dt)) stop("stage_col must be a column of stage_dt")
 
   coefs <- fit@coefficients
