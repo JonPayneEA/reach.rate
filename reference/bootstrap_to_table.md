@@ -1,5 +1,12 @@
 # Convert a fit's bootstrap draws into apply_rating_interval()'s input
 
+**Deprecated.** Use
+[`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md),
+which returns the same draws with unit-suffixed stage columns, and which
+[`apply_rating_interval()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating_interval.md)
+accepts directly. This function still works, with a warning, and will be
+removed in a later release.
+
 Bridges `rate_optimise(..., n_boot = )`'s per-draw coefficient samples
 (`fit@bootstrap`, which records every requested draw including failed or
 rejected ones) to the shape
@@ -44,6 +51,7 @@ stage_seq <- seq(0.5, 2.5, by = 0.05)
 discharge_seq <- 5 * stage_seq^1.6 + rnorm(length(stage_seq), sd = 0.02)
 fit <- rate_optimise(discharge_seq, stage_seq, n_boot = 50L, boot_seed = 1L)
 bootstrap_to_table(fit)
+#> Warning: bootstrap_to_table() is deprecated and will be removed in a later release. Use rating_bootstrap(), which gives the same draws with lower_stage_m and upper_stage_m in place of lower_level and upper_level.
 #> Key: <limb>
 #>      limb  draw        C             a        n lower_level upper_level
 #>     <int> <int>    <num>         <num>    <num>       <num>       <num>

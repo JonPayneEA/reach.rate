@@ -132,8 +132,8 @@ fit_recent <- rate_optimise(
 )
 
 rbind(
-  data.table(fit = "flat (unweighted)", fit_flat@limbs[, .(C, a, n, rmse_cms)]),
-  data.table(fit = "age_halflife = 3 years", fit_recent@limbs[, .(C, a, n, rmse_cms)])
+  data.table(fit = "flat (unweighted)", rating_limbs(fit_flat, all_columns = TRUE)[, .(C, a, n, rmse_cms)]),
+  data.table(fit = "age_halflife = 3 years", rating_limbs(fit_recent, all_columns = TRUE)[, .(C, a, n, rmse_cms)])
 )
 #>                       fit        C           a     n rmse_cms
 #>                    <char>    <num>       <num> <num>    <num>
@@ -145,11 +145,12 @@ The flat fit lands close to 4.5 – the simple average of the four
 campaigns’ true `C` (3, 4, 5, 6). The recency-weighted fit sits
 noticeably closer to 6, the most recent campaign’s true value, without
 discarding the older campaigns outright (their gaugings still carry
-`age_min_weight`’s worth of influence, visible in `@gaugings`):
+`age_min_weight`’s worth of influence, visible in
+[`rating_evidence()`](https://jonpayneea.github.io/reach.rate/reference/rating_evidence.md)):
 
 ``` r
 
-fit_recent@gaugings[, .(age_weight = round(mean(age_weight), 3), n_gaugings = .N),
+rating_evidence(fit_recent)[, .(age_weight = round(mean(age_weight), 3), n_gaugings = .N),
   by = .(campaign_year = data.table::year(gauging_datetime))
 ][order(-campaign_year)]
 #>    campaign_year age_weight n_gaugings

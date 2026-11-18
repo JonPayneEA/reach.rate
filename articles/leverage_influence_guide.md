@@ -52,7 +52,7 @@ stage_m <- c(stage_m, 3.5)
 discharge_cms <- c(discharge_cms, 5 * 3.5^1.5 * 1.25)
 
 fit <- rate_optimise(discharge_cms, stage_m, n_bounds = c(1.3, 1.7))
-fit@limbs[, .(C, a, n, rmse_cms, r_squared)]
+rating_limbs(fit, all_columns = TRUE)[, .(C, a, n, rmse_cms, r_squared)]
 #>           C           a     n rmse_cms r_squared
 #>       <num>       <num> <num>    <num>     <num>
 #> 1: 4.086972 -0.07832364   1.7 1.266437 0.9810271
@@ -66,7 +66,7 @@ Ask the influence question instead:
 ``` r
 
 flagged <- flag_influential_gaugings(fit)
-flagged@gaugings[order(-cooks_distance)][1:5, .(stage_m, discharge_cms, residual_cms, leverage, cooks_distance, influential)]
+rating_evidence(flagged)[order(-cooks_distance)][1:5, .(stage_m, discharge_cms, residual_cms, leverage, cooks_distance, influential)]
 #>    stage_m discharge_cms residual_cms   leverage cooks_distance influential
 #>      <num>         <num>        <num>      <num>          <num>      <lgcl>
 #> 1:     3.5      40.92438     5.225298 0.59697824    18.69865405        TRUE
@@ -121,14 +121,14 @@ literal one: take it out, refit, and look at both curves together.
 
 ``` r
 
-top_idx <- which.max(flagged@gaugings$cooks_distance)
+top_idx <- which.max(rating_evidence(flagged)$cooks_distance)
 fit_without <- rate_optimise(
   discharge_cms[-top_idx], stage_m[-top_idx], n_bounds = c(1.3, 1.7)
 )
 
 curve_dt <- function(f, label) {
-  h <- seq(f@limbs$lower_stage_m, f@limbs$upper_stage_m, length.out = 200)
-  data.table(stage_m = h, discharge_cms = f@limbs$C * (h - f@limbs$a)^f@limbs$n, fit = label)
+  h <- seq(rating_limbs(f)$lower_stage_m, rating_limbs(f)$upper_stage_m, length.out = 200)
+  data.table(stage_m = h, discharge_cms = rating_limbs(f)$C * (h - rating_limbs(f)$a)^rating_limbs(f)$n, fit = label)
 }
 curves_dt <- rbind(
   curve_dt(fit, "All gaugings"),
@@ -137,7 +137,7 @@ curves_dt <- rbind(
 
 ggplot() +
   geom_line(data = curves_dt, aes(discharge_cms, stage_m, colour = fit), linewidth = 1.1) +
-  geom_point(data = flagged@gaugings, aes(discharge_cms, stage_m, shape = influential), size = 2, colour = "grey30") +
+  geom_point(data = rating_evidence(flagged), aes(discharge_cms, stage_m, shape = influential), size = 2, colour = "grey30") +
   labs(
     title = "One gauging, two fitted curves",
     x = "Discharge (m^3/s)", y = "Stage (m)", colour = NULL, shape = "Influential"
@@ -152,7 +152,7 @@ range](leverage_influence_guide_files/figure-html/refit-comparison-1.png)
 
 ``` r
 
-pct_shift <- 100 * (fit@limbs$C - fit_without@limbs$C) / fit_without@limbs$C
+pct_shift <- 100 * (rating_limbs(fit)$C - rating_limbs(fit_without)$C) / rating_limbs(fit_without)$C
 sprintf("C shifts by %.0f%% depending on whether that one gauging is included", pct_shift)
 #> [1] "C shifts by -29% depending on whether that one gauging is included"
 ```

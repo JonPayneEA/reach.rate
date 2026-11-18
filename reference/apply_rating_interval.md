@@ -4,7 +4,7 @@ Like
 [`apply_rating()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating.md),
 but propagates per-limb bootstrap coefficient draws (from
 `rate_optimise(..., n_boot = )`, bridged through
-[`bootstrap_to_table()`](https://jonpayneea.github.io/reach.rate/reference/bootstrap_to_table.md))
+[`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md))
 to a discharge *prediction interval* at each stage, rather than a single
 point value. For each stage row, discharge is computed once per
 bootstrap draw using that draw's limb assignment and `C`/`a`/`n`, and
@@ -41,10 +41,11 @@ apply_rating_interval(
 - rating_boot_dt:
 
   Data.table of per-draw coefficients, one row per (limb, draw): columns
-  `limb`, `draw`, `lower_level`, `upper_level`, `C`, `a`, `n`. See
-  [`bootstrap_to_table()`](https://jonpayneea.github.io/reach.rate/reference/bootstrap_to_table.md)
-  (in `rating_curve_demo`) for building this from a
-  `rate_optimise(..., n_boot = )` fit.
+  `limb`, `draw`, `lower_level`, `upper_level`, `C`, `a`, `n`.
+  [`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md)
+  builds this from a `rate_optimise(..., n_boot = )` fit; its
+  `lower_stage_m` and `upper_stage_m` are accepted in place of
+  `lower_level` and `upper_level`.
 
 - stage_col:
 

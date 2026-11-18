@@ -61,7 +61,7 @@ The obvious first move: one power law across the whole range.
 ``` r
 
 fit_single <- rate_optimise(discharge_cms, stage_m)
-fit_single@limbs[, .(C, a, n, rmse_cms, r_squared)]
+rating_limbs(fit_single, all_columns = TRUE)[, .(C, a, n, rmse_cms, r_squared)]
 #>               C         a        n rmse_cms r_squared
 #>           <num>     <num>    <num>    <num>     <num>
 #> 1: 8.187914e-05 -2.917098 7.313943 2.583892 0.9543053
@@ -156,7 +156,7 @@ these against an actual berm, bank top, or control feature.
 ``` r
 
 fit_multi <- rate_optimise(discharge_cms, stage_m, control = breaks)
-fit_multi@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs)]
+rating_limbs(fit_multi, all_columns = TRUE)[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs)]
 #>     limb lower_stage_m upper_stage_m        C           a        n   rmse_cms
 #>    <int>         <num>         <num>    <num>       <num>    <num>      <num>
 #> 1:     1         0.300         1.375 2.530214 0.009671352 1.272510 0.04065298
@@ -196,7 +196,7 @@ at the breakpoints.
 rating_table <- as_rating_table(fit_multi)
 rc_raw_dt <- expand_rating_table(rating_table, step = 0.01)
 gaps_dt <- detect_rc_gaps(rc_raw_dt)
-#> INFO [2026-11-18 12:31:45] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-18 16:03:43] Checked 2 junction(s): 2 gap(s) flagged.
 gaps_dt[, .(junction, stage_break, q_lower_end, q_upper_start, gap_abs, gap_rel, gap_flagged)]
 #>    junction stage_break q_lower_end q_upper_start   gap_abs   gap_rel
 #>       <int>       <num>       <num>         <num>     <num>     <num>
@@ -235,7 +235,7 @@ aligned <- align_limb_boundaries(fit_multi)
 #> multi-start bookkeeping describe the pre-amendment fit and are not recomputed
 #> for this amendment; dropped rather than presented alongside updated point
 #> estimates.
-aligned@limbs[, .(limb, lower_stage_m, upper_stage_m, lower_stage_m_original, upper_stage_m_original, boundary_adjusted)]
+rating_limbs(aligned, all_columns = TRUE)[, .(limb, lower_stage_m, upper_stage_m, lower_stage_m_original, upper_stage_m_original, boundary_adjusted)]
 #>     limb lower_stage_m upper_stage_m lower_stage_m_original
 #>    <int>         <num>         <num>                  <num>
 #> 1:     1     0.3000000     0.8535431                  0.300
@@ -250,9 +250,9 @@ aligned@limbs[, .(limb, lower_stage_m, upper_stage_m, lower_stage_m_original, up
 
 (The warning about bootstrap uncertainty and multi-start bookkeeping
 being dropped is expected here – `fit_multi` was fitted with the default
-`multi_start = TRUE`, so it carries `@fit_starts`, and that bookkeeping
-describes the *pre*-alignment equations. It’s discarded rather than left
-around implying it still applies.)
+`multi_start = TRUE`, so it carries multi-start bookkeeping, and that
+bookkeeping describes the *pre*-alignment equations. It’s discarded
+rather than left around implying it still applies.)
 
 Junction 1 relocated – from 1.375 down to about 0.85 m. That is a
 genuine root of `C1*(H-a1)^n1 = C2*(H-a2)^n2`, so it is mathematically
@@ -282,7 +282,7 @@ takes `aligned` directly too:
 
 rc_aligned_dt <- expand_rating_table(aligned, step = 0.01)
 gaps_after_dt <- detect_rc_gaps(rc_aligned_dt)
-#> INFO [2026-11-18 12:31:46] Checked 2 junction(s): 1 gap(s) flagged.
+#> INFO [2026-11-18 16:03:43] Checked 2 junction(s): 1 gap(s) flagged.
 gaps_after_dt[, .(junction, gap_abs, gap_rel, gap_flagged)]
 #>    junction      gap_abs      gap_rel gap_flagged
 #>       <int>        <num>        <num>      <lgcl>
@@ -293,7 +293,7 @@ gaps_after_dt[, .(junction, gap_abs, gap_rel, gap_flagged)]
 ``` r
 
 plot_rc_gaps(rc_raw_dt, rc_aligned_dt)
-#> INFO [2026-11-18 12:31:46] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-18 16:03:43] Checked 2 junction(s): 2 gap(s) flagged.
 ```
 
 ![Before and after comparison of the rating curve at each junction,
@@ -306,13 +306,14 @@ limb that needs more than a boundary relocation.
 
 There’s a second payoff to staying inside `FlodeRating`: relocating
 junction 1 moved some gaugings from limb 1’s territory into limb 2’s (a
-boundary shift can do that on either side), and `aligned@gaugings`
-reflects the reassignment – `n_obs` per limb, and every diagnostic
-below, describe the *amended* rating, not the one before alignment:
+boundary shift can do that on either side), and
+`rating_evidence(aligned)` reflects the reassignment – `n_obs` per limb,
+and every diagnostic below, describe the *amended* rating, not the one
+before alignment:
 
 ``` r
 
-aligned@limbs[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
+rating_limbs(aligned, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
 #>     limb        C           a        n   rmse_cms r_squared n_obs
 #>    <int>    <num>       <num>    <num>      <num>     <num> <int>
 #> 1:     1 2.530214 0.009671352 1.272510 0.03034247 0.9958084    23
@@ -320,8 +321,9 @@ aligned@limbs[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
 #> 3:     3 7.333538 0.268231353 1.688375 1.01350296 0.9619503    12
 ```
 
-Compare `n_obs` above against `fit_multi@limbs$n_obs` (44, 40, 12): limb
-1 lost gaugings to limb 2 across the relocated boundary, limb 3 is
+Compare `n_obs` above against
+`rating_limbs(fit_multi, all_columns = TRUE)$n_obs` (44, 40, 12): limb 1
+lost gaugings to limb 2 across the relocated boundary, limb 3 is
 untouched (its own junction never moved), and
 [`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md)/
 [`plot_rating_residuals()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_residuals.md)
@@ -348,7 +350,7 @@ table – it stays a `FlodeRating` too:
 ``` r
 
 aligned_equations <- align_limb_equations(aligned, anchor_limb = 1L)
-aligned_equations@limbs[, .(limb, C, C_original, aligned, pct_change, rmse_cms, r_squared, n_obs)]
+rating_limbs(aligned_equations, all_columns = TRUE)[, .(limb, C, C_original, aligned, pct_change, rmse_cms, r_squared, n_obs)]
 #>     limb        C C_original aligned    pct_change    rmse_cms   r_squared
 #>    <int>    <num>      <num>  <lgcl>         <num>       <num>       <num>
 #> 1:     1 2.530214   2.530214   FALSE            NA  0.03034247   0.9958084
@@ -377,17 +379,26 @@ is visible here rather than hidden.
 
 rc_final_dt <- expand_rating_table(aligned_equations, step = 0.01)
 detect_rc_gaps(rc_final_dt)[, .(junction, gap_abs, gap_rel, gap_flagged)]
-#> INFO [2026-11-18 12:31:47] Checked 2 junction(s): 0 gap(s) flagged.
+#> INFO [2026-11-18 16:03:44] Checked 2 junction(s): 0 gap(s) flagged.
 #>    junction gap_abs gap_rel gap_flagged
 #>       <int>   <num>   <num>      <lgcl>
 #> 1:        1       0       0       FALSE
 #> 2:        2       0       0       FALSE
 ```
 
-Both junctions are closed now, and the audit chain runs two deep:
-`aligned_equations@previous` is `aligned`, and `aligned@previous` is
-`fit_multi` – the exact sequence of amendments is recoverable from the
-object alone, not from remembering which vignette chunk produced what.
+Both junctions are closed now, and the audit chain runs two deep. The
+exact sequence of amendments is recoverable from the object alone, not
+from remembering which vignette chunk produced what:
+
+``` r
+
+rating_history(aligned_equations)
+#>     step       class               status n_limbs
+#>    <int>      <char>               <char>   <int>
+#> 1:     1 FlodeRating independently_fitted       3
+#> 2:     2 FlodeRating     post_fit_aligned       3
+#> 3:     3 FlodeRating     post_fit_aligned       3
+```
 
 ## A rare flood gauging, and an anchored top limb
 
@@ -416,7 +427,7 @@ top_stage <- c(stage_hi, extreme_stage)
 top_discharge <- c(discharge_cms[stage_m >= 2.6], extreme_q)
 
 fit_top_unconstrained <- rate_optimise(top_discharge, top_stage)
-fit_top_unconstrained@limbs[, .(C, a, n, r_squared, n_obs)]
+rating_limbs(fit_top_unconstrained, all_columns = TRUE)[, .(C, a, n, r_squared, n_obs)]
 #>            C         a        n r_squared n_obs
 #>        <num>     <num>    <num>     <num> <int>
 #> 1: 0.3121133 -1.908384 3.049417 0.9912276    13
@@ -435,7 +446,7 @@ the evidence is this thin:
 ``` r
 
 fit_top_constrained <- rate_optimise(top_discharge, top_stage, n_bounds = c(1.5, 2.0))
-fit_top_constrained@limbs[, .(C, a, n, r_squared, n_obs, near_bound)]
+rating_limbs(fit_top_constrained, all_columns = TRUE)[, .(C, a, n, r_squared, n_obs, near_bound)]
 #>           C           a     n r_squared n_obs near_bound
 #>       <num>       <num> <num>     <num> <int>     <lgcl>
 #> 1: 4.194406 -0.08883467     2 0.9906619    13       TRUE

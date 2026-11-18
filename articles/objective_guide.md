@@ -83,7 +83,7 @@ discharge_true_cms <- true_C * (stage_m - true_a)^true_n
 discharge_cms <- discharge_true_cms * exp(rnorm(length(stage_m), sd = 0.08))
 
 fit_relative <- rate_optimise(discharge_cms, stage_m, objective = "relative")
-fitted_cms <- fit_relative@limbs$C * (stage_m - fit_relative@limbs$a)^fit_relative@limbs$n
+fitted_cms <- rating_limbs(fit_relative)$C * (stage_m - rating_limbs(fit_relative)$a)^rating_limbs(fit_relative)$n
 
 weight_dt <- data.table(
   stage_m = rep(stage_m, 2),
@@ -124,7 +124,7 @@ makes it clear instead:
 ``` r
 
 fit_absolute <- rate_optimise(discharge_cms, stage_m)
-fitted_abs <- fit_absolute@limbs$C * (stage_m - fit_absolute@limbs$a)^fit_absolute@limbs$n
+fitted_abs <- rating_limbs(fit_absolute)$C * (stage_m - rating_limbs(fit_absolute)$a)^rating_limbs(fit_absolute)$n
 
 resid_dt <- rbind(
   data.table(stage_m = stage_m, objective = "absolute", fitted_cms = fitted_abs),

@@ -44,7 +44,7 @@
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
-    <li><a class="dropdown-item" href="../articles/s7_objects_guide.html">Working with reach.rate's S7 Objects</a></li>
+    <li><a class="dropdown-item" href="../articles/s7_objects_guide.html">Maintaining reach.rate's S7 classes</a></li>
     <li><a class="dropdown-item" href="../articles/rating_curve_walkthrough.html">A Rating Curve Walkthrough: From Spot Gaugings to a Constrained Curve</a></li>
     <li><a class="dropdown-item" href="../articles/non_standard_optimisation.html">Non-Standard Rating Optimisation: When and Why</a></li>
     <li><a class="dropdown-item" href="../articles/n_bounds_guide.html">Choosing n_bounds: A Cross-Section Guide</a></li>
@@ -100,7 +100,7 @@ objects you actually hold at each stage, <strong>amber</strong> boxes
 check or fix something, and <strong>purple</strong> boxes are what you
 do with a finished rating. Nothing here replaces the vignette on any
 individual box – every box names the function whose own documentation
-and <code>@examples</code> you’d actually run.</p>
+and runnable examples you’d actually run.</p>
 <div class="section level2">
 <h2 id="three-ways-to-start">Three ways to start<a class="anchor" aria-label="anchor" href="#three-ways-to-start"></a>
 </h2>
@@ -136,7 +136,7 @@ channel geometry alone via Manning’s equation, then hands the resulting
 synthetic <code>(stage, discharge)</code> series to
 <code><a href="../reference/rate_optimise.html">rate_optimise()</a></code> internally – which is why its output is an
 ordinary <code>FlodeRating</code>, distinguished only by
-<code>@provenance$source</code>. Useful at an ungauged or
+<code>rating_provenance()$source</code>. Useful at an ungauged or
 newly-installed site, or as a physically-grounded sanity check on what a
 surveyed section implies about curve shape. See
 <code><a href="../articles/weir_flume_guide.html">vignette("weir_flume_guide")</a></code>’s sibling discussion and
@@ -200,18 +200,18 @@ downstream of that, <code><a href="../reference/apply_rating_inverse.html">apply
 <code><a href="../reference/compare_ratings.html">compare_ratings()</a></code>, all of which expect a
 <code>FlodeRatingTable</code>. If you need any of those on a segmented
 fit today, the practical workaround is evaluating the fit’s own equation
-(<code>fit@coefficients</code>,
+(<code>rating_coefficients(fit)</code>,
 <code><a href="../articles/segmented_model_guide.html">vignette("segmented_model_guide")</a></code>’s multiplicative-factor
 formula) across a stage sequence by hand and working from the resulting
 table directly.</p>
 <p><strong>Coefficient uncertainty runs beside this diagram, not through
-it.</strong> <code><a href="../reference/bootstrap_to_table.html">bootstrap_to_table()</a></code> and
+it.</strong> <code><a href="../reference/rating_bootstrap.html">rating_bootstrap()</a></code> and
 <code><a href="../reference/apply_rating_interval.html">apply_rating_interval()</a></code> (or, for a quick closed-form
 alternative, the
 <code>C_se_asymp</code>/<code>a_se_asymp</code>/<code>n_se_asymp</code>
 columns <code><a href="../reference/rate_optimise.html">rate_optimise()</a></code> always populates) work directly
-from a <code>FlodeRating</code>’s own <code>@bootstrap</code>/refit
-machinery, independent of whether the table above is gap-free yet –
+from a <code>FlodeRating</code>’s own bootstrap and refit machinery,
+independent of whether the table above is gap-free yet –
 <code>rating_curves_guide.Rmd</code>’s “Coefficient uncertainty” section
 covers that pipeline on its own terms.</p>
 </div>
@@ -249,10 +249,9 @@ cross-section into a starting <code>n_bounds</code> for
 <code>n_bounds</code>: <code>objective = "relative"</code>, and
 <code>age_halflife</code>.</li>
 <li>
-<code><a href="../articles/s7_objects_guide.html">vignette("s7_objects_guide")</a></code> – what
-<code>@</code>-access, <code>S7_inherits()</code>, and the
-<code>@status</code>/<code>@previous</code> audit chain actually buy
-you, for every green box in both diagrams above.</li>
+<code><a href="../articles/s7_objects_guide.html">vignette("s7_objects_guide")</a></code> – how the S7 classes are
+built, and what <code>S7_inherits()</code> and the amendment chain
+actually buy you, for every green box in both diagrams above.</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

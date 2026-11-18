@@ -39,7 +39,7 @@ A `ggplot` object, invisibly. Printed as a side effect.
 ## See also
 
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md),
-[`bootstrap_to_table()`](https://jonpayneea.github.io/reach.rate/reference/bootstrap_to_table.md),
+[`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md),
 [`apply_rating_interval()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating_interval.md)
 (in the `apply_rating` module)
 

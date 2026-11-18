@@ -44,7 +44,7 @@
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
-    <li><a class="dropdown-item" href="../articles/s7_objects_guide.html">Working with reach.rate's S7 Objects</a></li>
+    <li><a class="dropdown-item" href="../articles/s7_objects_guide.html">Maintaining reach.rate's S7 classes</a></li>
     <li><a class="dropdown-item" href="../articles/rating_curve_walkthrough.html">A Rating Curve Walkthrough: From Spot Gaugings to a Constrained Curve</a></li>
     <li><a class="dropdown-item" href="../articles/non_standard_optimisation.html">Non-Standard Rating Optimisation: When and Why</a></li>
     <li><a class="dropdown-item" href="../articles/n_bounds_guide.html">Choosing n_bounds: A Cross-Section Guide</a></li>
@@ -171,16 +171,18 @@ statistical one. Section 5 returns to this.</p>
 <h2 id="the-objects">The objects<a class="anchor" aria-label="anchor" href="#the-objects"></a>
 </h2>
 <p>The toolkit represents its results as three S7 classes rather than
-bare tables. The practical consequence for you as a user is small: you
-access contents with <code>@</code> rather than <code>$</code>, and the
-objects carry more than numbers.</p>
+bare tables. You read them through accessor functions, so your code
+never depends on where the package stores something, and the objects
+carry more than numbers.</p>
 <p><code>FlodeRating</code> is the result of
-<code><a href="../reference/rate_optimise.html">rate_optimise()</a></code>. <code>@limbs</code> holds one row per limb
-(bounds, coefficients, diagnostics), <code>@gaugings</code> holds the
-data it was fitted to, <code>@bootstrap</code> and
-<code>@fit_starts</code> hold uncertainty and fitting bookkeeping when
-produced, <code>@status</code> records whether the fit is as fitted or
-has been amended, and <code>@provenance</code> records how it was
+<code><a href="../reference/rate_optimise.html">rate_optimise()</a></code>. <code><a href="../reference/rating_limbs.html">rating_limbs()</a></code> gives one row
+per limb (stage range and equation), <code><a href="../reference/rating_coefficients.html">rating_coefficients()</a></code>
+the parameters with their uncertainty, <code><a href="../reference/rating_diagnostics.html">rating_diagnostics()</a></code>
+how well each limb fits, <code><a href="../reference/rating_evidence.html">rating_evidence()</a></code> the gaugings it
+was fitted to, <code><a href="../reference/rating_support.html">rating_support()</a></code> how much of each limb rests
+on gaugings, <code><a href="../reference/rating_bootstrap.html">rating_bootstrap()</a></code> the bootstrap draws when
+produced, <code><a href="../reference/rating_history.html">rating_history()</a></code> whether the fit is as fitted or
+has been amended, and <code><a href="../reference/rating_provenance.html">rating_provenance()</a></code> how it was
 made.</p>
 <p><code>FlodeSegmentedRating</code> is the result of
 <code><a href="../reference/rate_optimise_segmented.html">rate_optimise_segmented()</a></code>, a structurally different model
@@ -188,12 +190,12 @@ covered in section 9.</p>
 <p><code>FlodeRatingTable</code> is the equation-table representation
 used for gap checking and application: <code>lower_level</code>,
 <code>upper_level</code>, <code>C</code>, <code>a</code>, <code>n</code>
-per limb, same names and sign convention as <code>FlodeRating</code>’s
-<code>@limbs</code>. It carries <code>@status</code> and
-<code>@previous</code>, so an amended table references the exact object
-it was amended from. This is an audit trail by construction rather than
-by discipline: you cannot end up holding an aligned table with no record
-of what it was aligned from.</p>
+per limb, the same equation and sign convention as a
+<code>FlodeRating</code>. An amended table keeps the exact object it was
+amended from, and <code><a href="../reference/rating_history.html">rating_history()</a></code> lists the chain. This is
+an audit trail by construction rather than by discipline: you cannot end
+up holding an aligned table with no record of what it was aligned
+from.</p>
 <p>Three shared generics work across the classes:
 <code><a href="../reference/rating_plot.html">rating_plot()</a></code> draws whichever fit you hand it,
 <code><a href="../reference/apply_rating.html">apply_rating()</a></code> converts stage to discharge with whichever
@@ -205,10 +207,10 @@ residual plot, and bootstrap in this toolkit needs the original data,
 and a rating separated from its gaugings is a rating you can no longer
 question. Keeping them together is deliberate.</p>
 <p>This section is deliberately brief –
-<code><a href="../articles/s7_objects_guide.html">vignette("s7_objects_guide")</a></code> covers <code>@</code>-access,
-<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code>S7_inherits()</code>, and the
-<code>@status</code>/<code>@previous</code> audit chain in full,
-including a validator actually catching a malformed construction.</p>
+<code><a href="../articles/s7_objects_guide.html">vignette("s7_objects_guide")</a></code> (written for maintainers)
+covers how the classes are built: properties, <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>,
+<code>S7_inherits()</code>, the amendment chain, and a validator
+actually catching a malformed construction.</p>
 <div class="section level3">
 <h3 id="a-running-example">A running example<a class="anchor" aria-label="anchor" href="#a-running-example"></a>
 </h3>
@@ -244,7 +246,7 @@ shape of the workflow, not these particular coefficients.</p>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.6</span>, <span class="fl">2.2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">fit</span><span class="op">@</span><span class="va">limbs</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">C</span>, <span class="va">a</span>, <span class="va">n</span>, <span class="va">rmse_cms</span>, <span class="va">r_squared</span>, <span class="va">n_obs</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="../reference/rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">fit</span>, all_columns <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">C</span>, <span class="va">a</span>, <span class="va">n</span>, <span class="va">rmse_cms</span>, <span class="va">r_squared</span>, <span class="va">n_obs</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;     limb         C           a        n   rmse_cms r_squared n_obs</span></span>
 <span><span class="co">#&gt;    &lt;int&gt;     &lt;num&gt;       &lt;num&gt;    &lt;num&gt;      &lt;num&gt;     &lt;num&gt; &lt;int&gt;</span></span>
 <span><span class="co">#&gt; 1:     1  2.772226 -0.05503033 1.459775 0.05707128 0.9982030    37</span></span>
@@ -298,10 +300,10 @@ each limb is fitted from several starting combinations: a few plausible
 exponents, a data-driven estimate from a quick log-log regression, a
 data-scaled <span class="math inline">\(C\)</span>. Each converged
 result is checked for validity (finite, non-decreasing discharge across
-the limb) and the best valid result wins. Every attempt is recorded in
-<code>@fit_starts</code>, so you can see whether the starts agreed
-(reassuring) or scattered (a sign the data constrain the fit
-weakly).</p>
+the limb) and the best valid result wins. Every attempt is recorded with
+the fit, and <code><a href="../reference/rating_diagnostics.html">rating_diagnostics()</a></code> reports how many starts
+were tried, how many converged and which one won: many failures, or an
+unusual winner, is a sign the data constrain the fit weakly.</p>
 <p>The <code>near_bound</code> column flags a fit whose <span class="math inline">\(n\)</span> or <span class="math inline">\(a\)</span> finished pressed against its lower
 bound. That is worth a second look: it can mean a degenerate,
 nearly-flat fit, or an offset being forced against the lowest gauging,
@@ -310,10 +312,11 @@ either of which suggests the limb or its data need attention.</p>
 <div class="section level3">
 <h3 id="reading-the-diagnostics">Reading the diagnostics<a class="anchor" aria-label="anchor" href="#reading-the-diagnostics"></a>
 </h3>
-<p><code>@limbs</code> reports, per limb: <code>rmse_cms</code>,
-<code>r_squared</code>, <code>n_obs</code>, <code>n_unique_stage</code>,
-<code>mean_error_cms</code>, <code>median_abs_error_cms</code>,
-<code>max_abs_error_cms</code>, and <code>residual_df</code>.</p>
+<p><code><a href="../reference/rating_diagnostics.html">rating_diagnostics()</a></code> reports, per limb:
+<code>rmse_cms</code>, <code>r_squared</code>, <code>n_obs</code>,
+<code>n_unique_stage</code>, <code>mean_error_cms</code>,
+<code>median_abs_error_cms</code>, <code>max_abs_error_cms</code>, and
+<code>residual_df</code>.</p>
 <p>Three points of guidance. First, <code>r_squared</code> close to 1 is
 necessary but weak: a limb spanning a large discharge range can post an
 excellent <span class="math inline">\(R^2\)</span> over a mediocre fit,
@@ -419,7 +422,7 @@ like.</p>
 </h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/flag_extrapolated_limbs.html">flag_extrapolated_limbs</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
-<span><span class="va">fit</span><span class="op">@</span><span class="va">limbs</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">doubtful</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="../reference/rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">fit</span>, all_columns <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">doubtful</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;     limb doubtful</span></span>
 <span><span class="co">#&gt;    &lt;int&gt;   &lt;lgcl&gt;</span></span>
 <span><span class="co">#&gt; 1:     1    FALSE</span></span>
@@ -491,7 +494,7 @@ pipeline:</p>
 <span><span class="va">theoretical_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate_from_cross_section.html">rate_from_cross_section</a></span><span class="op">(</span></span>
 <span>  <span class="va">xs_theoretical</span>, slope <span class="op">=</span> <span class="fl">0.001</span>, roughness <span class="op">=</span> <span class="fl">0.035</span>, n_points <span class="op">=</span> <span class="fl">60</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">theoretical_fit</span><span class="op">@</span><span class="va">provenance</span><span class="op">$</span><span class="va">source</span></span>
+<span><span class="fu"><a href="../reference/rating_provenance.html">rating_provenance</a></span><span class="op">(</span><span class="va">theoretical_fit</span><span class="op">)</span><span class="op">$</span><span class="va">source</span></span>
 <span><span class="co">#&gt; [1] "cross_section_theoretical"</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/plot_rating_cross_section.html">plot_rating_cross_section</a></span><span class="op">(</span><span class="va">theoretical_fit</span>, <span class="va">xs_theoretical</span><span class="op">)</span></span></code></pre></div>
@@ -550,7 +553,7 @@ inputs.</p>
 <code class="sourceCode R"><span><span class="va">rating_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_rating_table.html">as_rating_table</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="va">rc_raw_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_rating_table.html">expand_rating_table</a></span><span class="op">(</span><span class="va">rating_table</span>, step <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
 <span><span class="va">gaps_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/detect_rc_gaps.html">detect_rc_gaps</a></span><span class="op">(</span><span class="va">rc_raw_dt</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-11-18 12:31:53] Checked 2 junction(s): 2 gap(s) flagged.</span></span>
+<span><span class="co">#&gt; INFO [2026-11-18 16:03:49] Checked 2 junction(s): 2 gap(s) flagged.</span></span>
 <span><span class="va">gaps_dt</span></span>
 <span><span class="co">#&gt;    junction limb_lower limb_upper stage_break stage_lower_end stage_upper_start</span></span>
 <span><span class="co">#&gt;       &lt;int&gt;     &lt;char&gt;     &lt;char&gt;       &lt;num&gt;           &lt;num&gt;             &lt;num&gt;</span></span>
@@ -598,11 +601,11 @@ just its junction row, so the reshaping is visible across the limb
 rather than only at its boundary.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rc_fixed_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolve_rc_gaps.html">resolve_rc_gaps</a></span><span class="op">(</span><span class="va">rc_raw_dt</span>, method <span class="op">=</span> <span class="st">"midpoint"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-11-18 12:31:53] Checked 2 junction(s): 2 gap(s) flagged.</span></span>
-<span><span class="co">#&gt; INFO [2026-11-18 12:31:53] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -&gt; 11.42 | agreed Q = 8.6042</span></span>
-<span><span class="co">#&gt; INFO [2026-11-18 12:31:53] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -&gt; 34.81 | agreed Q = 27.2512</span></span>
+<span><span class="co">#&gt; INFO [2026-11-18 16:03:49] Checked 2 junction(s): 2 gap(s) flagged.</span></span>
+<span><span class="co">#&gt; INFO [2026-11-18 16:03:49] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -&gt; 11.42 | agreed Q = 8.6042</span></span>
+<span><span class="co">#&gt; INFO [2026-11-18 16:03:49] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -&gt; 34.81 | agreed Q = 27.2512</span></span>
 <span><span class="fu"><a href="../reference/plot_rc_gaps.html">plot_rc_gaps</a></span><span class="op">(</span><span class="va">rc_raw_dt</span>, <span class="va">rc_fixed_dt</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-11-18 12:31:53] Checked 2 junction(s): 2 gap(s) flagged.</span></span></code></pre></div>
+<span><span class="co">#&gt; INFO [2026-11-18 16:03:49] Checked 2 junction(s): 2 gap(s) flagged.</span></span></code></pre></div>
 <p><img src="rating_curves_guide_files/figure-html/resolve-gaps-1.png" class="r-plt" alt="" width="672"></p>
 <p>This is fast and needs nothing but the table. Its limitation is
 fundamental: the equations that produced the table are untouched, so
@@ -616,10 +619,11 @@ equations are not going anywhere.</p>
 </h3>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">aligned_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/align_limb_equations.html">align_limb_equations</a></span><span class="op">(</span><span class="va">rating_table</span>, anchor_limb <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span>
-<span><span class="va">aligned_result</span><span class="op">@</span><span class="va">status</span></span>
-<span><span class="co">#&gt; [1] "post_fit_aligned"</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">aligned_result</span><span class="op">@</span><span class="va">previous</span>, <span class="va">rating_table</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/rating_history.html">rating_history</a></span><span class="op">(</span><span class="va">aligned_result</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     step            class               status n_limbs</span></span>
+<span><span class="co">#&gt;    &lt;int&gt;           &lt;char&gt;               &lt;char&gt;   &lt;int&gt;</span></span>
+<span><span class="co">#&gt; 1:     1 FlodeRatingTable independently_fitted       3</span></span>
+<span><span class="co">#&gt; 2:     2 FlodeRatingTable     post_fit_aligned       3</span></span></code></pre></div>
 <p>Fixes the equations themselves, using only the equations. Hold one
 limb fixed (the anchor, by default the lowest, usually the best gauged),
 then for each neighbouring limb solve for the <span class="math inline">\(C\)</span> that forces an exact match at the
@@ -632,9 +636,9 @@ from the anchor, so every junction along the chain closes exactly, and
 <span class="math inline">\(a\)</span> and <span class="math inline">\(n\)</span> (the curve’s datum and shape) are
 untouched. The original <span class="math inline">\(C\)</span> is kept
 alongside the scale factor and percentage change, and the result is a
-new <code>FlodeRatingTable</code> whose <code>@previous</code>
-references the exact pre-alignment object: an auditable amendment, not a
-silent overwrite.</p>
+new <code>FlodeRatingTable</code> that keeps the exact pre-alignment
+object, listed by <code><a href="../reference/rating_history.html">rating_history()</a></code> above: an auditable
+amendment, not a silent overwrite.</p>
 <p>The cost is honest: the rescaled <span class="math inline">\(C\)</span> is no longer the least-squares optimum
 for that limb’s own gaugings. You have traded a small amount of
 within-limb fit for continuity, holding shape fixed. When only the
@@ -645,9 +649,9 @@ available move.</p>
 a table, and the result stays a <code>FlodeRating</code> rather than
 downgrading to a <code>FlodeRatingTable</code>: gaugings carry through
 unchanged (equations are rescaled, not boundaries, so which limb a
-gauging belongs to never changes here), <code>@limbs</code> diagnostics
-are recomputed against the rescaled <span class="math inline">\(C\)</span> rather than left describing the
-pre-alignment fit, and
+gauging belongs to never changes here), the per-limb diagnostics are
+recomputed against the rescaled <span class="math inline">\(C\)</span>
+rather than left describing the pre-alignment fit, and
 <code><a href="../reference/rating_plot.html">rating_plot()</a></code>/<code><a href="../reference/plot_rating_residuals.html">plot_rating_residuals()</a></code> work on
 the result immediately, since it is the same class they were always
 written for.</p>
@@ -671,7 +675,7 @@ about either equation needs to change.</p>
 <span><span class="co">#&gt; multi-start bookkeeping describe the pre-amendment fit and are not recomputed</span></span>
 <span><span class="co">#&gt; for this amendment; dropped rather than presented alongside updated point</span></span>
 <span><span class="co">#&gt; estimates.</span></span>
-<span><span class="va">aligned_boundaries</span><span class="op">@</span><span class="va">limbs</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">lower_stage_m</span>, <span class="va">upper_stage_m</span>, <span class="va">C</span>, <span class="va">a</span>, <span class="va">n</span>, <span class="va">rmse_cms</span>, <span class="va">r_squared</span>, <span class="va">n_obs</span>, <span class="va">boundary_adjusted</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="../reference/rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">aligned_boundaries</span>, all_columns <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">lower_stage_m</span>, <span class="va">upper_stage_m</span>, <span class="va">C</span>, <span class="va">a</span>, <span class="va">n</span>, <span class="va">rmse_cms</span>, <span class="va">r_squared</span>, <span class="va">n_obs</span>, <span class="va">boundary_adjusted</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;     limb lower_stage_m upper_stage_m         C           a        n   rmse_cms</span></span>
 <span><span class="co">#&gt;    &lt;int&gt;         &lt;num&gt;         &lt;num&gt;     &lt;num&gt;       &lt;num&gt;    &lt;num&gt;      &lt;num&gt;</span></span>
 <span><span class="co">#&gt; 1:     1     0.5000000     0.5753647  2.772226 -0.05503033 1.459775 0.04105721</span></span>
@@ -715,7 +719,7 @@ constraint<a class="anchor" aria-label="anchor" href="#rate_optimise_constrained
 </h3>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_constrained</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate_optimise_constrained.html">rate_optimise_constrained</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.6</span>, <span class="fl">2.2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">fit_constrained</span><span class="op">@</span><span class="va">limbs</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">C</span>, <span class="va">a</span>, <span class="va">n</span>, <span class="va">rmse_cms</span>, <span class="va">r_squared</span>, <span class="va">aligned</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="../reference/rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">fit_constrained</span>, all_columns <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">C</span>, <span class="va">a</span>, <span class="va">n</span>, <span class="va">rmse_cms</span>, <span class="va">r_squared</span>, <span class="va">aligned</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;     limb         C           a         n   rmse_cms r_squared aligned</span></span>
 <span><span class="co">#&gt;    &lt;int&gt;     &lt;num&gt;       &lt;num&gt;     &lt;num&gt;      &lt;num&gt;     &lt;num&gt;  &lt;lgcl&gt;</span></span>
 <span><span class="co">#&gt; 1:     1  2.772226 -0.05503033 1.4597750 0.05707128 0.9982030   FALSE</span></span>
@@ -802,13 +806,25 @@ model structurally fits:</p>
 <span><span class="va">discharge_seg_cms</span> <span class="op">&lt;-</span> <span class="va">q1</span> <span class="op">*</span> <span class="va">q2</span> <span class="op">*</span> <span class="va">q3</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_seg_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.03</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit_seg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate_optimise_segmented.html">rate_optimise_segmented</a></span><span class="op">(</span><span class="va">discharge_seg_cms</span>, <span class="va">stage_seg_m</span>, control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.6</span>, <span class="fl">2.4</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">fit_seg</span><span class="op">@</span><span class="va">coefficients</span></span>
-<span><span class="co">#&gt;           C       bp1       n1        n2       n3   bp2   bp3 rmse_cms</span></span>
-<span><span class="co">#&gt;       &lt;num&gt;     &lt;num&gt;    &lt;num&gt;     &lt;num&gt;    &lt;num&gt; &lt;num&gt; &lt;num&gt;    &lt;num&gt;</span></span>
-<span><span class="co">#&gt; 1: 4.504393 0.1675615 1.443402 0.9201393 1.121105   1.6   2.4 1.388199</span></span>
-<span><span class="co">#&gt;    r_squared n_obs n_starts_attempted n_starts_converged selected_start_id</span></span>
-<span><span class="co">#&gt;        &lt;num&gt; &lt;int&gt;              &lt;int&gt;              &lt;int&gt;             &lt;int&gt;</span></span>
-<span><span class="co">#&gt; 1: 0.9987902   107                  4                  4                 1</span></span>
+<span><span class="fu"><a href="../reference/rating_coefficients.html">rating_coefficients</a></span><span class="op">(</span><span class="va">fit_seg</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     limb parameter  estimate         unit se_asymptotic se_bootstrap  q025</span></span>
+<span><span class="co">#&gt;    &lt;int&gt;    &lt;char&gt;     &lt;num&gt;       &lt;char&gt;         &lt;num&gt;        &lt;num&gt; &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:    NA         C 4.5043930 cms per m^n1            NA           NA    NA</span></span>
+<span><span class="co">#&gt; 2:    NA       bp1 0.1675615            m            NA           NA    NA</span></span>
+<span><span class="co">#&gt; 3:    NA        n1 1.4434025            1            NA           NA    NA</span></span>
+<span><span class="co">#&gt; 4:    NA       bp2 1.6000000            m            NA           NA    NA</span></span>
+<span><span class="co">#&gt; 5:    NA        n2 0.9201393            1            NA           NA    NA</span></span>
+<span><span class="co">#&gt; 6:    NA       bp3 2.4000000            m            NA           NA    NA</span></span>
+<span><span class="co">#&gt; 7:    NA        n3 1.1211046            1            NA           NA    NA</span></span>
+<span><span class="co">#&gt;      q50  q975</span></span>
+<span><span class="co">#&gt;    &lt;num&gt; &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:    NA    NA</span></span>
+<span><span class="co">#&gt; 2:    NA    NA</span></span>
+<span><span class="co">#&gt; 3:    NA    NA</span></span>
+<span><span class="co">#&gt; 4:    NA    NA</span></span>
+<span><span class="co">#&gt; 5:    NA    NA</span></span>
+<span><span class="co">#&gt; 6:    NA    NA</span></span>
+<span><span class="co">#&gt; 7:    NA    NA</span></span>
 <span><span class="fu"><a href="../reference/rating_plot.html">rating_plot</a></span><span class="op">(</span><span class="va">fit_seg</span><span class="op">)</span></span></code></pre></div>
 <p><img src="rating_curves_guide_files/figure-html/segmented-fit-1.png" class="r-plt" alt="Fitted segmented rating curve against gauged points" width="672"></p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
@@ -842,7 +858,7 @@ other structurally cannot.</p>
 </h2>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_boot</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.6</span>, <span class="fl">2.2</span><span class="op">)</span>, n_boot <span class="op">=</span> <span class="fl">200L</span>, boot_seed <span class="op">=</span> <span class="fl">11L</span><span class="op">)</span></span>
-<span><span class="va">fit_boot</span><span class="op">@</span><span class="va">limbs</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">C</span>, <span class="va">C_se</span>, <span class="va">n</span>, <span class="va">n_se</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="fu"><a href="../reference/rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">fit_boot</span>, all_columns <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">C</span>, <span class="va">C_se</span>, <span class="va">n</span>, <span class="va">n_se</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;     limb         C      C_se        n       n_se</span></span>
 <span><span class="co">#&gt;    &lt;int&gt;     &lt;num&gt;     &lt;num&gt;    &lt;num&gt;      &lt;num&gt;</span></span>
 <span><span class="co">#&gt; 1:     1  2.772226 0.2523197 1.459775 0.08574848</span></span>
@@ -867,18 +883,18 @@ each refit from the point estimate, and reports standard errors and
 chance, on too few distinct stage values to identify three parameters;
 such draws are rejected before fitting, recorded with a reason, and if
 the successful fraction falls below <code>min_boot_success</code> a
-warning is raised. And every draw is recorded in
-<code>@bootstrap</code>, failures included, because a bootstrap where
-40% of draws quietly failed is a different (and less trustworthy) object
-than one where they all converged.</p>
+warning is raised. And every draw is recorded, failures included
+(<code>rating_bootstrap(fit, successful_only = FALSE)</code>), because a
+bootstrap where 40% of draws quietly failed is a different (and less
+trustworthy) object than one where they all converged.</p>
 </div>
 <div class="section level3">
 <h3 id="what-the-interval-means-and-what-it-does-not">What the interval means, and what it does not<a class="anchor" aria-label="anchor" href="#what-the-interval-means-and-what-it-does-not"></a>
 </h3>
-<p><code><a href="../reference/bootstrap_to_table.html">bootstrap_to_table()</a></code> bridges the draws to
-<code><a href="../reference/apply_rating_interval.html">apply_rating_interval()</a></code>, which computes, per stage value,
-the mean, median, and a prediction interval across draws, plus the
-geometric standard error</p>
+<p><code><a href="../reference/rating_bootstrap.html">rating_bootstrap()</a></code> returns the draws in the shape
+<code><a href="../reference/apply_rating_interval.html">apply_rating_interval()</a></code> takes, and, which computes, per
+stage value, the mean, median, and a prediction interval across draws,
+plus the geometric standard error</p>
 <p><span class="math display">\[\mathrm{GSE} =
 \exp\!\bigl(\mathrm{sd}(\ln Q_{\text{draws}})\bigr)\]</span></p>
 <p>the same multiplicative summary Hodson et al. (2024) report: a GSE of
@@ -921,7 +937,7 @@ below:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">flow_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">rating_table</span>, <span class="va">hydrograph_dt</span>, stage_col <span class="op">=</span> <span class="st">"stage"</span>, out_col <span class="op">=</span> <span class="st">"discharge_cms"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-11-18 12:31:55] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.</span></span>
+<span><span class="co">#&gt; INFO [2026-11-18 16:03:51] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">flow_dt</span><span class="op">$</span><span class="va">extrapolated</span><span class="op">)</span> <span class="co"># stage values above the gauged range</span></span>
 <span><span class="co">#&gt; [1] 4</span></span>
 <span><span class="va">flow_dt</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">10</span>, <span class="fl">20</span>, <span class="fl">30</span>, <span class="fl">40</span><span class="op">)</span><span class="op">]</span></span>
@@ -959,7 +975,7 @@ produced above.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">target_flows_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span>discharge <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">20</span>, <span class="fl">60</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/apply_rating_inverse.html">apply_rating_inverse</a></span><span class="op">(</span><span class="va">aligned_result</span>, <span class="va">target_flows_dt</span>, discharge_col <span class="op">=</span> <span class="st">"discharge"</span>, out_col <span class="op">=</span> <span class="st">"stage_m"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-11-18 12:31:55] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.</span></span>
+<span><span class="co">#&gt; INFO [2026-11-18 16:03:51] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.</span></span>
 <span><span class="co">#&gt;    discharge  stage_m extrapolated</span></span>
 <span><span class="co">#&gt;        &lt;num&gt;    &lt;num&gt;       &lt;lgcl&gt;</span></span>
 <span><span class="co">#&gt; 1:         5 1.442813        FALSE</span></span>
@@ -1002,7 +1018,7 @@ survives the change of representation.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">versioned_flow_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/apply_rating_versioned.html">apply_rating_versioned</a></span><span class="op">(</span><span class="va">hydrograph_dt</span>, <span class="va">rating_history_dt</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-11-18 12:31:55] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.</span></span>
+<span><span class="co">#&gt; INFO [2026-11-18 16:03:51] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.</span></span>
 <span><span class="va">versioned_flow_dt</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">10</span>, <span class="fl">20</span>, <span class="fl">30</span>, <span class="fl">40</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;      datetime    stage   version discharge extrapolated</span></span>
 <span><span class="co">#&gt;        &lt;POSc&gt;    &lt;num&gt;    &lt;char&gt;     &lt;num&gt;       &lt;lgcl&gt;</span></span>
@@ -1054,8 +1070,8 @@ in force. <code><a href="../reference/graft_rating.html">graft_rating()</a></cod
 where <code>aligned_result</code>’s own top limb and the existing
 rating’s lowest limb actually cross:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">top</span> <span class="op">&lt;-</span> <span class="va">aligned_result</span><span class="op">@</span><span class="va">table</span><span class="op">[</span><span class="va">.N</span><span class="op">]</span></span>
-<span><span class="va">q_at_top</span> <span class="op">&lt;-</span> <span class="va">top</span><span class="op">$</span><span class="va">C</span> <span class="op">*</span> <span class="op">(</span><span class="va">top</span><span class="op">$</span><span class="va">upper_level</span> <span class="op">-</span> <span class="va">top</span><span class="op">$</span><span class="va">a</span><span class="op">)</span><span class="op">^</span><span class="va">top</span><span class="op">$</span><span class="va">n</span></span>
+<code class="sourceCode R"><span><span class="va">top</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">aligned_result</span><span class="op">)</span><span class="op">[</span><span class="va">.N</span><span class="op">]</span></span>
+<span><span class="va">q_at_top</span> <span class="op">&lt;-</span> <span class="va">top</span><span class="op">$</span><span class="va">C</span> <span class="op">*</span> <span class="op">(</span><span class="va">top</span><span class="op">$</span><span class="va">upper_stage_m</span> <span class="op">-</span> <span class="va">top</span><span class="op">$</span><span class="va">a</span><span class="op">)</span><span class="op">^</span><span class="va">top</span><span class="op">$</span><span class="va">n</span></span>
 <span></span>
 <span><span class="va">existing_rating</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
 <span>  lower_level <span class="op">=</span> <span class="fl">3.5</span>, upper_level <span class="op">=</span> <span class="fl">6.0</span>,</span>
@@ -1063,26 +1079,26 @@ rating’s lowest limb actually cross:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">grafted</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/graft_rating.html">graft_rating</a></span><span class="op">(</span><span class="va">aligned_result</span>, <span class="va">existing_rating</span><span class="op">)</span></span>
-<span><span class="va">grafted</span><span class="op">@</span><span class="va">table</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">lower_level</span>, <span class="va">upper_level</span>, <span class="va">C</span>, <span class="va">a</span>, <span class="va">n</span>, <span class="va">source</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;    lower_level upper_level        C           a        n   source</span></span>
-<span><span class="co">#&gt;          &lt;num&gt;       &lt;num&gt;    &lt;num&gt;       &lt;num&gt;    &lt;num&gt;   &lt;char&gt;</span></span>
-<span><span class="co">#&gt; 1:    0.500000    1.600000 2.772226 -0.05503033 1.459775      new</span></span>
-<span><span class="co">#&gt; 2:    1.600000    2.200000 3.670338  0.24224858 1.487198      new</span></span>
-<span><span class="co">#&gt; 3:    2.200000    4.429085 2.917089  0.21374016 1.790580      new</span></span>
-<span><span class="co">#&gt; 4:    4.429085    6.000000 5.540583  0.00000000 1.300000 existing</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">grafted</span>, all_columns <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">lower_stage_m</span>, <span class="va">upper_stage_m</span>, <span class="va">C</span>, <span class="va">a</span>, <span class="va">n</span>, <span class="va">source</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;    lower_stage_m upper_stage_m        C           a        n   source</span></span>
+<span><span class="co">#&gt;            &lt;num&gt;         &lt;num&gt;    &lt;num&gt;       &lt;num&gt;    &lt;num&gt;   &lt;char&gt;</span></span>
+<span><span class="co">#&gt; 1:      0.500000      1.600000 2.772226 -0.05503033 1.459775      new</span></span>
+<span><span class="co">#&gt; 2:      1.600000      2.200000 3.670338  0.24224858 1.487198      new</span></span>
+<span><span class="co">#&gt; 3:      2.200000      4.429085 2.917089  0.21374016 1.790580      new</span></span>
+<span><span class="co">#&gt; 4:      4.429085      6.000000 5.540583  0.00000000 1.300000 existing</span></span></code></pre></div>
 <p>The two curves happened to start about 15% apart at stage 3.5 –
 exactly the kind of small discontinuity
 <code><a href="../reference/align_limb_equations.html">align_limb_equations()</a></code> closes <em>within</em> a table – but
 here it resolves the same way <code><a href="../reference/align_limb_boundaries.html">align_limb_boundaries()</a></code> does:
 the boundary itself moves, out to 4.429, where the (unchanged) equations
 on both sides already agree. <code>source</code> marks which limb came
-from where; <code>@previous</code> references
+from where; <code><a href="../reference/rating_history.html">rating_history()</a></code> lists
 <code>aligned_result</code> directly, so the join is still an amendment
 with an audit trail, not a table built once and forgotten. The result is
 always a <code>FlodeRatingTable</code>, even here where
 <code>aligned_result</code> was one already –
 <code>existing_rating</code> carries no gaugings of its own, so nothing
-genuinely new is being merged into <code>@gaugings</code>;
+genuinely new is being merged into the evidence;
 <code>aligned_result</code> itself remains the object to go to for this
 station’s own diagnostics.</p>
 </div>
@@ -1097,15 +1113,16 @@ limb: a limb fitted on a handful of points is a hypothesis, not a
 rating. Third, <code>rmse_cms</code> against the gauging uncertainty you
 would expect at the site; then <code>r_squared</code>, comparatively
 across limbs rather than against a threshold. Fourth,
-<code>near_bound</code> and the <code>@fit_starts</code> record: did the
-optimiser find one clear answer or many mediocre ones? Fifth, the
-<code>doubtful</code> flags: where is this rating extrapolating, and
-does your operational range depend on those stages? Sixth, the
-junctions: <code><a href="../reference/detect_rc_gaps.html">detect_rc_gaps()</a></code> before and after whatever
-closure strategy you chose. Last, if the rating will be used for
-anything where uncertainty matters, run the bootstrap and look at where
-the band widens, remembering it is a floor on the true uncertainty, not
-the whole of it.</p>
+<code>near_bound</code> and the multi-start counts in
+<code><a href="../reference/rating_diagnostics.html">rating_diagnostics()</a></code>: did the optimiser find one clear
+answer or many mediocre ones? Fifth, the <code>doubtful</code> flags:
+where is this rating extrapolating, and does your operational range
+depend on those stages? Sixth, the junctions:
+<code><a href="../reference/detect_rc_gaps.html">detect_rc_gaps()</a></code> before and after whatever closure strategy
+you chose. Last, if the rating will be used for anything where
+uncertainty matters, run the bootstrap and look at where the band
+widens, remembering it is a floor on the true uncertainty, not the whole
+of it.</p>
 <p>None of this replaces the walk along the reach. Every statistical
 signal in this document is a prompt for a physical question.</p>
 <p>One caution cuts across all of it: New Zealand’s National
@@ -1130,10 +1147,10 @@ diagrams: which of the five ways to build a rating fits your data, and
 what genuinely differs downstream between a <code>FlodeRating</code> and
 a <code>FlodeSegmentedRating</code>.</li>
 <li>
-<code><a href="../articles/s7_objects_guide.html">vignette("s7_objects_guide")</a></code> – <code>@</code>-access,
-<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code>S7_inherits()</code>, and the
-<code>@status</code>/<code>@previous</code> audit chain, with a
-validator actually catching a mistake.</li>
+<code><a href="../articles/s7_objects_guide.html">vignette("s7_objects_guide")</a></code> – how the S7 classes are
+built (for maintainers): properties, <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>,
+<code>S7_inherits()</code>, the amendment chain, and a validator
+actually catching a mistake.</li>
 <li>
 <code><a href="../articles/rating_curve_walkthrough.html">vignette("rating_curve_walkthrough")</a></code> – one continuous
 worked example, spot gaugings to a checked, junction-aligned,
@@ -1168,12 +1185,11 @@ time.</li>
 compose, with diagrams.</li>
 </ul>
 <p>Every function used above also has its own roxygen documentation with
-a fuller <code>@description</code> and a runnable <code>@examples</code>
-block – see <code><a href="../reference/rate_optimise.html">?rate_optimise</a></code>, <code>?flode_classes</code>
-(for the class hierarchy: <code>FlodeRatingBase</code>,
-<code>FlodeRating</code>, <code>FlodeSegmentedRating</code>,
-<code>FlodeRatingTable</code>, and the three shared generics), and so
-on.
+a fuller description and a runnable examples block – see
+<code><a href="../reference/rate_optimise.html">?rate_optimise</a></code>, <code>?flode_classes</code> (for the class
+hierarchy: <code>FlodeRatingBase</code>, <code>FlodeRating</code>,
+<code>FlodeSegmentedRating</code>, <code>FlodeRatingTable</code>, and
+the three shared generics), and so on.
 <code>system.file("examples", "walkthrough.R", package = "reach.rate")</code>
 is a linear, section-by-section script covering the same ground as this
 vignette plus the cross-section demonstration

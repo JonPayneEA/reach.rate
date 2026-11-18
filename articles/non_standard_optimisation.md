@@ -56,8 +56,8 @@ fit_absolute <- rate_optimise(discharge_cms, stage_m)
 fit_relative <- rate_optimise(discharge_cms, stage_m, objective = "relative")
 
 rbind(
-  data.table(objective = "absolute", fit_absolute@limbs[, .(C, a, n, rmse_cms, r_squared)]),
-  data.table(objective = "relative", fit_relative@limbs[, .(C, a, n, rmse_cms, r_squared)])
+  data.table(objective = "absolute", rating_limbs(fit_absolute, all_columns = TRUE)[, .(C, a, n, rmse_cms, r_squared)]),
+  data.table(objective = "relative", rating_limbs(fit_relative, all_columns = TRUE)[, .(C, a, n, rmse_cms, r_squared)])
 )
 #>    objective        C            a        n rmse_cms r_squared
 #>       <char>    <num>        <num>    <num>    <num>     <num>
@@ -132,8 +132,8 @@ fit_unconstrained <- rate_optimise(discharge_cms, stage_m)
 fit_bounded <- rate_optimise(discharge_cms, stage_m, n_bounds = c(1.4, 1.6))
 
 rbind(
-  data.table(fit = "unconstrained", fit_unconstrained@limbs[, .(C, a, n, rmse_cms, r_squared)]),
-  data.table(fit = "n_bounds = c(1.4, 1.6)", fit_bounded@limbs[, .(C, a, n, rmse_cms, r_squared)])
+  data.table(fit = "unconstrained", rating_limbs(fit_unconstrained, all_columns = TRUE)[, .(C, a, n, rmse_cms, r_squared)]),
+  data.table(fit = "n_bounds = c(1.4, 1.6)", rating_limbs(fit_bounded, all_columns = TRUE)[, .(C, a, n, rmse_cms, r_squared)])
 )
 #>                       fit        C          a        n rmse_cms r_squared
 #>                    <char>    <num>      <num>    <num>    <num>     <num>
@@ -204,15 +204,15 @@ fit_dated <- rate_optimise(
   discharge_cms[seq_along(stage_dense_m)], stage_dense_m,
   gauging_datetime = gauging_datetime
 )
-head(fit_dated@gaugings)
-#>    discharge_cms stage_m gauging_datetime  limb
-#>            <num>   <num>           <Date> <int>
-#> 1:     0.4559383    0.20       2015-01-21     1
-#> 2:     0.5280606    0.23       2015-02-10     1
-#> 3:     0.7262610    0.26       2015-03-02     1
-#> 4:     0.9342280    0.29       2015-03-22     1
-#> 5:     0.9999470    0.32       2015-04-11     1
-#> 6:     1.1565643    0.35       2015-05-01     1
+head(rating_evidence(fit_dated))
+#>    gauging_datetime stage_m discharge_cms  limb
+#>              <Date>   <num>         <num> <int>
+#> 1:       2015-01-21    0.20     0.4559383     1
+#> 2:       2015-02-10    0.23     0.5280606     1
+#> 3:       2015-03-02    0.26     0.7262610     1
+#> 4:       2015-03-22    0.29     0.9342280     1
+#> 5:       2015-04-11    0.32     0.9999470     1
+#> 6:       2015-05-01    0.35     1.1565643     1
 ```
 
 `age_halflife` is left `NULL` by default, so supplying

@@ -37,6 +37,30 @@ planned; see IMPROVEMENT_PLAN.md.
 - [`plot_rating_comparison()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_comparison.md)
   : Plot a rating comparison: curves and their discharge difference
 
+## Accessors
+
+Read a rating without reaching inside it. Each accessor works on every
+rating class that holds the information, returns a copy as a data.table
+with unit-suffixed columns (or a documented list), and says plainly when
+a class does not hold it.
+
+- [`rating_limbs()`](https://jonpayneea.github.io/reach.rate/reference/rating_limbs.md)
+  : Limbs of a rating
+- [`rating_coefficients()`](https://jonpayneea.github.io/reach.rate/reference/rating_coefficients.md)
+  : Coefficients of a rating, with their uncertainty
+- [`rating_evidence()`](https://jonpayneea.github.io/reach.rate/reference/rating_evidence.md)
+  : The gaugings a rating was fitted to
+- [`rating_diagnostics()`](https://jonpayneea.github.io/reach.rate/reference/rating_diagnostics.md)
+  : Fit diagnostics of a rating
+- [`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md)
+  : Gauged support for a rating
+- [`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md)
+  : Bootstrap draws of a rating
+- [`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md)
+  : The audit chain of a rating
+- [`rating_provenance()`](https://jonpayneea.github.io/reach.rate/reference/rating_provenance.md)
+  : How a rating was made
+
 ## Advanced modelling
 
 Direct control over fitting. Until fit_rating() arrives, rate_optimise()
@@ -93,8 +117,6 @@ Bootstrap coefficient draws propagated to a discharge interval.
   : Apply a rating with bootstrap uncertainty to a stage series
 - [`plot_rating_interval()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_interval.md)
   : Plot a fitted rating curve with a bootstrap prediction interval
-- [`bootstrap_to_table()`](https://jonpayneea.github.io/reach.rate/reference/bootstrap_to_table.md)
-  : Convert a fit's bootstrap draws into apply_rating_interval()'s input
 
 ## Plotting
 
@@ -142,8 +164,9 @@ gaps at table level, and apply ratings that changed over time.
 
 ## Rating objects
 
-The S7 classes behind every fit. Accessor functions (planned) will
-replace direct property access in user code.
+The S7 classes behind every fit. Read them through the accessors above,
+not by property; vignette(“s7_objects_guide”) is the maintainer’s guide
+to how they are built.
 
 - [`FlodeRatingBase()`](https://jonpayneea.github.io/reach.rate/reference/FlodeRatingBase.md)
   : Abstract base class for a fitted rating (S7)
@@ -178,3 +201,5 @@ replacement.
 - [`suggested_breakpoints_vector()`](https://jonpayneea.github.io/reach.rate/reference/suggested_breakpoints_vector.md)
   : Extract the selected breakpoints from suggest_breakpoints() as a
   vector
+- [`bootstrap_to_table()`](https://jonpayneea.github.io/reach.rate/reference/bootstrap_to_table.md)
+  : Convert a fit's bootstrap draws into apply_rating_interval()'s input

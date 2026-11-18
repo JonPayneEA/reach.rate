@@ -193,10 +193,17 @@ Reference sections, in order: Primary workflow; Accessors; Diagnostics;
 Plotting; Advanced modelling; Specialist hydraulics; Conversion and
 export; Teaching tools; Deprecated.
 
-Accessors: `rating_limbs()`, `rating_coefficients()`,
-`rating_evidence()`, `rating_diagnostics()`, `rating_history()`,
-`rating_provenance()`, `rating_support()`, `rating_bootstrap()`. Each
-returns a `data.table` with unit-suffixed columns, or a documented list.
+Accessors:
+[`rating_limbs()`](https://jonpayneea.github.io/reach.rate/reference/rating_limbs.md),
+[`rating_coefficients()`](https://jonpayneea.github.io/reach.rate/reference/rating_coefficients.md),
+[`rating_evidence()`](https://jonpayneea.github.io/reach.rate/reference/rating_evidence.md),
+[`rating_diagnostics()`](https://jonpayneea.github.io/reach.rate/reference/rating_diagnostics.md),
+[`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md),
+[`rating_provenance()`](https://jonpayneea.github.io/reach.rate/reference/rating_provenance.md),
+[`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md),
+[`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md).
+Each returns a `data.table` with unit-suffixed columns, or a documented
+list.
 
 ## 5. Release A: Foundation (P0)
 
@@ -221,9 +228,10 @@ is deprecated in favour of a `selected` column on
 [`suggest_breakpoints()`](https://jonpayneea.github.io/reach.rate/reference/suggest_breakpoints.md)
 output.
 [`bootstrap_to_table()`](https://jonpayneea.github.io/reach.rate/reference/bootstrap_to_table.md)
-moves to A3, because its replacement, `rating_bootstrap()`, is an
-accessor: deprecating it before the replacement exists would leave users
-with a warning and nowhere to go.
+moves to A3, because its replacement,
+[`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md),
+is an accessor: deprecating it before the replacement exists would leave
+users with a warning and nowhere to go.
 
 **A3. Accessors** (#38). Add the eight accessors with success and
 failure tests. Replace every `@` access in README, vignettes and
@@ -320,8 +328,10 @@ statistical, hydraulic, operational) plus provenance, built on A6 and
 A8. No summary score. Closes the segmented-fit diagnostic gap so both
 fit classes assess alike.
 
-**B3. Support and extrapolation** (#47). `rating_support()` returns
-observed, modelled, fitted, operational and numerical stage ranges.
+**B3. Support and extrapolation** (#47).
+[`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md)
+returns observed, modelled, fitted, operational and numerical stage
+ranges.
 [`apply_rating()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating.md)
 gains a `support` column: `interpolation_observed`,
 `interpolation_mixed`, `model_supported`, `extrapolation`,

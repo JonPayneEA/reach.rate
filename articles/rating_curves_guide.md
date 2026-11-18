@@ -79,17 +79,28 @@ statistical one. Section 5 returns to this.
 ## The objects
 
 The toolkit represents its results as three S7 classes rather than bare
-tables. The practical consequence for you as a user is small: you access
-contents with `@` rather than `$`, and the objects carry more than
-numbers.
+tables. You read them through accessor functions, so your code never
+depends on where the package stores something, and the objects carry
+more than numbers.
 
 `FlodeRating` is the result of
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md).
-`@limbs` holds one row per limb (bounds, coefficients, diagnostics),
-`@gaugings` holds the data it was fitted to, `@bootstrap` and
-`@fit_starts` hold uncertainty and fitting bookkeeping when produced,
-`@status` records whether the fit is as fitted or has been amended, and
-`@provenance` records how it was made.
+[`rating_limbs()`](https://jonpayneea.github.io/reach.rate/reference/rating_limbs.md)
+gives one row per limb (stage range and equation),
+[`rating_coefficients()`](https://jonpayneea.github.io/reach.rate/reference/rating_coefficients.md)
+the parameters with their uncertainty,
+[`rating_diagnostics()`](https://jonpayneea.github.io/reach.rate/reference/rating_diagnostics.md)
+how well each limb fits,
+[`rating_evidence()`](https://jonpayneea.github.io/reach.rate/reference/rating_evidence.md)
+the gaugings it was fitted to,
+[`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md)
+how much of each limb rests on gaugings,
+[`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md)
+the bootstrap draws when produced,
+[`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md)
+whether the fit is as fitted or has been amended, and
+[`rating_provenance()`](https://jonpayneea.github.io/reach.rate/reference/rating_provenance.md)
+how it was made.
 
 `FlodeSegmentedRating` is the result of
 [`rate_optimise_segmented()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise_segmented.md),
@@ -97,11 +108,12 @@ a structurally different model covered in section 9.
 
 `FlodeRatingTable` is the equation-table representation used for gap
 checking and application: `lower_level`, `upper_level`, `C`, `a`, `n`
-per limb, same names and sign convention as `FlodeRating`’s `@limbs`. It
-carries `@status` and `@previous`, so an amended table references the
-exact object it was amended from. This is an audit trail by construction
-rather than by discipline: you cannot end up holding an aligned table
-with no record of what it was aligned from.
+per limb, the same equation and sign convention as a `FlodeRating`. An
+amended table keeps the exact object it was amended from, and
+[`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md)
+lists the chain. This is an audit trail by construction rather than by
+discipline: you cannot end up holding an aligned table with no record of
+what it was aligned from.
 
 Three shared generics work across the classes:
 [`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md)
@@ -119,9 +131,10 @@ question. Keeping them together is deliberate.
 
 This section is deliberately brief –
 [`vignette("s7_objects_guide")`](https://jonpayneea.github.io/reach.rate/articles/s7_objects_guide.md)
-covers `@`-access, [`print()`](https://rdrr.io/r/base/print.html),
-`S7_inherits()`, and the `@status`/`@previous` audit chain in full,
-including a validator actually catching a malformed construction.
+(written for maintainers) covers how the classes are built: properties,
+[`print()`](https://rdrr.io/r/base/print.html), `S7_inherits()`, the
+amendment chain, and a validator actually catching a malformed
+construction.
 
 ### A running example
 
@@ -159,7 +172,7 @@ range(stage_m)
 ``` r
 
 fit <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2))
-fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
+rating_limbs(fit, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
 #>     limb         C           a        n   rmse_cms r_squared n_obs
 #>    <int>     <num>       <num>    <num>      <num>     <num> <int>
 #> 1:     1  2.772226 -0.05503033 1.459775 0.05707128 0.9982030    37
@@ -215,9 +228,11 @@ fitted from several starting combinations: a few plausible exponents, a
 data-driven estimate from a quick log-log regression, a data-scaled
 \\C\\. Each converged result is checked for validity (finite,
 non-decreasing discharge across the limb) and the best valid result
-wins. Every attempt is recorded in `@fit_starts`, so you can see whether
-the starts agreed (reassuring) or scattered (a sign the data constrain
-the fit weakly).
+wins. Every attempt is recorded with the fit, and
+[`rating_diagnostics()`](https://jonpayneea.github.io/reach.rate/reference/rating_diagnostics.md)
+reports how many starts were tried, how many converged and which one
+won: many failures, or an unusual winner, is a sign the data constrain
+the fit weakly.
 
 The `near_bound` column flags a fit whose \\n\\ or \\a\\ finished
 pressed against its lower bound. That is worth a second look: it can
@@ -227,9 +242,10 @@ attention.
 
 ### Reading the diagnostics
 
-`@limbs` reports, per limb: `rmse_cms`, `r_squared`, `n_obs`,
-`n_unique_stage`, `mean_error_cms`, `median_abs_error_cms`,
-`max_abs_error_cms`, and `residual_df`.
+[`rating_diagnostics()`](https://jonpayneea.github.io/reach.rate/reference/rating_diagnostics.md)
+reports, per limb: `rmse_cms`, `r_squared`, `n_obs`, `n_unique_stage`,
+`mean_error_cms`, `median_abs_error_cms`, `max_abs_error_cms`, and
+`residual_df`.
 
 Three points of guidance. First, `r_squared` close to 1 is necessary but
 weak: a limb spanning a large discharge range can post an excellent
@@ -339,7 +355,7 @@ like.
 ``` r
 
 fit <- flag_extrapolated_limbs(fit)
-fit@limbs[, .(limb, doubtful)]
+rating_limbs(fit, all_columns = TRUE)[, .(limb, doubtful)]
 #>     limb doubtful
 #>    <int>   <lgcl>
 #> 1:     1    FALSE
@@ -417,7 +433,7 @@ xs_theoretical <- data.table(
 theoretical_fit <- rate_from_cross_section(
   xs_theoretical, slope = 0.001, roughness = 0.035, n_points = 60
 )
-theoretical_fit@provenance$source
+rating_provenance(theoretical_fit)$source
 #> [1] "cross_section_theoretical"
 
 plot_rating_cross_section(theoretical_fit, xs_theoretical)
@@ -484,7 +500,7 @@ steps into flow records and forecast inputs.
 rating_table <- as_rating_table(fit)
 rc_raw_dt <- expand_rating_table(rating_table, step = 0.01)
 gaps_dt <- detect_rc_gaps(rc_raw_dt)
-#> INFO [2026-11-18 12:31:53] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-18 16:03:49] Checked 2 junction(s): 2 gap(s) flagged.
 gaps_dt
 #>    junction limb_lower limb_upper stage_break stage_lower_end stage_upper_start
 #>       <int>     <char>     <char>       <num>           <num>             <num>
@@ -535,11 +551,11 @@ boundary.
 ``` r
 
 rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "midpoint")
-#> INFO [2026-11-18 12:31:53] Checked 2 junction(s): 2 gap(s) flagged.
-#> INFO [2026-11-18 12:31:53] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -> 11.42 | agreed Q = 8.6042
-#> INFO [2026-11-18 12:31:53] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -> 34.81 | agreed Q = 27.2512
+#> INFO [2026-11-18 16:03:49] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-18 16:03:49] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -> 11.42 | agreed Q = 8.6042
+#> INFO [2026-11-18 16:03:49] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -> 34.81 | agreed Q = 27.2512
 plot_rc_gaps(rc_raw_dt, rc_fixed_dt)
-#> INFO [2026-11-18 12:31:53] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-18 16:03:49] Checked 2 junction(s): 2 gap(s) flagged.
 ```
 
 ![](rating_curves_guide_files/figure-html/resolve-gaps-1.png)
@@ -555,10 +571,11 @@ equations are not going anywhere.
 ``` r
 
 aligned_result <- align_limb_equations(rating_table, anchor_limb = 1L)
-aligned_result@status
-#> [1] "post_fit_aligned"
-identical(aligned_result@previous, rating_table)
-#> [1] TRUE
+rating_history(aligned_result)
+#>     step            class               status n_limbs
+#>    <int>           <char>               <char>   <int>
+#> 1:     1 FlodeRatingTable independently_fitted       3
+#> 2:     2 FlodeRatingTable     post_fit_aligned       3
 ```
 
 Fixes the equations themselves, using only the equations. Hold one limb
@@ -573,9 +590,10 @@ discharge at the junction stage \\H_b\\. The correction propagates
 outward from the anchor, so every junction along the chain closes
 exactly, and \\a\\ and \\n\\ (the curve’s datum and shape) are
 untouched. The original \\C\\ is kept alongside the scale factor and
-percentage change, and the result is a new `FlodeRatingTable` whose
-`@previous` references the exact pre-alignment object: an auditable
-amendment, not a silent overwrite.
+percentage change, and the result is a new `FlodeRatingTable` that keeps
+the exact pre-alignment object, listed by
+[`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md)
+above: an auditable amendment, not a silent overwrite.
 
 The cost is honest: the rescaled \\C\\ is no longer the least-squares
 optimum for that limb’s own gaugings. You have traded a small amount of
@@ -588,8 +606,8 @@ Call it on a `FlodeRating` directly
 and the result stays a `FlodeRating` rather than downgrading to a
 `FlodeRatingTable`: gaugings carry through unchanged (equations are
 rescaled, not boundaries, so which limb a gauging belongs to never
-changes here), `@limbs` diagnostics are recomputed against the rescaled
-\\C\\ rather than left describing the pre-alignment fit, and
+changes here), the per-limb diagnostics are recomputed against the
+rescaled \\C\\ rather than left describing the pre-alignment fit, and
 [`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md)/[`plot_rating_residuals()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_residuals.md)
 work on the result immediately, since it is the same class they were
 always written for.
@@ -615,7 +633,7 @@ aligned_boundaries <- align_limb_boundaries(fit)
 #> multi-start bookkeeping describe the pre-amendment fit and are not recomputed
 #> for this amendment; dropped rather than presented alongside updated point
 #> estimates.
-aligned_boundaries@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs, boundary_adjusted)]
+rating_limbs(aligned_boundaries, all_columns = TRUE)[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared, n_obs, boundary_adjusted)]
 #>     limb lower_stage_m upper_stage_m         C           a        n   rmse_cms
 #>    <int>         <num>         <num>     <num>       <num>    <num>      <num>
 #> 1:     1     0.5000000     0.5753647  2.772226 -0.05503033 1.459775 0.04105721
@@ -660,7 +678,7 @@ known-good join, or one better handled by
 ``` r
 
 fit_constrained <- rate_optimise_constrained(discharge_cms, stage_m, control = c(1.6, 2.2))
-fit_constrained@limbs[, .(limb, C, a, n, rmse_cms, r_squared, aligned)]
+rating_limbs(fit_constrained, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared, aligned)]
 #>     limb         C           a         n   rmse_cms r_squared aligned
 #>    <int>     <num>       <num>     <num>      <num>     <num>  <lgcl>
 #> 1:     1  2.772226 -0.05503033 1.4597750 0.05707128 0.9982030   FALSE
@@ -756,13 +774,25 @@ q3 <- (pmax(stage_seg_m - 2.4, 0) + 1)^1.1
 discharge_seg_cms <- q1 * q2 * q3 * exp(rnorm(length(stage_seg_m), sd = 0.03))
 
 fit_seg <- rate_optimise_segmented(discharge_seg_cms, stage_seg_m, control = c(1.6, 2.4))
-fit_seg@coefficients
-#>           C       bp1       n1        n2       n3   bp2   bp3 rmse_cms
-#>       <num>     <num>    <num>     <num>    <num> <num> <num>    <num>
-#> 1: 4.504393 0.1675615 1.443402 0.9201393 1.121105   1.6   2.4 1.388199
-#>    r_squared n_obs n_starts_attempted n_starts_converged selected_start_id
-#>        <num> <int>              <int>              <int>             <int>
-#> 1: 0.9987902   107                  4                  4                 1
+rating_coefficients(fit_seg)
+#>     limb parameter  estimate         unit se_asymptotic se_bootstrap  q025
+#>    <int>    <char>     <num>       <char>         <num>        <num> <num>
+#> 1:    NA         C 4.5043930 cms per m^n1            NA           NA    NA
+#> 2:    NA       bp1 0.1675615            m            NA           NA    NA
+#> 3:    NA        n1 1.4434025            1            NA           NA    NA
+#> 4:    NA       bp2 1.6000000            m            NA           NA    NA
+#> 5:    NA        n2 0.9201393            1            NA           NA    NA
+#> 6:    NA       bp3 2.4000000            m            NA           NA    NA
+#> 7:    NA        n3 1.1211046            1            NA           NA    NA
+#>      q50  q975
+#>    <num> <num>
+#> 1:    NA    NA
+#> 2:    NA    NA
+#> 3:    NA    NA
+#> 4:    NA    NA
+#> 5:    NA    NA
+#> 6:    NA    NA
+#> 7:    NA    NA
 rating_plot(fit_seg)
 ```
 
@@ -803,7 +833,7 @@ junction gap and the other structurally cannot.
 ``` r
 
 fit_boot <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2), n_boot = 200L, boot_seed = 11L)
-fit_boot@limbs[, .(limb, C, C_se, n, n_se)]
+rating_limbs(fit_boot, all_columns = TRUE)[, .(limb, C, C_se, n, n_se)]
 #>     limb         C      C_se        n       n_se
 #>    <int>     <num>     <num>    <num>      <num>
 #> 1:     1  2.772226 0.2523197 1.459775 0.08574848
@@ -831,17 +861,18 @@ Two engineering details matter for trust. A resample can land, by
 chance, on too few distinct stage values to identify three parameters;
 such draws are rejected before fitting, recorded with a reason, and if
 the successful fraction falls below `min_boot_success` a warning is
-raised. And every draw is recorded in `@bootstrap`, failures included,
-because a bootstrap where 40% of draws quietly failed is a different
-(and less trustworthy) object than one where they all converged.
+raised. And every draw is recorded, failures included
+(`rating_bootstrap(fit, successful_only = FALSE)`), because a bootstrap
+where 40% of draws quietly failed is a different (and less trustworthy)
+object than one where they all converged.
 
 ### What the interval means, and what it does not
 
-[`bootstrap_to_table()`](https://jonpayneea.github.io/reach.rate/reference/bootstrap_to_table.md)
-bridges the draws to
-[`apply_rating_interval()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating_interval.md),
-which computes, per stage value, the mean, median, and a prediction
-interval across draws, plus the geometric standard error
+[`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md)
+returns the draws in the shape
+[`apply_rating_interval()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating_interval.md)
+takes, and, which computes, per stage value, the mean, median, and a
+prediction interval across draws, plus the geometric standard error
 
 \\\mathrm{GSE} = \exp\\\bigl(\mathrm{sd}(\ln Q\_{\text{draws}})\bigr)\\
 
@@ -883,7 +914,7 @@ hydrograph_dt <- data.table(
 )
 
 flow_dt <- apply_rating(rating_table, hydrograph_dt, stage_col = "stage", out_col = "discharge_cms")
-#> INFO [2026-11-18 12:31:55] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-18 16:03:51] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.
 sum(flow_dt$extrapolated) # stage values above the gauged range
 #> [1] 4
 flow_dt[c(1, 10, 20, 30, 40)]
@@ -924,7 +955,7 @@ already produced above.
 
 target_flows_dt <- data.table(discharge = c(5, 20, 60))
 apply_rating_inverse(aligned_result, target_flows_dt, discharge_col = "discharge", out_col = "stage_m")
-#> INFO [2026-11-18 12:31:55] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-18 16:03:51] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
 #>    discharge  stage_m extrapolated
 #>        <num>    <num>       <lgcl>
 #> 1:         5 1.442813        FALSE
@@ -970,7 +1001,7 @@ rating_history_dt <- data.table(
 )
 
 versioned_flow_dt <- apply_rating_versioned(hydrograph_dt, rating_history_dt)
-#> INFO [2026-11-18 12:31:55] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-18 16:03:51] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.
 versioned_flow_dt[c(1, 10, 20, 30, 40)]
 #>      datetime    stage   version discharge extrapolated
 #>        <POSc>    <num>    <char>     <num>       <lgcl>
@@ -1032,8 +1063,8 @@ and the existing rating’s lowest limb actually cross:
 
 ``` r
 
-top <- aligned_result@table[.N]
-q_at_top <- top$C * (top$upper_level - top$a)^top$n
+top <- rating_limbs(aligned_result)[.N]
+q_at_top <- top$C * (top$upper_stage_m - top$a)^top$n
 
 existing_rating <- data.table(
   lower_level = 3.5, upper_level = 6.0,
@@ -1041,13 +1072,13 @@ existing_rating <- data.table(
 )
 
 grafted <- graft_rating(aligned_result, existing_rating)
-grafted@table[, .(lower_level, upper_level, C, a, n, source)]
-#>    lower_level upper_level        C           a        n   source
-#>          <num>       <num>    <num>       <num>    <num>   <char>
-#> 1:    0.500000    1.600000 2.772226 -0.05503033 1.459775      new
-#> 2:    1.600000    2.200000 3.670338  0.24224858 1.487198      new
-#> 3:    2.200000    4.429085 2.917089  0.21374016 1.790580      new
-#> 4:    4.429085    6.000000 5.540583  0.00000000 1.300000 existing
+rating_limbs(grafted, all_columns = TRUE)[, .(lower_stage_m, upper_stage_m, C, a, n, source)]
+#>    lower_stage_m upper_stage_m        C           a        n   source
+#>            <num>         <num>    <num>       <num>    <num>   <char>
+#> 1:      0.500000      1.600000 2.772226 -0.05503033 1.459775      new
+#> 2:      1.600000      2.200000 3.670338  0.24224858 1.487198      new
+#> 3:      2.200000      4.429085 2.917089  0.21374016 1.790580      new
+#> 4:      4.429085      6.000000 5.540583  0.00000000 1.300000 existing
 ```
 
 The two curves happened to start about 15% apart at stage 3.5 – exactly
@@ -1057,13 +1088,14 @@ closes *within* a table – but here it resolves the same way
 [`align_limb_boundaries()`](https://jonpayneea.github.io/reach.rate/reference/align_limb_boundaries.md)
 does: the boundary itself moves, out to 4.429, where the (unchanged)
 equations on both sides already agree. `source` marks which limb came
-from where; `@previous` references `aligned_result` directly, so the
-join is still an amendment with an audit trail, not a table built once
-and forgotten. The result is always a `FlodeRatingTable`, even here
-where `aligned_result` was one already – `existing_rating` carries no
-gaugings of its own, so nothing genuinely new is being merged into
-`@gaugings`; `aligned_result` itself remains the object to go to for
-this station’s own diagnostics.
+from where;
+[`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md)
+lists `aligned_result` directly, so the join is still an amendment with
+an audit trail, not a table built once and forgotten. The result is
+always a `FlodeRatingTable`, even here where `aligned_result` was one
+already – `existing_rating` carries no gaugings of its own, so nothing
+genuinely new is being merged into the evidence; `aligned_result` itself
+remains the object to go to for this station’s own diagnostics.
 
 ## Guidance: reading a fit, in order
 
@@ -1073,10 +1105,11 @@ statistic. Second, `n_obs` and `residual_df` per limb: a limb fitted on
 a handful of points is a hypothesis, not a rating. Third, `rmse_cms`
 against the gauging uncertainty you would expect at the site; then
 `r_squared`, comparatively across limbs rather than against a threshold.
-Fourth, `near_bound` and the `@fit_starts` record: did the optimiser
-find one clear answer or many mediocre ones? Fifth, the `doubtful`
-flags: where is this rating extrapolating, and does your operational
-range depend on those stages? Sixth, the junctions:
+Fourth, `near_bound` and the multi-start counts in
+[`rating_diagnostics()`](https://jonpayneea.github.io/reach.rate/reference/rating_diagnostics.md):
+did the optimiser find one clear answer or many mediocre ones? Fifth,
+the `doubtful` flags: where is this rating extrapolating, and does your
+operational range depend on those stages? Sixth, the junctions:
 [`detect_rc_gaps()`](https://jonpayneea.github.io/reach.rate/reference/detect_rc_gaps.md)
 before and after whatever closure strategy you chose. Last, if the
 rating will be used for anything where uncertainty matters, run the
@@ -1106,9 +1139,9 @@ the following goes deeper on one part of it:
   your data, and what genuinely differs downstream between a
   `FlodeRating` and a `FlodeSegmentedRating`.
 - [`vignette("s7_objects_guide")`](https://jonpayneea.github.io/reach.rate/articles/s7_objects_guide.md)
-  – `@`-access, [`print()`](https://rdrr.io/r/base/print.html),
-  `S7_inherits()`, and the `@status`/`@previous` audit chain, with a
-  validator actually catching a mistake.
+  – how the S7 classes are built (for maintainers): properties,
+  [`print()`](https://rdrr.io/r/base/print.html), `S7_inherits()`, the
+  amendment chain, and a validator actually catching a mistake.
 - [`vignette("rating_curve_walkthrough")`](https://jonpayneea.github.io/reach.rate/articles/rating_curve_walkthrough.md)
   – one continuous worked example, spot gaugings to a checked,
   junction-aligned, physically-constrained multi-limb rating.
@@ -1137,7 +1170,7 @@ the following goes deeper on one part of it:
   multiplicative factors actually compose, with diagrams.
 
 Every function used above also has its own roxygen documentation with a
-fuller `@description` and a runnable `@examples` block – see
+fuller description and a runnable examples block – see
 [`?rate_optimise`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md),
 `?flode_classes` (for the class hierarchy: `FlodeRatingBase`,
 `FlodeRating`, `FlodeSegmentedRating`, `FlodeRatingTable`, and the three

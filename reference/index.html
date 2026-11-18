@@ -28,7 +28,7 @@
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
-    <li><a class="dropdown-item" href="../articles/s7_objects_guide.html">Working with reach.rate's S7 Objects</a></li>
+    <li><a class="dropdown-item" href="../articles/s7_objects_guide.html">Maintaining reach.rate's S7 classes</a></li>
     <li><a class="dropdown-item" href="../articles/rating_curve_walkthrough.html">A Rating Curve Walkthrough: From Spot Gaugings to a Constrained Curve</a></li>
     <li><a class="dropdown-item" href="../articles/non_standard_optimisation.html">Non-Standard Rating Optimisation: When and Why</a></li>
     <li><a class="dropdown-item" href="../articles/n_bounds_guide.html">Choosing n_bounds: A Cross-Section Guide</a></li>
@@ -134,6 +134,71 @@
 
         </dt>
         <dd>Plot a rating comparison: curves and their discharge difference</dd>
+      </dl></div><div class="section level2">
+      <h2 id="accessors">Accessors<a class="anchor" aria-label="anchor" href="#accessors"></a></h2>
+
+      <div class="section-desc"><p>Read a rating without reaching inside it. Each accessor works on every rating class that holds the information, returns a copy as a data.table with unit-suffixed columns (or a documented list), and says plainly when a class does not hold it.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="rating_limbs.html">rating_limbs()</a></code>
+
+        </dt>
+        <dd>Limbs of a rating</dd>
+
+        <dt>
+
+          <code><a href="rating_coefficients.html">rating_coefficients()</a></code>
+
+        </dt>
+        <dd>Coefficients of a rating, with their uncertainty</dd>
+
+        <dt>
+
+          <code><a href="rating_evidence.html">rating_evidence()</a></code>
+
+        </dt>
+        <dd>The gaugings a rating was fitted to</dd>
+
+        <dt>
+
+          <code><a href="rating_diagnostics.html">rating_diagnostics()</a></code>
+
+        </dt>
+        <dd>Fit diagnostics of a rating</dd>
+
+        <dt>
+
+          <code><a href="rating_support.html">rating_support()</a></code>
+
+        </dt>
+        <dd>Gauged support for a rating</dd>
+
+        <dt>
+
+          <code><a href="rating_bootstrap.html">rating_bootstrap()</a></code>
+
+        </dt>
+        <dd>Bootstrap draws of a rating</dd>
+
+        <dt>
+
+          <code><a href="rating_history.html">rating_history()</a></code>
+
+        </dt>
+        <dd>The audit chain of a rating</dd>
+
+        <dt>
+
+          <code><a href="rating_provenance.html">rating_provenance()</a></code>
+
+        </dt>
+        <dd>How a rating was made</dd>
       </dl></div><div class="section level2">
       <h2 id="advanced-modelling">Advanced modelling<a class="anchor" aria-label="anchor" href="#advanced-modelling"></a></h2>
 
@@ -280,13 +345,6 @@
 
         </dt>
         <dd>Plot a fitted rating curve with a bootstrap prediction interval</dd>
-
-        <dt>
-
-          <code><a href="bootstrap_to_table.html">bootstrap_to_table()</a></code>
-
-        </dt>
-        <dd>Convert a fit's bootstrap draws into apply_rating_interval()'s input</dd>
       </dl></div><div class="section level2">
       <h2 id="plotting">Plotting<a class="anchor" aria-label="anchor" href="#plotting"></a></h2>
 
@@ -401,7 +459,7 @@
       </dl></div><div class="section level2">
       <h2 id="rating-objects">Rating objects<a class="anchor" aria-label="anchor" href="#rating-objects"></a></h2>
 
-      <div class="section-desc"><p>The S7 classes behind every fit. Accessor functions (planned) will replace direct property access in user code.</p></div>
+      <div class="section-desc"><p>The S7 classes behind every fit. Read them through the accessors above, not by property; vignette(“s7_objects_guide”) is the maintainer’s guide to how they are built.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -488,6 +546,13 @@
 
         </dt>
         <dd>Extract the selected breakpoints from suggest_breakpoints() as a vector</dd>
+
+        <dt>
+
+          <code><a href="bootstrap_to_table.html">bootstrap_to_table()</a></code>
+
+        </dt>
+        <dd>Convert a fit's bootstrap draws into apply_rating_interval()'s input</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

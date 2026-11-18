@@ -7,7 +7,7 @@
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Apply a rating with bootstrap uncertainty to a stage series — apply_rating_interval"><meta name="description" content="Like apply_rating(), but propagates per-limb bootstrap coefficient
 draws (from rate_optimise(..., n_boot = ), bridged through
-bootstrap_to_table()) to a discharge prediction interval at each
+rating_bootstrap()) to a discharge prediction interval at each
 stage, rather than a single point value. For each stage row, discharge
 is computed once per bootstrap draw using that draw's limb assignment
 and C/a/n, and the draws are summarised into a mean, median, and
@@ -23,7 +23,7 @@ which matches how rate_optimise(..., n_boot = ) bootstraps: it
 resamples gaugings and refits within each limb's fixed stage range,
 not the breakpoints themselves."><meta property="og:description" content="Like apply_rating(), but propagates per-limb bootstrap coefficient
 draws (from rate_optimise(..., n_boot = ), bridged through
-bootstrap_to_table()) to a discharge prediction interval at each
+rating_bootstrap()) to a discharge prediction interval at each
 stage, rather than a single point value. For each stage row, discharge
 is computed once per bootstrap draw using that draw's limb assignment
 and C/a/n, and the draws are summarised into a mean, median, and
@@ -60,7 +60,7 @@ not the breakpoints themselves."></head><body>
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
-    <li><a class="dropdown-item" href="../articles/s7_objects_guide.html">Working with reach.rate's S7 Objects</a></li>
+    <li><a class="dropdown-item" href="../articles/s7_objects_guide.html">Maintaining reach.rate's S7 classes</a></li>
     <li><a class="dropdown-item" href="../articles/rating_curve_walkthrough.html">A Rating Curve Walkthrough: From Spot Gaugings to a Constrained Curve</a></li>
     <li><a class="dropdown-item" href="../articles/non_standard_optimisation.html">Non-Standard Rating Optimisation: When and Why</a></li>
     <li><a class="dropdown-item" href="../articles/n_bounds_guide.html">Choosing n_bounds: A Cross-Section Guide</a></li>
@@ -90,7 +90,7 @@ not the breakpoints themselves."></head><body>
     <div class="ref-description section level2">
     <p>Like <code><a href="apply_rating.html">apply_rating()</a></code>, but propagates per-limb bootstrap coefficient
 draws (from <code>rate_optimise(..., n_boot = )</code>, bridged through
-<code><a href="bootstrap_to_table.html">bootstrap_to_table()</a></code>) to a discharge <em>prediction interval</em> at each
+<code><a href="rating_bootstrap.html">rating_bootstrap()</a></code>) to a discharge <em>prediction interval</em> at each
 stage, rather than a single point value. For each stage row, discharge
 is computed once per bootstrap draw using that draw's limb assignment
 and <code>C</code>/<code>a</code>/<code>n</code>, and the draws are summarised into a mean, median, and
@@ -128,8 +128,10 @@ not the breakpoints themselves.</p>
 <dt id="arg-rating-boot-dt">rating_boot_dt<a class="anchor" aria-label="anchor" href="#arg-rating-boot-dt"></a></dt>
 <dd><p>Data.table of per-draw coefficients, one row per
 (limb, draw): columns <code>limb</code>, <code>draw</code>, <code>lower_level</code>, <code>upper_level</code>,
-<code>C</code>, <code>a</code>, <code>n</code>. See <code><a href="bootstrap_to_table.html">bootstrap_to_table()</a></code> (in <code>rating_curve_demo</code>)
-for building this from a <code>rate_optimise(..., n_boot = )</code> fit.</p></dd>
+<code>C</code>, <code>a</code>, <code>n</code>. <code><a href="rating_bootstrap.html">rating_bootstrap()</a></code> builds this from a
+<code>rate_optimise(..., n_boot = )</code> fit; its <code>lower_stage_m</code> and
+<code>upper_stage_m</code> are accepted in place of <code>lower_level</code> and
+<code>upper_level</code>.</p></dd>
 
 
 <dt id="arg-stage-col">stage_col<a class="anchor" aria-label="anchor" href="#arg-stage-col"></a></dt>

@@ -125,7 +125,7 @@ rating <- FlodeRatingTable(table = rating_dt)
 set.seed(11)
 stage_m <- c(0.25, 0.28, sort(runif(60, 0.3, 2.3)))
 predicted <- apply_rating(rating, stage_m)$discharge
-#> INFO [2026-11-18 12:31:19] apply_rating(): 2 of 62 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-18 16:03:22] apply_rating(): 2 of 62 stage value(s) fell outside the rating and were extrapolated.
 truth_factor <- ifelse(stage_m >= 1.7, 0.85, 1)
 gaugings <- data.frame(
   stage_m = stage_m,

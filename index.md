@@ -141,27 +141,38 @@ covered in the full guide, is an aid, not a substitute).
 
 The toolkit represents its results as three
 [S7](https://rconsortium.github.io/S7/) classes rather than bare tables.
-The practical consequence for you as a user is small: you access
-contents with `@` rather than `$`, and the objects carry more than
+You read them through accessor functions, so your code never depends on
+where the package stores something, and the objects carry more than
 numbers.
 
 - `FlodeRating` is the result of
   [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md).
-  `@limbs` holds one row per limb (bounds, coefficients, diagnostics),
-  `@gaugings` holds the data it was fitted to, `@bootstrap` and
-  `@fit_starts` hold uncertainty and fitting bookkeeping when produced,
-  `@status` records whether the fit is as fitted or has been amended,
-  and `@provenance` records how it was made.
+  [`rating_limbs()`](https://jonpayneea.github.io/reach.rate/reference/rating_limbs.md)
+  gives one row per limb (stage range and equation),
+  [`rating_coefficients()`](https://jonpayneea.github.io/reach.rate/reference/rating_coefficients.md)
+  the parameters with their uncertainty,
+  [`rating_diagnostics()`](https://jonpayneea.github.io/reach.rate/reference/rating_diagnostics.md)
+  how well each limb fits,
+  [`rating_evidence()`](https://jonpayneea.github.io/reach.rate/reference/rating_evidence.md)
+  the gaugings it was fitted to,
+  [`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md)
+  how much of each limb rests on gaugings,
+  [`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md)
+  the bootstrap draws when produced,
+  [`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md)
+  whether the fit is as fitted or has been amended, and
+  [`rating_provenance()`](https://jonpayneea.github.io/reach.rate/reference/rating_provenance.md)
+  how it was made.
 - `FlodeSegmentedRating` is the result of
   [`rate_optimise_segmented()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise_segmented.md),
   a structurally different joint model with no junction gap to reconcile
   (see the full guide).
 - `FlodeRatingTable` is the equation-table representation used for gap
   checking and application: `lower_level`, `upper_level`, `C`, `a`, `n`
-  per limb, same names and sign convention as `FlodeRating`’s `@limbs`.
-  It carries `@status` and `@previous`, so an amended table references
-  the exact object it was amended from – an audit trail by construction,
-  not by discipline.
+  per limb, the same equation and sign convention as a `FlodeRating`. An
+  amended table keeps the exact object it was amended from, and
+  [`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md)
+  lists the chain – an audit trail by construction, not by discipline.
 
 Three shared generics work across the classes:
 [`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md)
@@ -202,8 +213,11 @@ The fit is constrained so that \\C \> 0\\, \\n \> 0\\, and \\H - a \>
 rating exists. By default (`multi_start = TRUE`) each limb is fitted
 from several starting combinations rather than one, since a poor guess
 can strand the optimiser in a local minimum; every attempt is recorded
-in `@fit_starts`, and the `near_bound` column flags a fit whose `n` or
-`a` finished pressed against its bound, worth a second look.
+with the fit (summarised by `n_starts_attempted`, `n_starts_converged`
+and `selected_start_id` in
+[`rating_diagnostics()`](https://jonpayneea.github.io/reach.rate/reference/rating_diagnostics.md)),
+and the `near_bound` column flags a fit whose `n` or `a` finished
+pressed against its bound, worth a second look.
 
 ## Getting started
 
@@ -233,7 +247,7 @@ discharge_cms <- true_coefs$C[true_limb] *
 
 # Fit a multi-limb power-law rating curve: Q = C(H - a)^n per limb
 fit <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2))
-fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared)]
+rating_limbs(fit, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared)]
 
 rating_plot(fit)
 
@@ -335,8 +349,9 @@ multiplicative factors actually compose, with diagrams, see:
 vignette("segmented_model_guide", package = "reach.rate")
 ```
 
-For working with the package’s S7 classes – `@`-access, validators,
-`S7_inherits()`, the `@status`/`@previous` audit chain – see:
+For how the S7 classes are built, for anyone maintaining or extending
+the package – properties, validators, `S7_inherits()` and the amendment
+chain – see:
 
 ``` r
 
