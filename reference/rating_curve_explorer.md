@@ -31,7 +31,8 @@ explicitly otherwise.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-rating_curve_explorer()
-} # }
+# A Shiny app, so it only starts in an interactive session.
+if (interactive()) {
+  rating_curve_explorer()
+}
 ```

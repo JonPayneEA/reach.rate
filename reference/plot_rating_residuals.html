@@ -82,7 +82,29 @@ equivalent yet – so this takes a plain <code><a href="https://rdrr.io/r/base/c
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>ggplot</code> object, invisibly.</p>
     </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="rating_plot.html">rating_plot()</a></code> for the curve against the gaugings,
+<code><a href="plot_rating_leverage.html">plot_rating_leverage()</a></code> for which gaugings steer the fit.</p></div>
+    </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">stage_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">3.2</span>, by <span class="op">=</span> <span class="fl">0.06</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">stage_m</span> <span class="op">&lt;</span> <span class="fl">1.5</span>, <span class="fl">3.2</span> <span class="op">*</span> <span class="va">stage_m</span><span class="op">^</span><span class="fl">1.6</span>,</span></span>
+<span class="r-in"><span>                        <span class="fl">3.2</span> <span class="op">*</span> <span class="fl">1.5</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">*</span> <span class="op">(</span><span class="va">stage_m</span> <span class="op">/</span> <span class="fl">1.5</span><span class="op">)</span><span class="op">^</span><span class="fl">2.1</span><span class="op">)</span> <span class="op">*</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.04</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Residuals scatter around zero when a limb fits well; a curve or a fan</span></span></span>
+<span class="r-in"><span><span class="co"># in one facet says that limb's equation is wrong or its spread grows</span></span></span>
+<span class="r-in"><span><span class="co"># with flow.</span></span></span>
+<span class="r-in"><span><span class="fu">plot_rating_residuals</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="plot_rating_residuals-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

@@ -108,6 +108,38 @@ flagged <code>influential</code> if its Cook's distance exceeds
     <div class="dont-index"><p><code><a href="flag_influential_gaugings.html">flag_influential_gaugings()</a></code>, <code><a href="plot_rating_residuals.html">plot_rating_residuals()</a></code>.</p></div>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">stage_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">3.2</span>, by <span class="op">=</span> <span class="fl">0.06</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">stage_m</span> <span class="op">&lt;</span> <span class="fl">1.5</span>, <span class="fl">3.2</span> <span class="op">*</span> <span class="va">stage_m</span><span class="op">^</span><span class="fl">1.6</span>,</span></span>
+<span class="r-in"><span>                        <span class="fl">3.2</span> <span class="op">*</span> <span class="fl">1.5</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">*</span> <span class="op">(</span><span class="va">stage_m</span> <span class="op">/</span> <span class="fl">1.5</span><span class="op">)</span><span class="op">^</span><span class="fl">2.1</span><span class="op">)</span> <span class="op">*</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.04</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># One gauging recorded 70 per cent too high</span></span></span>
+<span class="r-in"><span><span class="va">discharge_cms</span><span class="op">[</span><span class="fl">40</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">discharge_cms</span><span class="op">[</span><span class="fl">40</span><span class="op">]</span> <span class="op">*</span> <span class="fl">1.7</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Gaugings in the top-right of a facet combine high leverage with high</span></span></span>
+<span class="r-in"><span><span class="co"># influence on the fit</span></span></span>
+<span class="r-in"><span><span class="fu">plot_rating_leverage</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="plot_rating_leverage-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The same gaugings as a table</span></span></span>
+<span class="r-in"><span><span class="va">flagged</span> <span class="op">&lt;-</span> <span class="fu"><a href="flag_influential_gaugings.html">flag_influential_gaugings</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="rating_evidence.html">rating_evidence</a></span><span class="op">(</span><span class="va">flagged</span><span class="op">)</span><span class="op">[</span><span class="va">influential</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"stage_m"</span>, <span class="st">"discharge_cms"</span>, <span class="st">"cooks_distance"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    stage_m discharge_cms cooks_distance</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      &lt;num&gt;         &lt;num&gt;          &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:    0.30     0.4924475   9.774673e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:    1.32     4.4866368   2.256700e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:    1.38     4.8591607   2.990657e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:    1.44     6.0459240   7.298657e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5:    1.50     6.0474061   7.121216e-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6:    1.56     6.1904399   6.197914e-05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7:    2.64    34.1624517   5.858075e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8:    3.18    29.1545480   8.555783e-03</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

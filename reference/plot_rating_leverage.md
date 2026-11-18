@@ -41,3 +41,35 @@ A `ggplot` object, invisibly.
 
 [`flag_influential_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/flag_influential_gaugings.md),
 [`plot_rating_residuals()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_residuals.md).
+
+## Examples
+
+``` r
+set.seed(42)
+stage_m <- seq(0.3, 3.2, by = 0.06)
+discharge_cms <- ifelse(stage_m < 1.5, 3.2 * stage_m^1.6,
+                        3.2 * 1.5^1.6 * (stage_m / 1.5)^2.1) *
+  exp(rnorm(length(stage_m), sd = 0.04))
+# One gauging recorded 70 per cent too high
+discharge_cms[40] <- discharge_cms[40] * 1.7
+fit <- rate_optimise(discharge_cms, stage_m, control = 1.5)
+
+# Gaugings in the top-right of a facet combine high leverage with high
+# influence on the fit
+plot_rating_leverage(fit)
+
+
+# The same gaugings as a table
+flagged <- flag_influential_gaugings(fit)
+rating_evidence(flagged)[influential == TRUE, c("stage_m", "discharge_cms", "cooks_distance")]
+#>    stage_m discharge_cms cooks_distance
+#>      <num>         <num>          <num>
+#> 1:    0.30     0.4924475   9.774673e-04
+#> 2:    1.32     4.4866368   2.256700e-01
+#> 3:    1.38     4.8591607   2.990657e-01
+#> 4:    1.44     6.0459240   7.298657e-01
+#> 5:    1.50     6.0474061   7.121216e-02
+#> 6:    1.56     6.1904399   6.197914e-05
+#> 7:    2.64    34.1624517   5.858075e-01
+#> 8:    3.18    29.1545480   8.555783e-03
+```

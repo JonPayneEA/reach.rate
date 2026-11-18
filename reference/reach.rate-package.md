@@ -42,3 +42,47 @@ Useful links:
 ## Author
 
 **Maintainer**: Jonathan Payne <jonathan.payne1988@gmail.com>
+
+## Examples
+
+``` r
+# The core route: gaugings in, a rating out, discharge from stage.
+set.seed(1)
+stage_m <- seq(0.3, 3, by = 0.06)
+discharge_cms <- 3.2 * stage_m^1.6 * exp(rnorm(length(stage_m), sd = 0.04))
+
+fit <- rate_optimise(discharge_cms, stage_m)
+rating_limbs(fit)                 # the equation, Q = C (H - a)^n
+#>     limb lower_stage_m upper_stage_m        C           a        n
+#>    <int>         <num>         <num>    <num>       <num>    <num>
+#> 1:     1           0.3             3 3.239461 0.003172732 1.588281
+rating_diagnostics(fit)           # how well it fits
+#>     limb rmse_cms rmse_pct r_squared n_obs n_unique_stage mean_error_cms
+#>    <int>    <num>    <num>     <num> <int>          <int>          <num>
+#> 1:     1 0.276629 3.402612  0.997422    46             46   2.241056e-05
+#>    median_abs_error_cms max_abs_error_cms residual_df n_starts_attempted
+#>                   <num>             <num>       <int>              <int>
+#> 1:            0.1435385          0.670075          43                  6
+#>    n_starts_converged selected_start_id near_bound
+#>                 <int>             <int>     <lgcl>
+#> 1:                  6                 6      FALSE
+rating_support(fit)               # how much rests on gaugings
+#>     limb lower_stage_m upper_stage_m n_gaugings gauged_min_stage_m
+#>    <int>         <num>         <num>      <int>              <num>
+#> 1:     1           0.3             3         46                0.3
+#>    gauged_max_stage_m lower_unsupported_m upper_unsupported_m
+#>                 <num>               <num>               <num>
+#> 1:                  3                   0                   0
+#>    lower_unsupported_frac upper_unsupported_frac
+#>                     <num>                  <num>
+#> 1:                      0                      0
+
+apply_rating(fit, c(0.8, 1.6, 2.4))
+#>    stage discharge extrapolated
+#>    <num>     <num>       <lgcl>
+#> 1:   0.8  2.258455        FALSE
+#> 2:   1.6  6.812454        FALSE
+#> 3:   2.4 12.985022        FALSE
+rating_plot(fit)
+
+```

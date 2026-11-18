@@ -71,3 +71,35 @@ data.table operations, so prefer the column.
 ## See also
 
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
+
+## Examples
+
+``` r
+# Gaugings whose rating changes character above about 2.4 m
+set.seed(7)
+stage_m <- seq(0.3, 3.5, by = 0.05)
+discharge_cms <- 4 * pmax(stage_m - 0.1, 0)^1.55 * (pmax(stage_m - 1.6, 0) + 1)^0.9 *
+  (pmax(stage_m - 2.4, 0) + 1)^1.1 * exp(rnorm(length(stage_m), sd = 0.03))
+
+candidates <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
+
+# The candidate each round adopted, and how much it improved the fit
+candidates[selected == TRUE, c("round", "candidate_stage", "improvement")]
+#>    round candidate_stage improvement
+#>    <int>           <num>       <num>
+#> 1:     1            2.45   0.8679386
+
+# The stages themselves, ready to pass to rate_optimise()
+breaks <- sort(candidates[selected == TRUE, candidate_stage])
+breaks
+#> [1] 2.45
+fit <- rate_optimise(discharge_cms, stage_m, control = breaks)
+rating_limbs(fit)
+#>     limb lower_stage_m upper_stage_m           C          a        n
+#>    <int>         <num>         <num>       <num>      <num>    <num>
+#> 1:     1          0.30          2.45 0.001049196 -2.5527229 6.292979
+#> 2:     2          2.45          3.50 1.871309888  0.4782094 4.017815
+
+# These are statistical suggestions only. Whether a stage marks a real
+# change of hydraulic control is a judgement for you, not the data.
+```

@@ -77,12 +77,12 @@ stage_dt <- data.table::data.table(stage = c(0.5, 1.5, 2.5))
 apply_rating_interval(stage_dt, rating_boot_dt)
 #>    stage extrapolated discharge_mean discharge_median discharge_gse
 #>    <num>       <lgcl>          <num>            <num>         <num>
-#> 1:   0.5        FALSE       0.979211        0.9878797      1.038741
-#> 2:   1.5        FALSE       5.681217        5.6838653      1.040993
-#> 3:   2.5        FALSE      12.868992       12.8965057      1.045910
+#> 1:   0.5        FALSE      0.9906373        0.9919398      1.038340
+#> 2:   1.5        FALSE      5.7387772        5.7242323      1.033839
+#> 3:   2.5        FALSE     12.9897539       12.9326164      1.035428
 #>    discharge_lower discharge_upper
 #>              <num>           <num>
-#> 1:       0.9201418        1.042176
-#> 2:       5.2805646        6.055316
-#> 3:      11.8205638       13.848566
+#> 1:       0.9345612        1.064795
+#> 2:       5.4616399        6.076604
+#> 3:      12.3433844       13.806740
 ```

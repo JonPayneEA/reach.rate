@@ -104,7 +104,41 @@ unsupported gap may reach before being flagged. Default <code>0.05</code>.</p></
 <code>extrapolates_above_range</code> (identical on every row – a whole-fit
 property, not per-limb), and <code>doubtful</code>.</p>
     </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="rating_support.html">rating_support()</a></code> for the same unsupported extents without a
+tolerance applied.</p></div>
+    </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">stage_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">3.2</span>, by <span class="op">=</span> <span class="fl">0.06</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">stage_m</span> <span class="op">&lt;</span> <span class="fl">1.5</span>, <span class="fl">3.2</span> <span class="op">*</span> <span class="va">stage_m</span><span class="op">^</span><span class="fl">1.6</span>,</span></span>
+<span class="r-in"><span>                        <span class="fl">3.2</span> <span class="op">*</span> <span class="fl">1.5</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">*</span> <span class="op">(</span><span class="va">stage_m</span> <span class="op">/</span> <span class="fl">1.5</span><span class="op">)</span><span class="op">^</span><span class="fl">2.1</span><span class="op">)</span> <span class="op">*</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.04</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># No gaugings between 1.2 and 1.8 m, where the limbs meet</span></span></span>
+<span class="r-in"><span><span class="va">keep</span> <span class="op">&lt;-</span> <span class="op">!</span><span class="op">(</span><span class="va">stage_m</span> <span class="op">&gt;</span> <span class="fl">1.2</span> <span class="op">&amp;</span> <span class="va">stage_m</span> <span class="op">&lt;</span> <span class="fl">1.8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span><span class="op">[</span><span class="va">keep</span><span class="op">]</span>, <span class="va">stage_m</span><span class="op">[</span><span class="va">keep</span><span class="op">]</span>, control <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Each limb stretches well beyond its nearest gauging at the junction,</span></span></span>
+<span class="r-in"><span><span class="co"># and the operational range (to 4 m) is above the highest gauging</span></span></span>
+<span class="r-in"><span><span class="va">flagged</span> <span class="op">&lt;-</span> <span class="fu">flag_extrapolated_limbs</span><span class="op">(</span><span class="va">fit</span>, operational_upper_m <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">flagged</span>, all_columns <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>,</span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"limb"</span>, <span class="st">"lower_unsupported_frac"</span>, <span class="st">"upper_unsupported_frac"</span>,</span></span>
+<span class="r-in"><span>    <span class="st">"extrapolates_above_range"</span>, <span class="st">"doubtful"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     limb lower_unsupported_frac upper_unsupported_frac extrapolates_above_range</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;                  &lt;num&gt;                  &lt;num&gt;                   &lt;lgcl&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1              0.0000000                   0.25                     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:     2              0.1785714                   0.00                     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    doubtful</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      &lt;lgcl&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:     TRUE</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

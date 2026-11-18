@@ -135,6 +135,47 @@ or <code>NULL</code> (default) for an independently-fitted result.</p></dd>
 
 </dl></div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># A FlodeRating normally comes from rate_optimise(); read it through</span></span></span>
+<span class="r-in"><span><span class="co"># the accessors.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">stage_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">3</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fl">3.2</span> <span class="op">*</span> <span class="va">stage_m</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.03</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;FlodeRating&gt; 1 limb(s), status: independently_fitted</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     limb lower_stage_m upper_stage_m        C          a        n  rmse_cms</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;         &lt;num&gt;         &lt;num&gt;    &lt;num&gt;      &lt;num&gt;    &lt;num&gt;     &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1           0.5             3 3.520861 0.05580791 1.538393 0.2765406</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    r_squared</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1: 0.9973271</span>
+<span class="r-in"><span><span class="fu"><a href="rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     limb lower_stage_m upper_stage_m        C          a        n</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;         &lt;num&gt;         &lt;num&gt;    &lt;num&gt;      &lt;num&gt;    &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1           0.5             3 3.520861 0.05580791 1.538393</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="rating_evidence.html">rating_evidence</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    stage_m discharge_cms  limb</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      &lt;num&gt;         &lt;num&gt; &lt;int&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     0.5      1.035953     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:     0.6      1.420969     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:     0.7      1.763679     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:     0.8      2.348976     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5:     0.9      2.730430     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6:     1.0      3.122196     1</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The constructor checks its input, so a malformed object cannot exist:</span></span></span>
+<span class="r-in"><span><span class="co"># here the limb table is missing its stage bounds.</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu">FlodeRating</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  limbs <span class="op">=</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span>limb <span class="op">=</span> <span class="fl">1</span>, C <span class="op">=</span> <span class="fl">1</span>, a <span class="op">=</span> <span class="fl">0</span>, n <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  gaugings <span class="op">=</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span>discharge_cms <span class="op">=</span> <span class="fl">1</span>, stage_m <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Error : &lt;reach.rate::FlodeRating&gt; object is invalid:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - limbs is missing required column(s): lower_stage_m, upper_stage_m</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

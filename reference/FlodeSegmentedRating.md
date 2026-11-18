@@ -69,3 +69,38 @@ FlodeSegmentedRating(
 
   Logical. Whether the interior breakpoints were refit as free
   parameters (`TRUE`) or held fixed at `control` (`FALSE`).
+
+## Examples
+
+``` r
+# Three multiplicative segments, so there is no junction to reconcile.
+set.seed(7)
+stage_m <- seq(0.3, 3.5, by = 0.05)
+discharge_cms <- 4 * pmax(stage_m - 0.1, 0)^1.55 * (pmax(stage_m - 1.6, 0) + 1)^0.9 *
+  (pmax(stage_m - 2.4, 0) + 1)^1.1 * exp(rnorm(length(stage_m), sd = 0.03))
+fit <- rate_optimise_segmented(discharge_cms, stage_m, control = c(1.6, 2.4))
+fit
+#> <FlodeSegmentedRating> 3 segment(s), status: independently_fitted, R² = 0.9994
+#>          C        bp1       n1        n2       n3   bp2   bp3  rmse_cms
+#>      <num>      <num>    <num>     <num>    <num> <num> <num>     <num>
+#> 1: 2.37908 -0.1903062 1.986332 0.7764828 1.051703   1.6   2.4 0.9894296
+#>    r_squared n_obs n_starts_attempted n_starts_converged selected_start_id
+#>        <num> <int>              <int>              <int>             <int>
+#> 1:  0.999443    65                  4                  4                 1
+rating_coefficients(fit)[, c("parameter", "estimate", "unit")]
+#>    parameter   estimate         unit
+#>       <char>      <num>       <char>
+#> 1:         C  2.3790801 cms per m^n1
+#> 2:       bp1 -0.1903062            m
+#> 3:        n1  1.9863320            1
+#> 4:       bp2  1.6000000            m
+#> 5:        n2  0.7764828            1
+#> 6:       bp3  2.4000000            m
+#> 7:        n3  1.0517028            1
+apply_rating(fit, c(0.5, 1.5, 3))
+#>    stage discharge extrapolated
+#>    <num>     <num>       <lgcl>
+#> 1:   0.5  1.139443        FALSE
+#> 2:   1.5  6.748761        FALSE
+#> 3:   3.0 77.106058        FALSE
+```

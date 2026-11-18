@@ -67,3 +67,44 @@ FlodeRating(
 
   Data.table of per-draw bootstrap coefficients, or `NULL` if the fit
   wasn't produced with `n_boot > 0`.
+
+## Examples
+
+``` r
+# A FlodeRating normally comes from rate_optimise(); read it through
+# the accessors.
+set.seed(1)
+stage_m <- seq(0.5, 3, by = 0.1)
+discharge_cms <- 3.2 * stage_m^1.6 * exp(rnorm(length(stage_m), sd = 0.03))
+fit <- rate_optimise(discharge_cms, stage_m)
+fit
+#> <FlodeRating> 1 limb(s), status: independently_fitted
+#>     limb lower_stage_m upper_stage_m        C          a        n  rmse_cms
+#>    <int>         <num>         <num>    <num>      <num>    <num>     <num>
+#> 1:     1           0.5             3 3.520861 0.05580791 1.538393 0.2765406
+#>    r_squared
+#>        <num>
+#> 1: 0.9973271
+rating_limbs(fit)
+#>     limb lower_stage_m upper_stage_m        C          a        n
+#>    <int>         <num>         <num>    <num>      <num>    <num>
+#> 1:     1           0.5             3 3.520861 0.05580791 1.538393
+head(rating_evidence(fit))
+#>    stage_m discharge_cms  limb
+#>      <num>         <num> <int>
+#> 1:     0.5      1.035953     1
+#> 2:     0.6      1.420969     1
+#> 3:     0.7      1.763679     1
+#> 4:     0.8      2.348976     1
+#> 5:     0.9      2.730430     1
+#> 6:     1.0      3.122196     1
+
+# The constructor checks its input, so a malformed object cannot exist:
+# here the limb table is missing its stage bounds.
+try(FlodeRating(
+  limbs = data.table::data.table(limb = 1, C = 1, a = 0, n = 1),
+  gaugings = data.table::data.table(discharge_cms = 1, stage_m = 1)
+))
+#> Error : <reach.rate::FlodeRating> object is invalid:
+#> - limbs is missing required column(s): lower_stage_m, upper_stage_m
+```

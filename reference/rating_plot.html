@@ -5,11 +5,31 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Plot a fitted rating curve (S7 generic) — rating_plot"><meta name="description" content="Dispatches on the fit's class: FlodeRating and
-FlodeSegmentedRating each provide their own method, so the same
-call works regardless of which model architecture produced the fit."><meta property="og:description" content="Dispatches on the fit's class: FlodeRating and
-FlodeSegmentedRating each provide their own method, so the same
-call works regardless of which model architecture produced the fit."></head><body>
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Plot a fitted rating curve (S7 generic) — rating_plot"><meta name="description" content="Draws a rating with discharge on the horizontal axis and stage on the
+vertical. Dispatches on the class of fit, so the same call works
+whichever model produced the rating:
+FlodeRating: the gauged points with each limb's fitted curve drawn
+over them, one colour per limb, in base graphics.
+FlodeSegmentedRating: the gauged points and the single joint curve,
+with dashed horizontal lines where each segment's factor turns on
+(bp1 to bpk), as a ggplot2 figure.
+FlodeRatingTable: each limb's curve in its own colour, so a kink or
+overlap at a junction can be seen, as a ggplot2 figure. A table holds
+no gaugings, so there are no points.
+
+"><meta property="og:description" content="Draws a rating with discharge on the horizontal axis and stage on the
+vertical. Dispatches on the class of fit, so the same call works
+whichever model produced the rating:
+FlodeRating: the gauged points with each limb's fitted curve drawn
+over them, one colour per limb, in base graphics.
+FlodeSegmentedRating: the gauged points and the single joint curve,
+with dashed horizontal lines where each segment's factor turns on
+(bp1 to bpk), as a ggplot2 figure.
+FlodeRatingTable: each limb's curve in its own colour, so a kink or
+overlap at a junction can be seen, as a ggplot2 figure. A table holds
+no gaugings, so there are no points.
+
+"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -60,10 +80,17 @@ call works regardless of which model architecture produced the fit."></head><bod
     </div>
 
     <div class="ref-description section level2">
-    <p>Dispatches on the fit's class: <a href="FlodeRating.html">FlodeRating</a> and
-<a href="FlodeSegmentedRating.html">FlodeSegmentedRating</a> each provide their own method, so the same
-call works regardless of which model architecture produced the fit.</p>
-    </div>
+    <p>Draws a rating with discharge on the horizontal axis and stage on the
+vertical. Dispatches on the class of <code>fit</code>, so the same call works
+whichever model produced the rating:</p><ul><li><p><a href="FlodeRating.html">FlodeRating</a>: the gauged points with each limb's fitted curve drawn
+over them, one colour per limb, in base graphics.</p></li>
+<li><p><a href="FlodeSegmentedRating.html">FlodeSegmentedRating</a>: the gauged points and the single joint curve,
+with dashed horizontal lines where each segment's factor turns on
+(<code>bp1</code> to <code>bpk</code>), as a ggplot2 figure.</p></li>
+<li><p><a href="FlodeRatingTable.html">FlodeRatingTable</a>: each limb's curve in its own colour, so a kink or
+overlap at a junction can be seen, as a ggplot2 figure. A table holds
+no gaugings, so there are no points.</p></li>
+</ul></div>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
@@ -75,14 +102,57 @@ call works regardless of which model architecture produced the fit.</p>
 
 
 <dl><dt id="arg-fit">fit<a class="anchor" aria-label="anchor" href="#arg-fit"></a></dt>
-<dd><p>A <code>FlodeRating</code> or <code>FlodeSegmentedRating</code> object.</p></dd>
+<dd><p>A <a href="FlodeRating.html">FlodeRating</a>, <a href="FlodeSegmentedRating.html">FlodeSegmentedRating</a> or
+<a href="FlodeRatingTable.html">FlodeRatingTable</a>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Passed to the class-specific method.</p></dd>
+<dd><p>Options for the class-specific method:</p><ul><li><p><code>colours</code> (<a href="FlodeRating.html">FlodeRating</a> only): plotting colours, one per limb, or
+<code>NULL</code> (default) for a single colour. A vector of the wrong length
+is ignored with a warning.</p></li>
+<li><p><code>n_points</code>: how many points are used to draw each limb's curve (the
+whole curve, for a segmented rating). Defaults to <code>200L</code>, or <code>300L</code>
+for a <a href="FlodeSegmentedRating.html">FlodeSegmentedRating</a>.</p></li>
+</ul></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
+    <p><code>NULL</code>, invisibly, for a <a href="FlodeRating.html">FlodeRating</a>, which draws in base
+graphics. For a <a href="FlodeSegmentedRating.html">FlodeSegmentedRating</a> or a <a href="FlodeRatingTable.html">FlodeRatingTable</a>, the
+ggplot2 figure, invisibly, as well as drawing it.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="plot_rating_residuals.html">plot_rating_residuals()</a></code> for how well each limb fits,
+<code><a href="plot_rating_curves.html">plot_rating_curves()</a></code> to overlay several ratings, and
+<code><a href="plot_rc_gaps.html">plot_rc_gaps()</a></code> for a before and after view of a closed junction.</p></div>
+    </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">stage_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">3.2</span>, by <span class="op">=</span> <span class="fl">0.06</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">stage_m</span> <span class="op">&lt;</span> <span class="fl">1.5</span>, <span class="fl">3.2</span> <span class="op">*</span> <span class="va">stage_m</span><span class="op">^</span><span class="fl">1.6</span>,</span></span>
+<span class="r-in"><span>                        <span class="fl">3.2</span> <span class="op">*</span> <span class="fl">1.5</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">*</span> <span class="op">(</span><span class="va">stage_m</span> <span class="op">/</span> <span class="fl">1.5</span><span class="op">)</span><span class="op">^</span><span class="fl">2.1</span><span class="op">)</span> <span class="op">*</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.04</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Two independent limbs: points, with each limb's curve over them</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">rating_plot</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="rating_plot-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The same rating as an equation table: just the curves, one colour per limb</span></span></span>
+<span class="r-in"><span><span class="fu">rating_plot</span><span class="op">(</span><span class="fu"><a href="as_rating_table.html">as_rating_table</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="rating_plot-2.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A joint segmented fit</span></span></span>
+<span class="r-in"><span><span class="va">fit_seg</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise_segmented.html">rate_optimise_segmented</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">rating_plot</span><span class="op">(</span><span class="va">fit_seg</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="rating_plot-3.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

@@ -88,3 +88,42 @@ unconstrained fit is kept and a warning is issued.
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md),
 [`align_limb_equations()`](https://jonpayneea.github.io/reach.rate/reference/align_limb_equations.md)
 (in the `gap_check` module) for the closed-form, no-refit alternative
+
+## Examples
+
+``` r
+set.seed(42)
+stage_m <- seq(0.3, 3.2, by = 0.06)
+discharge_cms <- ifelse(stage_m < 1.5, 3.2 * stage_m^1.6,
+                        3.2 * 1.5^1.6 * (stage_m / 1.5)^2.1) *
+  exp(rnorm(length(stage_m), sd = 0.04))
+
+# Fitted independently, the two limbs disagree about the discharge at
+# their shared boundary (1.5 m); fitted with the junction constraint,
+# they agree exactly.
+independent <- rate_optimise(discharge_cms, stage_m, control = 1.5)
+constrained <- rate_optimise_constrained(discharge_cms, stage_m, control = 1.5)
+
+junction_discharge <- function(fit) {
+  limbs <- rating_limbs(fit)
+  h <- limbs$upper_stage_m[1]
+  c(below = limbs$C[1] * (h - limbs$a[1])^limbs$n[1],
+    above = limbs$C[2] * (h - limbs$a[2])^limbs$n[2])
+}
+rbind(independent = junction_discharge(independent),
+      constrained = junction_discharge(constrained))
+#>                below    above
+#> independent 5.951898 6.370886
+#> constrained 5.951898 5.951898
+
+# The anchor limb is untouched; the others were refitted (aligned = TRUE)
+rating_limbs(constrained, all_columns = TRUE)[, c("limb", "C", "a", "n", "aligned")]
+#>     limb        C           a        n aligned
+#>    <int>    <num>       <num>    <num>  <lgcl>
+#> 1:     1 3.387724  0.03466713 1.474948   FALSE
+#> 2:     2 2.384472 -0.02706901 2.160699    TRUE
+rating_history(constrained)
+#>     step       class            status n_limbs
+#>    <int>      <char>            <char>   <int>
+#> 1:     1 FlodeRating constrained_refit       2
+```

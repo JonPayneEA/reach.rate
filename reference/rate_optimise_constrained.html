@@ -163,6 +163,45 @@ kept and a warning is issued.</p>
 <code>gap_check</code> module) for the closed-form, no-refit alternative</p></div>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">stage_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">3.2</span>, by <span class="op">=</span> <span class="fl">0.06</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">stage_m</span> <span class="op">&lt;</span> <span class="fl">1.5</span>, <span class="fl">3.2</span> <span class="op">*</span> <span class="va">stage_m</span><span class="op">^</span><span class="fl">1.6</span>,</span></span>
+<span class="r-in"><span>                        <span class="fl">3.2</span> <span class="op">*</span> <span class="fl">1.5</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">*</span> <span class="op">(</span><span class="va">stage_m</span> <span class="op">/</span> <span class="fl">1.5</span><span class="op">)</span><span class="op">^</span><span class="fl">2.1</span><span class="op">)</span> <span class="op">*</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.04</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Fitted independently, the two limbs disagree about the discharge at</span></span></span>
+<span class="r-in"><span><span class="co"># their shared boundary (1.5 m); fitted with the junction constraint,</span></span></span>
+<span class="r-in"><span><span class="co"># they agree exactly.</span></span></span>
+<span class="r-in"><span><span class="va">independent</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">constrained</span> <span class="op">&lt;-</span> <span class="fu">rate_optimise_constrained</span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">junction_discharge</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">limbs</span> <span class="op">&lt;-</span> <span class="fu"><a href="rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">h</span> <span class="op">&lt;-</span> <span class="va">limbs</span><span class="op">$</span><span class="va">upper_stage_m</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>below <span class="op">=</span> <span class="va">limbs</span><span class="op">$</span><span class="va">C</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">*</span> <span class="op">(</span><span class="va">h</span> <span class="op">-</span> <span class="va">limbs</span><span class="op">$</span><span class="va">a</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">^</span><span class="va">limbs</span><span class="op">$</span><span class="va">n</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>    above <span class="op">=</span> <span class="va">limbs</span><span class="op">$</span><span class="va">C</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">*</span> <span class="op">(</span><span class="va">h</span> <span class="op">-</span> <span class="va">limbs</span><span class="op">$</span><span class="va">a</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">^</span><span class="va">limbs</span><span class="op">$</span><span class="va">n</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>independent <span class="op">=</span> <span class="fu">junction_discharge</span><span class="op">(</span><span class="va">independent</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>      constrained <span class="op">=</span> <span class="fu">junction_discharge</span><span class="op">(</span><span class="va">constrained</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                below    above</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> independent 5.951898 6.370886</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> constrained 5.951898 5.951898</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The anchor limb is untouched; the others were refitted (aligned = TRUE)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">constrained</span>, all_columns <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"limb"</span>, <span class="st">"C"</span>, <span class="st">"a"</span>, <span class="st">"n"</span>, <span class="st">"aligned"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     limb        C           a        n aligned</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;    &lt;num&gt;       &lt;num&gt;    &lt;num&gt;  &lt;lgcl&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1 3.387724  0.03466713 1.474948   FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:     2 2.384472 -0.02706901 2.160699    TRUE</span>
+<span class="r-in"><span><span class="fu"><a href="rating_history.html">rating_history</a></span><span class="op">(</span><span class="va">constrained</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     step       class            status n_limbs</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;      &lt;char&gt;            &lt;char&gt;   &lt;int&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1 FlodeRating constrained_refit       2</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

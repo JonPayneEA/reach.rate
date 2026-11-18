@@ -133,6 +133,41 @@ at <code>control</code> (<code>FALSE</code>).</p></dd>
 
 </dl></div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Three multiplicative segments, so there is no junction to reconcile.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">7</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">stage_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">3.5</span>, by <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fl">4</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">stage_m</span> <span class="op">-</span> <span class="fl">0.1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">^</span><span class="fl">1.55</span> <span class="op">*</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">stage_m</span> <span class="op">-</span> <span class="fl">1.6</span>, <span class="fl">0</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">^</span><span class="fl">0.9</span> <span class="op">*</span></span></span>
+<span class="r-in"><span>  <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">stage_m</span> <span class="op">-</span> <span class="fl">2.4</span>, <span class="fl">0</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">^</span><span class="fl">1.1</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.03</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise_segmented.html">rate_optimise_segmented</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.6</span>, <span class="fl">2.4</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;FlodeSegmentedRating&gt; 3 segment(s), status: independently_fitted, R² = 0.9994</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          C        bp1       n1        n2       n3   bp2   bp3  rmse_cms</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      &lt;num&gt;      &lt;num&gt;    &lt;num&gt;     &lt;num&gt;    &lt;num&gt; &lt;num&gt; &lt;num&gt;     &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1: 2.37908 -0.1903062 1.986332 0.7764828 1.051703   1.6   2.4 0.9894296</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    r_squared n_obs n_starts_attempted n_starts_converged selected_start_id</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        &lt;num&gt; &lt;int&gt;              &lt;int&gt;              &lt;int&gt;             &lt;int&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:  0.999443    65                  4                  4                 1</span>
+<span class="r-in"><span><span class="fu"><a href="rating_coefficients.html">rating_coefficients</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"parameter"</span>, <span class="st">"estimate"</span>, <span class="st">"unit"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    parameter   estimate         unit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;char&gt;      &lt;num&gt;       &lt;char&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:         C  2.3790801 cms per m^n1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:       bp1 -0.1903062            m</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:        n1  1.9863320            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:       bp2  1.6000000            m</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5:        n2  0.7764828            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6:       bp3  2.4000000            m</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7:        n3  1.0517028            1</span>
+<span class="r-in"><span><span class="fu"><a href="apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">1.5</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    stage discharge extrapolated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;num&gt;     &lt;num&gt;       &lt;lgcl&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:   0.5  1.139443        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:   1.5  6.748761        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:   3.0 77.106058        FALSE</span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
