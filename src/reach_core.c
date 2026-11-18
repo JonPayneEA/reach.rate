@@ -162,3 +162,141 @@ REACH_API int reach_tangent_limb(double C, double a, double n, double h,
   *a_out = h - depth / n;
   return REACH_OK;
 }
+
+/* ---- limb crossing ----------------------------------------------------- */
+
+#define REACH_CROSSING_MAXIT 1000
+
+/* f(H) = C1 (H - a1)^n1 - C2 (H - a2)^n2, each side as written. */
+static double crossing_f(double C1, double a1, double n1,
+                         double C2, double a2, double n2, double h) {
+  return C1 * reach_pow(h - a1, n1) - C2 * reach_pow(h - a2, n2);
+}
+
+/* Brent's method (R. P. Brent, Algorithms for Minimization without
+ * Derivatives, 1973, ch. 4): bisection safeguarded by secant and inverse
+ * quadratic interpolation. Written from the published algorithm. */
+REACH_API int reach_crossing(double C1, double a1, double n1,
+                             double C2, double a2, double n2,
+                             double lo, double hi, double tol, double *root) {
+  double a, b, c, fa, fb, fc, d, e;
+  int iter;
+  const double eps = 2.220446049250313e-16;
+
+  if (!root) return REACH_ERR_ARG;
+  if (!isfinite(C1) || !isfinite(a1) || !isfinite(n1) || !isfinite(C2) || !isfinite(a2) ||
+      !isfinite(n2) || !isfinite(lo) || !isfinite(hi) || !isfinite(tol) || !(tol > 0.0)) {
+    return REACH_ERR_VALUE;
+  }
+  if (!(lo < hi)) return REACH_ERR_ORDER;
+
+  a = lo;
+  b = hi;
+  fa = crossing_f(C1, a1, n1, C2, a2, n2, a);
+  fb = crossing_f(C1, a1, n1, C2, a2, n2, b);
+  if (!isfinite(fa) || !isfinite(fb)) return REACH_NO_CROSSING;
+  if (fa == 0.0) { *root = a; return REACH_OK; }
+  if (fb == 0.0) { *root = b; return REACH_OK; }
+  if ((fa > 0.0) == (fb > 0.0)) return REACH_NO_CROSSING;
+
+  c = a; fc = fa;
+  d = e = b - a;
+  for (iter = 0; iter < REACH_CROSSING_MAXIT; iter++) {
+    double tol1, xm;
+    if ((fb > 0.0) == (fc > 0.0)) { c = a; fc = fa; d = e = b - a; }
+    if (fabs(fc) < fabs(fb)) { a = b; b = c; c = a; fa = fb; fb = fc; fc = fa; }
+    tol1 = 2.0 * eps * fabs(b) + 0.5 * tol;
+    xm = 0.5 * (c - b);
+    if (fabs(xm) <= tol1 || fb == 0.0) { *root = b; return REACH_OK; }
+    if (fabs(e) >= tol1 && fabs(fa) > fabs(fb)) {
+      double s = fb / fa, p, q, r, lim_a, lim_b;
+      if (a == c) {
+        p = 2.0 * xm * s;
+        q = 1.0 - s;
+      } else {
+        q = fa / fc;
+        r = fb / fc;
+        p = s * (2.0 * xm * q * (q - r) - (b - a) * (r - 1.0));
+        q = (q - 1.0) * (r - 1.0) * (s - 1.0);
+      }
+      if (p > 0.0) q = -q;
+      p = fabs(p);
+      lim_a = 3.0 * xm * q - fabs(tol1 * q);
+      lim_b = fabs(e * q);
+      if (2.0 * p < (lim_a < lim_b ? lim_a : lim_b)) { e = d; d = p / q; }
+      else { d = xm; e = d; }
+    } else {
+      d = xm; e = d;
+    }
+    a = b;
+    fa = fb;
+    if (fabs(d) > tol1) b += d;
+    else b += (xm >= 0.0 ? tol1 : -tol1);
+    fb = crossing_f(C1, a1, n1, C2, a2, n2, b);
+    if (!isfinite(fb)) return REACH_NO_CROSSING;
+  }
+  /* Brent's method converges long before this for any sensible bracket;
+   * return the best estimate rather than refuse. */
+  *root = b;
+  return REACH_OK;
+}
+
+/* ---- cross-section geometry and Manning -------------------------------- */
+
+REACH_API int reach_xs_geometry(const double *distance, const double *elevation,
+                                size_t n_points, const double *stage, size_t m,
+                                double *area, double *perimeter) {
+  size_t i, k;
+  if (!distance || !elevation || n_points < 2) return REACH_ERR_ARG;
+  if (m > 0 && !stage) return REACH_ERR_ARG;
+  for (i = 0; i < n_points; i++) {
+    if (!isfinite(distance[i]) || !isfinite(elevation[i])) return REACH_ERR_VALUE;
+    if (i > 0 && !(distance[i] > distance[i - 1])) return REACH_ERR_ORDER;
+  }
+
+  for (k = 0; k < m; k++) {
+    double h = stage[k], a = 0.0, p = 0.0;
+    if (is_nan(h)) {
+      if (area) area[k] = h;
+      if (perimeter) perimeter[k] = h;
+      continue;
+    }
+    for (i = 0; i + 1 < n_points; i++) {
+      double x1 = distance[i], z1 = elevation[i];
+      double x2 = distance[i + 1], z2 = elevation[i + 1];
+      double d1 = h - z1, d2 = h - z2;
+      if (d1 <= 0.0 && d2 <= 0.0) continue;
+      if (d1 > 0.0 && d2 > 0.0) {
+        a = a + (d1 + d2) / 2.0 * (x2 - x1);
+        p = p + sqrt((x2 - x1) * (x2 - x1) + (z2 - z1) * (z2 - z1));
+      } else {
+        double frac = d1 / (d1 - d2);
+        double xc = x1 + frac * (x2 - x1);
+        if (d1 > 0.0) {
+          a = a + d1 / 2.0 * (xc - x1);
+          p = p + sqrt((xc - x1) * (xc - x1) + d1 * d1);
+        } else {
+          a = a + d2 / 2.0 * (x2 - xc);
+          p = p + sqrt((x2 - xc) * (x2 - xc) + d2 * d2);
+        }
+      }
+    }
+    if (area) area[k] = a;
+    if (perimeter) perimeter[k] = p;
+  }
+  return REACH_OK;
+}
+
+REACH_API int reach_manning(const double *area, const double *perimeter, size_t m,
+                            double roughness, double slope, double *discharge) {
+  size_t k;
+  if (m > 0 && (!area || !perimeter || !discharge)) return REACH_ERR_ARG;
+  if (!isfinite(roughness) || !isfinite(slope) || !(roughness > 0.0) || slope < 0.0) {
+    return REACH_ERR_VALUE;
+  }
+  for (k = 0; k < m; k++) {
+    double radius = perimeter[k] > 0.0 ? area[k] / perimeter[k] : 0.0;
+    discharge[k] = (1.0 / roughness) * area[k] * reach_pow(radius, 2.0 / 3.0) * sqrt(slope);
+  }
+  return REACH_OK;
+}

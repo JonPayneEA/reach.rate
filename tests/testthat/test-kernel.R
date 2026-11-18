@@ -164,3 +164,129 @@ test_that("apply_rating and apply_rating_inverse still agree with the reference 
 test_that("the kernel reports its ABI version", {
   expect_identical(.kernel_abi_version(), 1L)
 })
+
+# ---- limb crossing ---------------------------------------------------------
+
+test_that("crossing: agrees with the uniroot() it replaced, and the curves meet at the root", {
+  set.seed(201)
+  found <- 0L
+  for (i in 1:300) {
+    C1 <- runif(1, 0.3, 5); a1 <- runif(1, -1, 0.5); n1 <- runif(1, 0.5, 4)
+    C2 <- runif(1, 0.3, 5); a2 <- runif(1, -1, 0.5); n2 <- runif(1, 0.5, 4)
+    lo <- runif(1, 0.6, 2); hi <- lo + runif(1, 0.5, 5)
+    ref <- reference_intersection(C1, a1, n1, C2, a2, n2, lo, hi)
+    got <- .kernel_crossing(C1, a1, n1, C2, a2, n2, lo, hi)
+
+    expect_identical(is.na(got), is.na(ref))
+    if (!is.na(got)) {
+      found <- found + 1L
+      expect_equal(got, ref, tolerance = 1e-7)
+      f <- C1 * (got - a1)^n1 - C2 * (got - a2)^n2
+      expect_lt(abs(f), 1e-6 * max(1, abs(C1 * (got - a1)^n1)))
+    }
+  }
+  expect_gt(found, 50L)   # the draw really did produce crossings, not just refusals
+})
+
+test_that("crossing: ends, no crossing, unevaluable curves and bad input", {
+  # 2 H = H^2 meets at H = 2
+  expect_equal(.kernel_crossing(2, 0, 1, 1, 0, 2, 1, 3), 2, tolerance = 1e-8)
+  expect_identical(.kernel_crossing(2, 0, 1, 1, 0, 2, 2, 3), 2)     # the root is the lower end
+  expect_identical(.kernel_crossing(2, 0, 1, 1, 0, 2, 1, 2), 2)     # the root is the upper end
+  expect_true(is.na(.kernel_crossing(2, 0, 1, 1, 0, 2, 2.5, 3)))    # same order throughout
+  expect_true(is.na(.kernel_crossing(2, 0, 1.5, 1, 5, 1.5, 1, 3)))  # (H - 5)^1.5 is NaN
+  expect_true(is.na(.kernel_crossing(2, 0, 1, 1, 0, 2, 3, 1)))      # lo not below hi
+  expect_true(is.na(.kernel_crossing(NA, 0, 1, 1, 0, 2, 1, 3)))
+  expect_true(is.na(.kernel_crossing(2, 0, 1, 1, 0, 2, 1, 3, tol = 0)))
+})
+
+test_that("crossing: graft_rating and align_limb_boundaries still find the same joins", {
+  limbs <- data.table::data.table(lower_level = c(0, 1.5), upper_level = c(1.5, 3.41),
+                                  C = c(2.5, 2.831), a = c(0, -0.886), n = c(1.5, 1.935))
+  existing <- data.table::data.table(lower_level = 3.41, upper_level = 6, C = 0.3128, a = 0, n = 4.095)
+  joined <- graft_rating(limbs, existing)@table
+  expected <- reference_intersection(2.831, -0.886, 1.935, 0.3128, 0, 4.095, 3.41, 6)
+  expect_equal(joined$upper_level[2], expected, tolerance = 1e-7)
+})
+
+# ---- cross-section geometry and Manning -------------------------------------
+
+random_section <- function(n_points) {
+  x <- cumsum(c(0, runif(n_points - 1L, 0.2, 3)))
+  z <- 0.05 * (x - mean(x))^2 + runif(n_points, 0, 0.4)
+  list(distance = x, elevation = z)
+}
+
+test_that("cross-section: area and perimeter match the R reference on random sections", {
+  set.seed(202)
+  for (i in 1:60) {
+    s <- random_section(sample(3:60, 1L))
+    stages <- c(
+      seq(min(s$elevation) - 0.5, max(s$elevation) + 0.5, length.out = 120),
+      s$elevation,                              # exactly on every survey point
+      s$elevation + 1e-9, s$elevation - 1e-9,
+      NaN
+    )
+    got <- .kernel_xs(s$distance, s$elevation, stages)
+    ref <- vapply(stages, function(h) {
+      if (is.nan(h)) c(area = NaN, perimeter = NaN) else reference_xs_area_perimeter(s$distance, s$elevation, h)
+    }, numeric(2))
+    expect_equal(got$area, unname(ref["area", ]), tolerance = 1e-12)
+    expect_equal(got$perimeter, unname(ref["perimeter", ]), tolerance = 1e-12)
+  }
+})
+
+test_that("cross-section: hand-computed trapezoid, bank full, above the banks and below the bed", {
+  x <- c(0, 1, 9, 10); z <- c(3, 0, 0, 3)
+  g <- .kernel_xs(x, z, c(-1, 0, 2, 3, 5))
+  expect_equal(g$area, c(0, 0, 2 * (8 + 2 / 3), 27, 47))
+  expect_equal(g$perimeter, c(0, 0, 8 + 2 * sqrt(4 + 4 / 9), 8 + 2 * sqrt(10), 8 + 2 * sqrt(10)))
+})
+
+test_that("cross-section: .xs_area_perimeter keeps its named-vector form", {
+  g <- .xs_area_perimeter(c(0, 1, 9, 10), c(3, 0, 0, 3), 2)
+  expect_named(g, c("area", "perimeter"))
+  expect_equal(g[["area"]], 2 * (8 + 2 / 3))
+})
+
+test_that("cross-section: a malformed survey is refused with a message that says what is wrong", {
+  expect_error(.kernel_xs(c(0, 1, 1), c(1, 0, 1), 0.5), "strictly increasing")
+  expect_error(.kernel_xs(c(0, 2, 1), c(1, 0, 1), 0.5), "strictly increasing")
+  expect_error(.kernel_xs(c(0, 1, 2), c(1, NA, 1), 0.5), "must be finite")
+  expect_error(.kernel_xs(0, 1, 0.5), "at least 2 points")
+  expect_error(.kernel_xs(c(0, 1), c(1, 0, 1), 0.5), "same length")
+})
+
+test_that("manning: matches the R reference, including zero perimeter and NaN", {
+  set.seed(203)
+  area <- c(runif(100, 0.1, 80), 0, 5, NaN)
+  perimeter <- c(runif(100, 1, 40), 0, 0, 3)
+  for (i in 1:20) {
+    n <- runif(1, 0.01, 0.1); s <- runif(1, 1e-4, 0.02)
+    ref <- suppressWarnings(reference_manning(area, perimeter, n, s))
+    got <- .kernel_manning(area, perimeter, n, s)
+    expect_equal(got, ref, tolerance = 1e-12)
+    expect_identical(is.nan(got), is.nan(ref))
+  }
+  expect_error(.kernel_manning(1, 1, 0, 0.001), "must be positive")
+  expect_error(.kernel_manning(1, 1, 0.03, -1), "must be positive")
+  expect_error(.kernel_manning(c(1, 2), 1, 0.03, 0.001), "same length")
+  expect_identical(.kernel_manning(10, 8, 0.03, 0), 0)
+})
+
+test_that("rate_from_cross_section: its synthetic points match the R reference end to end", {
+  set.seed(204)
+  s <- random_section(25)
+  xs <- data.table::data.table(distance_m = s$distance, elevation_m = s$elevation)
+  stage_seq <- seq(min(s$elevation) + 0.05, max(s$elevation), length.out = 40)
+  fit <- suppressWarnings(suppressMessages(
+    rate_from_cross_section(xs, slope = 0.002, roughness = 0.035, stage_seq = stage_seq)
+  ))
+
+  ref_geom <- vapply(stage_seq, function(h) reference_xs_area_perimeter(s$distance, s$elevation, h), numeric(2))
+  ref_q <- reference_manning(ref_geom["area", ], ref_geom["perimeter", ], 0.035, 0.002)
+  keep <- ref_q > 0
+  g <- fit@gaugings
+  expect_equal(g$stage_m, stage_seq[keep])
+  expect_equal(g$discharge_cms, ref_q[keep], tolerance = 1e-12)
+})

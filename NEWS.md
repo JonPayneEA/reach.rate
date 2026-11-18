@@ -1,5 +1,26 @@
 # reach.rate (development)
 
+* Two more pieces of the rating arithmetic moved into the C kernel
+  (`src/reach_core.c`), so another language can share them: the stage where
+  two limb equations cross, and the geometry of a surveyed cross-section.
+  `reach_crossing()` finds `C1 (H - a1)^n1 = C2 (H - a2)^n2` by Brent's
+  method to an absolute accuracy of the square root of machine epsilon, and
+  reports no crossing when the curves do not change order in the range or a
+  curve cannot be evaluated; `graft_rating()` and `align_limb_boundaries()`
+  use it, replacing `uniroot()` with the same tolerance. `reach_xs_geometry()`
+  gives wetted area and perimeter at each stage from the survey points (the
+  free surface is not part of the perimeter, a segment crossing the water
+  line is clipped, and the section is not extended above its highest
+  point), and `reach_manning()` turns them into Manning's discharge;
+  `rate_from_cross_section()` uses both. Results are unchanged: the previous
+  R code, including `uniroot()`, is kept in the tests as an oracle and the
+  kernel is compared against it on random equations and random surveys,
+  exactly at every survey point and just either side. A cross-section's
+  geometry for 4,000 survey points at 346 stages takes 0.009 s instead of
+  0.59 s. One small difference: a survey with a non-finite elevation or
+  distance is now refused with a clear message, where before it failed
+  with an unrelated condition. No mathematical changes.
+
 * The rating arithmetic now lives in a small C library, `src/reach_core.c`
   and `src/reach_core.h`, so that other languages can use exactly the same
   code. It covers stage to discharge, discharge to stage, which limb a stage

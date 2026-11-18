@@ -66,3 +66,53 @@ reference_tangent <- function(C, a, n, h) {
   depth <- h - a
   c(n * C * depth^(n - 1), h - depth / n)
 }
+
+# Wetted area and perimeter of a surveyed cross-section at one stage, as
+# .xs_area_perimeter() computed them before they moved into the C kernel.
+reference_xs_area_perimeter <- function(distance_m, elevation_m, stage) {
+  area <- 0
+  perimeter <- 0
+  for (i in seq_len(length(distance_m) - 1L)) {
+    x1 <- distance_m[i]; z1 <- elevation_m[i]
+    x2 <- distance_m[i + 1L]; z2 <- elevation_m[i + 1L]
+    d1 <- stage - z1
+    d2 <- stage - z2
+    if (d1 <= 0 && d2 <= 0) next
+    if (d1 > 0 && d2 > 0) {
+      area <- area + (d1 + d2) / 2 * (x2 - x1)
+      perimeter <- perimeter + sqrt((x2 - x1)^2 + (z2 - z1)^2)
+    } else {
+      frac <- d1 / (d1 - d2)
+      xc <- x1 + frac * (x2 - x1)
+      if (d1 > 0) {
+        area <- area + d1 / 2 * (xc - x1)
+        perimeter <- perimeter + sqrt((xc - x1)^2 + d1^2)
+      } else {
+        area <- area + d2 / 2 * (x2 - xc)
+        perimeter <- perimeter + sqrt((x2 - xc)^2 + d2^2)
+      }
+    }
+  }
+  c(area = area, perimeter = perimeter)
+}
+
+# Manning's discharge from area and perimeter, as rate_from_cross_section()
+# computed it.
+reference_manning <- function(area, perimeter, roughness, slope) {
+  radius <- ifelse(perimeter > 0, area / perimeter, 0)
+  (1 / roughness) * area * radius^(2 / 3) * sqrt(slope)
+}
+
+# The stage where two limb equations give the same discharge, as
+# .find_intersection_stage() found it with uniroot(), or NA if they do not
+# cross in the range.
+reference_intersection <- function(C1, a1, n1, C2, a2, n2, search_lo, search_hi) {
+  f <- function(H) C1 * (H - a1)^n1 - C2 * (H - a2)^n2
+  f_lo <- tryCatch(f(search_lo), error = function(e) NA_real_)
+  f_hi <- tryCatch(f(search_hi), error = function(e) NA_real_)
+  if (!is.finite(f_lo) || !is.finite(f_hi) || sign(f_lo) == sign(f_hi)) return(NA_real_)
+  tryCatch(
+    uniroot(f, lower = search_lo, upper = search_hi, tol = .Machine$double.eps^0.5)$root,
+    error = function(e) NA_real_
+  )
+}

@@ -151,6 +151,82 @@ static void test_rating_check(void) {
   }
 }
 
+
+static void test_crossing(void) {
+  double root;
+  /* 2 H = H^2 meets at H = 2 */
+  CHECK(reach_crossing(2.0, 0.0, 1.0, 1.0, 0.0, 2.0, 1.0, 3.0, 1e-12, &root) == REACH_OK);
+  CLOSE(root, 2.0);
+  /* An offset pair: 3 (H - 0.5)^1.5 = 2 (H + 0.2)^1.2 somewhere in 1..5 */
+  CHECK(reach_crossing(3.0, 0.5, 1.5, 2.0, -0.2, 1.2, 1.0, 5.0, 1e-12, &root) == REACH_OK);
+  CHECK(fabs(3.0 * pow(root - 0.5, 1.5) - 2.0 * pow(root + 0.2, 1.2)) < 1e-9);
+  /* A crossing exactly at an end is that end, from either side */
+  CHECK(reach_crossing(2.0, 0.0, 1.0, 1.0, 0.0, 2.0, 2.0, 3.0, 1e-12, &root) == REACH_OK && root == 2.0);
+  CHECK(reach_crossing(2.0, 0.0, 1.0, 1.0, 0.0, 2.0, 1.0, 2.0, 1e-12, &root) == REACH_OK && root == 2.0);
+  /* No change of order in the range, or a non-finite value */
+  CHECK(reach_crossing(2.0, 0.0, 1.0, 1.0, 0.0, 2.0, 2.5, 3.0, 1e-12, &root) == REACH_NO_CROSSING);
+  CHECK(reach_crossing(2.0, 0.0, 1.5, 1.0, 5.0, 1.5, 1.0, 3.0, 1e-12, &root) == REACH_NO_CROSSING); /* (H-5)^1.5 is NaN */
+  /* Bad input */
+  CHECK(reach_crossing(2.0, 0.0, 1.0, 1.0, 0.0, 2.0, 3.0, 1.0, 1e-12, &root) == REACH_ERR_ORDER);
+  CHECK(reach_crossing(2.0, 0.0, 1.0, 1.0, 0.0, 2.0, 1.0, 1.0, 1e-12, &root) == REACH_ERR_ORDER);
+  CHECK(reach_crossing(NAN, 0.0, 1.0, 1.0, 0.0, 2.0, 1.0, 3.0, 1e-12, &root) == REACH_ERR_VALUE);
+  CHECK(reach_crossing(2.0, 0.0, 1.0, 1.0, 0.0, 2.0, 1.0, 3.0, 0.0, &root) == REACH_ERR_VALUE);
+  CHECK(reach_crossing(2.0, 0.0, 1.0, 1.0, 0.0, 2.0, 1.0, 3.0, 1e-12, NULL) == REACH_ERR_ARG);
+  /* A steep pair: the two curves agree to rounding at the root found */
+  CHECK(reach_crossing(0.3128, 0.0, 4.095, 2.831, -0.886, 1.935, 3.41, 6.0, 1.4901161193847656e-08, &root) == REACH_OK);
+  CHECK(fabs(0.3128 * pow(root, 4.095) - 2.831 * pow(root + 0.886, 1.935)) < 1e-6 * 0.3128 * pow(root, 4.095));
+}
+
+static void test_xs_geometry(void) {
+  /* A trapezoid: walls rise 3 over 1 on each side, flat bed 8 wide */
+  const double x[4] = {0.0, 1.0, 9.0, 10.0}, z[4] = {3.0, 0.0, 0.0, 3.0};
+  const double stage[] = {-1.0, 0.0, 2.0, 3.0, 5.0, NAN};
+  double area[6], perim[6];
+  CHECK(reach_xs_geometry(x, z, 4, stage, 6, area, perim) == REACH_OK);
+  CLOSE(area[0], 0.0); CLOSE(perim[0], 0.0);            /* below the bed */
+  CLOSE(area[1], 0.0); CLOSE(perim[1], 0.0);            /* at the bed: nothing wet */
+  /* depth 2: area d (8 + d/3), perimeter 8 + 2 sqrt((d/3)^2 + d^2) */
+  CLOSE(area[2], 2.0 * (8.0 + 2.0 / 3.0));
+  CLOSE(perim[2], 8.0 + 2.0 * sqrt((2.0 / 3.0) * (2.0 / 3.0) + 4.0));
+  /* depth 3 is exactly bank full: the whole trapezoid, no free surface */
+  CLOSE(area[3], 3.0 * (8.0 + 1.0));
+  CLOSE(perim[3], 8.0 + 2.0 * sqrt(1.0 + 9.0));
+  /* above every point: the section is not extended upwards */
+  /* stage 5, above every point: segments give 3.5 + 40 + 3.5, and the
+   * perimeter is the 8 m bed plus two walls of length sqrt(10) */
+  CLOSE(area[4], 47.0);
+  CLOSE(perim[4], 8.0 + 2.0 * sqrt(10.0));
+  CHECK(isnan(area[5]) && isnan(perim[5]));
+  CHECK(reach_xs_geometry(x, z, 4, stage, 6, NULL, NULL) == REACH_OK);
+  CHECK(reach_xs_geometry(x, z, 4, NULL, 0, area, perim) == REACH_OK);
+}
+
+static void test_xs_geometry_errors(void) {
+  const double x[3] = {0.0, 1.0, 2.0}, z[3] = {1.0, 0.0, 1.0}, h[1] = {0.5};
+  const double bad_x[3] = {0.0, 1.0, 1.0}, nan_z[3] = {1.0, NAN, 1.0};
+  double area[1];
+  CHECK(reach_xs_geometry(x, z, 1, h, 1, area, NULL) == REACH_ERR_ARG);
+  CHECK(reach_xs_geometry(NULL, z, 3, h, 1, area, NULL) == REACH_ERR_ARG);
+  CHECK(reach_xs_geometry(x, z, 3, NULL, 1, area, NULL) == REACH_ERR_ARG);
+  CHECK(reach_xs_geometry(bad_x, z, 3, h, 1, area, NULL) == REACH_ERR_ORDER);
+  CHECK(reach_xs_geometry(x, nan_z, 3, h, 1, area, NULL) == REACH_ERR_VALUE);
+}
+
+static void test_manning(void) {
+  const double area[] = {10.0, 0.0, 4.0, NAN}, perim[] = {8.0, 0.0, 0.0, 1.0};
+  double q[4];
+  CHECK(reach_manning(area, perim, 4, 0.03, 0.001, q) == REACH_OK);
+  CLOSE(q[0], (1.0 / 0.03) * 10.0 * pow(1.25, 2.0 / 3.0) * sqrt(0.001));
+  CHECK(q[1] == 0.0);
+  CHECK(q[2] == 0.0);                    /* no wetted perimeter: radius 0 */
+  CHECK(isnan(q[3]));
+  CHECK(reach_manning(area, perim, 4, 0.0, 0.001, q) == REACH_ERR_VALUE);
+  CHECK(reach_manning(area, perim, 4, 0.03, -1.0, q) == REACH_ERR_VALUE);
+  CHECK(reach_manning(area, perim, 4, NAN, 0.001, q) == REACH_ERR_VALUE);
+  CHECK(reach_manning(area, perim, 4, 0.03, 0.0, q) == REACH_OK && q[0] == 0.0);
+  CHECK(reach_manning(NULL, perim, 4, 0.03, 0.001, q) == REACH_ERR_ARG);
+}
+
 static void test_version(void) {
   CHECK(reach_abi_version() == REACH_ABI_VERSION);
   CHECK(strlen(reach_version()) > 0);
@@ -165,6 +241,10 @@ int main(void) {
   test_junctions();
   test_tangent();
   test_rating_check();
+  test_crossing();
+  test_xs_geometry();
+  test_xs_geometry_errors();
+  test_manning();
   test_version();
   if (failures) { printf("%d check(s) failed\n", failures); return 1; }
   printf("reach_core: all checks passed\n");
