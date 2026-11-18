@@ -5,13 +5,15 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Read a spot-gauging archive — read_gaugings"><meta name="description" content="Reads gaugings from a CSV file (or a data.frame) into a table with
-standard column names, whatever the original headers were called. It
-cleans nothing and removes nothing: every row of the file is returned,
-in order. What it does is read every column as text, turn placeholder
-text such as --- into a missing value, parse stage, discharge, date
-and time explicitly, and record in read_issue anything that did not
-parse, so a bad row is visible and not silently lost or changed.
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Read a spot-gauging archive — read_gaugings"><meta name="description" content="Reads gaugings from delimited text (comma, semicolon, tab or pipe), a
+spreadsheet (.xlsx, .xls) or a data.frame into a table with standard
+column names, whatever the original headers were called. It cleans
+nothing and removes nothing: every row of the file is returned, in
+order. What it does is read every column as text, turn placeholder text
+such as --- into a missing value, parse stage, discharge, date and
+time explicitly, and record in read_issue anything that did not parse,
+so a bad row is visible and not silently lost or changed. The values as
+they were written are kept beside the parsed ones.
 The defaults match the column names of the Environment Agency
 WISKI-style gauging export (Station number, Date, Time, Stage,
 Flow). Use the mapping arguments for any other headers.
@@ -19,13 +21,18 @@ Dates are detected, not assumed. The format that parses the most values
 is used, day-first ahead of month-first when both fit (04/05/1970 is
 read as 4 May). The format chosen is reported in the message, with a
 warning when the choice was a default and could be wrong. Pass
-date_format (for example &quot;%d/%m/%Y&quot;) to settle it."><meta property="og:description" content="Reads gaugings from a CSV file (or a data.frame) into a table with
-standard column names, whatever the original headers were called. It
-cleans nothing and removes nothing: every row of the file is returned,
-in order. What it does is read every column as text, turn placeholder
-text such as --- into a missing value, parse stage, discharge, date
-and time explicitly, and record in read_issue anything that did not
-parse, so a bad row is visible and not silently lost or changed.
+date_format (for example &quot;%d/%m/%Y&quot;) to settle it. A spreadsheet's
+date cells arrive as Excel serial numbers and are recognised as such.
+Reading a spreadsheet needs the readxl package. Without it the
+function stops and says so; saving the sheet as a CSV is the alternative."><meta property="og:description" content="Reads gaugings from delimited text (comma, semicolon, tab or pipe), a
+spreadsheet (.xlsx, .xls) or a data.frame into a table with standard
+column names, whatever the original headers were called. It cleans
+nothing and removes nothing: every row of the file is returned, in
+order. What it does is read every column as text, turn placeholder text
+such as --- into a missing value, parse stage, discharge, date and
+time explicitly, and record in read_issue anything that did not parse,
+so a bad row is visible and not silently lost or changed. The values as
+they were written are kept beside the parsed ones.
 The defaults match the column names of the Environment Agency
 WISKI-style gauging export (Station number, Date, Time, Stage,
 Flow). Use the mapping arguments for any other headers.
@@ -33,7 +40,10 @@ Dates are detected, not assumed. The format that parses the most values
 is used, day-first ahead of month-first when both fit (04/05/1970 is
 read as 4 May). The format chosen is reported in the message, with a
 warning when the choice was a default and could be wrong. Pass
-date_format (for example &quot;%d/%m/%Y&quot;) to settle it."></head><body>
+date_format (for example &quot;%d/%m/%Y&quot;) to settle it. A spreadsheet's
+date cells arrive as Excel serial numbers and are recognised as such.
+Reading a spreadsheet needs the readxl package. Without it the
+function stops and says so; saving the sheet as a CSV is the alternative."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -84,13 +94,15 @@ date_format (for example &quot;%d/%m/%Y&quot;) to settle it."></head><body>
     </div>
 
     <div class="ref-description section level2">
-    <p>Reads gaugings from a CSV file (or a data.frame) into a table with
-standard column names, whatever the original headers were called. It
-cleans nothing and removes nothing: every row of the file is returned,
-in order. What it does is read every column as text, turn placeholder
-text such as <code>---</code> into a missing value, parse stage, discharge, date
-and time explicitly, and record in <code>read_issue</code> anything that did not
-parse, so a bad row is visible and not silently lost or changed.</p>
+    <p>Reads gaugings from delimited text (comma, semicolon, tab or pipe), a
+spreadsheet (<code>.xlsx</code>, <code>.xls</code>) or a data.frame into a table with standard
+column names, whatever the original headers were called. It cleans
+nothing and removes nothing: every row of the file is returned, in
+order. What it does is read every column as text, turn placeholder text
+such as <code>---</code> into a missing value, parse stage, discharge, date and
+time explicitly, and record in <code>read_issue</code> anything that did not parse,
+so a bad row is visible and not silently lost or changed. The values as
+they were written are kept beside the parsed ones.</p>
 <p>The defaults match the column names of the Environment Agency
 WISKI-style gauging export (<code>Station number</code>, <code>Date</code>, <code>Time</code>, <code>Stage</code>,
 <code>Flow</code>). Use the mapping arguments for any other headers.</p>
@@ -98,7 +110,10 @@ WISKI-style gauging export (<code>Station number</code>, <code>Date</code>, <cod
 is used, day-first ahead of month-first when both fit (<code>04/05/1970</code> is
 read as 4 May). The format chosen is reported in the message, with a
 warning when the choice was a default and could be wrong. Pass
-<code>date_format</code> (for example <code>"%d/%m/%Y"</code>) to settle it.</p>
+<code>date_format</code> (for example <code>"%d/%m/%Y"</code>) to settle it. A spreadsheet's
+date cells arrive as Excel serial numbers and are recognised as such.</p>
+<p>Reading a spreadsheet needs the <code>readxl</code> package. Without it the
+function stops and says so; saving the sheet as a CSV is the alternative.</p>
     </div>
 
     <div class="section level2">
@@ -111,8 +126,14 @@ warning when the choice was a default and could be wrong. Pass
 <span>  time <span class="op">=</span> <span class="st">"Time"</span>,</span>
 <span>  stage <span class="op">=</span> <span class="st">"Stage"</span>,</span>
 <span>  discharge <span class="op">=</span> <span class="st">"Flow"</span>,</span>
+<span>  datetime <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  date_format <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tz <span class="op">=</span> <span class="st">"UTC"</span>,</span>
+<span>  sep <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  dec <span class="op">=</span> <span class="st">"."</span>,</span>
+<span>  sheet <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  encoding <span class="op">=</span> <span class="st">"unknown"</span>,</span>
+<span>  keep_original <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -122,7 +143,8 @@ warning when the choice was a default and could be wrong. Pass
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A file path to a delimited text file, or a data.frame.</p></dd>
+<dd><p>A file path to a delimited text file or a spreadsheet, or a
+data.frame.</p></dd>
 
 
 <dt id="arg-station-id-station-name">station_id, station_name<a class="anchor" aria-label="anchor" href="#arg-station-id-station-name"></a></dt>
@@ -142,15 +164,51 @@ midnight, with no note.</p></dd>
 discharge (cumecs).</p></dd>
 
 
+<dt id="arg-datetime">datetime<a class="anchor" aria-label="anchor" href="#arg-datetime"></a></dt>
+<dd><p>Character, or <code>NULL</code> (default). The name of a single
+column holding date and time together, such as <code>2020-03-04 12:30:00</code>.
+When given, <code>date</code> and <code>time</code> are not used.</p></dd>
+
+
 <dt id="arg-date-format">date_format<a class="anchor" aria-label="anchor" href="#arg-date-format"></a></dt>
-<dd><p>A <code><a href="https://rdrr.io/r/base/strptime.html" class="external-link">strptime()</a></code> format for the date column, or <code>NULL</code>
-(default) to detect it.</p></dd>
+<dd><p>A <code><a href="https://rdrr.io/r/base/strptime.html" class="external-link">strptime()</a></code> format for the date column (or the
+date-time column), or <code>NULL</code> (default) to detect it.</p></dd>
 
 
 <dt id="arg-tz">tz<a class="anchor" aria-label="anchor" href="#arg-tz"></a></dt>
 <dd><p>Time zone label for <code>observation_time</code>. Default <code>"UTC"</code>. The
-clock time in the file is used as it stands, with no daylight-saving
-adjustment, so it is only as good as the file's own convention.</p></dd>
+clock time in the file is used as it stands: 12:00 in the file is
+12:00 in <code>tz</code>, with no daylight-saving adjustment, so it is only as
+good as the file's own convention. A clock time that does not exist in
+<code>tz</code> (the hour skipped when clocks go forward) becomes <code>NA</code>.</p></dd>
+
+
+<dt id="arg-sep">sep<a class="anchor" aria-label="anchor" href="#arg-sep"></a></dt>
+<dd><p>The field separator for a text file. <code>"auto"</code> (default)
+detects it.</p></dd>
+
+
+<dt id="arg-dec">dec<a class="anchor" aria-label="anchor" href="#arg-dec"></a></dt>
+<dd><p>The decimal mark in stage and discharge: <code>"."</code> (default) or
+<code>","</code>. A thousands separator is not guessed at; a value that does not
+parse is noted, not reinterpreted.</p></dd>
+
+
+<dt id="arg-sheet">sheet<a class="anchor" aria-label="anchor" href="#arg-sheet"></a></dt>
+<dd><p>The sheet to read from a spreadsheet, by name or number.
+Ignored for text.</p></dd>
+
+
+<dt id="arg-encoding">encoding<a class="anchor" aria-label="anchor" href="#arg-encoding"></a></dt>
+<dd><p>The encoding of a text file: <code>"unknown"</code> (default),
+<code>"UTF-8"</code> or <code>"Latin-1"</code>.</p></dd>
+
+
+<dt id="arg-keep-original">keep_original<a class="anchor" aria-label="anchor" href="#arg-keep-original"></a></dt>
+<dd><p>Logical. <code>TRUE</code> (default) keeps the text of each
+mapped column as it was written, in <code>station_id_original</code>,
+<code>stage_original</code>, <code>discharge_original</code>, <code>date_original</code> and, where
+they exist, <code>time_original</code> and <code>datetime_original</code>.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
@@ -160,12 +218,14 @@ adjustment, so it is only as good as the file's own convention.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A data.table, one row per row of the input, with these columns
-first: <code>source_row</code> (row of the data, header excluded), <code>station_id</code>,
-<code>station_name</code>, <code>observation_time</code> (POSIXct), <code>stage_m</code>,
-<code>discharge_cms</code> and <code>read_issue</code> (<code>NA</code> when the row parsed cleanly,
-otherwise the problems separated by semicolons). Every other column
-of the input follows unchanged, as text. The columns you mapped are
-not repeated; the file still has their original values.</p>
+first: <code>source_row</code> (row of the data, header and blank lines
+excluded), <code>station_id</code>, <code>station_name</code>, <code>observation_time</code> (POSIXct),
+<code>stage_m</code>, <code>discharge_cms</code> and <code>read_issue</code> (<code>NA</code> when the row parsed
+cleanly, otherwise the problems separated by semicolons). The
+<code>*_original</code> columns follow, then every other column of the input
+unchanged, as text. A repeated header is kept and made distinct
+(<code>Flag</code>, <code>Flag.1</code>). The structured summary is attached; read it with
+<code><a href="read_summary.html">read_summary()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="notes-the-function-can-add">Notes the function can add<a class="anchor" aria-label="anchor" href="#notes-the-function-can-add"></a></h2>
@@ -180,7 +240,9 @@ are acceptable is a hydrometric judgement for a later check.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="read_operational_ratings.html">read_operational_ratings()</a></code> for the matching ratings export;
+    <div class="dont-index"><p><code><a href="read_summary.html">read_summary()</a></code> for the structured summary,
+<code><a href="as_flode_evidence.html">as_flode_evidence()</a></code> to turn the result into evidence,
+<code><a href="read_operational_ratings.html">read_operational_ratings()</a></code> for the matching ratings export;
 <code><a href="compare_gaugings_to_rating.html">compare_gaugings_to_rating()</a></code> to check a rating against the result.</p></div>
     </div>
 
@@ -208,18 +270,47 @@ are acceptable is a hydrometric judgement for a later check.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3:          3       &lt;NA&gt;         &lt;NA&gt; 1970-05-29 00:00:00   0.850        6.6824</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4:          4      F2405         &lt;NA&gt; 1960-01-06 00:00:00   1.885      104.1890</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5:          5      F2405         &lt;NA&gt; 1960-01-12 00:01:00   0.000        0.4250</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            read_issue  Remark</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                &lt;char&gt;  &lt;char&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:                                               &lt;NA&gt;        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:                                      stage missing     dry</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3: station id missing; time missing, midnight assumed        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4:                                               &lt;NA&gt; FALLING</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5:                                               &lt;NA&gt;        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                            read_issue station_id_original</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                &lt;char&gt;              &lt;char&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:                                               &lt;NA&gt;               10250</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:                                      stage missing               10250</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3: station id missing; time missing, midnight assumed                    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:                                               &lt;NA&gt;               F2405</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5:                                               &lt;NA&gt;               F2405</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    stage_original discharge_original date_original time_original  Remark</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            &lt;char&gt;             &lt;char&gt;        &lt;char&gt;        &lt;char&gt;  &lt;char&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:            1.6            53.3371    03/02/1970      12:47:00        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:            ---              9.738    05/05/1970      13:02:00     dry</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:           0.85             6.6824    29/05/1970                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:          1.885            104.189    06/01/1960      00:00:00 FALLING</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5:              0              0.425    12/01/1960      00:01:00        </span>
 <span class="r-in"><span><span class="va">gaugings</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">gaugings</span><span class="op">$</span><span class="va">read_issue</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"source_row"</span>, <span class="st">"read_issue"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    source_row                                         read_issue</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         &lt;int&gt;                                             &lt;char&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1:          2                                      stage missing</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2:          3 station id missing; time missing, midnight assumed</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A semicolon file with decimal commas, as a continental export writes it.</span></span></span>
+<span class="r-in"><span><span class="va">path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".csv"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/writeLines.html" class="external-link">writeLines</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"Station number;Date;Time;Stage;Flow"</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"10250;03/02/1970;12:47:00;1,6;53,3371"</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"10250;05/05/1970;13:02:00;0,85;6,6824"</span></span></span>
+<span class="r-in"><span><span class="op">)</span>, <span class="va">path</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">read_gaugings</span><span class="op">(</span><span class="va">path</span>, dec <span class="op">=</span> <span class="st">","</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">stage_m</span>, <span class="va">discharge_cms</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>read_gaugings(): every date fits both day-first and month-first, so %d/%m/%Y was used by default. If the file is month-first, pass date_format = "%m/%d/%Y".</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    stage_m discharge_cms</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      &lt;num&gt;         &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:    1.60       53.3371</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:    0.85        6.6824</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># What was found, as a table.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="read_summary.html">read_summary</a></span><span class="op">(</span><span class="va">gaugings</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                             issue n_rows share_of_rows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                            &lt;char&gt;  &lt;int&gt;         &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:                  stage missing      1           0.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:             station id missing      1           0.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3: time missing, midnight assumed      1           0.2</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

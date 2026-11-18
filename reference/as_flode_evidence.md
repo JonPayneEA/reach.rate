@@ -11,10 +11,19 @@ the result says what it assumed in its `conversion_note`:
 - `observation_time` is taken from `gauging_datetime` when that column
   exists, and is otherwise `NA`.
 
-- `source_type` is `"gauging"`, `included` is `TRUE`, `weight` is 1 and
-  `source_row` is the row position.
+- A table from
+  [`read_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/read_gaugings.md)
+  is recognised: its `station_id` becomes `site_id`, the file name
+  becomes `source_name`, and a row whose stage or discharge could not be
+  read becomes `included = FALSE` with its `read_issue` as the
+  `exclusion_reason`. Nothing is dropped.
 
-- The text columns are `NA`, and `metadata` is empty for each row.
+- `source_type` is `"gauging"`, `weight` is 1 and `source_row` is the
+  row position. `included` is `TRUE` unless the stage or discharge is
+  missing, in which case it is `FALSE` and `exclusion_reason` says why.
+
+- The remaining text columns are `NA`, and `metadata` is empty for each
+  row.
 
 A table that is already a `FlodeEvidence` is returned as it is.
 
@@ -49,5 +58,5 @@ evidence <- as_flode_evidence(plain)
 evidence$evidence_id
 #> [1] "G001" "G002" "G003"
 evidence@conversion_note
-#> [1] "Converted from a plain table; filled evidence_id, site_id, observation_time, source_type, source_name, source_version, quality_code, exclusion_reason, notes, included, weight, source_row, metadata. source_type assumed 'gauging', included assumed TRUE, weight assumed 1."
+#> [1] "Converted from a plain table; filled evidence_id, site_id, observation_time, source_type, source_name, source_version, quality_code, notes, exclusion_reason, included, weight, source_row, metadata. source_type assumed 'gauging', weight assumed 1, included TRUE unless stage or discharge is missing."
 ```

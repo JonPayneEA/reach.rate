@@ -56,7 +56,7 @@
     <div class="section level2">
       <h2 id="reading-data">Reading data<a class="anchor" aria-label="anchor" href="#reading-data"></a></h2>
 
-      <div class="section-desc"><p>Bring a gauging archive and an operational ratings export into R without cleaning them. Every row is kept; what did not parse is noted on the row. match_stations() links the two files’ station ids, with a table you supply where the ids differ, and check_operational_ratings() compares every rating with its gaugings and lists what could not be compared. The guided read_gaugings() workflow in the improvement plan will build on these.</p></div>
+      <div class="section-desc"><p>Bring a gauging archive and an operational ratings export into R without cleaning them. Every row is kept; what did not parse is noted on the row. match_stations() links the two files’ station ids, with a table you supply where the ids differ, and check_operational_ratings() compares every rating with its gaugings and lists what could not be compared. read_gaugings() takes delimited text, a spreadsheet or a data.frame, and read_summary() reports what it found as a table.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -69,6 +69,13 @@
 
         </dt>
         <dd>Read a spot-gauging archive</dd>
+
+        <dt>
+
+          <code><a href="read_summary.html">read_summary()</a></code>
+
+        </dt>
+        <dd>What a read found, as a table</dd>
 
         <dt>
 

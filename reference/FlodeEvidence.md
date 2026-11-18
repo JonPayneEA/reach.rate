@@ -68,7 +68,7 @@ evidence <- as_flode_evidence(data.frame(
 ))
 evidence
 #> <FlodeEvidence> 3 row(s), 3 included, source type(s): gauging
-#> Note: Converted from a plain table; filled evidence_id, site_id, observation_time, source_type, source_name, source_version, quality_code, exclusion_reason, notes, included, weight, source_row, metadata. source_type assumed 'gauging', included assumed TRUE, weight assumed 1. 
+#> Note: Converted from a plain table; filled evidence_id, site_id, observation_time, source_type, source_name, source_version, quality_code, notes, exclusion_reason, included, weight, source_row, metadata. source_type assumed 'gauging', weight assumed 1, included TRUE unless stage or discharge is missing. 
 #>    evidence_id stage_m discharge_cms observation_time source_type included
 #>         <char>   <num>         <num>           <POSc>      <char>   <lgcl>
 #> 1:        G001     0.5           1.2             <NA>     gauging     TRUE

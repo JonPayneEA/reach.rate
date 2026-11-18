@@ -6,12 +6,14 @@ Bring a gauging archive and an operational ratings export into R without
 cleaning them. Every row is kept; what did not parse is noted on the
 row. match_stations() links the two files’ station ids, with a table you
 supply where the ids differ, and check_operational_ratings() compares
-every rating with its gaugings and lists what could not be compared. The
-guided read_gaugings() workflow in the improvement plan will build on
-these.
+every rating with its gaugings and lists what could not be compared.
+read_gaugings() takes delimited text, a spreadsheet or a data.frame, and
+read_summary() reports what it found as a table.
 
 - [`read_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/read_gaugings.md)
   : Read a spot-gauging archive
+- [`read_summary()`](https://jonpayneea.github.io/reach.rate/reference/read_summary.md)
+  : What a read found, as a table
 - [`read_operational_ratings()`](https://jonpayneea.github.io/reach.rate/reference/read_operational_ratings.md)
   : Read an operational ratings export
 - [`operational_rating_tables()`](https://jonpayneea.github.io/reach.rate/reference/operational_rating_tables.md)
