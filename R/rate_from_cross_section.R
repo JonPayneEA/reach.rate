@@ -33,30 +33,8 @@ NULL
 # excludes the free surface (the top of the water), matching the
 # standard hydraulic convention.
 .xs_area_perimeter <- function(distance_m, elevation_m, stage) {
-  area <- 0
-  perimeter <- 0
-  for (i in seq_len(length(distance_m) - 1L)) {
-    x1 <- distance_m[i]; z1 <- elevation_m[i]
-    x2 <- distance_m[i + 1L]; z2 <- elevation_m[i + 1L]
-    d1 <- stage - z1
-    d2 <- stage - z2
-    if (d1 <= 0 && d2 <= 0) next
-    if (d1 > 0 && d2 > 0) {
-      area <- area + (d1 + d2) / 2 * (x2 - x1)
-      perimeter <- perimeter + sqrt((x2 - x1)^2 + (z2 - z1)^2)
-    } else {
-      frac <- d1 / (d1 - d2)
-      xc <- x1 + frac * (x2 - x1)
-      if (d1 > 0) {
-        area <- area + d1 / 2 * (xc - x1)
-        perimeter <- perimeter + sqrt((xc - x1)^2 + d1^2)
-      } else {
-        area <- area + d2 / 2 * (x2 - xc)
-        perimeter <- perimeter + sqrt((x2 - xc)^2 + d2^2)
-      }
-    }
-  }
-  c(area = area, perimeter = perimeter)
+  g <- .kernel_xs(distance_m, elevation_m, stage)
+  c(area = g$area, perimeter = g$perimeter)
 }
 
 #' Derive a theoretical rating from a surveyed cross-section (Manning's equation)
@@ -205,15 +183,10 @@ rate_from_cross_section <- function(cross_section, slope, roughness,
     stage_seq <- sort(unique(stage_seq))
   }
 
-  geom <- vapply(
-    stage_seq,
-    function(h) .xs_area_perimeter(xs_dt$distance_m, xs_dt$elevation_m, h),
-    numeric(2)
-  )
-  area_vec <- geom["area", ]
-  perimeter_vec <- geom["perimeter", ]
-  radius_vec <- ifelse(perimeter_vec > 0, area_vec / perimeter_vec, 0)
-  discharge_vec <- (1 / roughness) * area_vec * radius_vec^(2 / 3) * sqrt(slope)
+  # Area, perimeter and Manning's discharge come from the C kernel
+  # (src/reach_core.c), shared with any other language binding.
+  geom <- .kernel_xs(xs_dt$distance_m, xs_dt$elevation_m, stage_seq)
+  discharge_vec <- .kernel_manning(geom$area, geom$perimeter, roughness, slope)
 
   keep <- discharge_vec > 0
   if (sum(keep) < 2L) {

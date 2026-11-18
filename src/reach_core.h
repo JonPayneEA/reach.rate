@@ -29,8 +29,9 @@
  *    Callers that distinguish a missing value from NaN (R does) restore it.
  *  - Exponentiation follows R's `^` for finite arguments: x^2 is computed
  *    as x * x, and x^0 and 1^y are exactly 1. Otherwise it is the C library
- *    pow(). This keeps results bit-identical to the R reference
- *    implementation wherever the C library's pow() is.
+ *    pow(). Results agree with the R reference implementation to the last
+ *    bit wherever the C library's pow() does and the compiler does not fuse
+ *    a multiplication with an addition; otherwise to within rounding.
  *  - Functions return a status code. A non-zero status means no output
  *    array was written.
  */
@@ -66,8 +67,10 @@ enum {
   REACH_ERR_VALUE = 2,    /* a limb value is not finite; or, for the inverse
                              and tangent, C <= 0 or n <= 0 */
   REACH_ERR_ORDER = 3,    /* upper <= lower, or limbs not ascending and contiguous */
-  REACH_ERR_MONOTONE = 4  /* inverse only: discharge at the limb bounds does
+  REACH_ERR_MONOTONE = 4, /* inverse only: discharge at the limb bounds does
                              not increase with stage */
+  REACH_NO_CROSSING = 5   /* reach_crossing only: the two curves do not cross
+                             in the range given (not an error in the inputs) */
 };
 
 /* A non-owning view of one rating. All five arrays have n_limbs entries. */
@@ -129,6 +132,50 @@ REACH_API int reach_junctions(const reach_rating *r, double *q_below, double *q_
  * Needs h > a, C > 0 and n > 0, all finite (REACH_ERR_VALUE otherwise). */
 REACH_API int reach_tangent_limb(double C, double a, double n, double h,
                                  double *C_out, double *a_out);
+
+/* The stage where two limb equations give the same discharge:
+ *     C1 (H - a1)^n1 = C2 (H - a2)^n2     for H in [lo, hi].
+ * Used to relocate a junction to where the curves actually meet. Each side
+ * is evaluated as written, with no floor at zero, so a curve whose offset
+ * lies above H gives NaN.
+ * The root is found by Brent's method to an absolute accuracy of tol in H
+ * (tol > 0). It is returned only if f(lo) and f(hi) are finite and have
+ * opposite signs, or one of them is exactly zero (then that end is the
+ * root). Otherwise:
+ *   REACH_NO_CROSSING  the curves do not change order between lo and hi, or
+ *                      a non-finite value was met while searching
+ *   REACH_ERR_VALUE    a parameter or bound is not finite, or tol <= 0
+ *   REACH_ERR_ORDER    lo >= hi
+ * *root is written only when the status is REACH_OK. */
+REACH_API int reach_crossing(double C1, double a1, double n1,
+                             double C2, double a2, double n2,
+                             double lo, double hi, double tol, double *root);
+
+/* Wetted area and wetted perimeter of a surveyed cross-section at each of m
+ * stages. The section is n_points >= 2 points (distance, elevation) in
+ * strictly increasing distance. Between two points the bed is a straight
+ * line. At each stage:
+ *   - a segment entirely at or above the water contributes nothing;
+ *   - a segment entirely below contributes its full trapezoid of area and
+ *     its full length of perimeter;
+ *   - a segment crossing the water surface is clipped where it crosses.
+ * The free surface is not part of the perimeter. A stage above every point
+ * wets every segment: the section is not extended upwards.
+ *   area, perimeter  out, m values each; either may be NULL
+ * A NaN stage gives NaN. Errors: REACH_ERR_ARG (null pointer, or fewer than
+ * 2 points), REACH_ERR_VALUE (a point is not finite), REACH_ERR_ORDER
+ * (distance not strictly increasing). */
+REACH_API int reach_xs_geometry(const double *distance, const double *elevation,
+                                size_t n_points, const double *stage, size_t m,
+                                double *area, double *perimeter);
+
+/* Manning's discharge for m wetted areas and perimeters:
+ *     Q = (1 / roughness) * A * R^(2/3) * sqrt(slope),   R = A / P
+ * with R = 0 where P is not positive. roughness is Manning's n and must be
+ * positive; slope must be zero or positive; both finite (REACH_ERR_VALUE).
+ * A NaN area or perimeter gives NaN. */
+REACH_API int reach_manning(const double *area, const double *perimeter, size_t m,
+                            double roughness, double slope, double *discharge);
 
 #ifdef __cplusplus
 }

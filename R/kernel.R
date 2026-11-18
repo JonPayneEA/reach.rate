@@ -73,5 +73,28 @@ NULL
   .Call(C_reach_r_tangent, as.numeric(C), as.numeric(a), as.numeric(n), as.numeric(h))
 }
 
+# The stage where two limb equations give the same discharge,
+# C1 (H - a1)^n1 = C2 (H - a2)^n2, inside [lo, hi]; NA when they do not
+# cross there or cannot be evaluated.
+.kernel_crossing <- function(C1, a1, n1, C2, a2, n2, lo, hi, tol = .Machine$double.eps^0.5) {
+  .Call(C_reach_r_crossing, as.numeric(C1), as.numeric(a1), as.numeric(n1),
+        as.numeric(C2), as.numeric(a2), as.numeric(n2), as.numeric(lo), as.numeric(hi),
+        as.numeric(tol))
+}
+
+# Wetted area and perimeter of a surveyed cross-section at each stage:
+# list(area, perimeter). distance must be strictly increasing.
+.kernel_xs <- function(distance, elevation, stage) {
+  res <- .Call(C_reach_r_xs, as.numeric(distance), as.numeric(elevation), as.numeric(stage))
+  names(res) <- c("area", "perimeter")
+  res
+}
+
+# Manning's discharge from wetted area and perimeter.
+.kernel_manning <- function(area, perimeter, roughness, slope) {
+  .Call(C_reach_r_manning, as.numeric(area), as.numeric(perimeter),
+        as.numeric(roughness), as.numeric(slope))
+}
+
 # ABI version of the compiled kernel, for tests and bug reports.
 .kernel_abi_version <- function() .Call(C_reach_r_version)

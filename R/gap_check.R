@@ -672,19 +672,12 @@ align_limb_equations <- function(rating_dt, anchor_limb = 1L,
 #' @keywords internal
 #' @noRd
 .find_intersection_stage <- function(C1, a1, n1, C2, a2, n2, search_lo, search_hi) {
-  f <- function(H) C1 * (H - a1)^n1 - C2 * (H - a2)^n2
-  f_lo <- tryCatch(f(search_lo), error = function(e) NA_real_)
-  f_hi <- tryCatch(f(search_hi), error = function(e) NA_real_)
-  if (!is.finite(f_lo) || !is.finite(f_hi) || sign(f_lo) == sign(f_hi)) {
-    return(NA_real_)
-  }
-  # uniroot()'s default tol (~1.2e-4) is loose enough that, on a steep
-  # curve, the discharge values at the "found" root can visibly disagree
-  # -- tighten it so the two curves genuinely agree at the stage returned.
-  tryCatch(
-    uniroot(f, lower = search_lo, upper = search_hi, tol = .Machine$double.eps^0.5)$root,
-    error = function(e) NA_real_
-  )
+  # Brent's method in the C kernel (src/reach_core.c). The tolerance is
+  # tight (the square root of machine epsilon) so the two curves genuinely
+  # agree at the stage returned: uniroot()'s default (~1.2e-4) is loose
+  # enough that, on a steep curve, the discharge values at the "found" root
+  # can visibly disagree.
+  .kernel_crossing(C1, a1, n1, C2, a2, n2, search_lo, search_hi)
 }
 
 #' Relocate a junction to where two limb equations actually cross
