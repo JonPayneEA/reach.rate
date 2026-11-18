@@ -62,6 +62,8 @@ rating_table <- FlodeRatingTable(table = data.table::data.table(
 ))
 rating_table
 #> <FlodeRatingTable> 2 limb(s), origin: independently_fitted, lifecycle: draft
+#>   converged: not assessed (no optimiser record for this rating)
+#>   valid: yes
 #>    lower_level upper_level        C     a     n
 #>          <num>       <num>    <num> <num> <num>
 #> 1:         0.0         1.2 2.500000     0   1.5
@@ -73,9 +75,9 @@ apply_rating(rating_table, c(0.5, 1.5, 2.5))
 #> 2:   1.5  4.8024058        FALSE
 #> 3:   2.5 11.4446292        FALSE
 rating_history(rating_table)
-#>     step            class           fit_origin lifecycle n_limbs
-#>    <int>           <char>               <char>    <char>   <int>
-#> 1:     1 FlodeRatingTable independently_fitted     draft       2
+#>     step            class           fit_origin lifecycle n_limbs   note
+#>    <int>           <char>               <char>    <char>   <int> <char>
+#> 1:     1 FlodeRatingTable independently_fitted     draft       2   <NA>
 
 # Limbs must be contiguous, so a gap between them is refused.
 try(FlodeRatingTable(table = data.table::data.table(

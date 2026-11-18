@@ -62,6 +62,8 @@ fit <- rate_optimise(discharge_cms, stage_m)
 rating_table <- as_rating_table(fit)
 rating_table
 #> <FlodeRatingTable> 1 limb(s), origin: independently_fitted, lifecycle: draft
+#>   converged: not assessed (no optimiser record for this rating)
+#>   valid: yes
 #>    lower_level upper_level        C           a        n
 #>          <num>       <num>    <num>       <num>    <num>
 #> 1:         0.5         2.5 4.991305 -0.00144775 1.600899

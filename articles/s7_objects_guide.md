@@ -61,6 +61,8 @@ fit <- rate_optimise(discharge_cms, stage_m)
 
 fit # each class has its own print method
 #> <FlodeRating> 1 limb(s), origin: independently_fitted, lifecycle: draft
+#>   converged: yes (1 of 1 limb)
+#>   valid: yes
 #>     limb lower_stage_m upper_stage_m        C          a        n  rmse_cms
 #>    <int>         <num>         <num>    <num>      <num>    <num>     <num>
 #> 1:     1           0.3             3 5.754582 0.08356371 1.394315 0.3719334
@@ -185,10 +187,10 @@ tbl <- FlodeRatingTable(table = rating_dt)
 aligned <- align_limb_equations(tbl)
 
 rating_history(aligned)
-#>     step            class           fit_origin lifecycle n_limbs
-#>    <int>           <char>               <char>    <char>   <int>
-#> 1:     1 FlodeRatingTable independently_fitted     draft       2
-#> 2:     2 FlodeRatingTable     post_fit_aligned     draft       2
+#>     step            class           fit_origin lifecycle n_limbs   note
+#>    <int>           <char>               <char>    <char>   <int> <char>
+#> 1:     1 FlodeRatingTable independently_fitted     draft       2   <NA>
+#> 2:     2 FlodeRatingTable     post_fit_aligned     draft       2   <NA>
 identical(S7::prop(S7::prop(aligned, "previous"), "table"), S7::prop(tbl, "table")) # the exact object it was built from
 #> [1] TRUE
 ```

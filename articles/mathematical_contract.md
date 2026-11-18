@@ -314,6 +314,72 @@ curve is well determined though its coefficients are not.
 thousands, says two parameters trade off against each other. Neither is
 a verdict; they say where to look first.
 
+## Checks on the equations, and when a rating is refused
+
+After a fit,
+[`rating_invariants()`](https://jonpayneea.github.io/reach.rate/reference/rating_invariants.md)
+checks the rating’s own equations, without reference to its gaugings,
+and returns a `FlodeAssessment`. It answers whether the equations are
+mathematically usable. It does not say whether the rating is a good one.
+
+A **technical** check can fail:
+
+- every \\C\\, \\a\\ and \\n\\ is finite, and \\C\\ and \\n\\ are
+  positive;
+- limb stage ranges are finite, ascending and contiguous;
+- discharge is finite and not negative at 25 stages in each limb;
+- discharge does not decrease as stage rises within a limb;
+- the discharge at the top of each limb is no lower than at the top of
+  the limb before, so each discharge belongs to one limb;
+- discharge to stage and back reproduces the discharge to within
+  \\10^{-6}\\ (relative);
+- where bootstrap draws exist, each parameter’s lower, median and upper
+  bounds are in order;
+- for a fit made directly by the optimiser, each parameter is inside the
+  bounds it was given.
+
+A **hydrometric** check can only warn: no gap or overlap between
+adjacent limbs’ stage ranges, discharge continuous across each junction
+(within 1% by default), and each limb’s zero-flow stage at or below its
+lower stage. That last one is a warning because discharge is zero at and
+below \\a\\, so a limb that starts below it is a legitimate way to write
+a table, but part of the limb then carries no flow.
+
+**A failure stops the operation it makes meaningless.**
+[`apply_rating()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating.md)
+refuses a rating that fails any technical check except the two that
+concern the inverse, and says which check failed.
+[`apply_rating_inverse()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating_inverse.md)
+refuses any failure. A drop in discharge at the top of a limb, for
+example, leaves stage to discharge well defined, so forward application
+proceeds, but makes the inverse ambiguous, so the inverse is refused. A
+warning never blocks.
+
+The checks are evaluated when asked for, not stored on the object, so
+they always describe the rating as it now stands, including after a
+change to it. The same two facts are on the printed rating, as separate
+lines, because a fit can converge to an invalid equation and a valid
+equation can come from a fit that did not converge:
+
+``` r
+
+set.seed(7)
+h <- seq(0.4, 3, by = 0.05)
+q <- 3.2 * h^1.6 * exp(rnorm(length(h), sd = 0.03))
+print(rate_optimise(q, h, control = 1.5))
+#> <FlodeRating> 2 limb(s), origin: independently_fitted, lifecycle: draft
+#>   converged: yes (2 of 2 limbs)
+#>   valid: yes, with 1 warning (limb_continuity)
+#>     limb lower_stage_m upper_stage_m        C           a        n   rmse_cms
+#>    <int>         <num>         <num>    <num>       <num>    <num>      <num>
+#> 1:     1           0.4           1.5 3.452241  0.03394668 1.552369 0.09401666
+#> 2:     2           1.5           3.0 1.942301 -0.35539746 1.872624 0.26140031
+#>    r_squared
+#>        <num>
+#> 1: 0.9968900
+#> 2: 0.9949382
+```
+
 ## What the intervals mean
 
 **Asymptotic standard errors** (`C_se_asymp`, `a_se_asymp`,

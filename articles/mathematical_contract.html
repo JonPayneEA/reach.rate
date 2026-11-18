@@ -471,6 +471,65 @@ trade off against each other. Neither is a verdict; they say where to
 look first.</p>
 </div>
 <div class="section level2">
+<h2 id="checks-on-the-equations-and-when-a-rating-is-refused">Checks on the equations, and when a rating is refused<a class="anchor" aria-label="anchor" href="#checks-on-the-equations-and-when-a-rating-is-refused"></a>
+</h2>
+<p>After a fit, <code><a href="../reference/rating_invariants.html">rating_invariants()</a></code> checks the rating’s own
+equations, without reference to its gaugings, and returns a
+<code>FlodeAssessment</code>. It answers whether the equations are
+mathematically usable. It does not say whether the rating is a good
+one.</p>
+<p>A <strong>technical</strong> check can fail:</p>
+<ul>
+<li>every <span class="math inline">\(C\)</span>, <span class="math inline">\(a\)</span> and <span class="math inline">\(n\)</span> is finite, and <span class="math inline">\(C\)</span> and <span class="math inline">\(n\)</span> are positive;</li>
+<li>limb stage ranges are finite, ascending and contiguous;</li>
+<li>discharge is finite and not negative at 25 stages in each limb;</li>
+<li>discharge does not decrease as stage rises within a limb;</li>
+<li>the discharge at the top of each limb is no lower than at the top of
+the limb before, so each discharge belongs to one limb;</li>
+<li>discharge to stage and back reproduces the discharge to within <span class="math inline">\(10^{-6}\)</span> (relative);</li>
+<li>where bootstrap draws exist, each parameter’s lower, median and
+upper bounds are in order;</li>
+<li>for a fit made directly by the optimiser, each parameter is inside
+the bounds it was given.</li>
+</ul>
+<p>A <strong>hydrometric</strong> check can only warn: no gap or overlap
+between adjacent limbs’ stage ranges, discharge continuous across each
+junction (within 1% by default), and each limb’s zero-flow stage at or
+below its lower stage. That last one is a warning because discharge is
+zero at and below <span class="math inline">\(a\)</span>, so a limb that
+starts below it is a legitimate way to write a table, but part of the
+limb then carries no flow.</p>
+<p><strong>A failure stops the operation it makes meaningless.</strong>
+<code><a href="../reference/apply_rating.html">apply_rating()</a></code> refuses a rating that fails any technical
+check except the two that concern the inverse, and says which check
+failed. <code><a href="../reference/apply_rating_inverse.html">apply_rating_inverse()</a></code> refuses any failure. A drop
+in discharge at the top of a limb, for example, leaves stage to
+discharge well defined, so forward application proceeds, but makes the
+inverse ambiguous, so the inverse is refused. A warning never
+blocks.</p>
+<p>The checks are evaluated when asked for, not stored on the object, so
+they always describe the rating as it now stands, including after a
+change to it. The same two facts are on the printed rating, as separate
+lines, because a fit can converge to an invalid equation and a valid
+equation can come from a fit that did not converge:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">7</span><span class="op">)</span></span>
+<span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="fl">3</span>, by <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span>
+<span><span class="va">q</span> <span class="op">&lt;-</span> <span class="fl">3.2</span> <span class="op">*</span> <span class="va">h</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">h</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.03</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="../reference/rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">q</span>, <span class="va">h</span>, control <span class="op">=</span> <span class="fl">1.5</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;FlodeRating&gt; 2 limb(s), origin: independently_fitted, lifecycle: draft</span></span>
+<span><span class="co">#&gt;   converged: yes (2 of 2 limbs)</span></span>
+<span><span class="co">#&gt;   valid: yes, with 1 warning (limb_continuity)</span></span>
+<span><span class="co">#&gt;     limb lower_stage_m upper_stage_m        C           a        n   rmse_cms</span></span>
+<span><span class="co">#&gt;    &lt;int&gt;         &lt;num&gt;         &lt;num&gt;    &lt;num&gt;       &lt;num&gt;    &lt;num&gt;      &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:     1           0.4           1.5 3.452241  0.03394668 1.552369 0.09401666</span></span>
+<span><span class="co">#&gt; 2:     2           1.5           3.0 1.942301 -0.35539746 1.872624 0.26140031</span></span>
+<span><span class="co">#&gt;    r_squared</span></span>
+<span><span class="co">#&gt;        &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1: 0.9968900</span></span>
+<span><span class="co">#&gt; 2: 0.9949382</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="what-the-intervals-mean">What the intervals mean<a class="anchor" aria-label="anchor" href="#what-the-intervals-mean"></a>
 </h2>
 <p><strong>Asymptotic standard errors</strong> (<code>C_se_asymp</code>,
@@ -500,7 +559,7 @@ successful bootstrap draw to a stage, using that draw’s coefficients and
 the original limb boundaries, and reports for each stage the mean, the
 median, a geometric standard error and the lower and upper percentiles
 at <code>conf_level</code>.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">stage_m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">3</span>, length.out <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span>
 <span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fl">3</span> <span class="op">*</span> <span class="op">(</span><span class="va">stage_m</span> <span class="op">-</span> <span class="fl">0.2</span><span class="op">)</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">25</span>, sd <span class="op">=</span> <span class="fl">0.04</span><span class="op">)</span><span class="op">)</span></span>
@@ -574,7 +633,7 @@ segmented model with <code>estimate_breakpoints = TRUE</code>.</li>
 </h2>
 <p>The equations printed in a fit’s provenance are the ones in this
 document.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">absolute</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span><span class="op">)</span></span>
 <span><span class="va">relative</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, objective <span class="op">=</span> <span class="st">"relative"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/rating_provenance.html">rating_provenance</a></span><span class="op">(</span><span class="va">absolute</span><span class="op">)</span><span class="op">$</span><span class="va">fitting_equation</span></span>
@@ -584,7 +643,7 @@ document.</p>
 <p>And the fitted coefficients minimise the objective written above. At
 a minimum the objective cannot be reduced by moving any coefficient, so
 every small step away gives a larger value.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">limb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">absolute</span><span class="op">)</span></span>
 <span><span class="va">objective</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">par</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="op">(</span><span class="va">discharge_cms</span> <span class="op">-</span> <span class="va">par</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">*</span> <span class="op">(</span><span class="va">stage_m</span> <span class="op">-</span> <span class="va">par</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">^</span><span class="va">par</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">here</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">limb</span><span class="op">$</span><span class="va">C</span>, <span class="va">limb</span><span class="op">$</span><span class="va">a</span>, <span class="va">limb</span><span class="op">$</span><span class="va">n</span><span class="op">)</span></span>

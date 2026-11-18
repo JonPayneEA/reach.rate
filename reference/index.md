@@ -28,10 +28,14 @@ read_summary() reports what it found as a table.
 Ask whether a set of gaugings can be used and whether it looks right for
 a river. Technical checks fail; hydrometric checks only warn, and
 nothing is removed. The result is a FlodeAssessment, a table of checks
-that a fitted rating’s assessment will reuse.
+that a fitted rating’s assessment will reuse. rating_invariants() runs
+the same kind of check on a rating’s own equations and is what stops
+apply_rating() from using one that cannot give a meaningful discharge.
 
 - [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md)
   : Check a set of gaugings
+- [`rating_invariants()`](https://jonpayneea.github.io/reach.rate/reference/rating_invariants.md)
+  : Post-fit invariants of a rating
 - [`FlodeAssessment()`](https://jonpayneea.github.io/reach.rate/reference/FlodeAssessment.md)
   : The outcome of a set of checks (S7)
 - [`assessment_checks()`](https://jonpayneea.github.io/reach.rate/reference/assessment_checks.md)

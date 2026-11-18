@@ -45,8 +45,8 @@ table <- FlodeRatingTable(table = data.table::data.table(
 ))
 aligned <- align_limb_equations(table)
 rating_history(aligned)
-#>     step            class           fit_origin lifecycle n_limbs
-#>    <int>           <char>               <char>    <char>   <int>
-#> 1:     1 FlodeRatingTable independently_fitted     draft       2
-#> 2:     2 FlodeRatingTable     post_fit_aligned     draft       2
+#>     step            class           fit_origin lifecycle n_limbs   note
+#>    <int>           <char>               <char>    <char>   <int> <char>
+#> 1:     1 FlodeRatingTable independently_fitted     draft       2   <NA>
+#> 2:     2 FlodeRatingTable     post_fit_aligned     draft       2   <NA>
 ```

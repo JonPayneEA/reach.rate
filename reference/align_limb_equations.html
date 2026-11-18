@@ -207,6 +207,8 @@ legacy rating, for instance)</p></div>
 <span class="r-in"><span><span class="va">aligned_result</span> <span class="op">&lt;-</span> <span class="fu">align_limb_equations</span><span class="op">(</span><span class="va">rating_dt</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">aligned_result</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;FlodeRatingTable&gt; 3 limb(s), origin: post_fit_aligned, lifecycle: draft</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   converged: not assessed (no optimiser record for this rating)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   valid: yes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    lower_level upper_level        C     a     n C_original aligned align_failed</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          &lt;num&gt;       &lt;num&gt;    &lt;num&gt; &lt;num&gt; &lt;num&gt;      &lt;num&gt;  &lt;lgcl&gt;       &lt;lgcl&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1:         0.0         1.2 2.500000     0   1.5        2.5   FALSE        FALSE</span>
@@ -224,7 +226,7 @@ legacy rating, for instance)</p></div>
 <span class="r-in"><span><span class="co"># expand_rating_table() accepts the FlodeRatingTable directly</span></span></span>
 <span class="r-in"><span><span class="va">rc_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="expand_rating_table.html">expand_rating_table</a></span><span class="op">(</span><span class="va">aligned_result</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">gaps_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="detect_rc_gaps.html">detect_rc_gaps</a></span><span class="op">(</span><span class="va">rc_dt</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 22:18:45] Checked 2 junction(s): 0 gap(s) flagged.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-18 22:31:57] Checked 2 junction(s): 0 gap(s) flagged.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/any.html" class="external-link">any</a></span><span class="op">(</span><span class="va">gaps_dt</span><span class="op">$</span><span class="va">gap_flagged</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-in"><span></span></span>
