@@ -135,7 +135,7 @@ NULL
         weights = age_weight,
         data = gaugings_dt,
         start = st,
-        control = nls.lm.control(maxiter = maxiter),
+        control = .lm_control(maxiter),
         ...
       )),
       error = function(e) e
@@ -143,7 +143,8 @@ NULL
 
     if (inherits(fit_attempt, "error")) {
       attempts[[s]] <- data.table(
-        start_id = s, converged = FALSE, rss = NA_real_,
+        start_id = s, converged = FALSE, valid = FALSE, rss = NA_real_,
+        convergence_code = NA_integer_, convergence_message = NA_character_, iterations = NA_integer_,
         error_message = conditionMessage(fit_attempt)
       )
       next
@@ -160,11 +161,17 @@ NULL
     )
     is_valid <- all(is.finite(q_check)) && all(diff(q_check) >= -1e-9)
 
+    info <- fit_attempt$convInfo
+    opt_converged <- isTRUE(info$isConv)
     attempts[[s]] <- data.table(
-      start_id = s, converged = is_valid, rss = if (is_valid) rss else NA_real_,
+      start_id = s, converged = opt_converged, valid = is_valid, rss = if (is_valid) rss else NA_real_,
+      convergence_code = as.integer(info$stopCode), convergence_message = as.character(info$stopMessage),
+      iterations = as.integer(info$finIter),
       error_message = if (is_valid) NA_character_ else "fitted equation failed the domain/monotonicity check"
     )
 
+    # Lowest objective among valid attempts, converged or not (see the
+    # note in .fit_limb_multi_start()); the caller warns if it did not converge.
     if (is_valid && rss < best_rss) {
       best_rss <- rss
       best_model <- fit_attempt
@@ -177,8 +184,10 @@ NULL
     model = best_model,
     attempts = attempts_dt,
     n_starts_attempted = length(starts),
-    n_starts_converged = sum(attempts_dt$converged),
-    selected_start_id = best_start_id
+    n_starts_converged = sum(attempts_dt$converged & attempts_dt$valid),
+    selected_start_id = best_start_id,
+    selected_converged = !is.null(best_model) && isTRUE(best_model$convInfo$isConv),
+    objective_value = if (is.null(best_model)) NA_real_ else best_rss
   )
 }
 
@@ -366,22 +375,37 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = N
       ))
     }
     model <- fit_result$model
+    if (!isTRUE(fit_result$selected_converged)) {
+      warning(sprintf(
+        paste0("rate_optimise_segmented(): the best fit found did not converge (%s). It has the lowest objective of ",
+               "the %d starts, but the optimiser stopped before settling, so treat the fit with caution."),
+        sub("\\s+$", "", model$convInfo$stopMessage), fit_result$n_starts_attempted
+      ), call. = FALSE)
+    }
+    objective_value <- fit_result$objective_value
     n_starts_attempted <- fit_result$n_starts_attempted
     n_starts_converged <- fit_result$n_starts_converged
     selected_start_id <- fit_result$selected_start_id
     fit_starts_dt <- fit_result$attempts
   } else {
-    model <- nlsLM(
+    model <- suppressWarnings(nlsLM(
       formula = model_formula,
       weights = age_weight,
       data = gaugings_dt,
       start = start_list,
-      control = nls.lm.control(maxiter = 300),
+      control = .lm_control(300),
       ...
-    )
+    ))
+    if (!isTRUE(model$convInfo$isConv)) {
+      warning(sprintf(
+        "rate_optimise_segmented(): the fit did not converge from its single start (%s). Use multi_start = TRUE, or treat the fit with caution.",
+        sub("\\s+$", "", model$convInfo$stopMessage)
+      ), call. = FALSE)
+    }
     n_starts_attempted <- 1L
-    n_starts_converged <- 1L
+    n_starts_converged <- as.integer(isTRUE(model$convInfo$isConv))
     selected_start_id <- 1L
+    objective_value <- sum(gaugings_dt$age_weight * residuals(model)^2)
     fit_starts_dt <- NULL
   }
 
@@ -413,7 +437,19 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = N
     n_obs = length(discharge_cms),
     n_starts_attempted = n_starts_attempted,
     n_starts_converged = n_starts_converged,
-    selected_start_id = selected_start_id
+    selected_start_id = selected_start_id,
+    converged = isTRUE(model$convInfo$isConv),
+    convergence_code = as.integer(model$convInfo$stopCode),
+    convergence_message = as.character(model$convInfo$stopMessage),
+    iterations = as.integer(model$convInfo$finIter),
+    objective_value = objective_value,
+    # No box bounds on this model's parameters, and the attempts do not
+    # store their coefficients, so bound hits and multi-start spread are
+    # not assessed here.
+    bound_hits = NA_character_,
+    multi_start_spread = NA_real_,
+    parameter_correlation = .fit_identifiability(model)$parameter_correlation,
+    condition_number = .fit_identifiability(model)$condition_number
   )]
 
   if (is.null(age_halflife)) gaugings_dt[, age_weight := NULL]

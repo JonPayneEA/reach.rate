@@ -249,8 +249,8 @@ test_that("an attempt whose equation decreases across the limb is not valid", {
   expect_equal(formals(reach.rate:::.fit_limb_multi_start)$maxiter, 100L)
   d <- contract_data()
   fit <- rate_optimise(d$discharge_cms, d$stage_m)
-  expect_true(all(fit@fit_starts[converged == TRUE]$n_fit > 0))
-  expect_true(all(is.na(fit@fit_starts[converged == FALSE]$rss)))
+  expect_true(all(fit@fit_starts[valid == TRUE]$n_fit > 0))
+  expect_true(all(is.na(fit@fit_starts[valid == FALSE]$rss)))
 })
 
 # ---- convergence ---------------------------------------------------------------------

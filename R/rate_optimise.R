@@ -151,6 +151,95 @@ NULL
   })
 }
 
+# ---------------------------------------------------------------------------
+# Convergence and identifiability of one fitted limb (tranche A9). Each
+# helper returns NA where the information is not available, never a guess.
+# ---------------------------------------------------------------------------
+
+# The optimiser's controls. nlsLM stops at 400 function calls by default,
+# and with a numerical Jacobian each iteration costs about four calls
+# (one more than the parameters), so that limit bound at roughly 94
+# iterations and `maxiter` never did. The call limit is raised so that the
+# iteration limit is the one in force, as documented. The tolerances are
+# the optimiser's defaults.
+.lm_control <- function(maxiter) nls.lm.control(maxiter = maxiter, maxfev = 20L * as.integer(maxiter))
+
+# An amended limb no longer matches the fit its convergence and
+# identifiability columns describe, so they are set to NA (not assessed)
+# rather than left beside coefficients they do not belong to. `i` is the
+# row, or NULL for every row.
+.a9_columns <- c("converged", "convergence_code", "convergence_message", "iterations", "objective_value",
+                 "bound_hits", "multi_start_spread", "parameter_correlation", "condition_number")
+
+.clear_fit_diagnostics <- function(limbs_dt, i = NULL) {
+  blank <- list(converged = NA, convergence_code = NA_integer_, convergence_message = NA_character_,
+                iterations = NA_integer_, objective_value = NA_real_, bound_hits = NA_character_,
+                multi_start_spread = NA_real_, parameter_correlation = NA_real_, condition_number = NA_real_)
+  for (col in intersect(.a9_columns, names(limbs_dt))) {
+    if (is.null(i)) set(limbs_dt, j = col, value = blank[[col]]) else set(limbs_dt, i = i, j = col, value = blank[[col]])
+  }
+  invisible(limbs_dt)
+}
+
+# Which parameters sit on a bound, as "C_lower", "a_upper", "n_lower",
+# "n_upper" joined by commas, or "" when none does. Tolerances: C within
+# 1e-6 of its lower bound; n within 0.01 of either bound; a within 1% of
+# the limb's stage width of its upper bound.
+.bound_hits <- function(coefs, fit_lower, fit_upper, stage_width) {
+  hits <- character(0)
+  if (is.finite(fit_lower[["C"]]) && coefs[["C"]] - fit_lower[["C"]] < 1e-6) hits <- c(hits, "C_lower")
+  if (is.finite(fit_upper[["a"]]) && fit_upper[["a"]] - coefs[["a"]] < 0.01 * max(stage_width, 1e-6)) hits <- c(hits, "a_upper")
+  if (is.finite(fit_lower[["n"]]) && coefs[["n"]] - fit_lower[["n"]] < 0.01) hits <- c(hits, "n_lower")
+  if (is.finite(fit_upper[["n"]]) && fit_upper[["n"]] - coefs[["n"]] < 0.01) hits <- c(hits, "n_upper")
+  paste(hits, collapse = ",")
+}
+
+# How far the other near-optimal starting points disagree with the chosen
+# solution, as the largest difference in fitted discharge across the limb,
+# relative to the limb's peak fitted discharge. "Near-optimal" means a valid
+# attempt whose objective is within 5% of the best. 0 when no other
+# attempt is that close; NA when fewer than two attempts were valid, so
+# there is nothing to compare. A large value means two almost equally good
+# fits predict different discharges: the data do not decide between them.
+.multi_start_spread <- function(attempts, selected_id, stage_min, stage_max) {
+  if (is.null(attempts) || !nrow(attempts)) return(NA_real_)
+  ok <- attempts[attempts$valid %in% TRUE & is.finite(attempts$rss)]
+  if (nrow(ok) < 2L || is.na(selected_id)) return(NA_real_)
+  best <- ok[ok$start_id == selected_id]
+  if (!nrow(best)) return(NA_real_)
+  grid <- seq(stage_min, stage_max, length.out = 25L)
+  curve <- function(r) r$C_fit * pmax(grid - r$a_fit, 0)^r$n_fit
+  q_best <- curve(best)
+  peak <- max(q_best)
+  if (!is.finite(peak) || peak <= 0) return(NA_real_)
+  close <- ok[ok$start_id != selected_id & ok$rss <= 1.05 * best$rss]
+  if (!nrow(close)) return(0)
+  max(vapply(seq_len(nrow(close)), function(k) max(abs(curve(close[k]) - q_best)) / peak, numeric(1)))
+}
+
+# The largest absolute correlation between two parameter estimates, and the
+# condition number of the Jacobian with its columns scaled to unit length.
+# Both come from the fitted model; either is NA if it cannot be computed.
+# A correlation near 1, or a condition number in the thousands, says that
+# two parameters trade off against each other and the data cannot separate
+# them.
+.fit_identifiability <- function(model) {
+  correlation <- tryCatch({
+    v <- vcov(model)
+    r <- stats::cov2cor(v)
+    diag(r) <- NA_real_
+    max(abs(r), na.rm = TRUE)
+  }, error = function(e) NA_real_, warning = function(w) NA_real_)
+  condition <- tryCatch({
+    j <- model$m$gradient()
+    j <- sweep(j, 2L, sqrt(colSums(j^2)), "/")
+    d <- svd(j, nu = 0L, nv = 0L)$d
+    if (min(d) <= 0) Inf else max(d) / min(d)
+  }, error = function(e) NA_real_)
+  list(parameter_correlation = if (is.finite(correlation)) correlation else NA_real_,
+       condition_number = condition)
+}
+
 #' Fit one limb from multiple starting points and keep the best
 #'
 #' @description
@@ -202,7 +291,7 @@ NULL
         start = st,
         lower = fit_lower,
         upper = fit_upper,
-        control = nls.lm.control(maxiter = maxiter),
+        control = .lm_control(maxiter),
         ...
       )),
       error = function(e) e
@@ -211,7 +300,8 @@ NULL
     if (inherits(fit_attempt, "error")) {
       attempts[[s]] <- data.table(
         start_id = s, C_start = st$C, a_start = st$a, n_start = st$n,
-        converged = FALSE, rss = NA_real_, C_fit = NA_real_, a_fit = NA_real_, n_fit = NA_real_,
+        converged = FALSE, valid = FALSE, rss = NA_real_, C_fit = NA_real_, a_fit = NA_real_, n_fit = NA_real_,
+        convergence_code = NA_integer_, convergence_message = NA_character_, iterations = NA_integer_,
         error_message = conditionMessage(fit_attempt)
       )
       next
@@ -230,13 +320,23 @@ NULL
     q_check <- coefs[["C"]] * (stage_check - coefs[["a"]])^coefs[["n"]]
     is_valid <- all(is.finite(q_check)) && all(diff(q_check) >= -1e-9)
 
+    info <- fit_attempt$convInfo
+    opt_converged <- isTRUE(info$isConv)
     attempts[[s]] <- data.table(
       start_id = s, C_start = st$C, a_start = st$a, n_start = st$n,
-      converged = is_valid, rss = if (is_valid) rss else NA_real_,
+      converged = opt_converged, valid = is_valid, rss = if (is_valid) rss else NA_real_,
       C_fit = coefs[["C"]], a_fit = coefs[["a"]], n_fit = coefs[["n"]],
+      convergence_code = as.integer(info$stopCode), convergence_message = as.character(info$stopMessage),
+      iterations = as.integer(info$finIter),
       error_message = if (is_valid) NA_character_ else "fitted equation failed the domain/monotonicity check"
     )
 
+    # The attempt kept is the valid one with the lowest objective, whether
+    # or not the optimiser reported convergence. Convergence is not the same
+    # as quality: an attempt can stop at its iteration limit far below a
+    # converged one (and a converged one can sit on a bound), so ranking on
+    # convergence would sometimes choose a much worse fit. Whether the
+    # chosen attempt converged is reported, and the caller warns if not.
     if (is_valid && rss < best_rss) {
       best_rss <- rss
       best_model <- fit_attempt
@@ -249,8 +349,10 @@ NULL
     model = best_model,
     attempts = attempts_dt,
     n_starts_attempted = length(starts),
-    n_starts_converged = sum(attempts_dt$converged),
-    selected_start_id = best_start_id
+    n_starts_converged = sum(attempts_dt$converged & attempts_dt$valid),
+    selected_start_id = best_start_id,
+    selected_converged = !is.null(best_model) && isTRUE(best_model$convInfo$isConv),
+    objective_value = if (is.null(best_model)) NA_real_ else best_rss
   )
 }
 
@@ -339,7 +441,12 @@ NULL
 #'   parameter standard errors from the fit's own NLS covariance matrix,
 #'   always computed, `NA` if that covariance matrix is singular --
 #'   distinct from the bootstrap-only `C_se`/`a_se`/`n_se` columns below)
-#'   -- and multi-start bookkeeping. When `n_boot > 0`, `@bootstrap` holds
+#'   -- and multi-start bookkeeping. Nine columns record how the fit ended and
+#'   whether the data pin it down: `converged`, `convergence_code`,
+#'   `convergence_message` and `iterations` (the optimiser's own report),
+#'   `objective_value`, `bound_hits` (parameters on a bound),
+#'   `multi_start_spread`, `parameter_correlation` and `condition_number`;
+#'   `NA` means not assessed. When `n_boot > 0`, `@bootstrap` holds
 #'   every draw and `@limbs` gains `C_se`/`a_se`/`n_se`/percentile/
 #'   success-count columns; prefer these over `*_se_asymp` when present,
 #'   since they don't rely on the NLS asymptotic approximation.
@@ -506,6 +613,15 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
   n_starts_converged_vec <- integer(n_limbs)
   selected_start_id_vec <- integer(n_limbs)
   near_bound_vec <- logical(n_limbs)
+  converged_vec <- logical(n_limbs)
+  convergence_code_vec <- rep(NA_integer_, n_limbs)
+  convergence_message_vec <- rep(NA_character_, n_limbs)
+  iterations_vec <- rep(NA_integer_, n_limbs)
+  objective_value_vec <- rep(NA_real_, n_limbs)
+  bound_hits_vec <- rep(NA_character_, n_limbs)
+  multi_start_spread_vec <- rep(NA_real_, n_limbs)
+  parameter_correlation_vec <- rep(NA_real_, n_limbs)
+  condition_number_vec <- rep(NA_real_, n_limbs)
   fit_starts_list <- vector("list", n_limbs)
   boot_list <- vector("list", n_limbs)
 
@@ -551,27 +667,55 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
         ))
       }
       model <- fit_result$model
+      if (!isTRUE(fit_result$selected_converged)) {
+        warning(sprintf(
+          paste0("rate_optimise(): limb %s -- the best fit found did not converge (%s). It has the lowest objective of ",
+                 "the %d starts, but the optimiser stopped before settling, so treat the limb with caution."),
+          lb, sub("\\s+$", "", model$convInfo$stopMessage), fit_result$n_starts_attempted
+        ), call. = FALSE)
+      }
       n_starts_attempted_vec[i] <- fit_result$n_starts_attempted
       n_starts_converged_vec[i] <- fit_result$n_starts_converged
       selected_start_id_vec[i] <- fit_result$selected_start_id
+      objective_value_vec[i] <- fit_result$objective_value
+      multi_start_spread_vec[i] <- .multi_start_spread(
+        fit_result$attempts, fit_result$selected_start_id, min(limb_dt$stage_m), max(limb_dt$stage_m)
+      )
       fit_starts_list[[i]] <- data.table(limb = lb, fit_result$attempts)
     } else {
       start_n <- min(max(1, n_lower), if (is.finite(n_upper)) n_upper else Inf)
-      model <- nlsLM(
+      # nlsLM's own warning that it stopped at the iteration limit is
+      # replaced by the one below, which says what to do about it.
+      model <- suppressWarnings(nlsLM(
         formula = fit_formula,
         data = limb_dt,
         start = list(C = 1, a = start_a, n = start_n),
         lower = fit_lower,
         upper = fit_upper,
-        control = nls.lm.control(maxiter = 100),
+        control = .lm_control(100),
         weights = age_weight,
         ...
-      )
+      ))
+      if (!isTRUE(model$convInfo$isConv)) {
+        warning(sprintf(
+          "rate_optimise(): limb %s did not converge from its single start (%s). Use multi_start = TRUE, which tries several starts, or treat this limb with caution.",
+          lb, sub("\\s+$", "", model$convInfo$stopMessage)
+        ), call. = FALSE)
+      }
       n_starts_attempted_vec[i] <- 1L
-      n_starts_converged_vec[i] <- 1L
+      n_starts_converged_vec[i] <- as.integer(isTRUE(model$convInfo$isConv))
       selected_start_id_vec[i] <- 1L
+      objective_value_vec[i] <- sum(limb_dt$age_weight * residuals(model)^2)
       fit_starts_list[[i]] <- NULL
     }
+    info <- model$convInfo
+    converged_vec[i] <- isTRUE(info$isConv)
+    convergence_code_vec[i] <- as.integer(info$stopCode)
+    convergence_message_vec[i] <- as.character(info$stopMessage)
+    iterations_vec[i] <- as.integer(info$finIter)
+    ident <- .fit_identifiability(model)
+    parameter_correlation_vec[i] <- ident$parameter_correlation
+    condition_number_vec[i] <- ident$condition_number
 
     coefs <- coef(model)
     # Diagnostics are always computed on the natural discharge (cms) scale,
@@ -588,6 +732,8 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
     near_bound_vec[i] <- (coefs[["n"]] - fit_lower[["n"]]) < 0.01 ||
       (is.finite(fit_upper[["n"]]) && (fit_upper[["n"]] - coefs[["n"]]) < 0.01) ||
       (fit_upper[["a"]] - coefs[["a"]]) < 0.01 * max(limb_width_for_bound_check, 1e-6)
+
+    bound_hits_vec[i] <- .bound_hits(coefs, fit_lower, fit_upper, limb_width_for_bound_check)
 
     C_vec[i] <- coefs[["C"]]
     a_vec[i] <- coefs[["a"]]
@@ -656,7 +802,7 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
             start = list(C = coefs[["C"]], a = coefs[["a"]], n = coefs[["n"]]),
             lower = fit_lower,
             upper = fit_upper,
-            control = nls.lm.control(maxiter = 100),
+            control = .lm_control(100),
             weights = age_weight
           )),
           error = function(e) e
@@ -724,6 +870,11 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
     residual_df = residual_df_vec, n_starts_attempted = n_starts_attempted_vec,
     n_starts_converged = n_starts_converged_vec, selected_start_id = selected_start_id_vec,
     near_bound = near_bound_vec,
+    converged = converged_vec, convergence_code = convergence_code_vec,
+    convergence_message = convergence_message_vec, iterations = iterations_vec,
+    objective_value = objective_value_vec, bound_hits = bound_hits_vec,
+    multi_start_spread = multi_start_spread_vec,
+    parameter_correlation = parameter_correlation_vec, condition_number = condition_number_vec,
     C_se_asymp = C_se_asymp_vec, a_se_asymp = a_se_asymp_vec, n_se_asymp = n_se_asymp_vec
   )]
 
@@ -927,7 +1078,7 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
         start = list(a = start_a_clipped, n = start_n_clipped),
         lower = fit_lower,
         upper = fit_upper,
-        control = nls.lm.control(maxiter = 200),
+        control = .lm_control(200),
         weights = age_weight
       )),
       error = function(e) NULL
@@ -1009,6 +1160,7 @@ rate_optimise_constrained <- function(discharge_cms, stage_m, control = NULL, an
       set(limbs_dt, i = i, j = "n_starts_converged", value = NA_integer_)
       set(limbs_dt, i = i, j = "selected_start_id", value = NA_integer_)
     }
+    .clear_fit_diagnostics(limbs_dt, i)
     if ("near_bound" %in% names(limbs_dt)) {
       set(limbs_dt, i = i, j = "near_bound", value = result$near_bound)
     }
@@ -1537,9 +1689,20 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
     )
   }
 
+  # Candidates are scored from a single start, as they always have been:
+  # each is advisory and there can be hundreds. The warning that a single
+  # start did not converge is muffled here, because it would repeat for
+  # many candidates; the score is an approximation either way.
   .fit_rss_aic <- function(control) {
     fit <- tryCatch(
-      rate_optimise(discharge_sorted, stage_sorted, control = control, multi_start = FALSE),
+      withCallingHandlers(
+        rate_optimise(discharge_sorted, stage_sorted, control = control, multi_start = FALSE),
+        warning = function(w) {
+          if (grepl("did not converge from its single start", conditionMessage(w), fixed = TRUE)) {
+            invokeRestart("muffleWarning")
+          }
+        }
+      ),
       error = function(e) NULL
     )
     if (is.null(fit)) return(NULL)
@@ -1550,7 +1713,7 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
 
   baseline <- .fit_rss_aic(NULL)
   if (is.null(baseline)) {
-    warning("suggest_breakpoints(): the baseline single-limb fit failed to converge; cannot score candidates.")
+    warning("suggest_breakpoints(): the baseline single-limb fit failed; cannot score candidates.")
     return(empty_result())
   }
 

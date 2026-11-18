@@ -385,6 +385,7 @@ expand_rating_table <- function(rating_dt,
     set(limbs_dt, j = "n_starts_converged", value = NA_integer_)
     set(limbs_dt, j = "selected_start_id", value = NA_integer_)
   }
+  .clear_fit_diagnostics(limbs_dt)
 
   # Bootstrap uncertainty and multi-start bookkeeping describe the
   # pre-amendment fit and are not recomputed here -- dropped rather than

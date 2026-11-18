@@ -227,7 +227,8 @@ equation is finite and does not decrease across a grid of 20 stages spanning
 the limb (30 across the range for the segmented model); a decrease of more
 than $10^{-9}$ fails. Among the valid
 attempts the one with the smallest **weighted sum of squares on the
-objective's own scale** is kept: the weighted absolute sum for the absolute
+objective's own scale** is kept, whether or not the optimiser reported
+convergence (see the next section): the weighted absolute sum for the absolute
 objective, the weighted log-scale sum for the relative one. If no attempt is
 valid the fit stops with an error. Every attempt, selected or not, is
 recorded in `@fit_starts`.
@@ -237,23 +238,59 @@ ranked them on the unweighted sum of squares even when age weights were
 used, which chose between local optima by a criterion nobody had optimised.
 The two agree when there are no weights.
 
-# Convergence
+# Convergence and identifiability
 
 Each fit is a Levenberg-Marquardt least-squares fit (`minpack.lm::nlsLM`)
 with at most 100 iterations (300 for the segmented model) and the
-optimiser's default tolerances: it stops when the relative change in the sum
-of squares, or in the parameters, falls below $\sqrt{\epsilon} \approx
-1.5 \times 10^{-8}$, with $\epsilon$ the machine epsilon.
+optimiser's default tolerances. It stops when the relative change in the
+sum of squares, or in the parameters, falls below $\sqrt{\epsilon} \approx
+1.5 \times 10^{-8}$, with $\epsilon$ the machine epsilon. The optimiser's
+default limit of 400 function calls would stop a fit at about 94 iterations,
+before the iteration limit, so the call limit is raised to twenty times the
+iteration limit and the documented limit is the one in force.
 
-The `converged` column in `@fit_starts` means that an attempt returned a
-fit **and that the fit passed the validity check above**. It does not mean
-the optimiser reported convergence. When the iteration limit is reached,
-`nlsLM` returns its last estimate with a warning; the package suppresses
-that warning, and such an attempt counts as converged if it is valid.
+Every limb of a fit records what happened, in stable columns of `@limbs`
+(and of `@coefficients` for the segmented model). Where the optimiser does
+not supply a value the column is `NA`, meaning not assessed, never a guess.
 
-That is a limitation, stated here so it is not discovered by accident. The
-planned convergence columns (the optimiser's own code and message, the
-iteration count, and the final objective) will expose it per limb.
+| column | meaning |
+|---|---|
+| `converged` | the optimiser reports convergence (stop codes 1 to 4) |
+| `convergence_code`, `convergence_message` | its own stop code and message; `-1` is the iteration limit |
+| `iterations` | iterations used by the fit that was kept |
+| `objective_value` | the weighted objective of Section "The two objectives", at the kept fit |
+| `bound_hits` | parameters on a bound: `C_lower`, `a_upper`, `n_lower`, `n_upper`, comma separated; `""` for none |
+| `multi_start_spread` | how far near-optimal starts disagree in discharge (see below) |
+| `parameter_correlation` | the largest absolute correlation between two parameter estimates |
+| `condition_number` | the condition number of the Jacobian with columns scaled to unit length |
+
+In `@fit_starts`, an attempt has `converged` (the optimiser's own report) and
+`valid` (the domain and monotonicity check above) as separate columns,
+together with its stop code, message and iteration count.
+
+**Converged does not mean good, and unconverged does not mean bad.** Among
+the valid attempts the package keeps the one with the lowest objective,
+whether or not it converged. A flat valley in the objective lets the
+optimiser creep for the whole iteration limit while the fit is already
+practically optimal, and a converged attempt can sit on a bound with a much
+worse objective. Ranking on convergence would sometimes choose the worse
+fit. So the choice is made on the objective, and the report says whether the
+kept attempt converged. When it did not, `rate_optimise()` and
+`rate_optimise_segmented()` warn, and say how the optimiser stopped.
+
+`multi_start_spread` makes the difference visible. It is the largest
+difference in fitted discharge, across the limb, between the chosen solution
+and any other valid attempt whose objective is within 5% of it, as a
+fraction of the limb's peak discharge. It is 0 when no other attempt is that
+close and `NA` when fewer than two attempts were valid or only one start was
+used. A large value means two almost equally good fits predict different
+discharges: the data do not choose between them. A small value alongside
+wandering parameters means the opposite: the curve is well determined though
+its coefficients are not.
+
+`parameter_correlation` near 1, or a `condition_number` in the thousands, says
+two parameters trade off against each other. Neither is a verdict; they say
+where to look first.
 
 # What the intervals mean
 
@@ -335,7 +372,8 @@ assume. They are collected here so none is found by surprise.
   breakpoint is reported by the gap tools, not prevented.
 * A gauging on a breakpoint is fitted with the lower limb and applied with
   the upper one.
-* `converged` does not report the optimiser's own convergence (see above).
+* A fit that did not converge is still returned, with a warning and
+  `converged = FALSE`, when it has the lowest objective. It is not an error.
 * Bootstrap draws start from the fitted solution and are not validity
   checked.
 * No interval includes stage error, rating shift or equation-form error.

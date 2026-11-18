@@ -301,8 +301,10 @@ method(rating_diagnostics, class_any) <- function(x) .accessor_not_a_rating("rat
 .diagnostic_columns <- c(
   "rmse_cms", "rmse_pct", "r_squared", "n_obs", "n_unique_stage", "mean_error_cms",
   "median_abs_error_cms", "max_abs_error_cms", "residual_df", "n_starts_attempted",
-  "n_starts_converged", "selected_start_id", "near_bound", "n_boot_requested",
-  "n_boot_success", "n_boot_failed", "boot_success_fraction"
+  "n_starts_converged", "selected_start_id", "near_bound",
+  "converged", "convergence_code", "convergence_message", "iterations", "objective_value",
+  "bound_hits", "multi_start_spread", "parameter_correlation", "condition_number",
+  "n_boot_requested", "n_boot_success", "n_boot_failed", "boot_success_fraction"
 )
 
 method(rating_diagnostics, FlodeRating) <- function(x) {

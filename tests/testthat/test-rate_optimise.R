@@ -579,10 +579,19 @@ test_that("rate_optimise multi_start = TRUE (default) adds bookkeeping columns a
 test_that("rate_optimise multi_start = FALSE reproduces the original single-start behaviour", {
   discharge_cms <- c(177.685, 240.898, 221.954, 205.55, 383.051, 154.061, 216.582)
   stage_m <- c(1.855, 2.109, 2.037, 1.972, 2.574, 1.748, 2.016)
-  fit <- rate_optimise(discharge_cms, stage_m, multi_start = FALSE)
+  # This awkward set (seven gaugings, narrow range) does not converge from
+  # the single fixed start: the optimiser stops at its call limit. That used
+  # to pass without a word; it now warns and is recorded as not converged.
+  expect_warning(
+    fit <- rate_optimise(discharge_cms, stage_m, multi_start = FALSE),
+    "did not converge from its single start"
+  )
 
   expect_equal(fit@limbs$n_starts_attempted, 1L)
-  expect_equal(fit@limbs$n_starts_converged, 1L)
+  expect_equal(fit@limbs$n_starts_converged, 0L)
+  expect_false(fit@limbs$converged)
+  expect_equal(fit@limbs$convergence_code, -1L)  # the iteration limit
+  expect_match(fit@limbs$convergence_message, "maxiter")
   expect_equal(fit@limbs$selected_start_id, 1L)
   expect_null(fit@fit_starts)
 })
