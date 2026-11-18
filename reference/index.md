@@ -44,11 +44,14 @@ a hydraulic judgement.
 
 ## Diagnostics
 
-Residuals, extrapolation, influence, and the discharge gaps left where
-independently-fitted limbs meet.
+Residuals, extrapolation, influence, a rating checked against a set of
+gaugings, and the discharge gaps left where independently-fitted limbs
+meet.
 
 - [`plot_rating_residuals()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_residuals.md)
   : Plot rating fit residuals by limb
+- [`compare_gaugings_to_rating()`](https://jonpayneea.github.io/reach.rate/reference/compare_gaugings_to_rating.md)
+  : Compare a rating with a set of gaugings
 - [`flag_extrapolated_limbs()`](https://jonpayneea.github.io/reach.rate/reference/flag_extrapolated_limbs.md)
   : Flag rating limbs that extrapolate substantially beyond their
   gaugings
