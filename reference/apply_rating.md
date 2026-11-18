@@ -1,12 +1,16 @@
 # Apply a fitted rating to a stage series (S7 generic)
 
-Dispatches on the fit's class:
-[FlodeRating](https://jonpayneea.github.io/reach.rate/reference/FlodeRating.md)
+Converts a stage record to discharge. Dispatches on the class of `fit`:
+[FlodeRating](https://jonpayneea.github.io/reach.rate/reference/FlodeRating.md),
+[FlodeRatingTable](https://jonpayneea.github.io/reach.rate/reference/FlodeRatingTable.md)
 and
 [FlodeSegmentedRating](https://jonpayneea.github.io/reach.rate/reference/FlodeSegmentedRating.md)
-each provide their own method. Replaces the previous separate
+each provide a method. Replaces the previous separate
 `apply_rating()`/`apply_segmented_rating()` pair – one name, dispatched
 by what you're holding.
+
+The stage record can be a table with a stage column, or simply a numeric
+vector of stage values.
 
 ## Usage
 
@@ -18,13 +22,74 @@ apply_rating(fit, ...)
 
 - fit:
 
-  A `FlodeRating` or `FlodeSegmentedRating` object.
+  A
+  [FlodeRating](https://jonpayneea.github.io/reach.rate/reference/FlodeRating.md),
+  [FlodeRatingTable](https://jonpayneea.github.io/reach.rate/reference/FlodeRatingTable.md)
+  or
+  [FlodeSegmentedRating](https://jonpayneea.github.io/reach.rate/reference/FlodeSegmentedRating.md).
 
 - ...:
 
-  Passed to the class-specific method – typically `stage_dt` (a
-  data.frame or data.table with a stage column) plus
-  `stage_col`/`out_col`; see the individual methods' examples.
+  Arguments for the class-specific method, which are the same for all
+  three:
+
+  - `stage_dt`: a data.frame or data.table with a stage column, or a
+    numeric vector of stage values. Any other columns, such as
+    `datetime`, are carried through unchanged. A vector is wrapped in a
+    one-column table named by `stage_col`.
+
+  - `stage_col`: name of the stage column in `stage_dt`. Default
+    `"stage"`. With a vector it names the stage column of the result.
+
+  - `out_col`: name of the discharge column to add. Default
+    `"discharge"`.
+
+## Value
+
+`stage_dt` as a data.table (or, for a vector input, a table holding the
+stage values) with two columns added: `out_col` (the computed discharge)
+and `extrapolated` (logical; `TRUE` where the stage fell outside the
+range the rating covers, as defined for each class above).
+
+## Details
+
+**[FlodeRating](https://jonpayneea.github.io/reach.rate/reference/FlodeRating.md)
+method.** What
+[`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
+and
+[`rate_optimise_constrained()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise_constrained.md)
+return. It is converted with
+[`as_rating_table()`](https://jonpayneea.github.io/reach.rate/reference/as_rating_table.md)
+and then handled exactly as below, so the two give identical results.
+
+**[FlodeRatingTable](https://jonpayneea.github.io/reach.rate/reference/FlodeRatingTable.md)
+method.** Each stage value is assigned to the limb whose
+`[lower_level, upper_level]` band contains it, and discharge is that
+limb's `Q = C(H - a)^n`. Limbs must be contiguous
+(`upper_level[i] == lower_level[i + 1]`), or the call stops. Stage at or
+below a limb's `a` gives zero discharge. Stage below the lowest limb or
+above the highest is evaluated by extrapolating the nearest limb's
+equation, and flagged `extrapolated = TRUE`. Where stage may fall below
+the lowest gauged stage,
+[`extend_rating_low()`](https://jonpayneea.github.io/reach.rate/reference/extend_rating_low.md)
+adds an explicit linear limb there instead.
+
+**[FlodeSegmentedRating](https://jonpayneea.github.io/reach.rate/reference/FlodeSegmentedRating.md)
+method.** Discharge comes from the joint segmented formula. Stage at or
+below the zero-flow stage `bp1` gives zero discharge, which falls out of
+the formula itself. Only stage above the highest gauged stage is flagged
+`extrapolated = TRUE`.
+
+## See also
+
+[`apply_rating_interval()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating_interval.md)
+for a bootstrap prediction interval,
+[`apply_rating_versioned()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating_versioned.md)
+for a rating that changed over time,
+[`apply_rating_inverse()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating_inverse.md)
+for discharge back to stage, and
+[`extend_rating_low()`](https://jonpayneea.github.io/reach.rate/reference/extend_rating_low.md)
+for stage below the lowest limb.
 
 ## Examples
 
@@ -55,7 +120,7 @@ stage_dt <- data.table::data.table(
 )
 
 flow_dt <- apply_rating(my_fit, stage_dt)
-#> INFO [2026-11-06 10:44:50] apply_rating(): 35 of 193 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-18 09:20:01] apply_rating(): 35 of 193 stage value(s) fell outside the rating and were extrapolated.
 head(flow_dt)
 #>               datetime     stage discharge extrapolated
 #>                 <POSc>     <num>     <num>       <lgcl>
@@ -115,4 +180,20 @@ ggplot(long_dt, aes(datetime, value)) +
   theme(strip.placement = "outside")
 
 
+# A plain vector of stage values works too, and a fit from
+# rate_optimise() can be used directly
+apply_rating(my_fit, c(0.5, 1.5, 3.0))
+#>    stage  discharge extrapolated
+#>    <num>      <num>       <lgcl>
+#> 1:   0.5  0.4154976        FALSE
+#> 2:   1.5  4.3632457        FALSE
+#> 3:   3.0 19.3162711        FALSE
+gaugings <- station_gaugings
+fit <- rate_optimise(gaugings$discharge_cms, gaugings$stage_m)
+apply_rating(fit, quantile(gaugings$stage_m, c(0.25, 0.5, 0.75)))
+#>    stage discharge extrapolated
+#>    <num>     <num>       <lgcl>
+#> 1: 0.179 0.4909471        FALSE
+#> 2: 0.211 0.6250359        FALSE
+#> 3: 0.289 0.9919259        FALSE
 ```
