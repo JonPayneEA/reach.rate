@@ -61,10 +61,12 @@ reference:
 
 - title: Diagnostics
   desc: >
-    Residuals, extrapolation, influence, and the discharge gaps left where
-    independently-fitted limbs meet.
+    Residuals, extrapolation, influence, a rating checked against a set of
+    gaugings, and the discharge gaps left where independently-fitted
+    limbs meet.
   contents:
   - plot_rating_residuals
+  - compare_gaugings_to_rating
   - flag_extrapolated_limbs
   - flag_influential_gaugings
   - plot_rating_leverage
