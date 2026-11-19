@@ -99,6 +99,7 @@ fit
 #> <FlodeSegmentedRating> 3 segment(s), origin: independently_fitted, lifecycle: draft, R² = 0.9994
 #>   converged: yes
 #>   valid: yes
+#> 
 #>          C        bp1       n1        n2       n3   bp2   bp3  rmse_cms
 #>      <num>      <num>    <num>     <num>    <num> <num> <num>     <num>
 #> 1: 2.37908 -0.1903062 1.986332 0.7764828 1.051703   1.6   2.4 0.9894296

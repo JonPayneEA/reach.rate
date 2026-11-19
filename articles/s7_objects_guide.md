@@ -63,6 +63,7 @@ fit # each class has its own print method
 #> <FlodeRating> 1 limb(s), origin: independently_fitted, lifecycle: draft
 #>   converged: yes (1 of 1 limb)
 #>   valid: yes
+#> 
 #>     limb lower_stage_m upper_stage_m        C          a        n  rmse_cms
 #>    <int>         <num>         <num>    <num>      <num>    <num>     <num>
 #> 1:     1           0.3             3 5.754582 0.08356371 1.394315 0.3719334

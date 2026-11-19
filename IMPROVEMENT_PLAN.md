@@ -123,9 +123,10 @@ These were settled before writing. Each tranche assumes them.
     [`run_demo()`](https://jonpayneea.github.io/reach.rate/reference/run_demo.md)
     stay exported under a “Teaching tools” reference heading, labelled
     as synthetic-data demonstrations. No `lifecycle` dependency.
-4.  **Guided objective defaults to relative.** `fit_rating()` defaults
-    to `objective = "relative"`, because gauging error scales roughly
-    with discharge.
+4.  **Guided objective defaults to relative.**
+    [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)
+    defaults to `objective = "relative"`, because gauging error scales
+    roughly with discharge.
     [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
     keeps `"absolute"`, so existing expert code and results do not move.
     The mathematical contract states both equations and when they
@@ -149,7 +150,7 @@ API categories in section 4.
 
 | Function or class | Source | Tests | Vignettes | Known risk | Action |
 |----|----|----|----|----|----|
-| [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md) | rate_optimise.R | 10 | 11 | Vector input; no evidence IDs; absolute default | Advanced modelling; called by `fit_rating()` |
+| [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md) | rate_optimise.R | 10 | 11 | Vector input; no evidence IDs; absolute default | Advanced modelling; called by [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md) |
 | [`rate_optimise_constrained()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise_constrained.md) | rate_optimise.R | 3 | 4 | Fallback to unconstrained fit is recorded only in a warning | Advanced; record fallback in history |
 | [`rate_optimise_segmented()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise_segmented.md) | rate_optimise_segmented.R | 3 | 6 | No diagnostic parity with `FlodeRating` | Advanced; close parity gap in B2 |
 | [`rate_from_cross_section()`](https://jonpayneea.github.io/reach.rate/reference/rate_from_cross_section.md) | rate_from_cross_section.R | 1 | 3 | Output not yet evidence with `source_type = "cross_section"` | Advanced; emit `FlodeEvidence` |
@@ -274,7 +275,8 @@ and `FlodeAssessment`** (#41). Introduce the check-table schema here:
 hydrometric checks warn and never exclude.
 [`print()`](https://rdrr.io/r/base/print.html) and
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods. *Done
-when* each check has its own pass and fail test, and `assess_rating()`
+when* each check has its own pass and fail test, and
+[`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md)
 can reuse the class unchanged.
 
 **A7. Mathematical contract** (#42). New vignette
@@ -316,7 +318,9 @@ is green on all four matrix cells; vignettes build; no test fails.
 
 ## 6. Release B: Guided workflow (P1)
 
-**B1. `fit_rating()`** (#45). Orchestrates
+**B1.
+[`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)**
+(#45). Orchestrates
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
 and
 [`rate_optimise_segmented()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise_segmented.md).
@@ -325,10 +329,12 @@ One limb by default. Multiple limbs only with explicit `controls` or
 objective by default. Stores the call, the seed and every attempted fit.
 Operational limits required before unrestricted application.
 
-**B2. `assess_rating()`** (#46). Five domains (data, numerical,
-statistical, hydraulic, operational) plus provenance, built on A6 and
-A8. No summary score. Closes the segmented-fit diagnostic gap so both
-fit classes assess alike.
+**B2.
+[`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md)**
+(#46). Five domains (data, numerical, statistical, hydraulic,
+operational) plus provenance, built on A6 and A8. No summary score.
+Closes the segmented-fit diagnostic gap so both fit classes assess
+alike.
 
 **B3. Support and extrapolation** (#47).
 [`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md)

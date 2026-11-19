@@ -23,6 +23,20 @@ read_summary() reports what it found as a table.
 - [`check_operational_ratings()`](https://jonpayneea.github.io/reach.rate/reference/check_operational_ratings.md)
   : Check every operational rating against its gaugings
 
+## Fitting a rating
+
+The guided way to a rating. fit_rating() takes evidence and fits one
+with defaults a careful analyst would not argue with (one limb, the
+relative objective), and records what it did: the call, the seed, what
+was used and left out and why, where any breakpoints came from, and the
+range the rating may be applied over. set_operational_limits() states
+that range. Experts can still call rate_optimise() directly.
+
+- [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)
+  : Fit a rating from evidence
+- [`set_operational_limits()`](https://jonpayneea.github.io/reach.rate/reference/set_operational_limits.md)
+  : State the stage range a rating may be applied over
+
 ## Checking evidence
 
 Ask whether a set of gaugings can be used and whether it looks right for
@@ -34,6 +48,8 @@ apply_rating() from using one that cannot give a meaningful discharge.
 
 - [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md)
   : Check a set of gaugings
+- [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md)
+  : Assess a fitted rating
 - [`rating_invariants()`](https://jonpayneea.github.io/reach.rate/reference/rating_invariants.md)
   : Post-fit invariants of a rating
 - [`FlodeAssessment()`](https://jonpayneea.github.io/reach.rate/reference/FlodeAssessment.md)

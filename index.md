@@ -45,25 +45,27 @@ target is six functions:
 
 | Step | Function | Status |
 |----|----|----|
-| Import your gaugings | [`read_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/read_gaugings.md) | planned |
-| Check them | [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md) | planned |
-| Fit a candidate rating | `fit_rating()` | planned |
-| Assess it | `assess_rating()` | planned |
+| Import your gaugings | [`read_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/read_gaugings.md) | available |
+| Check them | [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md) | available |
+| Fit a candidate rating | [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md) | available |
+| Assess it | [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md) | available |
 | Compare with the current rating | [`compare_ratings()`](https://jonpayneea.github.io/reach.rate/reference/compare_ratings.md) | available |
 | Export it | `export_rating()` | planned |
 
-Until the planned functions land, the route runs through the advanced
-API: fit with
-[`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md),
-diagnose with
-[`plot_rating_residuals()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_residuals.md),
-[`flag_extrapolated_limbs()`](https://jonpayneea.github.io/reach.rate/reference/flag_extrapolated_limbs.md)
-and
-[`flag_influential_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/flag_influential_gaugings.md),
-then apply with
+Until `export_rating()` lands, assess a fit with
+[`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md),
+which reports on six domains (data, numerical, statistical, hydraulic,
+operational and provenance) without giving a score, then apply it with
 [`apply_rating()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating.md).
-That route stays available afterwards for anyone who needs direct
-control. The [function
+A rating made by
+[`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)
+is applied only within the range it was gauged over until you state the
+range it may be used over with
+[`set_operational_limits()`](https://jonpayneea.github.io/reach.rate/reference/set_operational_limits.md).
+Anyone who wants direct control can fit with
+[`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
+instead. That route stays available afterwards for anyone who needs
+direct control. The [function
 reference](https://jonpayneea.github.io/reach.rate/reference/) groups
 every export by the job it does.
 

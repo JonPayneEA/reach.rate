@@ -97,6 +97,7 @@ fit
 #> <FlodeRating> 1 limb(s), origin: independently_fitted, lifecycle: draft
 #>   converged: yes (1 of 1 limb)
 #>   valid: yes
+#> 
 #>     limb lower_stage_m upper_stage_m        C          a        n  rmse_cms
 #>    <int>         <num>         <num>    <num>      <num>    <num>     <num>
 #> 1:     1           0.5             3 3.520861 0.05580791 1.538393 0.2765406

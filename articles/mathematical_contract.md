@@ -370,6 +370,7 @@ print(rate_optimise(q, h, control = 1.5))
 #> <FlodeRating> 2 limb(s), origin: independently_fitted, lifecycle: draft
 #>   converged: yes (2 of 2 limbs)
 #>   valid: yes, with 1 warning (limb_continuity)
+#> 
 #>     limb lower_stage_m upper_stage_m        C           a        n   rmse_cms
 #>    <int>         <num>         <num>    <num>       <num>    <num>      <num>
 #> 1:     1           0.4           1.5 3.452241  0.03394668 1.552369 0.09401666

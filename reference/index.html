@@ -106,6 +106,29 @@
         </dt>
         <dd>Check every operational rating against its gaugings</dd>
       </dl></div><div class="section level2">
+      <h2 id="fitting-a-rating">Fitting a rating<a class="anchor" aria-label="anchor" href="#fitting-a-rating"></a></h2>
+
+      <div class="section-desc"><p>The guided way to a rating. fit_rating() takes evidence and fits one with defaults a careful analyst would not argue with (one limb, the relative objective), and records what it did: the call, the seed, what was used and left out and why, where any breakpoints came from, and the range the rating may be applied over. set_operational_limits() states that range. Experts can still call rate_optimise() directly.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="fit_rating.html">fit_rating()</a></code>
+
+        </dt>
+        <dd>Fit a rating from evidence</dd>
+
+        <dt>
+
+          <code><a href="set_operational_limits.html">set_operational_limits()</a></code>
+
+        </dt>
+        <dd>State the stage range a rating may be applied over</dd>
+      </dl></div><div class="section level2">
       <h2 id="checking-evidence">Checking evidence<a class="anchor" aria-label="anchor" href="#checking-evidence"></a></h2>
 
       <div class="section-desc"><p>Ask whether a set of gaugings can be used and whether it looks right for a river. Technical checks fail; hydrometric checks only warn, and nothing is removed. The result is a FlodeAssessment, a table of checks that a fitted rating’s assessment will reuse. rating_invariants() runs the same kind of check on a rating’s own equations and is what stops apply_rating() from using one that cannot give a meaningful discharge.</p></div>
@@ -121,6 +144,13 @@
 
         </dt>
         <dd>Check a set of gaugings</dd>
+
+        <dt>
+
+          <code><a href="assess_rating.html">assess_rating()</a></code>
+
+        </dt>
+        <dd>Assess a fitted rating</dd>
 
         <dt>
 
