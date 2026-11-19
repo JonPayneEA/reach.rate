@@ -105,6 +105,31 @@ each limb's bounds. A discharge of zero, a negative discharge or `NA` gives
 $a$ and has no single answer. The inverse is only defined where discharge
 rises across the limbs; it refuses a rating where it does not.
 
+## How well a stage is supported
+
+`apply_rating()` does not only compute a discharge. It says what the stage
+rests on, in a `support` column, by comparing it with five stage ranges
+(`rating_support()`): the range of the **gaugings**, the range of any
+**modelled** evidence, the range the equations are **fitted** over, the
+**operational** range if one has been stated, and the **numerical** range
+where the equations give a finite number.
+
+| `support` | the stage is |
+|---|---|
+| `interpolation_observed` | inside the range of the gaugings |
+| `interpolation_mixed` | inside the range of all the evidence, but outside the gaugings |
+| `model_supported` | inside the fitted range, with no evidence there |
+| `extrapolation` | beyond the fitted range |
+| `outside_operational_range` | beyond the stated operational limits (this outranks the rest) |
+
+Only gaugings count as observation. A modelled value, a cross-section or
+structure computation, and a point read off another rating are evidence that
+shapes a rating, and are kept apart from measurements. A stage beyond the
+numerical range is an error, since the discharge would not be a number.
+Support is a statement about the evidence, not the fit statistics: a limb
+that fits its gaugings very closely is still an extrapolation above the
+highest of them.
+
 # The two objectives
 
 Each limb is fitted by minimising a weighted sum of squares over its $m$

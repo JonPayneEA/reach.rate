@@ -1338,7 +1338,11 @@ plot_rating_residuals <- function(fit) {
 #'   property, not per-limb), and `doubtful`.
 #'
 #' @seealso [rating_support()] for the same unsupported extents without a
-#'   tolerance applied.
+#'   tolerance applied. The `support` column of [apply_rating()] supersedes
+#'   this function's single flag for deciding how far to trust a stage: it
+#'   separates stages inside the gaugings from those resting on modelled
+#'   evidence, on the equations alone, or on extrapolation. This function
+#'   remains for marking doubtful limbs.
 #'
 #' @examples
 #' set.seed(42)

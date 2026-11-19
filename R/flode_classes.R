@@ -574,10 +574,30 @@ rating_plot <- new_generic("rating_plot", "fit")
 #'     `"discharge"`.
 #'
 #' @return `stage_dt` as a data.table (or, for a vector input, a table
-#'   holding the stage values) with two columns added: `out_col` (the
-#'   computed discharge) and `extrapolated` (logical; `TRUE` where the
-#'   stage fell outside the range the rating covers, as defined for each
-#'   class above).
+#'   holding the stage values) with three columns added: `out_col` (the
+#'   computed discharge), `extrapolated` (logical; `TRUE` where the stage
+#'   fell outside the range the rating covers, as defined for each class
+#'   above) and `support`, which says how well supported that stage is:
+#'
+#'   * `"interpolation_observed"`: inside the stage range of the gaugings;
+#'   * `"interpolation_mixed"`: inside the range of all the evidence but
+#'     outside the gaugings, so it rests on modelled evidence (a modelled
+#'     value, a cross-section or structure computation, a point read off
+#'     another rating);
+#'   * `"model_supported"`: inside the range the equations are declared over
+#'     but with no evidence there, as after [extend_rating_low()] or
+#'     [graft_rating()]; also what a table, which holds equations only, gives
+#'     within its range;
+#'   * `"extrapolation"`: beyond the range the equations are declared over;
+#'   * `"outside_operational_range"`: beyond the operational limits, if
+#'     stated. It outranks the others.
+#'
+#'   `NA` where the stage is `NA`. A stage beyond the numerical range of the
+#'   rating (where its top limb's equation overflows) is an error, because
+#'   the result would not be a number. See [rating_support()] for the ranges.
+#'
+#'   A rating made by [fit_rating()] is stricter: it refuses stages outside
+#'   its operational limits, or outside its gauged range if none are stated.
 #'
 #' @seealso [apply_rating_interval()] for a bootstrap prediction interval,
 #'   [apply_rating_versioned()] for a rating that changed over time,

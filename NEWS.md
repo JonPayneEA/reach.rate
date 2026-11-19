@@ -1,5 +1,32 @@
 # reach.rate (development)
 
+* Tranche B3 of the improvement plan: support and extrapolation.
+  `apply_rating()` gains a **`support`** column saying what each stage rests
+  on: `interpolation_observed` (inside the gaugings), `interpolation_mixed`
+  (inside the evidence but outside the gaugings, so resting on modelled
+  evidence), `model_supported` (inside the fitted range with no evidence
+  there, as after `extend_rating_low()` or `graft_rating()`), `extrapolation`
+  (beyond the fitted range) and `outside_operational_range` (beyond stated
+  limits, which outranks the others). A stage beyond the **numerical range**,
+  where the top limb's equation overflows, now fails with an error, since the
+  result would not be a number. The existing `extrapolated` flag is
+  unchanged.
+
+  **`rating_support()` changes its default.** It now returns the five stage
+  ranges a rating rests on (observed, modelled, fitted, operational,
+  numerical) with how many pieces of evidence stand behind each. The per-limb
+  table from tranche A3 is still there as `rating_support(x, by = "limb")`.
+  Only gaugings count as observed; modelled, cross-section, structure and
+  operational-rating evidence is the modelled range. It works for a
+  `FlodeRatingTable` too (equations only, so no evidence ranges).
+  `flag_extrapolated_limbs()` is kept for marking doubtful limbs, and says
+  that the support classes supersede its single flag.
+
+  **A gap closed in earlier tranches.** `apply_rating()` on a *segmented*
+  fit now goes through the same post-fit invariant gate (A8) and, for a fit
+  made by `fit_rating()`, the operational-limits requirement (B1). Neither
+  applied to the segmented method before.
+
 * Tranche B2 of the improvement plan: `assess_rating()`. It looks at a
   rating from six sides and returns what it found as a `FlodeAssessment`:
   **data** (`validate_gaugings()` on the evidence the rating used),

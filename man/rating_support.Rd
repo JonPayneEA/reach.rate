@@ -2,31 +2,59 @@
 % Please edit documentation in R/accessors.R
 \name{rating_support}
 \alias{rating_support}
-\title{Gauged support for a rating}
+\title{What a rating rests on}
 \usage{
-rating_support(x)
+rating_support(x, by = "range")
 }
 \arguments{
-\item{x}{A \link{FlodeRating} or \link{FlodeSegmentedRating}. A
-\link{FlodeRatingTable} holds equations only, with no gaugings to measure
-support against.}
+\item{x}{A \link{FlodeRating}, \link{FlodeSegmentedRating} or \link{FlodeRatingTable}.
+A table holds equations only, so it has no observed or modelled range.}
+
+\item{by}{\code{"range"} (default) for the five ranges, or \code{"limb"} for the
+per-limb table. \code{"limb"} needs gaugings, so a \link{FlodeRatingTable} is
+refused.}
 }
 \value{
-A data.table. For a \link{FlodeRating}, one row per limb:
-\code{limb}, \code{lower_stage_m}, \code{upper_stage_m}, \code{n_gaugings},
-\code{gauged_min_stage_m}, \code{gauged_max_stage_m}, \code{lower_unsupported_m} and
-\code{upper_unsupported_m} (how far the limb extends below its lowest and
-above its highest gauging, m), and the same as a fraction of the
-limb's width, \code{lower_unsupported_frac} and \code{upper_unsupported_frac}.
-A limb with no gaugings has \code{n_gaugings} 0 and \code{NA} elsewhere. For a
-\link{FlodeSegmentedRating}, one row with \code{n_gaugings},
-\code{gauged_min_stage_m} and \code{gauged_max_stage_m}.
+With \code{by = "range"}, a data.table of five rows with \code{range},
+\code{lower_stage_m}, \code{upper_stage_m}, \code{n_evidence} (gaugings or modelled
+points, \code{NA} for the ranges that are not evidence) and \code{basis}, a
+sentence on what the range is. A range that does not exist is \code{NA}.
+
+With \code{by = "limb"}, for a \link{FlodeRating}, one row per limb: \code{limb},
+\code{lower_stage_m}, \code{upper_stage_m}, \code{n_gaugings}, \code{gauged_min_stage_m},
+\code{gauged_max_stage_m}, \code{lower_unsupported_m} and \code{upper_unsupported_m}
+(how far the limb extends below its lowest and above its highest
+gauging, m), and the same as a fraction of the limb's width,
+\code{lower_unsupported_frac} and \code{upper_unsupported_frac}. A limb with no
+gaugings has \code{n_gaugings} 0 and \code{NA} elsewhere. For a
+\link{FlodeSegmentedRating}, one row with \code{n_gaugings}, \code{gauged_min_stage_m}
+and \code{gauged_max_stage_m}.
 }
 \description{
-How much of each limb rests on gaugings: how many fall inside it, the
-stage range they cover, and how far the limb extends beyond them at
-either end. A limb that stretches well past its highest gauging is an
-extrapolation there, whatever its fit statistics say.
+The stage ranges a rating rests on, and which of them are evidence and
+which are decision. There are five:
+\itemize{
+\item \strong{observed}: the stage range of the gaugings (evidence of source type
+\code{gauging}), with how many there are;
+\item \strong{modelled}: the stage range of evidence that is not a measurement (a
+modelled value, a cross-section or structure computation, or a point read
+off another rating);
+\item \strong{fitted}: the stage range the equations are declared over, which can be
+wider than the evidence after \code{\link[=extend_rating_low]{extend_rating_low()}} or \code{\link[=graft_rating]{graft_rating()}};
+\item \strong{operational}: the range the rating may be used over, if stated (see
+\code{\link[=set_operational_limits]{set_operational_limits()}}); \code{NA} if not;
+\item \strong{numerical}: where the equations give a finite discharge. Beyond it
+\code{\link[=apply_rating]{apply_rating()}} fails.
+}
+
+\code{\link[=apply_rating]{apply_rating()}} uses the same ranges to say, for every stage it
+computes, how well supported that stage is (its \code{support} column).
+
+With \code{by = "limb"} it gives instead how much of each limb rests on
+gaugings: how many fall inside it, the stage range they cover, and how far
+the limb extends beyond them at either end. A limb that stretches well past
+its highest gauging is an extrapolation there, whatever its fit statistics
+say.
 }
 \examples{
 set.seed(1)
@@ -34,9 +62,11 @@ stage_m <- seq(0.5, 2.5, by = 0.05)
 discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.02)
 fit <- rate_optimise(discharge_cms, stage_m)
 rating_support(fit)
+rating_support(fit, by = "limb")
 
 }
 \seealso{
-\code{\link[=flag_extrapolated_limbs]{flag_extrapolated_limbs()}} for the same measures with a
-tolerance applied; \code{\link[=rating_evidence]{rating_evidence()}}
+\code{\link[=apply_rating]{apply_rating()}} for the \code{support} column; \code{\link[=set_operational_limits]{set_operational_limits()}};
+\code{\link[=flag_extrapolated_limbs]{flag_extrapolated_limbs()}}, which the support classes supersede;
+\code{\link[=rating_evidence]{rating_evidence()}}
 }

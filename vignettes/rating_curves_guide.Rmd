@@ -59,7 +59,7 @@ Each regime approximates a different power law. The standard response is a multi
 
 The toolkit represents its results as three S7 classes rather than bare tables. You read them through accessor functions, so your code never depends on where the package stores something, and the objects carry more than numbers.
 
-`FlodeRating` is the result of `rate_optimise()`. `rating_limbs()` gives one row per limb (stage range and equation), `rating_coefficients()` the parameters with their uncertainty, `rating_diagnostics()` how well each limb fits, `rating_evidence()` the gaugings it was fitted to, `rating_support()` how much of each limb rests on gaugings, `rating_bootstrap()` the bootstrap draws when produced, `rating_history()` whether the fit is as fitted or has been amended, and `rating_provenance()` how it was made.
+`FlodeRating` is the result of `rate_optimise()`. `rating_limbs()` gives one row per limb (stage range and equation), `rating_coefficients()` the parameters with their uncertainty, `rating_diagnostics()` how well each limb fits, `rating_evidence()` the gaugings it was fitted to, `rating_support()` the stage ranges it rests on (gauged, modelled, fitted, operational, numerical), `rating_bootstrap()` the bootstrap draws when produced, `rating_history()` whether the fit is as fitted or has been amended, and `rating_provenance()` how it was made.
 
 `FlodeSegmentedRating` is the result of `rate_optimise_segmented()`, a structurally different model covered in section 9.
 

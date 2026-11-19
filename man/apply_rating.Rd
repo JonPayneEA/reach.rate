@@ -25,10 +25,31 @@ one-column table named by \code{stage_col}.
 }
 \value{
 \code{stage_dt} as a data.table (or, for a vector input, a table
-holding the stage values) with two columns added: \code{out_col} (the
-computed discharge) and \code{extrapolated} (logical; \code{TRUE} where the
-stage fell outside the range the rating covers, as defined for each
-class above).
+holding the stage values) with three columns added: \code{out_col} (the
+computed discharge), \code{extrapolated} (logical; \code{TRUE} where the stage
+fell outside the range the rating covers, as defined for each class
+above) and \code{support}, which says how well supported that stage is:
+\itemize{
+\item \code{"interpolation_observed"}: inside the stage range of the gaugings;
+\item \code{"interpolation_mixed"}: inside the range of all the evidence but
+outside the gaugings, so it rests on modelled evidence (a modelled
+value, a cross-section or structure computation, a point read off
+another rating);
+\item \code{"model_supported"}: inside the range the equations are declared over
+but with no evidence there, as after \code{\link[=extend_rating_low]{extend_rating_low()}} or
+\code{\link[=graft_rating]{graft_rating()}}; also what a table, which holds equations only, gives
+within its range;
+\item \code{"extrapolation"}: beyond the range the equations are declared over;
+\item \code{"outside_operational_range"}: beyond the operational limits, if
+stated. It outranks the others.
+}
+
+\code{NA} where the stage is \code{NA}. A stage beyond the numerical range of the
+rating (where its top limb's equation overflows) is an error, because
+the result would not be a number. See \code{\link[=rating_support]{rating_support()}} for the ranges.
+
+A rating made by \code{\link[=fit_rating]{fit_rating()}} is stricter: it refuses stages outside
+its operational limits, or outside its gauged range if none are stated.
 }
 \description{
 Converts a stage record to discharge. Dispatches on the class of \code{fit}:

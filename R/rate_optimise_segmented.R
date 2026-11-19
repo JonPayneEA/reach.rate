@@ -502,6 +502,8 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = N
 # flode_classes.R (see ?apply_rating): roxygen cannot name a
 # `method(...) <-` call, so a block written here is silently dropped.
 method(apply_rating, FlodeSegmentedRating) <- function(fit, stage_dt, stage_col = "stage", out_col = "discharge") {
+  .require_valid_rating(fit, "apply_rating()")
+  .require_operational_range(fit, stage_dt, stage_col)
   stage_dt <- .coerce_stage_input(stage_dt, stage_col)
   if (!stage_col %in% names(stage_dt)) stop("stage_col must be a column of stage_dt")
 
@@ -516,6 +518,7 @@ method(apply_rating, FlodeSegmentedRating) <- function(fit, stage_dt, stage_col 
 
   set(out_dt, j = out_col, value = q)
   set(out_dt, j = "extrapolated", value = H > max(gaugings_dt$stage_m))
+  set(out_dt, j = "support", value = .support_class(fit, H))
   out_dt[]
 }
 
