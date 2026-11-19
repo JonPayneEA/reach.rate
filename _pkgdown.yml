@@ -148,9 +148,16 @@ reference:
   - plot_rating_interval
 
 - title: Plotting
+  desc: >
+    autoplot() and plot() draw any rating with one grammar and return a
+    ggplot2 object; they also work on an assessment and a sensitivity
+    analysis. rating_plot() is superseded by them. plot_rating_curves()
+    overlays several ratings.
   contents:
-  - rating_plot
+  - autoplot.FlodeRating
+  - reexports
   - plot_rating_curves
+  - rating_plot
 
 - title: Specialist hydraulics
   desc: >

@@ -7,7 +7,7 @@
 # (suggest_breakpoints()).
 # Add to it when new data.table code introduces a column name.
 globalVariables(c(
-  ".", "change_pct", "change_cms", "max_abs_change_pct", "evidence_ids", "worst", "variant", "relative_residual", "value", "affected_evidence", "check_id", "check_label", "domain", "n_affected", "status", "tile_label", ".a", ".limb", ".row_id", ".stage_value", "C", "C_new", "C_old", "a",
+  ".", "kind", "ymin", "ymax", "lower", "upper", "use", "success", "change_pct", "change_cms", "max_abs_change_pct", "evidence_ids", "worst", "variant", "relative_residual", "value", "affected_evidence", "check_id", "check_label", "domain", "n_affected", "status", "tile_label", ".a", ".limb", ".row_id", ".stage_value", "C", "C_new", "C_old", "a",
   "candidate_stage", "a_new", "a_old", "above_bankfull", "age_weight", "aligned", "band",
   "cooks_distance", "depth", "discharge", "discharge_", "discharge_cms",
   "discharge_diff", "discharge_draw", "discharge_lower", "discharge_mean",

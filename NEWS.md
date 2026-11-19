@@ -1,5 +1,35 @@
 # reach.rate (development)
 
+* Tranche B7 of the improvement plan: one plot grammar. **`autoplot()` and
+  `plot()`** now draw a `FlodeRating`, `FlodeSegmentedRating` or
+  `FlodeRatingTable` and return a ggplot2 object, so the plot can be added to,
+  themed or saved like any other. `autoplot()` is re-exported, so it works
+  without attaching ggplot2, and `plot()` gives the same plot. On the plot:
+  the **gaugings shaped by source type** (a circle for a gauging, other shapes
+  for modelled, cross-section, structure and operational-rating evidence, so
+  evidence that is not a measurement cannot be mistaken for one); rows left out
+  of the fit drawn **muted and never hidden**; a **95% bootstrap band** where
+  the fit made draws; the **stage ranges the rating rests on** shaded (a tint
+  over modelled evidence, a grey one where the curve is fitted but no evidence
+  lies), with operational limits as dashed lines; **units on the axes**
+  (discharge horizontal, stage vertical, the hydrological convention); and the
+  rating's **status in the caption**: origin, lifecycle, whether it converged
+  and whether it is valid. Evidence is told apart by shape and the status is
+  written out, so nothing depends on colour alone. The curve is evaluated
+  directly, so a rating that fails its invariants can still be drawn, which is
+  how you find out why. `autoplot()` also works on an assessment and a
+  sensitivity analysis, as `plot()` already did.
+
+  `fit_rating()` now keeps the stage, discharge and source type of the rows it
+  left out, with the reason, in `rating_provenance()$fit_rating$excluded`, so
+  they can be shown muted on the plot and checked later. Before, only their ids
+  and reasons were kept.
+
+  **`rating_plot()` is superseded** by `autoplot()` and `plot()`. It still
+  works and is unchanged, and its documentation says so; it will warn in a
+  later release and then be removed. `plot_rating_curves()`, which overlays
+  several ratings, does not overlap and stays.
+
 * Tranche B6 of the improvement plan: `check_limb_continuity()`. At each
   junction between two limbs it measures how far the equations are apart at
   the stage they share, from the equations themselves and not from a

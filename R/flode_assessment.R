@@ -273,7 +273,7 @@ method(print, FlodeAssessment) <- function(x, ...) {
 #' @param y,... Unused.
 #' @return A ggplot object.
 #' @noRd
-method(plot, FlodeAssessment) <- function(x, y, ...) {
+.plot_assessment <- function(x) {
   chk <- copy(x@checks)
   if (nrow(chk) == 0L) stop("there are no checks to plot", call. = FALSE)
   chk[, n_affected := vapply(affected_evidence, length, integer(1))]
@@ -294,3 +294,9 @@ method(plot, FlodeAssessment) <- function(x, y, ...) {
     theme(panel.grid = element_blank(), legend.position = "bottom")
   p
 }
+
+#' @noRd
+method(plot, FlodeAssessment) <- function(x, y, ...) .plot_assessment(x)
+
+#' @noRd
+method(autoplot, FlodeAssessment) <- function(object, ...) .plot_assessment(object)

@@ -12,6 +12,8 @@ test_that("every exported function has an example in its help page", {
     sub("^\\\\alias\\{(.*)\\}$", "\\1", l[grepl("^\\\\alias\\{", l)])
   }
   covered <- unlist(lapply(rd_files[vapply(rd_files, has_example, logical(1))], aliases))
-  missing <- setdiff(exports, covered)
+  # A re-export (autoplot, from ggplot2) is documented where it is defined.
+  reexported <- unlist(lapply(rd_files[basename(rd_files) == "reexports.Rd"], aliases))
+  missing <- setdiff(setdiff(exports, reexported), covered)
   expect_identical(sort(missing), character(0))
 })

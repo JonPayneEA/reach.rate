@@ -71,7 +71,7 @@ The toolkit represents its results as three [S7](https://rconsortium.github.io/S
 - `FlodeSegmentedRating` is the result of `rate_optimise_segmented()`, a structurally different joint model with no junction gap to reconcile (see the full guide).
 - `FlodeRatingTable` is the equation-table representation used for gap checking and application: `lower_level`, `upper_level`, `C`, `a`, `n` per limb, the same equation and sign convention as a `FlodeRating`. An amended table keeps the exact object it was amended from, and `rating_history()` lists the chain -- an audit trail by construction, not by discipline.
 
-Three shared generics work across the classes: `rating_plot()` draws whichever fit you hand it, `apply_rating()` converts stage to discharge with whichever representation you hold, and `as_rating_table()` converts a fit to the table form. The class system chooses the right implementation; you use one name.
+Three shared generics work across the classes: `autoplot()` (or `plot()`) draws whichever rating you hand it, `apply_rating()` converts stage to discharge with whichever representation you hold, and `as_rating_table()` converts a fit to the table form. The class system chooses the right implementation; you use one name.
 
 A fit remembers its own gaugings deliberately: every diagnostic, residual plot, and bootstrap in this toolkit needs the original data, and a rating separated from its gaugings is a rating you can no longer question.
 
@@ -108,7 +108,7 @@ discharge_cms <- true_coefs$C[true_limb] *
 fit <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2))
 rating_limbs(fit, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared)]
 
-rating_plot(fit)
+autoplot(fit)            # a ggplot2 object; plot(fit) gives the same
 
 # Independently-fitted limbs rarely meet exactly at their junctions --
 # detect the resulting discharge gap
