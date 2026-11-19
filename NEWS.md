@@ -1,5 +1,24 @@
 # reach.rate (development)
 
+* Release C: **`export_rating()` and `import_rating()`**, the sixth step of the
+  guided workflow. `export_rating(rating, assessment, path)` writes a folder a
+  reviewer can read without R: the rating and assessment as `.rds` (the record),
+  the same content as plain CSV tables (limbs, coefficients, evidence, history,
+  support, assessment checks), a README, and a `manifest.csv` of file sizes and
+  MD5 checksums. `import_rating(path)` checks every file against the manifest
+  first, so a damaged or edited file is named and not read, then returns the
+  rating as it went in, equal in every value with no tolerance (not `identical()`,
+  which no R object passes after a write and read, because `data.table` keeps
+  internal pointers that differ), with its assessment.
+  Exporting never changes the rating or its lifecycle. The `.rds` is the record:
+  evidence `metadata` is a list column and is left out of the CSV only. An
+  existing export is not overwritten unless `overwrite = TRUE`, and then only
+  the files this function writes are replaced. Schema migration has its
+  mechanism in place (`import_rating()` refuses a rating from an older schema
+  with no migration, and from a newer one, with the reason) but no migrations
+  yet, since schema version 2 is the first. `tools` is now an import, for the
+  checksums.
+
 * Release C begins with **`vignette("thresholds")`**, a practitioner article
   on every limit in `validate_gaugings()` and `assess_rating()`: its default
   (read from the functions when the page is built, so it cannot drift), what it
