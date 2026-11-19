@@ -278,6 +278,7 @@ FlodeRating <- new_class(
 method(print, FlodeRating) <- function(x, ...) {
   cat(sprintf("<FlodeRating> %d limb(s), origin: %s, lifecycle: %s\n", nrow(x@limbs), x@fit_origin, x@lifecycle))
   cat(.state_lines(x), sep = "\n")
+  cat(.guided_lines(x), sep = "\n")
   print(x@limbs[, .(limb, lower_stage_m, upper_stage_m, C, a, n, rmse_cms, r_squared)])
   invisible(x)
 }
@@ -367,6 +368,7 @@ method(print, FlodeSegmentedRating) <- function(x, ...) {
     x@n_segments, x@fit_origin, x@lifecycle, x@coefficients$r_squared[1]
   ))
   cat(.state_lines(x), sep = "\n")
+  cat(.guided_lines(x), sep = "\n")
   print(x@coefficients)
   invisible(x)
 }

@@ -1,5 +1,41 @@
 # reach.rate (development)
 
+* Tranche B1 of the improvement plan: `fit_rating()`, the guided entry
+  point, with `set_operational_limits()`. Give it evidence (a `FlodeEvidence`,
+  a plain table, or the output of `read_gaugings()`) and it fits a rating
+  with defaults chosen so that a careful analyst would not argue: **one
+  limb**, **the relative objective**, an independent fit (or
+  `model = "segmented"`). More than one limb needs an explicit choice, either
+  `controls` (recorded as yours) or `limbs = "suggest"` (recorded as a
+  statistical candidate, marked advisory, and said so each time the rating
+  is printed).
+
+  It records what it did, in `rating_provenance()$fit_rating`: the call, the
+  seed, the model and objective, how many rows were used, and every row it
+  left out with its `evidence_id` and reason (marked excluded, missing or
+  non-finite, negative discharge, or zero discharge under the relative
+  objective). Nothing is deleted from your evidence. The rating's
+  `@gaugings` is the evidence that was used, with each row's `evidence_id`,
+  source and notes, plus the fitter's own limb and age-weight columns. This
+  is the first fitter to act on `included = FALSE`. Every starting point
+  tried is in `@fit_starts`.
+
+  **Operational limits.** A rating made by `fit_rating()` is applied only
+  within the stage range it was gauged over until you state the range it may
+  be used over, with `operational_limits` or `set_operational_limits()`, and
+  say why. Stages outside the limits are refused by `apply_rating()`; stages
+  inside them but beyond the gauged range are computed and flagged
+  `extrapolated`. Setting limits makes a new version, returns the lifecycle
+  to `draft`, and keeps the earlier one in `rating_history()` with a note. A
+  rating from `rate_optimise()` is not restricted, and neither is its
+  equation table: an expert calling those has taken that decision.
+
+  Printing a guided rating shows its breakpoints and where they came from, how
+  many rows were used, and its operational limits.
+
+  `README.md` now lists `read_gaugings()`, `validate_gaugings()` and
+  `fit_rating()` as available.
+
 * Tranche A8 of the improvement plan: post-fit invariants.
   `rating_invariants()` checks a rating's own equations and returns a
   `FlodeAssessment` (subject `"rating"`) reusing the class from A6. Eight

@@ -152,6 +152,7 @@ method(apply_rating, FlodeRating) <- function(fit, stage_dt, stage_col = "stage"
   # Checked on the fit itself, which can fail things its equation table
   # cannot show (bootstrap interval order, parameter bounds).
   .require_valid_rating(fit, "apply_rating()")
+  .require_operational_range(fit, stage_dt, stage_col)
   apply_rating(as_rating_table(fit), stage_dt, stage_col = stage_col, out_col = out_col)
 }
 

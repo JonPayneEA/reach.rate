@@ -49,6 +49,18 @@ reference:
   - match_stations
   - check_operational_ratings
 
+- title: Fitting a rating
+  desc: >
+    The guided way to a rating. fit_rating() takes evidence and fits one
+    with defaults a careful analyst would not argue with (one limb, the
+    relative objective), and records what it did: the call, the seed, what
+    was used and left out and why, where any breakpoints came from, and the
+    range the rating may be applied over. set_operational_limits() states
+    that range. Experts can still call rate_optimise() directly.
+  contents:
+  - fit_rating
+  - set_operational_limits
+
 - title: Checking evidence
   desc: >
     Ask whether a set of gaugings can be used and whether it looks right
