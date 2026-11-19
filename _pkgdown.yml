@@ -138,6 +138,7 @@ reference:
   - flag_influential_gaugings
   - plot_rating_leverage
   - detect_rc_gaps
+  - check_limb_continuity
   - plot_rc_gaps
 
 - title: Uncertainty
