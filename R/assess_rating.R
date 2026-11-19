@@ -384,7 +384,7 @@ assess_rating <- function(x, bias_tol = 0.05, spread_tol = 0.15, trend_rho = 0.6
         if (is.null(lim)) "No operational limits are stated for this rating." else
           sprintf("Operational limits are %.4g to %.4g m%s.", lim$lower_stage_m, lim$upper_stage_m,
                   if (is.na(lim$basis)) " (no basis recorded)" else paste0(" (", lim$basis, ")")),
-        if (guided) "Until limits are stated the rating applies only within its gauged range. Use set_operational_limits()."
+        if (guided) "Until limits are stated, stages beyond the gauged range are flagged as extrapolation but not bounded. Use set_operational_limits()."
         else "State the stage range this rating may be used over, and why, with set_operational_limits().")
     if (!is.null(lim) && !is.null(frame)) {
       gmin <- min(frame$stage_m); gmax <- max(frame$stage_m); span <- diff(c(gmin, gmax))

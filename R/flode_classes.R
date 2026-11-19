@@ -604,8 +604,10 @@ rating_plot <- new_generic("rating_plot", "fit")
 #'   rating (where its top limb's equation overflows) is an error, because
 #'   the result would not be a number. See [rating_support()] for the ranges.
 #'
-#'   A rating made by [fit_rating()] is stricter: it refuses stages outside
-#'   its operational limits, or outside its gauged range if none are stated.
+#'   A rating made by [fit_rating()] also refuses stages outside its
+#'   operational limits, when they have been stated. With none stated, stages
+#'   beyond the gauged range are returned, flagged `extrapolation` in the
+#'   `support` column, with one warning per call.
 #'
 #' @seealso [apply_rating_interval()] for a bootstrap prediction interval,
 #'   [apply_rating_versioned()] for a rating that changed over time,

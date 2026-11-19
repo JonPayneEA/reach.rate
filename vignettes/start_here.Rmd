@@ -158,21 +158,35 @@ apply_rating(fit, c(0.5, 1.2, 2.5))
 The `support` column says what each answer rests on. `interpolation_observed`
 means the stage lies among the gaugings, which is the best case.
 
-A rating made by `fit_rating()` will not give an answer outside the stage range
-it was gauged over until you say where it may be used, and why:
+Forecast models need discharge above the highest gauging, so a rating made by
+`fit_rating()` does not stop at the edge of its evidence. Ask for a stage
+beyond it and you get an answer, flagged, with a warning:
 
-```{r limits, error=TRUE}
-apply_rating(fit, 3.6)
+```{r extrapolate}
+out <- withCallingHandlers(
+  apply_rating(fit, c(2.5, 3.6)),
+  warning = function(w) {
+    message("Warning: ", conditionMessage(w))
+    invokeRestart("muffleWarning")
+  }
+)
+out
 ```
 
-```{r limits-set}
-wider <- set_operational_limits(fit, 0.25, 3.6, basis = "control confirmed by survey to 3.6 m")
-apply_rating(wider, c(2.5, 3.6))
+The 3.6 m row is marked `extrapolation`. The value rests on the equation alone,
+with no gauging beyond 2.9 m to check it. Use it, and say so.
+
+You can turn that flag into a boundary. If you know where the rating may be
+used, such as a structure's limit or a surveyed control, say so and say why:
+
+```{r limits-set, error=TRUE}
+limited <- set_operational_limits(fit, 0.25, 3.6, basis = "control confirmed by survey to 3.6 m")
+apply_rating(limited, c(2.5, 3.6))
+apply_rating(limited, 4.2)
 ```
 
-The answer at 3.6 m is now given, and flagged `extrapolation`: the stage is
-within the limits you stated but beyond the gaugings. That is honest. The
-discharge is computed, and it is labelled as resting on the equation alone.
+Inside the limits you still get flagged extrapolation. Outside them the rating
+refuses, because that range was your decision and the package holds you to it.
 
 # How sure is it?
 

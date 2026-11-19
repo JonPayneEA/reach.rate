@@ -192,11 +192,14 @@ test_that("a bad seed, limit or option is refused with a message that names it",
 
 # ---- operational limits ---------------------------------------------------------------------------
 
-test_that("without limits a guided rating applies only inside its gauged range", {
+test_that("without limits a guided rating extrapolates beyond its gauged range, flagged and with a warning", {
   fit <- fit_quiet(sample_gaugings())
-  expect_no_error(apply_rating(fit, c(0.5, 1, 2.9)))
-  expect_error(apply_rating(fit, c(0.2, 1)), "no operational limits.*0\\.4 to 3 m.*1 of 2.*set_operational_limits")
-  expect_error(apply_rating(fit, data.frame(stage = c(1, 3.5))), "no operational limits")
+  expect_no_warning(apply_rating(fit, c(0.5, 1, 2.9)))
+  expect_warning(out <- apply_rating(fit, c(0.2, 1)), "1 of 2 stage value.*gauged range \\(0\\.4 to 3 m.*extrapolat.*set_operational_limits")
+  expect_equal(out$support[1L], "extrapolation")
+  expect_true(is.finite(out$discharge[1L]))
+  expect_warning(out2 <- apply_rating(fit, data.frame(stage = c(1, 3.5))), "no operational limits")
+  expect_true(out2$extrapolated[2L])
 })
 
 test_that("stating limits allows a wider range, flags extrapolation, and refuses beyond the limits", {
@@ -260,7 +263,7 @@ test_that("printing shows the breakpoints, the evidence count and the operationa
   out <- capture.output(print(fit))
   expect_match(paste(out, collapse = "\n"), "breakpoints: 1.6 \\(user_judgement\\)")
   expect_match(paste(out, collapse = "\n"), "evidence: 40 of 40 rows used")
-  expect_match(paste(out, collapse = "\n"), "operational limits: not set; applies only within the gauged range 0.3 to 3.4 m")
+  expect_match(paste(out, collapse = "\n"), "operational limits: not set; stages beyond the gauged range 0.3 to 3.4 m are flagged as extrapolation")
   limited <- set_operational_limits(fit, 0.2, 3.6, basis = "x")
   expect_match(paste(capture.output(print(limited)), collapse = "\n"), "operational limits: 0.2 to 3.6 m \\(x\\)")
 })

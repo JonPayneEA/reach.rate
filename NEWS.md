@@ -1,5 +1,13 @@
 # reach.rate (development)
 
+* **Behaviour change: extrapolation is flagged, not refused.** A rating from
+  `fit_rating()` with no operational limits used to refuse any stage beyond
+  its gauged range. Flood forecasting needs discharge above the highest
+  gauging, so `apply_rating()` now returns the value, marks it `extrapolation`
+  in the `support` column and warns once per call. A rating with stated
+  limits still refuses stages outside them, since that range was a decision.
+  The same applies to segmented ratings.
+
 * **Fix: `autoplot()` under S7 1.0.0.** Registering S7 methods with
   `method(autoplot, Class) <- fn` assigns its result back to `autoplot`, and
   under S7 1.0.0 that result is a placeholder, which replaced the real

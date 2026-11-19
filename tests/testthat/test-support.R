@@ -184,12 +184,13 @@ test_that("the extrapolated flag from before is unchanged beside the new classes
 
 # ---- the segmented fit is gated like the others -----------------------------------------------------------------
 
-test_that("a guided segmented rating is applied only within its range, and gets a support class", {
+test_that("a guided segmented rating extrapolates with a warning, and gets a support class", {
   set.seed(3)
   h <- round(seq(0.3, 3.4, length.out = 40), 3)
   q <- ifelse(h < 1.6, 3.2 * h^1.6, 3.2 * 1.6^1.6 * (h / 1.6)^2.1) * exp(rnorm(40, sd = 0.03))
   seg <- fit_rating(data.frame(stage_m = h, discharge_cms = q), controls = 1.6, model = "segmented", quiet = TRUE)
-  expect_error(apply_rating(seg, c(1, 4)), "no operational limits")
+  expect_warning(out <- apply_rating(seg, c(1, 4)), "no operational limits")
+  expect_equal(out$support, c("interpolation_observed", "extrapolation"))
   expect_equal(apply_rating(seg, c(1, 2))$support, rep("interpolation_observed", 2))
   wide <- set_operational_limits(seg, 0.2, 4, basis = "b")
   expect_equal(apply_rating(wide, c(0.25, 3.9))$support, rep("extrapolation", 2))
