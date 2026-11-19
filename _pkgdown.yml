@@ -37,6 +37,7 @@ articles:
   navbar: Guides
   contents:
   - rating_curves_guide
+  - thresholds
   - rating_methods_overview
   - mathematical_contract
   - s7_objects_guide
