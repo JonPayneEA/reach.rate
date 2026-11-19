@@ -421,6 +421,8 @@ that range. Experts can still call rate_optimise() directly.
   : Fit a rating from evidence
 - [`set_operational_limits()`](https://jonpayneea.github.io/reach.rate/reference/set_operational_limits.md)
   : State the stage range a rating may be applied over
+- [`breakpoint_origins()`](https://jonpayneea.github.io/reach.rate/reference/breakpoint_origins.md)
+  : Where a breakpoint can come from
 
 ## Checking evidence
 

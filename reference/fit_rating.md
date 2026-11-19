@@ -21,7 +21,10 @@ What it decides for you, and where to change it:
   records that the breakpoints came from a statistical search and not
   from field evidence, and says so each time the rating is printed. They
   are candidates for a person to review. Breakpoints you give in
-  `controls` are recorded as yours.
+  `controls` are recorded with the origin you state in
+  `breakpoint_origin` (`"user_judgement"` if you do not), so a reviewer
+  can tell a surveyed change of control from a better AIC. See
+  [`breakpoint_origins()`](https://jonpayneea.github.io/reach.rate/reference/breakpoint_origins.md).
 
 - **The relative objective.** Gauging error is typically proportional to
   the reading, so the fit minimises error in log discharge. Use
@@ -53,6 +56,7 @@ reproduced and checked.
 fit_rating(
   evidence,
   controls = NULL,
+  breakpoint_origin = "user_judgement",
   limbs = c("one", "suggest"),
   model = c("independent", "segmented"),
   objective = c("relative", "absolute"),
@@ -83,6 +87,14 @@ fit_rating(
 
   Numeric vector of breakpoint stages, or `NULL` (default) for one limb.
   Each must lie inside the stage range of the evidence used.
+
+- breakpoint_origin:
+
+  Where the breakpoints in `controls` came from: one value from
+  [`breakpoint_origins()`](https://jonpayneea.github.io/reach.rate/reference/breakpoint_origins.md)
+  for all of them, or one per breakpoint. Default `"user_judgement"`.
+  Ignored for `limbs = "suggest"`, whose breakpoints are always
+  `"statistical_candidate"`.
 
 - limbs:
 
@@ -189,7 +201,7 @@ apply_rating(fit, c(0.8, 1.5, 2.5))
 # To apply it more widely, state the range and why.
 wider <- set_operational_limits(fit, 0.2, 3.5, basis = "channel control confirmed to 3.5 m")
 apply_rating(wider, c(0.3, 3.4))
-#> INFO [2026-11-19 05:31:20] apply_rating(): 2 of 2 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-19 07:19:24] apply_rating(): 2 of 2 stage value(s) fell outside the rating and were extrapolated.
 #>    stage  discharge extrapolated       support
 #>    <num>      <num>       <lgcl>        <char>
 #> 1:   0.3  0.4536877         TRUE extrapolation

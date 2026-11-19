@@ -5,23 +5,33 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Suggest candidate stage breakpoints for a multi-limb rating fit — suggest_breakpoints"><meta name="description" content="A heuristic aid for choosing control in rate_optimise(). Reuses
-rate_optimise() directly: for each candidate stage, fits a two-limb
-rating there and compares its AIC against the current best model
-(penalising the extra parameters, unlike raw RSS). A candidate must
-also clear min_improvement, a minimum relative RSS reduction, to be
-eligible. Multiple breakpoints are found iteratively and greedily,
-respecting min_gap. Not a claim that a statistically-supported
-breakpoint corresponds to a real physical control change – that
-judgement remains yours."><meta property="og:description" content="A heuristic aid for choosing control in rate_optimise(). Reuses
-rate_optimise() directly: for each candidate stage, fits a two-limb
-rating there and compares its AIC against the current best model
-(penalising the extra parameters, unlike raw RSS). A candidate must
-also clear min_improvement, a minimum relative RSS reduction, to be
-eligible. Multiple breakpoints are found iteratively and greedily,
-respecting min_gap. Not a claim that a statistically-supported
-breakpoint corresponds to a real physical control change – that
-judgement remains yours."></head><body>
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Suggest candidate stage breakpoints for a multi-limb rating fit — suggest_breakpoints"><meta name="description" content="Puts forward candidates for a breakpoint, for a person to review. It
+is not a finding. A statistical search sees only the gaugings; it cannot
+know where a channel control changes, a weir drowns or a bank is overtopped.
+A candidate that fits better has not thereby been shown to be a real change
+of hydraulic control, and one the search does not put forward may still be
+real. Use the table to decide where to look, then say where a breakpoint
+came from when you adopt it (see the breakpoint_origin argument of
+fit_rating()).
+For each candidate stage the function fits a two-limb rating there with
+rate_optimise() and compares its AIC against the current best model
+(penalising the extra parameters, unlike raw RSS). A candidate must also
+clear min_improvement, a minimum relative RSS reduction, to be put
+forward. Multiple breakpoints are found iteratively and greedily,
+respecting min_gap."><meta property="og:description" content="Puts forward candidates for a breakpoint, for a person to review. It
+is not a finding. A statistical search sees only the gaugings; it cannot
+know where a channel control changes, a weir drowns or a bank is overtopped.
+A candidate that fits better has not thereby been shown to be a real change
+of hydraulic control, and one the search does not put forward may still be
+real. Use the table to decide where to look, then say where a breakpoint
+came from when you adopt it (see the breakpoint_origin argument of
+fit_rating()).
+For each candidate stage the function fits a two-limb rating there with
+rate_optimise() and compares its AIC against the current best model
+(penalising the extra parameters, unlike raw RSS). A candidate must also
+clear min_improvement, a minimum relative RSS reduction, to be put
+forward. Multiple breakpoints are found iteratively and greedily,
+respecting min_gap."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -73,15 +83,20 @@ judgement remains yours."></head><body>
     </div>
 
     <div class="ref-description section level2">
-    <p>A heuristic aid for choosing <code>control</code> in <code><a href="rate_optimise.html">rate_optimise()</a></code>. Reuses
-<code><a href="rate_optimise.html">rate_optimise()</a></code> directly: for each candidate stage, fits a two-limb
-rating there and compares its AIC against the current best model
-(penalising the extra parameters, unlike raw RSS). A candidate must
-also clear <code>min_improvement</code>, a minimum relative RSS reduction, to be
-eligible. Multiple breakpoints are found iteratively and greedily,
-respecting <code>min_gap</code>. Not a claim that a statistically-supported
-breakpoint corresponds to a real physical control change – that
-judgement remains yours.</p>
+    <p>Puts forward <strong>candidates</strong> for a breakpoint, for a person to review. It
+is not a finding. A statistical search sees only the gaugings; it cannot
+know where a channel control changes, a weir drowns or a bank is overtopped.
+A candidate that fits better has not thereby been shown to be a real change
+of hydraulic control, and one the search does not put forward may still be
+real. Use the table to decide where to look, then say where a breakpoint
+came from when you adopt it (see the <code>breakpoint_origin</code> argument of
+<code><a href="fit_rating.html">fit_rating()</a></code>).</p>
+<p>For each candidate stage the function fits a two-limb rating there with
+<code><a href="rate_optimise.html">rate_optimise()</a></code> and compares its AIC against the current best model
+(penalising the extra parameters, unlike raw RSS). A candidate must also
+clear <code>min_improvement</code>, a minimum relative RSS reduction, to be put
+forward. Multiple breakpoints are found iteratively and greedily,
+respecting <code>min_gap</code>.</p>
     </div>
 
     <div class="section level2">
@@ -133,18 +148,30 @@ and thinned if exceeded. Default <code>200L</code>.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>data.table</code>, one row per candidate evaluated across every
-round, with <code>candidate_stage</code>, <code>score</code>, <code>improvement</code>,
-<code>n_obs_lower</code>, <code>n_obs_upper</code>, <code>round</code>, <code>fit_status</code>, <code>rank</code> and
-<code>selected</code>. <code>selected</code> is <code>TRUE</code> for the candidate each round
-adopted; extract the selected stages with
+round. For each candidate:</p><ul><li><p><code>candidate_stage</code>, and the <code>round</code> it was considered in;</p></li>
+<li><p><code>score</code>, the improvement in AIC over the simpler model (positive is
+better), and <code>improvement</code>, the fraction by which the residual sum of
+squares falls;</p></li>
+<li><p>the evidence on each side: <code>n_obs_lower</code> and <code>n_obs_upper</code> (how many
+gaugings), and <code>lower_min_m</code>, <code>lower_max_m</code>, <code>upper_min_m</code> and
+<code>upper_max_m</code> (the stage range they cover). A candidate resting on a few
+gaugings crowded at one end is weak however good its score;</p></li>
+<li><p><code>fit_status</code>: <code>"ok"</code>, <code>"failed"</code> (the two-limb fit raised an error) or
+<code>"insufficient_obs"</code> (too few gaugings on one side), and
+<code>failure_reason</code> saying why when it is not <code>"ok"</code>. A candidate that
+could not be fitted is listed, not dropped, because the stage where
+fits fail can itself be informative;</p></li>
+<li><p><code>rank</code> within its round, and <code>selected</code>, <code>TRUE</code> for the candidate each
+round put forward. Extract those stages with
 <code>sort(result[selected == TRUE, candidate_stage])</code>. The same stages
-remain attached as the <code>"selected_breaks"</code> attribute for code
-written against earlier versions, but an attribute can be lost
-under ordinary data.table operations, so prefer the column.</p>
-    </div>
+remain attached as the <code>"selected_breaks"</code> attribute for code written
+against earlier versions, but an attribute can be lost under ordinary
+data.table operations, so prefer the column.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="rate_optimise.html">rate_optimise()</a></code></p></div>
+    <div class="dont-index"><p><code><a href="rate_optimise.html">rate_optimise()</a></code>, <code><a href="fit_rating.html">fit_rating()</a></code> and <code><a href="breakpoint_origins.html">breakpoint_origins()</a></code> to
+record where an adopted breakpoint came from</p></div>
     </div>
 
     <div class="section level2">
@@ -157,11 +184,12 @@ under ordinary data.table operations, so prefer the column.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">candidates</span> <span class="op">&lt;-</span> <span class="fu">suggest_breakpoints</span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, max_breaks <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># The candidate each round adopted, and how much it improved the fit</span></span></span>
-<span class="r-in"><span><span class="va">candidates</span><span class="op">[</span><span class="va">selected</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"round"</span>, <span class="st">"candidate_stage"</span>, <span class="st">"improvement"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    round candidate_stage improvement</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;           &lt;num&gt;       &lt;num&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1            2.45   0.8679528</span>
+<span class="r-in"><span><span class="co"># The candidate each round put forward, how much it improved the fit, and</span></span></span>
+<span class="r-in"><span><span class="co"># how many gaugings stand on each side of it</span></span></span>
+<span class="r-in"><span><span class="va">candidates</span><span class="op">[</span><span class="va">selected</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"round"</span>, <span class="st">"candidate_stage"</span>, <span class="st">"improvement"</span>, <span class="st">"n_obs_lower"</span>, <span class="st">"n_obs_upper"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    round candidate_stage improvement n_obs_lower n_obs_upper</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;           &lt;num&gt;       &lt;num&gt;       &lt;int&gt;       &lt;int&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1            2.45   0.8679528          44          21</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The stages themselves, ready to pass to rate_optimise()</span></span></span>
 <span class="r-in"><span><span class="va">breaks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">candidates</span><span class="op">[</span><span class="va">selected</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="va">candidate_stage</span><span class="op">]</span><span class="op">)</span></span></span>
@@ -175,8 +203,8 @@ under ordinary data.table operations, so prefer the column.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1          0.30          2.45 0.001006872 -2.5641810 6.309658</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2:     2          2.45          3.50 1.871309888  0.4782094 4.017815</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># These are statistical suggestions only. Whether a stage marks a real</span></span></span>
-<span class="r-in"><span><span class="co"># change of hydraulic control is a judgement for you, not the data.</span></span></span>
+<span class="r-in"><span><span class="co"># These are candidates only. Whether a stage marks a real change of</span></span></span>
+<span class="r-in"><span><span class="co"># hydraulic control is a judgement for you, not the data.</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

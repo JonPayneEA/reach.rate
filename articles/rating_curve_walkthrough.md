@@ -130,19 +130,32 @@ candidates_dt[fit_status == "ok"]
 #> 162:           1.300 -78.27991  -1.1231816          41          43         ok
 #> 163:           1.325 -81.93574  -1.2055949          42          42         ok
 #> 164:           1.930 -97.37556  -1.5904425          62          22         ok
-#>      round selected  rank
-#>      <int>   <lgcl> <int>
-#>   1:     1     TRUE     8
-#>   2:     1    FALSE     9
-#>   3:     1    FALSE    10
-#>   4:     1    FALSE    11
-#>   5:     1    FALSE    12
-#>  ---                     
-#> 160:     2    FALSE    82
-#> 161:     2    FALSE    83
-#> 162:     2    FALSE    84
-#> 163:     2    FALSE    85
-#> 164:     2    FALSE    86
+#>      lower_min_m lower_max_m upper_min_m upper_max_m failure_reason round
+#>            <num>       <num>       <num>       <num>         <char> <int>
+#>   1:         0.3       2.590       2.650        3.31           <NA>     1
+#>   2:         0.3       2.560       2.590        3.31           <NA>     1
+#>   3:         0.3       2.530       2.560        3.31           <NA>     1
+#>   4:         0.3       2.500       2.530        3.31           <NA>     1
+#>   5:         0.3       2.470       2.500        3.31           <NA>     1
+#>  ---                                                                     
+#> 160:         0.3       1.250       1.275        2.59           <NA>     2
+#> 161:         0.3       1.275       1.300        2.59           <NA>     2
+#> 162:         0.3       1.300       1.325        2.59           <NA>     2
+#> 163:         0.3       1.325       1.350        2.59           <NA>     2
+#> 164:         0.3       1.930       1.960        2.59           <NA>     2
+#>      selected  rank
+#>        <lgcl> <int>
+#>   1:     TRUE     8
+#>   2:    FALSE     9
+#>   3:    FALSE    10
+#>   4:    FALSE    11
+#>   5:    FALSE    12
+#>  ---               
+#> 160:    FALSE    82
+#> 161:    FALSE    83
+#> 162:    FALSE    84
+#> 163:    FALSE    85
+#> 164:    FALSE    86
 breaks <- sort(candidates_dt[selected == TRUE, candidate_stage])
 breaks
 #> [1] 1.375 2.590
@@ -164,7 +177,7 @@ rating_limbs(fit_multi, all_columns = TRUE)[, .(limb, lower_stage_m, upper_stage
 #>     limb lower_stage_m upper_stage_m        C           a        n   rmse_cms
 #>    <int>         <num>         <num>    <num>       <num>    <num>      <num>
 #> 1:     1         0.300         1.375 2.530214 0.009671352 1.272510 0.04065298
-#> 2:     2         1.375         2.590 3.264323 0.102560035 1.643885 0.20612587
+#> 2:     2         1.375         2.590 3.264323 0.102560115 1.643885 0.20612587
 #> 3:     3         2.590         3.310 7.333538 0.268231353 1.688375 1.01350296
 #>    r_squared n_obs
 #>        <num> <int>
@@ -200,7 +213,7 @@ at the breakpoints.
 rating_table <- as_rating_table(fit_multi)
 rc_raw_dt <- expand_rating_table(rating_table, step = 0.01)
 gaps_dt <- detect_rc_gaps(rc_raw_dt)
-#> INFO [2026-11-19 05:32:03] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-19 07:19:58] Checked 2 junction(s): 2 gap(s) flagged.
 gaps_dt[, .(junction, stage_break, q_lower_end, q_upper_start, gap_abs, gap_rel, gap_flagged)]
 #>    junction stage_break q_lower_end q_upper_start   gap_abs   gap_rel
 #>       <int>       <num>       <num>         <num>     <num>     <num>
@@ -286,18 +299,18 @@ takes `aligned` directly too:
 
 rc_aligned_dt <- expand_rating_table(aligned, step = 0.01)
 gaps_after_dt <- detect_rc_gaps(rc_aligned_dt)
-#> INFO [2026-11-19 05:32:03] Checked 2 junction(s): 1 gap(s) flagged.
+#> INFO [2026-11-19 07:19:58] Checked 2 junction(s): 1 gap(s) flagged.
 gaps_after_dt[, .(junction, gap_abs, gap_rel, gap_flagged)]
 #>    junction      gap_abs      gap_rel gap_flagged
 #>       <int>        <num>        <num>      <lgcl>
-#> 1:        1 3.690781e-11 1.810402e-11       FALSE
+#> 1:        1 3.690737e-11 1.810380e-11       FALSE
 #> 2:        2 1.580516e+01 1.082515e+00        TRUE
 ```
 
 ``` r
 
 plot_rc_gaps(rc_raw_dt, rc_aligned_dt)
-#> INFO [2026-11-19 05:32:03] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-19 07:19:58] Checked 2 junction(s): 2 gap(s) flagged.
 ```
 
 ![Before and after comparison of the rating curve at each junction,
@@ -321,7 +334,7 @@ rating_limbs(aligned, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared
 #>     limb        C           a        n   rmse_cms r_squared n_obs
 #>    <int>    <num>       <num>    <num>      <num>     <num> <int>
 #> 1:     1 2.530214 0.009671352 1.272510 0.03034247 0.9958084    23
-#> 2:     2 3.264323 0.102560035 1.643885 0.39178496 0.9899567    61
+#> 2:     2 3.264323 0.102560115 1.643885 0.39178495 0.9899567    61
 #> 3:     3 7.333538 0.268231353 1.688375 1.01350296 0.9619503    12
 ```
 
@@ -358,8 +371,8 @@ rating_limbs(aligned_equations, all_columns = TRUE)[, .(limb, C, C_original, ali
 #>     limb        C C_original aligned    pct_change    rmse_cms   r_squared
 #>    <int>    <num>      <num>  <lgcl>         <num>       <num>       <num>
 #> 1:     1 2.530214   2.530214   FALSE            NA  0.03034247   0.9958084
-#> 2:     2 3.264323   3.264323    TRUE -1.810396e-09  0.39178496   0.9899567
-#> 3:     3 3.521482   7.333538    TRUE -5.198113e+01 20.80631191 -15.0358434
+#> 2:     2 3.264323   3.264323    TRUE -1.810369e-09  0.39178495   0.9899567
+#> 3:     3 3.521482   7.333538    TRUE -5.198113e+01 20.80631194 -15.0358434
 #>    n_obs
 #>    <int>
 #> 1:    23
@@ -383,7 +396,7 @@ is visible here rather than hidden.
 
 rc_final_dt <- expand_rating_table(aligned_equations, step = 0.01)
 detect_rc_gaps(rc_final_dt)[, .(junction, gap_abs, gap_rel, gap_flagged)]
-#> INFO [2026-11-19 05:32:04] Checked 2 junction(s): 0 gap(s) flagged.
+#> INFO [2026-11-19 07:19:59] Checked 2 junction(s): 0 gap(s) flagged.
 #>    junction gap_abs gap_rel gap_flagged
 #>       <int>   <num>   <num>      <lgcl>
 #> 1:        1       0       0       FALSE

@@ -64,9 +64,9 @@ rating_table
 #> <FlodeRatingTable> 1 limb(s), origin: independently_fitted, lifecycle: draft
 #>   converged: not assessed (no optimiser record for this rating)
 #>   valid: yes
-#>    lower_level upper_level        C           a        n
-#>          <num>       <num>    <num>       <num>    <num>
-#> 1:         0.5         2.5 4.991305 -0.00144775 1.600899
+#>    lower_level upper_level        C            a        n
+#>          <num>       <num>    <num>        <num>    <num>
+#> 1:         0.5         2.5 4.991305 -0.001447794 1.600899
 apply_rating(rating_table, c(0.8, 1.6, 2.4))
 #>    stage discharge extrapolated         support
 #>    <num>     <num>       <lgcl>          <char>

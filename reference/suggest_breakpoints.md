@@ -1,17 +1,22 @@
 # Suggest candidate stage breakpoints for a multi-limb rating fit
 
-A heuristic aid for choosing `control` in
-[`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md).
-Reuses
+Puts forward **candidates** for a breakpoint, for a person to review. It
+is not a finding. A statistical search sees only the gaugings; it cannot
+know where a channel control changes, a weir drowns or a bank is
+overtopped. A candidate that fits better has not thereby been shown to
+be a real change of hydraulic control, and one the search does not put
+forward may still be real. Use the table to decide where to look, then
+say where a breakpoint came from when you adopt it (see the
+`breakpoint_origin` argument of
+[`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)).
+
+For each candidate stage the function fits a two-limb rating there with
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
-directly: for each candidate stage, fits a two-limb rating there and
-compares its AIC against the current best model (penalising the extra
-parameters, unlike raw RSS). A candidate must also clear
-`min_improvement`, a minimum relative RSS reduction, to be eligible.
+and compares its AIC against the current best model (penalising the
+extra parameters, unlike raw RSS). A candidate must also clear
+`min_improvement`, a minimum relative RSS reduction, to be put forward.
 Multiple breakpoints are found iteratively and greedily, respecting
-`min_gap`. Not a claim that a statistically-supported breakpoint
-corresponds to a real physical control change – that judgement remains
-yours.
+`min_gap`.
 
 ## Usage
 
@@ -59,18 +64,40 @@ suggest_breakpoints(
 
 ## Value
 
-A `data.table`, one row per candidate evaluated across every round, with
-`candidate_stage`, `score`, `improvement`, `n_obs_lower`, `n_obs_upper`,
-`round`, `fit_status`, `rank` and `selected`. `selected` is `TRUE` for
-the candidate each round adopted; extract the selected stages with
-`sort(result[selected == TRUE, candidate_stage])`. The same stages
-remain attached as the `"selected_breaks"` attribute for code written
-against earlier versions, but an attribute can be lost under ordinary
-data.table operations, so prefer the column.
+A `data.table`, one row per candidate evaluated across every round. For
+each candidate:
+
+- `candidate_stage`, and the `round` it was considered in;
+
+- `score`, the improvement in AIC over the simpler model (positive is
+  better), and `improvement`, the fraction by which the residual sum of
+  squares falls;
+
+- the evidence on each side: `n_obs_lower` and `n_obs_upper` (how many
+  gaugings), and `lower_min_m`, `lower_max_m`, `upper_min_m` and
+  `upper_max_m` (the stage range they cover). A candidate resting on a
+  few gaugings crowded at one end is weak however good its score;
+
+- `fit_status`: `"ok"`, `"failed"` (the two-limb fit raised an error) or
+  `"insufficient_obs"` (too few gaugings on one side), and
+  `failure_reason` saying why when it is not `"ok"`. A candidate that
+  could not be fitted is listed, not dropped, because the stage where
+  fits fail can itself be informative;
+
+- `rank` within its round, and `selected`, `TRUE` for the candidate each
+  round put forward. Extract those stages with
+  `sort(result[selected == TRUE, candidate_stage])`. The same stages
+  remain attached as the `"selected_breaks"` attribute for code written
+  against earlier versions, but an attribute can be lost under ordinary
+  data.table operations, so prefer the column.
 
 ## See also
 
-[`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
+[`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md),
+[`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)
+and
+[`breakpoint_origins()`](https://jonpayneea.github.io/reach.rate/reference/breakpoint_origins.md)
+to record where an adopted breakpoint came from
 
 ## Examples
 
@@ -83,11 +110,12 @@ discharge_cms <- 4 * pmax(stage_m - 0.1, 0)^1.55 * (pmax(stage_m - 1.6, 0) + 1)^
 
 candidates <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
 
-# The candidate each round adopted, and how much it improved the fit
-candidates[selected == TRUE, c("round", "candidate_stage", "improvement")]
-#>    round candidate_stage improvement
-#>    <int>           <num>       <num>
-#> 1:     1            2.45   0.8679528
+# The candidate each round put forward, how much it improved the fit, and
+# how many gaugings stand on each side of it
+candidates[selected == TRUE, c("round", "candidate_stage", "improvement", "n_obs_lower", "n_obs_upper")]
+#>    round candidate_stage improvement n_obs_lower n_obs_upper
+#>    <int>           <num>       <num>       <int>       <int>
+#> 1:     1            2.45   0.8679528          44          21
 
 # The stages themselves, ready to pass to rate_optimise()
 breaks <- sort(candidates[selected == TRUE, candidate_stage])
@@ -101,6 +129,6 @@ rating_limbs(fit)
 #> 1:     1          0.30          2.45 0.001006872 -2.5641810 6.309658
 #> 2:     2          2.45          3.50 1.871309888  0.4782094 4.017815
 
-# These are statistical suggestions only. Whether a stage marks a real
-# change of hydraulic control is a judgement for you, not the data.
+# These are candidates only. Whether a stage marks a real change of
+# hydraulic control is a judgement for you, not the data.
 ```
