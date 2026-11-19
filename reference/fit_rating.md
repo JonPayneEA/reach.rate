@@ -175,14 +175,14 @@ gaugings <- data.frame(stage_m = round(seq(0.4, 3, length.out = 20), 3))
 gaugings$discharge_cms <- round(3.2 * gaugings$stage_m^1.6 * exp(rnorm(20, sd = 0.03)), 3)
 fit <- fit_rating(gaugings)
 #> fit_rating(): 20 of 20 rows used; relative objective, independent model, one limb.
-#>   No operational limits set: the rating applies only within the gauged range. See set_operational_limits().
+#>   No operational limits set: stages beyond the gauged range are returned and flagged as extrapolation. See set_operational_limits().
 fit
 #> <FlodeRating> 1 limb(s), origin: independently_fitted, lifecycle: draft
 #>   converged: yes (1 of 1 limb)
 #>   valid: yes
 #>   breakpoints: one limb
 #>   evidence: 20 of 20 rows used
-#>   operational limits: not set; applies only within the gauged range 0.4 to 3 m
+#>   operational limits: not set; stages beyond the gauged range 0.4 to 3 m are flagged as extrapolation
 #>     limb lower_stage_m upper_stage_m        C          a        n  rmse_cms
 #>    <int>         <num>         <num>    <num>      <num>    <num>     <num>
 #> 1:     1           0.4             3 3.286169 0.01254205 1.588275 0.2498467
@@ -201,7 +201,7 @@ apply_rating(fit, c(0.8, 1.5, 2.5))
 # To apply it more widely, state the range and why.
 wider <- set_operational_limits(fit, 0.2, 3.5, basis = "channel control confirmed to 3.5 m")
 apply_rating(wider, c(0.3, 3.4))
-#> INFO [2026-11-19 20:58:25] apply_rating(): 2 of 2 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-19 21:34:08] apply_rating(): 2 of 2 stage value(s) fell outside the rating and were extrapolated.
 #>    stage  discharge extrapolated       support
 #>    <num>      <num>       <lgcl>        <char>
 #> 1:   0.3  0.4536877         TRUE extrapolation

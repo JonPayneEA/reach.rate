@@ -79,8 +79,10 @@ for the ranges.
 
 A rating made by
 [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)
-is stricter: it refuses stages outside its operational limits, or
-outside its gauged range if none are stated.
+also refuses stages outside its operational limits, when they have been
+stated. With none stated, stages beyond the gauged range are returned,
+flagged `extrapolation` in the `support` column, with one warning per
+call.
 
 ## Details
 
@@ -151,7 +153,7 @@ stage_dt <- data.table::data.table(
 )
 
 flow_dt <- apply_rating(my_fit, stage_dt)
-#> INFO [2026-11-19 20:58:18] apply_rating(): 35 of 193 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-19 21:34:01] apply_rating(): 35 of 193 stage value(s) fell outside the rating and were extrapolated.
 head(flow_dt)
 #>               datetime     stage discharge extrapolated         support
 #>                 <POSc>     <num>     <num>       <lgcl>          <char>

@@ -5,22 +5,26 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="State the stage range a rating may be applied over — set_operational_limits"><meta name="description" content="A rating made by fit_rating() is applied only within the stage range it
-was gauged over, until the range it may be used over is stated here. That
-range is a decision, not a property of the data: it might be the gauged
-range, a structure's limit, a hydraulic argument for extrapolating to a
-stated stage, or a review outcome. Saying it, and saying why, is what
-makes a wider application defensible.
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="State the stage range a rating may be applied over — set_operational_limits"><meta name="description" content="A rating made by fit_rating() may be applied beyond the stage range it
+was gauged over, because forecast models need discharge above the highest
+gauging. Without limits, such stages are returned, flagged extrapolation
+and warned about. Stating limits here turns that into a boundary: the range
+is a decision, not a property of the data. It might be the gauged range, a
+structure's limit, a hydraulic argument for extrapolating to a stated
+stage, or a review outcome. Saying it, and saying why, is what makes the
+application defensible.
 The rating is returned as a new version. Its earlier state is kept in
 rating_history(), and its lifecycle goes back to &quot;draft&quot;, since a
 change to where a rating may be used is a change a reviewer should see.
 Stages outside the limits are refused by apply_rating(); stages inside
-them but beyond the gauged range are computed and flagged extrapolated."><meta property="og:description" content="A rating made by fit_rating() is applied only within the stage range it
-was gauged over, until the range it may be used over is stated here. That
-range is a decision, not a property of the data: it might be the gauged
-range, a structure's limit, a hydraulic argument for extrapolating to a
-stated stage, or a review outcome. Saying it, and saying why, is what
-makes a wider application defensible.
+them but beyond the gauged range are computed and flagged extrapolated."><meta property="og:description" content="A rating made by fit_rating() may be applied beyond the stage range it
+was gauged over, because forecast models need discharge above the highest
+gauging. Without limits, such stages are returned, flagged extrapolation
+and warned about. Stating limits here turns that into a boundary: the range
+is a decision, not a property of the data. It might be the gauged range, a
+structure's limit, a hydraulic argument for extrapolating to a stated
+stage, or a review outcome. Saying it, and saying why, is what makes the
+application defensible.
 The rating is returned as a new version. Its earlier state is kept in
 rating_history(), and its lifecycle goes back to &quot;draft&quot;, since a
 change to where a rating may be used is a change a reviewer should see.
@@ -84,12 +88,14 @@ them but beyond the gauged range are computed and flagged extrapolated."><script
     </div>
 
     <div class="ref-description section level2">
-    <p>A rating made by <code><a href="fit_rating.html">fit_rating()</a></code> is applied only within the stage range it
-was gauged over, until the range it may be used over is stated here. That
-range is a decision, not a property of the data: it might be the gauged
-range, a structure's limit, a hydraulic argument for extrapolating to a
-stated stage, or a review outcome. Saying it, and saying why, is what
-makes a wider application defensible.</p>
+    <p>A rating made by <code><a href="fit_rating.html">fit_rating()</a></code> may be applied beyond the stage range it
+was gauged over, because forecast models need discharge above the highest
+gauging. Without limits, such stages are returned, flagged <code>extrapolation</code>
+and warned about. Stating limits here turns that into a boundary: the range
+is a decision, not a property of the data. It might be the gauged range, a
+structure's limit, a hydraulic argument for extrapolating to a stated
+stage, or a review outcome. Saying it, and saying why, is what makes the
+application defensible.</p>
 <p>The rating is returned as a new version. Its earlier state is kept in
 <code><a href="rating_history.html">rating_history()</a></code>, and its lifecycle goes back to <code>"draft"</code>, since a
 change to where a rating may be used is a change a reviewer should see.

@@ -133,8 +133,10 @@ stated. It outranks the others.</p></li>
 </ul><p><code>NA</code> where the stage is <code>NA</code>. A stage beyond the numerical range of the
 rating (where its top limb's equation overflows) is an error, because
 the result would not be a number. See <code><a href="rating_support.html">rating_support()</a></code> for the ranges.</p>
-<p>A rating made by <code><a href="fit_rating.html">fit_rating()</a></code> is stricter: it refuses stages outside
-its operational limits, or outside its gauged range if none are stated.</p>
+<p>A rating made by <code><a href="fit_rating.html">fit_rating()</a></code> also refuses stages outside its
+operational limits, when they have been stated. With none stated, stages
+beyond the gauged range are returned, flagged <code>extrapolation</code> in the
+<code>support</code> column, with one warning per call.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -192,7 +194,7 @@ highest gauged stage is flagged <code>extrapolated = TRUE</code>.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">flow_dt</span> <span class="op">&lt;-</span> <span class="fu">apply_rating</span><span class="op">(</span><span class="va">my_fit</span>, <span class="va">stage_dt</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 20:58:18] apply_rating(): 35 of 193 stage value(s) fell outside the rating and were extrapolated.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 21:34:01] apply_rating(): 35 of 193 stage value(s) fell outside the rating and were extrapolated.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">flow_dt</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               datetime     stage discharge extrapolated         support</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 &lt;POSc&gt;     &lt;num&gt;     &lt;num&gt;       &lt;lgcl&gt;          &lt;char&gt;</span>

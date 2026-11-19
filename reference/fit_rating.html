@@ -283,14 +283,14 @@ seed, exclusions, breakpoint origin and operational limits (read it with
 <span class="r-in"><span><span class="va">gaugings</span><span class="op">$</span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fl">3.2</span> <span class="op">*</span> <span class="va">gaugings</span><span class="op">$</span><span class="va">stage_m</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20</span>, sd <span class="op">=</span> <span class="fl">0.03</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">fit_rating</span><span class="op">(</span><span class="va">gaugings</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> fit_rating(): 20 of 20 rows used; relative objective, independent model, one limb.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   No operational limits set: the rating applies only within the gauged range. See set_operational_limits().</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   No operational limits set: stages beyond the gauged range are returned and flagged as extrapolation. See set_operational_limits().</span>
 <span class="r-in"><span><span class="va">fit</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;FlodeRating&gt; 1 limb(s), origin: independently_fitted, lifecycle: draft</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   converged: yes (1 of 1 limb)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   valid: yes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   breakpoints: one limb</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   evidence: 20 of 20 rows used</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   operational limits: not set; applies only within the gauged range 0.4 to 3 m</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   operational limits: not set; stages beyond the gauged range 0.4 to 3 m are flagged as extrapolation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     limb lower_stage_m upper_stage_m        C          a        n  rmse_cms</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;         &lt;num&gt;         &lt;num&gt;    &lt;num&gt;      &lt;num&gt;    &lt;num&gt;     &lt;num&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1           0.4             3 3.286169 0.01254205 1.588275 0.2498467</span>
@@ -309,7 +309,7 @@ seed, exclusions, breakpoint origin and operational limits (read it with
 <span class="r-in"><span><span class="co"># To apply it more widely, state the range and why.</span></span></span>
 <span class="r-in"><span><span class="va">wider</span> <span class="op">&lt;-</span> <span class="fu"><a href="set_operational_limits.html">set_operational_limits</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fl">0.2</span>, <span class="fl">3.5</span>, basis <span class="op">=</span> <span class="st">"channel control confirmed to 3.5 m"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">wider</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">3.4</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 20:58:25] apply_rating(): 2 of 2 stage value(s) fell outside the rating and were extrapolated.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 21:34:08] apply_rating(): 2 of 2 stage value(s) fell outside the rating and were extrapolated.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    stage  discharge extrapolated       support</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;num&gt;      &lt;num&gt;       &lt;lgcl&gt;        &lt;char&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1:   0.3  0.4536877         TRUE extrapolation</span>

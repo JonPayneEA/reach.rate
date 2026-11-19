@@ -2,11 +2,13 @@
 
 A rating made by
 [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)
-is applied only within the stage range it was gauged over, until the
-range it may be used over is stated here. That range is a decision, not
-a property of the data: it might be the gauged range, a structure's
-limit, a hydraulic argument for extrapolating to a stated stage, or a
-review outcome. Saying it, and saying why, is what makes a wider
+may be applied beyond the stage range it was gauged over, because
+forecast models need discharge above the highest gauging. Without
+limits, such stages are returned, flagged `extrapolation` and warned
+about. Stating limits here turns that into a boundary: the range is a
+decision, not a property of the data. It might be the gauged range, a
+structure's limit, a hydraulic argument for extrapolating to a stated
+stage, or a review outcome. Saying it, and saying why, is what makes the
 application defensible.
 
 The rating is returned as a new version. Its earlier state is kept in

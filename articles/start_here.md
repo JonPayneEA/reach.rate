@@ -161,14 +161,14 @@ record. Here we know one was entered 60% too high and one is a dry pool.
 fit <- fit_rating(gaugings)
 #> fit_rating(): 40 of 43 rows used; relative objective, independent model, one limb.
 #>   Not used: 1 (stage missing; discharge missing); 1 (stage not a number); 1 (zero discharge).
-#>   No operational limits set: the rating applies only within the gauged range. See set_operational_limits().
+#>   No operational limits set: stages beyond the gauged range are returned and flagged as extrapolation. See set_operational_limits().
 fit
 #> <FlodeRating> 1 limb(s), origin: independently_fitted, lifecycle: draft
 #>   converged: yes (1 of 1 limb)
 #>   valid: yes
 #>   breakpoints: one limb
 #>   evidence: 40 of 43 rows used
-#>   operational limits: not set; applies only within the gauged range 0.301 to 2.876 m
+#>   operational limits: not set; stages beyond the gauged range 0.301 to 2.876 m are flagged as extrapolation
 #>     limb lower_stage_m upper_stage_m        C          a       n  rmse_cms
 #>    <int>         <num>         <num>    <num>      <num>   <num>     <num>
 #> 1:     1         0.301         2.876 3.009912 0.06841777 1.69713 0.7886304
@@ -287,33 +287,54 @@ The `support` column says what each answer rests on.
 `interpolation_observed` means the stage lies among the gaugings, which
 is the best case.
 
-A rating made by
+Forecast models need discharge above the highest gauging, so a rating
+made by
 [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)
-will not give an answer outside the stage range it was gauged over until
-you say where it may be used, and why:
+does not stop at the edge of its evidence. Ask for a stage beyond it and
+you get an answer, flagged, with a warning:
 
 ``` r
 
-apply_rating(fit, 3.6)
-#> Error:
-#> ! apply_rating(): this rating was made by fit_rating() and has no operational limits, so it applies only within the stage range it was gauged over (0.301 to 2.876 m). 1 of 1 stage value fall outside it (3.6 to 3.6 m). State the range it may be used over, and why, with set_operational_limits(x, lower, upper, basis).
-```
-
-``` r
-
-wider <- set_operational_limits(fit, 0.25, 3.6, basis = "control confirmed by survey to 3.6 m")
-apply_rating(wider, c(2.5, 3.6))
-#> INFO [2026-11-19 20:59:28] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
+out <- withCallingHandlers(
+  apply_rating(fit, c(2.5, 3.6)),
+  warning = function(w) {
+    message("Warning: ", conditionMessage(w))
+    invokeRestart("muffleWarning")
+  }
+)
+#> Warning: apply_rating(): 1 of 2 stage value(s) lie beyond the gauged range (0.301 to 2.876 m; stages 2.5 to 3.6 m) and are extrapolated. They are flagged 'extrapolation' in the support column. This rating has no operational limits: state the range it may be used over, and why, with set_operational_limits(x, lower, upper, basis).
+#> INFO [2026-11-19 21:35:11] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
+out
 #>    stage discharge extrapolated                support
 #>    <num>     <num>       <lgcl>                 <char>
 #> 1:   2.5  13.59745        FALSE interpolation_observed
 #> 2:   3.6  25.61704         TRUE          extrapolation
 ```
 
-The answer at 3.6 m is now given, and flagged `extrapolation`: the stage
-is within the limits you stated but beyond the gaugings. That is honest.
-The discharge is computed, and it is labelled as resting on the equation
-alone.
+The 3.6 m row is marked `extrapolation`. The value rests on the equation
+alone, with no gauging beyond 2.9 m to check it. Use it, and say so.
+
+You can turn that flag into a boundary. If you know where the rating may
+be used, such as a structure’s limit or a surveyed control, say so and
+say why:
+
+``` r
+
+limited <- set_operational_limits(fit, 0.25, 3.6, basis = "control confirmed by survey to 3.6 m")
+apply_rating(limited, c(2.5, 3.6))
+#> INFO [2026-11-19 21:35:11] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
+#>    stage discharge extrapolated                support
+#>    <num>     <num>       <lgcl>                 <char>
+#> 1:   2.5  13.59745        FALSE interpolation_observed
+#> 2:   3.6  25.61704         TRUE          extrapolation
+apply_rating(limited, 4.2)
+#> Error:
+#> ! apply_rating(): 1 of 1 stage value(s) fall outside this rating's operational limits (0.25 to 3.6 m; basis: control confirmed by survey to 3.6 m). Values range from 4.2 to 4.2 m. Widen the limits with set_operational_limits() if that is a decision you can state.
+```
+
+Inside the limits you still get flagged extrapolation. Outside them the
+rating refuses, because that range was your decision and the package
+holds you to it.
 
 ## How sure is it?
 

@@ -233,14 +233,14 @@ pool.</p>
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_rating.html">fit_rating</a></span><span class="op">(</span><span class="va">gaugings</span><span class="op">)</span></span>
 <span><span class="co">#&gt; fit_rating(): 40 of 43 rows used; relative objective, independent model, one limb.</span></span>
 <span><span class="co">#&gt;   Not used: 1 (stage missing; discharge missing); 1 (stage not a number); 1 (zero discharge).</span></span>
-<span><span class="co">#&gt;   No operational limits set: the rating applies only within the gauged range. See set_operational_limits().</span></span>
+<span><span class="co">#&gt;   No operational limits set: stages beyond the gauged range are returned and flagged as extrapolation. See set_operational_limits().</span></span>
 <span><span class="va">fit</span></span>
 <span><span class="co">#&gt; &lt;FlodeRating&gt; 1 limb(s), origin: independently_fitted, lifecycle: draft</span></span>
 <span><span class="co">#&gt;   converged: yes (1 of 1 limb)</span></span>
 <span><span class="co">#&gt;   valid: yes</span></span>
 <span><span class="co">#&gt;   breakpoints: one limb</span></span>
 <span><span class="co">#&gt;   evidence: 40 of 43 rows used</span></span>
-<span><span class="co">#&gt;   operational limits: not set; applies only within the gauged range 0.301 to 2.876 m</span></span>
+<span><span class="co">#&gt;   operational limits: not set; stages beyond the gauged range 0.301 to 2.876 m are flagged as extrapolation</span></span>
 <span><span class="co">#&gt;     limb lower_stage_m upper_stage_m        C          a       n  rmse_cms</span></span>
 <span><span class="co">#&gt;    &lt;int&gt;         &lt;num&gt;         &lt;num&gt;    &lt;num&gt;      &lt;num&gt;   &lt;num&gt;     &lt;num&gt;</span></span>
 <span><span class="co">#&gt; 1:     1         0.301         2.876 3.009912 0.06841777 1.69713 0.7886304</span></span>
@@ -344,25 +344,45 @@ at next. Read the ones that did not pass:</p>
 <p>The <code>support</code> column says what each answer rests on.
 <code>interpolation_observed</code> means the stage lies among the
 gaugings, which is the best case.</p>
-<p>A rating made by <code><a href="../reference/fit_rating.html">fit_rating()</a></code> will not give an answer
-outside the stage range it was gauged over until you say where it may be
-used, and why:</p>
+<p>Forecast models need discharge above the highest gauging, so a rating
+made by <code><a href="../reference/fit_rating.html">fit_rating()</a></code> does not stop at the edge of its
+evidence. Ask for a stage beyond it and you get an answer, flagged, with
+a warning:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fl">3.6</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;">:</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> apply_rating(): this rating was made by fit_rating() and has no operational limits, so it applies only within the stage range it was gauged over (0.301 to 2.876 m). 1 of 1 stage value fall outside it (3.6 to 3.6 m). State the range it may be used over, and why, with set_operational_limits(x, lower, upper, basis).</span></span></code></pre></div>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">wider</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/set_operational_limits.html">set_operational_limits</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fl">0.25</span>, <span class="fl">3.6</span>, basis <span class="op">=</span> <span class="st">"control confirmed by survey to 3.6 m"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">wider</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.5</span>, <span class="fl">3.6</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-11-19 20:59:28] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.</span></span>
+<code class="sourceCode R"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">withCallingHandlers</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.5</span>, <span class="fl">3.6</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  warning <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">w</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Warning: "</span>, <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">conditionMessage</a></span><span class="op">(</span><span class="va">w</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/conditions.html" class="external-link">invokeRestart</a></span><span class="op">(</span><span class="st">"muffleWarning"</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: apply_rating(): 1 of 2 stage value(s) lie beyond the gauged range (0.301 to 2.876 m; stages 2.5 to 3.6 m) and are extrapolated. They are flagged 'extrapolation' in the support column. This rating has no operational limits: state the range it may be used over, and why, with set_operational_limits(x, lower, upper, basis).</span></span>
+<span><span class="co">#&gt; INFO [2026-11-19 21:35:11] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.</span></span>
+<span><span class="va">out</span></span>
 <span><span class="co">#&gt;    stage discharge extrapolated                support</span></span>
 <span><span class="co">#&gt;    &lt;num&gt;     &lt;num&gt;       &lt;lgcl&gt;                 &lt;char&gt;</span></span>
 <span><span class="co">#&gt; 1:   2.5  13.59745        FALSE interpolation_observed</span></span>
 <span><span class="co">#&gt; 2:   3.6  25.61704         TRUE          extrapolation</span></span></code></pre></div>
-<p>The answer at 3.6 m is now given, and flagged
-<code>extrapolation</code>: the stage is within the limits you stated
-but beyond the gaugings. That is honest. The discharge is computed, and
-it is labelled as resting on the equation alone.</p>
+<p>The 3.6 m row is marked <code>extrapolation</code>. The value rests
+on the equation alone, with no gauging beyond 2.9 m to check it. Use it,
+and say so.</p>
+<p>You can turn that flag into a boundary. If you know where the rating
+may be used, such as a structure’s limit or a surveyed control, say so
+and say why:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">limited</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/set_operational_limits.html">set_operational_limits</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fl">0.25</span>, <span class="fl">3.6</span>, basis <span class="op">=</span> <span class="st">"control confirmed by survey to 3.6 m"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">limited</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.5</span>, <span class="fl">3.6</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; INFO [2026-11-19 21:35:11] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.</span></span>
+<span><span class="co">#&gt;    stage discharge extrapolated                support</span></span>
+<span><span class="co">#&gt;    &lt;num&gt;     &lt;num&gt;       &lt;lgcl&gt;                 &lt;char&gt;</span></span>
+<span><span class="co">#&gt; 1:   2.5  13.59745        FALSE interpolation_observed</span></span>
+<span><span class="co">#&gt; 2:   3.6  25.61704         TRUE          extrapolation</span></span>
+<span><span class="fu"><a href="../reference/apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">limited</span>, <span class="fl">4.2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00; font-weight: bold;">Error</span><span style="font-weight: bold;">:</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BBBB00;">!</span> apply_rating(): 1 of 1 stage value(s) fall outside this rating's operational limits (0.25 to 3.6 m; basis: control confirmed by survey to 3.6 m). Values range from 4.2 to 4.2 m. Widen the limits with set_operational_limits() if that is a decision you can state.</span></span></code></pre></div>
+<p>Inside the limits you still get flagged extrapolation. Outside them
+the rating refuses, because that range was your decision and the package
+holds you to it.</p>
 </div>
 <div class="section level2">
 <h2 id="how-sure-is-it">How sure is it?<a class="anchor" aria-label="anchor" href="#how-sure-is-it"></a>

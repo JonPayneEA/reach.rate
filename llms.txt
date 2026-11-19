@@ -66,10 +66,10 @@ operational and provenance) without giving a score, then apply it with
 [`apply_rating()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating.md).
 A rating made by
 [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)
-is applied only within the range it was gauged over until you state the
-range it may be used over with
-[`set_operational_limits()`](https://jonpayneea.github.io/reach.rate/reference/set_operational_limits.md).
-Anyone who wants direct control can fit with
+extrapolates beyond its gauged range, because forecasting needs that,
+and flags every such value; state the range it may be used over with
+[`set_operational_limits()`](https://jonpayneea.github.io/reach.rate/reference/set_operational_limits.md)
+to make that a boundary. Anyone who wants direct control can fit with
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
 instead. That route stays available afterwards for anyone who needs
 direct control. The [function
