@@ -392,19 +392,19 @@ set_operational_limits <- function(x, lower_stage_m, upper_stage_m, basis = NA_c
     outside <- sum(st < g[1L] | st > g[2L])
     if (outside) {
       warning(sprintf(
-        paste0("apply_rating(): %d of %d stage value%s lie beyond the gauged range (%.4g to %.4g m; stages %.4g to %.4g m) and are ",
+        paste0("apply_rating(): %d of %d stage value(s) lie beyond the gauged range (%.4g to %.4g m; stages %.4g to %.4g m) and are ",
                "extrapolated. They are flagged 'extrapolation' in the support column. This rating has no operational limits: ",
                "state the range it may be used over, and why, with set_operational_limits(x, lower, upper, basis)."),
-        outside, length(st), if (length(st) == 1L) "" else "s", g[1L], g[2L], min(st), max(st)
+        outside, length(st), g[1L], g[2L], min(st), max(st)
       ), call. = FALSE)
     }
   } else {
     outside <- sum(st < lim$lower_stage_m | st > lim$upper_stage_m)
     if (outside) {
       stop(sprintf(
-        paste0("apply_rating(): %d of %d stage value%s fall outside this rating's operational limits (%.4g to %.4g m%s). ",
+        paste0("apply_rating(): %d of %d stage value(s) fall outside this rating's operational limits (%.4g to %.4g m%s). ",
                "Values range from %.4g to %.4g m. Widen the limits with set_operational_limits() if that is a decision you can state."),
-        outside, length(st), if (length(st) == 1L) "" else "s", lim$lower_stage_m, lim$upper_stage_m,
+        outside, length(st), lim$lower_stage_m, lim$upper_stage_m,
         if (is.na(lim$basis)) "" else paste0("; basis: ", lim$basis), min(st), max(st)
       ), call. = FALSE)
     }
