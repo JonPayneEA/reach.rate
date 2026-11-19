@@ -64,7 +64,7 @@ stage_m <- seq(0.5, 2.5, by = 0.05)
 discharge_cms <- 5 * stage_m^1.6 + rnorm(length(stage_m), sd = 0.02)
 fit <- rate_optimise(discharge_cms, stage_m)
 rating_limbs(fit)
-#>     limb lower_stage_m upper_stage_m        C            a        n
-#>    <int>         <num>         <num>    <num>        <num>    <num>
-#> 1:     1           0.5           2.5 4.991305 -0.001447794 1.600899
+#>     limb lower_stage_m upper_stage_m        C           a        n
+#>    <int>         <num>         <num>    <num>       <num>    <num>
+#> 1:     1           0.5           2.5 4.991305 -0.00144775 1.600899
 ```

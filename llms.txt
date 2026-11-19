@@ -435,6 +435,14 @@ apply_rating() from using one that cannot give a meaningful discharge.
   : Check a set of gaugings
 - [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md)
   : Assess a fitted rating
+- [`rating_sensitivity()`](https://jonpayneea.github.io/reach.rate/reference/rating_sensitivity.md)
+  : How sensitive a rating is to its evidence and its choices
+- [`FlodeSensitivity()`](https://jonpayneea.github.io/reach.rate/reference/FlodeSensitivity.md)
+  : The outcome of a sensitivity analysis (S7)
+- [`sensitivity_summary()`](https://jonpayneea.github.io/reach.rate/reference/sensitivity_summary.md)
+  : The per-variant summary of a sensitivity analysis
+- [`sensitivity_results()`](https://jonpayneea.github.io/reach.rate/reference/sensitivity_results.md)
+  : The full results of a sensitivity analysis
 - [`rating_invariants()`](https://jonpayneea.github.io/reach.rate/reference/rating_invariants.md)
   : Post-fit invariants of a rating
 - [`FlodeAssessment()`](https://jonpayneea.github.io/reach.rate/reference/FlodeAssessment.md)

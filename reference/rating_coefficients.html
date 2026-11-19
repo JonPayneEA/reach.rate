@@ -109,16 +109,16 @@ in metres, <code>n</code> has no unit (<code>"1"</code>).</p>
 <span class="r-in"><span><span class="va">discharge_cms</span> <span class="op">&lt;-</span> <span class="fl">5</span> <span class="op">*</span> <span class="va">stage_m</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.02</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, n_boot <span class="op">=</span> <span class="fl">50L</span>, boot_seed <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">rating_coefficients</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     limb parameter     estimate        unit se_asymptotic se_bootstrap</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;    &lt;char&gt;        &lt;num&gt;      &lt;char&gt;         &lt;num&gt;        &lt;num&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1         C  4.991304846 cms per m^n   0.033148401  0.029635009</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:     1         a -0.001447794           m   0.004272320  0.003844284</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:     1         n  1.600898687           1   0.004548673  0.004024947</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     limb parameter    estimate        unit se_asymptotic se_bootstrap</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;    &lt;char&gt;       &lt;num&gt;      &lt;char&gt;         &lt;num&gt;        &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1         C  4.99130515 cms per m^n   0.033147599  0.029634924</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:     1         a -0.00144775           m   0.004272234  0.003844260</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:     1         n  1.60089865           1   0.004548600  0.004024928</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            q025          q50        q975</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           &lt;num&gt;        &lt;num&gt;       &lt;num&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:  4.932304052  4.987080365 5.031973540</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2: -0.008904214 -0.001792388 0.004936101</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:  1.596019343  1.601228745 1.609215849</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:  4.932304029  4.987083468 5.031973553</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2: -0.008904218 -0.001792158 0.004936103</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:  1.596019204  1.601228358 1.609215851</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

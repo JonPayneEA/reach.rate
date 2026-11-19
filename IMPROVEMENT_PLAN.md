@@ -347,10 +347,11 @@ gains a `support` column: `interpolation_observed`,
 Supersedes the single flag in
 [`flag_extrapolated_limbs()`](https://jonpayneea.github.io/reach.rate/reference/flag_extrapolated_limbs.md).
 
-**B4. `rating_sensitivity()`** (#48). Leave-one-out,
-leave-high-flow-out, starting values, boundary shift. Reports
-consequences in discharge space, linked to evidence IDs. Reuses the
-leverage code in `.rating_leverage_dt()`.
+**B4.
+[`rating_sensitivity()`](https://jonpayneea.github.io/reach.rate/reference/rating_sensitivity.md)**
+(#48). Leave-one-out, leave-high-flow-out, starting values, boundary
+shift. Reports consequences in discharge space, linked to evidence IDs.
+Reuses the leverage code in `.rating_leverage_dt()`.
 
 **B5. Breakpoint candidates** (#49).
 [`suggest_breakpoints()`](https://jonpayneea.github.io/reach.rate/reference/suggest_breakpoints.md)
