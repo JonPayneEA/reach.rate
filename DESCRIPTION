@@ -58,6 +58,7 @@ Collate:
     'reach.rate-package.R'
     'read_gaugings.R'
     'support.R'
+    'sensitivity.R'
     'weir_equations.R'
     'zzz.R'
 Depends:

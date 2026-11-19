@@ -72,6 +72,10 @@ reference:
   contents:
   - validate_gaugings
   - assess_rating
+  - rating_sensitivity
+  - FlodeSensitivity
+  - sensitivity_summary
+  - sensitivity_results
   - rating_invariants
   - FlodeAssessment
   - assessment_checks
