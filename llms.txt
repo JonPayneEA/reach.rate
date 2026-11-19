@@ -539,6 +539,8 @@ meet.
   : Plot each gauging's leverage against its influence on the fit
 - [`detect_rc_gaps()`](https://jonpayneea.github.io/reach.rate/reference/detect_rc_gaps.md)
   : Detect discharge gaps between rating-curve limbs
+- [`check_limb_continuity()`](https://jonpayneea.github.io/reach.rate/reference/check_limb_continuity.md)
+  : Check that the limbs of a rating meet
 - [`plot_rc_gaps()`](https://jonpayneea.github.io/reach.rate/reference/plot_rc_gaps.md)
   : Diagnostic plot for rating-curve gap detection and resolution
 

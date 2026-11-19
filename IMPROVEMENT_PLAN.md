@@ -157,7 +157,7 @@ API categories in section 4.
 | `weir_discharge_*()`, [`flume_discharge_parshall()`](https://jonpayneea.github.io/reach.rate/reference/flume_discharge_parshall.md) | weir_equations.R | 1 | 2-3 | As above, `structure_equation` | Specialist; emit `FlodeEvidence` |
 | [`suggest_breakpoints()`](https://jonpayneea.github.io/reach.rate/reference/suggest_breakpoints.md) | rate_optimise.R | 1 | 2 | Output reads as a finding, not a candidate | Advanced; reframe in B5 |
 | [`suggested_breakpoints_vector()`](https://jonpayneea.github.io/reach.rate/reference/suggested_breakpoints_vector.md) | rate_optimise.R | 1 | 2 | Reads an attribute; attributes are fragile | Deprecate; fold into return value |
-| [`align_limb_equations()`](https://jonpayneea.github.io/reach.rate/reference/align_limb_equations.md), [`align_limb_boundaries()`](https://jonpayneea.github.io/reach.rate/reference/align_limb_boundaries.md) | gap_check.R | 1 | 3-4 | Coefficient changes need before/after reporting | Advanced; feed `check_limb_continuity()` |
+| [`align_limb_equations()`](https://jonpayneea.github.io/reach.rate/reference/align_limb_equations.md), [`align_limb_boundaries()`](https://jonpayneea.github.io/reach.rate/reference/align_limb_boundaries.md) | gap_check.R | 1 | 3-4 | Coefficient changes need before/after reporting | Advanced; feed [`check_limb_continuity()`](https://jonpayneea.github.io/reach.rate/reference/check_limb_continuity.md) |
 | [`detect_rc_gaps()`](https://jonpayneea.github.io/reach.rate/reference/detect_rc_gaps.md), [`resolve_rc_gaps()`](https://jonpayneea.github.io/reach.rate/reference/resolve_rc_gaps.md), [`plot_rc_gaps()`](https://jonpayneea.github.io/reach.rate/reference/plot_rc_gaps.md) | gap_check.R | 1 | 2-3 | Single discharge-gap tolerance | Diagnostics; superseded in part by B6 |
 | [`expand_rating_table()`](https://jonpayneea.github.io/reach.rate/reference/expand_rating_table.md) | gap_check.R | 1 | 3 | None material | Advanced gap tool; keep |
 | [`graft_rating()`](https://jonpayneea.github.io/reach.rate/reference/graft_rating.md) | graft_rating.R | 1 | 4 | Coefficient change must reach history | Advanced; keep |
@@ -360,9 +360,11 @@ simpler model and failed fits. Accepted boundaries record their origin
 (`field_evidence`, `cross_section`, `structure_geometry`,
 `user_judgement`, `statistical_candidate`, `existing_rating`, `other`).
 
-**B6. `check_limb_continuity()`** (#50). Absolute and relative discharge
-tolerance plus stage tolerance, before and after alignment, derivative
-difference where assessed. Builds on
+**B6.
+[`check_limb_continuity()`](https://jonpayneea.github.io/reach.rate/reference/check_limb_continuity.md)**
+(#50). Absolute and relative discharge tolerance plus stage tolerance,
+before and after alignment, derivative difference where assessed. Builds
+on
 [`detect_rc_gaps()`](https://jonpayneea.github.io/reach.rate/reference/detect_rc_gaps.md).
 
 **B7. Plot grammar** (#51).
