@@ -305,7 +305,7 @@ fit_rating <- function(evidence, controls = NULL, breakpoint_origin = "user_judg
       message("  Not used: ", paste(sprintf("%d (%s)", as.integer(tab), names(tab)), collapse = "; "), ".")
     }
     if (is.null(limits)) {
-      message("  No operational limits set: the rating applies only within the gauged range. See set_operational_limits().")
+      message("  No operational limits set: stages beyond the gauged range are returned and flagged as extrapolation. See set_operational_limits().")
     }
   }
   fit
@@ -322,12 +322,14 @@ fit_rating <- function(evidence, controls = NULL, breakpoint_origin = "user_judg
 #' State the stage range a rating may be applied over
 #'
 #' @description
-#' A rating made by [fit_rating()] is applied only within the stage range it
-#' was gauged over, until the range it may be used over is stated here. That
-#' range is a decision, not a property of the data: it might be the gauged
-#' range, a structure's limit, a hydraulic argument for extrapolating to a
-#' stated stage, or a review outcome. Saying it, and saying why, is what
-#' makes a wider application defensible.
+#' A rating made by [fit_rating()] may be applied beyond the stage range it
+#' was gauged over, because forecast models need discharge above the highest
+#' gauging. Without limits, such stages are returned, flagged `extrapolation`
+#' and warned about. Stating limits here turns that into a boundary: the range
+#' is a decision, not a property of the data. It might be the gauged range, a
+#' structure's limit, a hydraulic argument for extrapolating to a stated
+#' stage, or a review outcome. Saying it, and saying why, is what makes the
+#' application defensible.
 #'
 #' The rating is returned as a new version. Its earlier state is kept in
 #' [rating_history()], and its lifecycle goes back to `"draft"`, since a
@@ -372,9 +374,11 @@ set_operational_limits <- function(x, lower_stage_m, upper_stage_m, basis = NA_c
   x
 }
 
-# A guided rating with no limits stated is applied only within its gauged
-# range; one with limits only within them. Plain fits from rate_optimise()
-# are not restricted: an expert calling it directly has taken that decision.
+# A guided rating with no limits stated may be applied beyond its gauged range
+# (forecast models need that): the values are returned, flagged as
+# extrapolation in the support column, with one warning per call. One with
+# limits stated is refused beyond them: the analyst chose that range.
+# Plain fits from rate_optimise() are not restricted.
 .require_operational_range <- function(fit, stage_dt, stage_col) {
   guided <- fit@provenance$fit_rating
   if (is.null(guided)) return(invisible(TRUE))
@@ -387,11 +391,11 @@ set_operational_limits <- function(x, lower_stage_m, upper_stage_m, basis = NA_c
     g <- guided$gauged_range
     outside <- sum(st < g[1L] | st > g[2L])
     if (outside) {
-      stop(sprintf(
-        paste0("apply_rating(): this rating was made by fit_rating() and has no operational limits, so it applies only within ",
-               "the stage range it was gauged over (%.4g to %.4g m). %d of %d stage value%s fall outside it (%.4g to %.4g m). ",
-               "State the range it may be used over, and why, with set_operational_limits(x, lower, upper, basis)."),
-        g[1L], g[2L], outside, length(st), if (length(st) == 1L) "" else "s", min(st), max(st)
+      warning(sprintf(
+        paste0("apply_rating(): %d of %d stage value%s lie beyond the gauged range (%.4g to %.4g m; stages %.4g to %.4g m) and are ",
+               "extrapolated. They are flagged 'extrapolation' in the support column. This rating has no operational limits: ",
+               "state the range it may be used over, and why, with set_operational_limits(x, lower, upper, basis)."),
+        outside, length(st), if (length(st) == 1L) "" else "s", g[1L], g[2L], min(st), max(st)
       ), call. = FALSE)
     }
   } else {
@@ -420,7 +424,7 @@ set_operational_limits <- function(x, lower_stage_m, upper_stage_m, basis = NA_c
   )
   lim <- x@provenance$operational_limits
   lim_line <- if (is.null(lim)) {
-    sprintf("not set; applies only within the gauged range %.4g to %.4g m", guided$gauged_range[1L], guided$gauged_range[2L])
+    sprintf("not set; stages beyond the gauged range %.4g to %.4g m are flagged as extrapolation", guided$gauged_range[1L], guided$gauged_range[2L])
   } else {
     sprintf("%.4g to %.4g m%s", lim$lower_stage_m, lim$upper_stage_m, if (is.na(lim$basis)) "" else paste0(" (", lim$basis, ")"))
   }

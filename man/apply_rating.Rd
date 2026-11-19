@@ -48,8 +48,10 @@ stated. It outranks the others.
 rating (where its top limb's equation overflows) is an error, because
 the result would not be a number. See \code{\link[=rating_support]{rating_support()}} for the ranges.
 
-A rating made by \code{\link[=fit_rating]{fit_rating()}} is stricter: it refuses stages outside
-its operational limits, or outside its gauged range if none are stated.
+A rating made by \code{\link[=fit_rating]{fit_rating()}} also refuses stages outside its
+operational limits, when they have been stated. With none stated, stages
+beyond the gauged range are returned, flagged \code{extrapolation} in the
+\code{support} column, with one warning per call.
 }
 \description{
 Converts a stage record to discharge. Dispatches on the class of \code{fit}:
