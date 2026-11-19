@@ -303,7 +303,7 @@ apply_rating(fit, 3.6)
 
 wider <- set_operational_limits(fit, 0.25, 3.6, basis = "control confirmed by survey to 3.6 m")
 apply_rating(wider, c(2.5, 3.6))
-#> INFO [2026-11-19 10:39:08] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-19 20:59:28] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
 #>    stage discharge extrapolated                support
 #>    <num>     <num>       <lgcl>                 <char>
 #> 1:   2.5  13.59745        FALSE interpolation_observed
