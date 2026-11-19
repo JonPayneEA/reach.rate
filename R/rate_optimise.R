@@ -1618,15 +1618,21 @@ plot_rating_leverage <- function(fit, cooks_mult = 4, leverage_mult = 2) {
 #' Suggest candidate stage breakpoints for a multi-limb rating fit
 #'
 #' @description
-#' A heuristic aid for choosing `control` in [rate_optimise()]. Reuses
-#' `rate_optimise()` directly: for each candidate stage, fits a two-limb
-#' rating there and compares its AIC against the current best model
-#' (penalising the extra parameters, unlike raw RSS). A candidate must
-#' also clear `min_improvement`, a minimum relative RSS reduction, to be
-#' eligible. Multiple breakpoints are found iteratively and greedily,
-#' respecting `min_gap`. Not a claim that a statistically-supported
-#' breakpoint corresponds to a real physical control change -- that
-#' judgement remains yours.
+#' Puts forward **candidates** for a breakpoint, for a person to review. It
+#' is not a finding. A statistical search sees only the gaugings; it cannot
+#' know where a channel control changes, a weir drowns or a bank is overtopped.
+#' A candidate that fits better has not thereby been shown to be a real change
+#' of hydraulic control, and one the search does not put forward may still be
+#' real. Use the table to decide where to look, then say where a breakpoint
+#' came from when you adopt it (see the `breakpoint_origin` argument of
+#' [fit_rating()]).
+#'
+#' For each candidate stage the function fits a two-limb rating there with
+#' [rate_optimise()] and compares its AIC against the current best model
+#' (penalising the extra parameters, unlike raw RSS). A candidate must also
+#' clear `min_improvement`, a minimum relative RSS reduction, to be put
+#' forward. Multiple breakpoints are found iteratively and greedily,
+#' respecting `min_gap`.
 #'
 #' @param discharge_cms,stage_m Numeric vectors, as in [rate_optimise()].
 #' @param max_breaks Integer. Maximum breakpoints to search for.
@@ -1641,16 +1647,30 @@ plot_rating_leverage <- function(fit, cooks_mult = 4, leverage_mult = 2) {
 #'   and thinned if exceeded. Default `200L`.
 #'
 #' @return A `data.table`, one row per candidate evaluated across every
-#'   round, with `candidate_stage`, `score`, `improvement`,
-#'   `n_obs_lower`, `n_obs_upper`, `round`, `fit_status`, `rank` and
-#'   `selected`. `selected` is `TRUE` for the candidate each round
-#'   adopted; extract the selected stages with
-#'   `sort(result[selected == TRUE, candidate_stage])`. The same stages
-#'   remain attached as the `"selected_breaks"` attribute for code
-#'   written against earlier versions, but an attribute can be lost
-#'   under ordinary data.table operations, so prefer the column.
+#'   round. For each candidate:
 #'
-#' @seealso [rate_optimise()]
+#'   * `candidate_stage`, and the `round` it was considered in;
+#'   * `score`, the improvement in AIC over the simpler model (positive is
+#'     better), and `improvement`, the fraction by which the residual sum of
+#'     squares falls;
+#'   * the evidence on each side: `n_obs_lower` and `n_obs_upper` (how many
+#'     gaugings), and `lower_min_m`, `lower_max_m`, `upper_min_m` and
+#'     `upper_max_m` (the stage range they cover). A candidate resting on a few
+#'     gaugings crowded at one end is weak however good its score;
+#'   * `fit_status`: `"ok"`, `"failed"` (the two-limb fit raised an error) or
+#'     `"insufficient_obs"` (too few gaugings on one side), and
+#'     `failure_reason` saying why when it is not `"ok"`. A candidate that
+#'     could not be fitted is listed, not dropped, because the stage where
+#'     fits fail can itself be informative;
+#'   * `rank` within its round, and `selected`, `TRUE` for the candidate each
+#'     round put forward. Extract those stages with
+#'     `sort(result[selected == TRUE, candidate_stage])`. The same stages
+#'     remain attached as the `"selected_breaks"` attribute for code written
+#'     against earlier versions, but an attribute can be lost under ordinary
+#'     data.table operations, so prefer the column.
+#'
+#' @seealso [rate_optimise()], [fit_rating()] and [breakpoint_origins()] to
+#'   record where an adopted breakpoint came from
 #'
 #' @examples
 #' # Gaugings whose rating changes character above about 2.4 m
@@ -1661,8 +1681,9 @@ plot_rating_leverage <- function(fit, cooks_mult = 4, leverage_mult = 2) {
 #'
 #' candidates <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
 #'
-#' # The candidate each round adopted, and how much it improved the fit
-#' candidates[selected == TRUE, c("round", "candidate_stage", "improvement")]
+#' # The candidate each round put forward, how much it improved the fit, and
+#' # how many gaugings stand on each side of it
+#' candidates[selected == TRUE, c("round", "candidate_stage", "improvement", "n_obs_lower", "n_obs_upper")]
 #'
 #' # The stages themselves, ready to pass to rate_optimise()
 #' breaks <- sort(candidates[selected == TRUE, candidate_stage])
@@ -1670,8 +1691,8 @@ plot_rating_leverage <- function(fit, cooks_mult = 4, leverage_mult = 2) {
 #' fit <- rate_optimise(discharge_cms, stage_m, control = breaks)
 #' rating_limbs(fit)
 #'
-#' # These are statistical suggestions only. Whether a stage marks a real
-#' # change of hydraulic control is a judgement for you, not the data.
+#' # These are candidates only. Whether a stage marks a real change of
+#' # hydraulic control is a judgement for you, not the data.
 #'
 #' @export
 suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
@@ -1700,7 +1721,8 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
     data.table(
       candidate_stage = numeric(0), score = numeric(0), improvement = numeric(0),
       n_obs_lower = integer(0), n_obs_upper = integer(0), round = integer(0),
-      fit_status = character(0), rank = integer(0), selected = logical(0)
+      fit_status = character(0), lower_min_m = numeric(0), lower_max_m = numeric(0), upper_min_m = numeric(0),
+      upper_max_m = numeric(0), failure_reason = character(0), rank = integer(0), selected = logical(0)
     )
   }
 
@@ -1708,6 +1730,7 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
   # each is advisory and there can be hundreds. The warning that a single
   # start did not converge is muffled here, because it would repeat for
   # many candidates; the score is an approximation either way.
+  last_failure <- NA_character_
   .fit_rss_aic <- function(control) {
     fit <- tryCatch(
       withCallingHandlers(
@@ -1718,7 +1741,10 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
           }
         }
       ),
-      error = function(e) NULL
+      error = function(e) {
+        last_failure <<- conditionMessage(e)
+        NULL
+      }
     )
     if (is.null(fit)) return(NULL)
     rss <- sum(fit@limbs$rmse_cms^2 * fit@limbs$n_obs)
@@ -1757,7 +1783,9 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
       if (is.null(result)) {
         round_results[[i]] <- data.table(
           candidate_stage = bp, score = NA_real_, improvement = NA_real_,
-          n_obs_lower = NA_integer_, n_obs_upper = NA_integer_, fit_status = "failed"
+          n_obs_lower = NA_integer_, n_obs_upper = NA_integer_, fit_status = "failed",
+          lower_min_m = NA_real_, lower_max_m = NA_real_, upper_min_m = NA_real_, upper_max_m = NA_real_,
+          failure_reason = last_failure
         )
         next
       }
@@ -1767,12 +1795,23 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
       idx_upper <- which(abs(fit@limbs$lower_stage_m - bp) < 1e-9)
       n_obs_lower <- if (length(idx_lower) == 1L) fit@limbs$n_obs[idx_lower] else NA_integer_
       n_obs_upper <- if (length(idx_upper) == 1L) fit@limbs$n_obs[idx_upper] else NA_integer_
+      # The stage range of the gaugings on each side of the candidate.
+      side_range <- function(idx) {
+        if (length(idx) != 1L) return(c(NA_real_, NA_real_))
+        s <- fit@gaugings$stage_m[fit@gaugings$limb == fit@limbs$limb[idx]]
+        if (length(s)) c(min(s), max(s)) else c(NA_real_, NA_real_)
+      }
+      lo_rng <- side_range(idx_lower)
+      up_rng <- side_range(idx_upper)
 
       if ((!is.na(n_obs_lower) && n_obs_lower < min_obs_per_side) ||
         (!is.na(n_obs_upper) && n_obs_upper < min_obs_per_side)) {
         round_results[[i]] <- data.table(
           candidate_stage = bp, score = NA_real_, improvement = NA_real_,
-          n_obs_lower = n_obs_lower, n_obs_upper = n_obs_upper, fit_status = "insufficient_obs"
+          n_obs_lower = n_obs_lower, n_obs_upper = n_obs_upper, fit_status = "insufficient_obs",
+          lower_min_m = lo_rng[1L], lower_max_m = lo_rng[2L], upper_min_m = up_rng[1L], upper_max_m = up_rng[2L],
+          failure_reason = sprintf("fewer than %d gaugings on a side (%s below, %s above)", as.integer(min_obs_per_side),
+                                   n_obs_lower, n_obs_upper)
         )
         next
       }
@@ -1781,7 +1820,9 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
         candidate_stage = bp,
         score = current_best$aic - result$aic,
         improvement = (current_best$rss - result$rss) / current_best$rss,
-        n_obs_lower = n_obs_lower, n_obs_upper = n_obs_upper, fit_status = "ok"
+        n_obs_lower = n_obs_lower, n_obs_upper = n_obs_upper, fit_status = "ok",
+        lower_min_m = lo_rng[1L], lower_max_m = lo_rng[2L], upper_min_m = up_rng[1L], upper_max_m = up_rng[2L],
+        failure_reason = NA_character_
       )
     }
 
