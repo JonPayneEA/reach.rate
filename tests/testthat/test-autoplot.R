@@ -167,8 +167,8 @@ test_that("the axes carry units, with discharge horizontal and stage vertical", 
   expect_match(paste(deparse(p$labels$x), collapse = ""), "Discharge")
   expect_match(paste(deparse(p$labels$x), collapse = ""), "m\"\\^3")
   m <- p$layers[[which(layers(p) == "GeomLine")]]$mapping
-  expect_equal(rlang::as_label(m$x), "discharge")
-  expect_equal(rlang::as_label(m$y), "stage")
+  expect_equal(ggplot2::as_label(m$x), "discharge")
+  expect_equal(ggplot2::as_label(m$y), "stage")
 })
 
 test_that("the caption gives the rating's status: origin, lifecycle, converged and valid", {

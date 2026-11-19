@@ -1,0 +1,207 @@
+---
+title: "Start Here: From a File of Gaugings to a Rating"
+author: "Jonathan Payne, Environment Agency Flood Forecasting"
+date: "November 2026"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Start Here: From a File of Gaugings to a Rating}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  eval = TRUE, echo = TRUE, collapse = TRUE, comment = "#>",
+  fig.width = 7, fig.height = 5
+)
+library(reach.rate)
+library(data.table)
+library(ggplot2)
+```
+
+**Audience:** novice. You have a file of spot gaugings and want a rating
+from it. No knowledge of the package, of S7 or of the mathematics is assumed;
+terms are explained where they first appear, and `vignette("glossary")` lists
+them all.
+
+This page takes one file from start to finish. The file is synthetic, a made-up
+station called Example Weir, in the layout of an Environment Agency gauging
+export. It has a few faults in it on purpose, because a real archive does, and
+you will see what the package does about each.
+
+<pre class="mermaid">
+flowchart LR
+  A[Your file] --> B[read_gaugings<br/>read it, keep every row]
+  B --> C[validate_gaugings<br/>is it usable, does it look right]
+  C --> D[fit_rating<br/>fit, and record how]
+  D --> E[assess_rating<br/>look from six sides]
+  D --> F[autoplot<br/>draw it]
+  E --> G[apply_rating<br/>stage to discharge]
+  F --> G
+  G --> H[A person reviews<br/>and decides]
+</pre>
+
+The diagram shows the route. Every step keeps what the one before found, and
+none of them removes a row from your data. At the end a person decides whether
+the rating is fit to use. The package never makes that decision for you.
+
+# Your file
+
+```{r file}
+path <- system.file("extdata", "example_gaugings.csv", package = "reach.rate")
+cat(readLines(path, n = 6), sep = "\n")
+```
+
+Each row is one spot gauging: a stage in metres and a discharge in cubic metres
+per second, measured together at one time. A **rating curve** is the
+relationship between them, so that a stage reading, which is easy to measure
+continuously, can be turned into a discharge, which is not.
+
+# Read it
+
+```{r read}
+gaugings <- read_gaugings(path)
+```
+
+`read_gaugings()` reads every column as text and then turns it into numbers and
+dates one step at a time, so that a problem is noted on its own row and not
+silently dropped or changed. It tells you what it found:
+
+```{r read-summary}
+read_summary(gaugings)
+gaugings[!is.na(read_issue), .(source_row, stage_original, discharge_original, read_issue)]
+```
+
+`---` is a placeholder for "no value" and `1.60m` has a unit stuck to it. Both
+are kept, with the original text beside them, and each row says what was wrong.
+Nothing has been removed or corrected.
+
+# Check it
+
+```{r validate}
+checks <- validate_gaugings(gaugings, reference_time = as.POSIXct("2025-01-01", tz = "UTC"))
+checks
+```
+
+There are two kinds of finding. A **fail** means the data cannot be used as it
+stands, such as a stage that is not a number. A **warning** is a judgement for
+you to make, such as a gauging that is far from its neighbours. The check never
+removes anything; it names the rows concerned so you can look.
+
+```{r validate-detail}
+assessment_checks(checks)[status %in% c("fail", "warning"), .(check_id, status, message)]
+plot(checks)
+```
+
+Look at the two rows the outlier and zero-discharge checks point to before you
+go on. In a real archive you would go back to the paper record. Here we know
+one was entered 60% too high and one is a dry pool.
+
+# Fit a rating
+
+```{r fit}
+fit <- fit_rating(gaugings)
+fit
+```
+
+`fit_rating()` makes choices a careful analyst would not argue with, and says
+what they were. It fits **one limb**, one equation
+$Q = C\,(H - a)^n$ over the whole range, because a rating with several limbs is
+a decision about the river that you should make, not the software. It fits on
+the **relative** objective, because gauging error is usually proportional to the
+reading. And it leaves out the rows it cannot use, listing each with its reason:
+
+```{r excluded}
+rating_provenance(fit)$fit_rating$excluded[, .(evidence_id, reason)]
+```
+
+The printed rating also says whether the optimiser **converged** and whether the
+equations are **valid**. They are separate questions, and both should be yes.
+
+# Look at it
+
+```{r plot}
+autoplot(fit)
+```
+
+The curve runs through the gaugings. Evidence that is not a gauging would have
+a different shape, and rows left out of the fit are drawn grey and faint, not
+hidden. The caption gives the rating's status.
+
+# Assess it
+
+```{r assess}
+assessment <- assess_rating(fit, reference_time = as.POSIXct("2025-01-01", tz = "UTC"))
+assessment
+```
+
+`assess_rating()` looks at the rating from six sides: the **data**, the
+**numerical** behaviour of the fit, the **statistical** quality, the
+**hydraulic** plausibility, the **operational** limits and the **provenance**.
+There is no score. A single number would hide exactly the things a reviewer needs
+to see, so each check says what it found and what to look at next. Read the
+ones that did not pass:
+
+```{r assess-detail}
+assessment_checks(assessment)[status %in% c("warning", "fail"), .(domain, check_id, message)]
+```
+
+# Use it
+
+```{r apply}
+apply_rating(fit, c(0.5, 1.2, 2.5))
+```
+
+The `support` column says what each answer rests on. `interpolation_observed`
+means the stage lies among the gaugings, which is the best case.
+
+A rating made by `fit_rating()` will not give an answer outside the stage range
+it was gauged over until you say where it may be used, and why:
+
+```{r limits, error=TRUE}
+apply_rating(fit, 3.6)
+```
+
+```{r limits-set}
+wider <- set_operational_limits(fit, 0.25, 3.6, basis = "control confirmed by survey to 3.6 m")
+apply_rating(wider, c(2.5, 3.6))
+```
+
+The answer at 3.6 m is now given, and flagged `extrapolation`: the stage is
+within the limits you stated but beyond the gaugings. That is honest. The
+discharge is computed, and it is labelled as resting on the equation alone.
+
+# How sure is it?
+
+The quick question is how much one gauging matters. `rating_sensitivity()`
+leaves gaugings out and refits, and reports the effect on discharge:
+
+```{r sensitivity}
+sens <- rating_sensitivity(fit, tests = "leave_high_out", stages = c(1, 2, 3))
+sens
+```
+
+Leaving out the highest gaugings moves the top of the curve most, which is what
+you would expect, since the top is the part with the fewest gaugings behind it.
+
+# What is not here yet
+
+`export_rating()`, to write a rating and its assessment out for others to review,
+is planned and not built. Until it is, the rating object itself, saved with
+`saveRDS()`, carries everything: the evidence with its ids, how it was fitted,
+what was left out and why, and its status.
+
+The lifecycle of every rating starts at `draft` and the package never moves it
+on. Approval is a decision for a person.
+
+# Where next
+
+| If you want | Read |
+|---|---|
+| the words explained | `vignette("glossary")` |
+| the whole package in one tour | `vignette("rating_methods_overview")` |
+| to fit several limbs, and why | `vignette("rating_curves_guide")` |
+| exactly what is computed | `vignette("mathematical_contract")` |

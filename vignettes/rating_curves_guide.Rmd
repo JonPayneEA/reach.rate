@@ -21,6 +21,8 @@ library(reach.rate)
 library(data.table)
 ```
 
+**Audience:** practitioner. You fit and use ratings and want the whole package explained, with the reasoning behind its choices.
+
 # What a rating curve is
 
 A river gauging station measures water level continuously. It does not measure flow. Level (stage) is cheap: a pressure transducer or a float in a stilling well, logging every fifteen minutes for decades. Flow (discharge) is expensive: someone has to stand in or above the river with a current meter or an ADCP and measure it directly. A single discharge measurement is called a gauging, and a typical station accumulates a few dozen to a few hundred of them over its life.

@@ -21,6 +21,8 @@ library(reach.rate)
 library(data.table)
 ```
 
+**Audience:** practitioner. You want to go beyond the defaults: relative error, recency weighting and multi-start.
+
 # Why deviate from the default fit
 
 `rate_optimise()`'s default call -- no `objective`, no `n_bounds`, no

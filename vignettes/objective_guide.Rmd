@@ -22,6 +22,8 @@ library(data.table)
 library(ggplot2)
 ```
 
+**Audience:** practitioner. You are choosing between the absolute and relative objectives and want to know when they differ.
+
 `vignette("non_standard_optimisation")` covers `objective = "relative"`
 mechanically: what it does to a fit, and a worked comparison showing its
 `C`/`a`/`n` land closer to the truth on proportionally-noisy data. It

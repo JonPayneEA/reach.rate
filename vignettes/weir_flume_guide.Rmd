@@ -24,6 +24,8 @@ library(gridExtra)
 library(grid)
 ```
 
+**Audience:** specialist. You derive discharge from a structure or a surveyed cross-section instead of gaugings.
+
 Everything else in this package fits a rating to gaugings: `rate_optimise()`
 estimates `C`/`a`/`n` by nonlinear least squares, and every uncertainty
 figure it produces -- bootstrap or asymptotic -- comes from that fit. A
