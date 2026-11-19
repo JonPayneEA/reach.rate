@@ -275,7 +275,7 @@ FlodeRating <- new_class(
 #' @param ... Unused; present for consistency with the `print` generic.
 #' @return `x`, invisibly.
 #' @noRd
-method(print, FlodeRating) <- function(x, ...) {
+method(.s7_print, FlodeRating) <- function(x, ...) {
   cat(sprintf("<FlodeRating> %d limb(s), origin: %s, lifecycle: %s\n", nrow(x@limbs), x@fit_origin, x@lifecycle))
   cat(.state_lines(x), sep = "\n")
   cat(.guided_lines(x), sep = "\n")
@@ -362,7 +362,7 @@ FlodeSegmentedRating <- new_class(
 #' @param ... Unused; present for consistency with the `print` generic.
 #' @return `x`, invisibly.
 #' @noRd
-method(print, FlodeSegmentedRating) <- function(x, ...) {
+method(.s7_print, FlodeSegmentedRating) <- function(x, ...) {
   cat(sprintf(
     "<FlodeSegmentedRating> %d segment(s), origin: %s, lifecycle: %s, R\u00b2 = %.4f\n",
     x@n_segments, x@fit_origin, x@lifecycle, x@coefficients$r_squared[1]
@@ -456,7 +456,7 @@ FlodeRatingTable <- new_class(
 #' @param ... Unused; present for consistency with the `print` generic.
 #' @return `x`, invisibly.
 #' @noRd
-method(print, FlodeRatingTable) <- function(x, ...) {
+method(.s7_print, FlodeRatingTable) <- function(x, ...) {
   cat(sprintf("<FlodeRatingTable> %d limb(s), origin: %s, lifecycle: %s\n", nrow(x@table), x@fit_origin, x@lifecycle))
   cat(.state_lines(x), sep = "\n")
   print(x@table)

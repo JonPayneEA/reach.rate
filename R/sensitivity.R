@@ -381,7 +381,7 @@ sensitivity_results <- function(x) {
 #' @param x A [FlodeSensitivity].
 #' @param ... Unused.
 #' @noRd
-method(print, FlodeSensitivity) <- function(x, ...) {
+method(.s7_print, FlodeSensitivity) <- function(x, ...) {
   s <- x@summary
   cat(sprintf("<FlodeSensitivity> %d variant(s) over %d stage(s), tests: %s\n", nrow(s), length(x@stages), paste(x@tests, collapse = ", ")))
   for (tst in .sensitivity_tests[.sensitivity_tests %in% x@tests]) {
@@ -430,7 +430,7 @@ method(print, FlodeSensitivity) <- function(x, ...) {
 }
 
 #' @noRd
-method(plot, FlodeSensitivity) <- function(x, y, ...) .plot_sensitivity(x)
+method(.s7_plot, FlodeSensitivity) <- function(x, y, ...) .plot_sensitivity(x)
 
 #' @noRd
-method(autoplot, FlodeSensitivity) <- function(object, ...) .plot_sensitivity(object)
+method(.s7_autoplot, FlodeSensitivity) <- function(object, ...) .plot_sensitivity(object)

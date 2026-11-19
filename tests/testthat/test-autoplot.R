@@ -219,3 +219,13 @@ test_that("assessments and sensitivity analyses answer autoplot as they answer p
   expect_s3_class(autoplot(s), "ggplot")
   expect_equal(layers(autoplot(s)), layers(plot(s)))
 })
+
+test_that("registering S7 methods leaves the real print, plot and autoplot untouched in the namespace", {
+  ns <- asNamespace("reach.rate")
+  for (nm in c("print", "plot", "autoplot")) {
+    if (exists(nm, envir = ns, inherits = FALSE)) {
+      expect_false(inherits(get(nm, envir = ns, inherits = FALSE), "S7_external_generic"), info = nm)
+    }
+  }
+  expect_true(is.function(reach.rate::autoplot))
+})

@@ -31,6 +31,9 @@
   notes = "character", source_row = "integer", metadata = "list"
 )
 
+#' @include s7_external.R
+NULL
+
 #' The controlled vocabulary for where evidence came from
 #'
 #' @description
@@ -301,7 +304,7 @@ rating_schema_version <- function() .rating_schema_version
 #' @param x A [FlodeEvidence].
 #' @param ... Passed to the data.table print method.
 #' @noRd
-method(print, FlodeEvidence) <- function(x, ...) {
+method(.s7_print, FlodeEvidence) <- function(x, ...) {
   inc <- .subset2(x, "included")
   cat(sprintf(
     "<FlodeEvidence> %d row(s), %d included, source type(s): %s\n",
