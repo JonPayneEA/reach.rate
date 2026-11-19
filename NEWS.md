@@ -1,5 +1,44 @@
 # reach.rate (development)
 
+* Tranche B2 of the improvement plan: `assess_rating()`. It looks at a
+  rating from six sides and returns what it found as a `FlodeAssessment`:
+  **data** (`validate_gaugings()` on the evidence the rating used),
+  **numerical** (the technical checks of `rating_invariants()`, and whether
+  the optimiser converged), **statistical** (bias, spread and trend of the
+  residuals per limb, limb support, parameter identifiability, multi-start
+  agreement, parameters on a bound, influential gaugings), **hydraulic**
+  (plausible exponents and zero-flow stage, and the hydrometric invariants),
+  **operational** (whether limits are stated, how far they reach beyond the
+  gauged range, whether the rating has been changed since it was fitted) and
+  **provenance** (evidence sources, assumptions, how and with what version it
+  was made, whether a bootstrap seed is recorded). There is **no summary
+  score**: every check states what it measured and what to look at next, and
+  a rating that passes everything is not thereby approved.
+
+  An independent fit and a segmented fit are assessed with the same checks,
+  closing the diagnostic gap between them: bias, spread, trend, support,
+  identifiability and convergence now work for a segmented fit. Checks that
+  cannot be computed for one of them, or for a rating that holds only
+  equations, are `not_assessed` and say why, never `pass`.
+
+  `FlodeAssessment` now holds eight domains. What a check can do follows
+  from its **severity**, not its domain: a check with severity `error` can
+  pass or fail, one with severity `warning` can only warn, so a single
+  domain can hold both. `technical` and `hydrometric` keep their fixed
+  severities. Printing shows each domain's counts.
+
+  Influence is computed on the scale the fit minimised (log discharge for the
+  relative objective, with any age weights), and warns only above a Cook's
+  distance of 1. The existing `flag_influential_gaugings()` works on
+  absolute residuals, which grow with flow, so on a relative-error fit it
+  always flags the highest gauging; it is unchanged and documented for the
+  absolute case.
+
+  A segmented fit's invariants now list every check, with those that do not
+  apply to one joint equation marked `not_assessed`, so the two fit classes
+  produce the same check ids. `convergence` no longer reports a limb with no
+  optimiser record (amended after fitting) as having failed to converge.
+
 * Tranche B1 of the improvement plan: `fit_rating()`, the guided entry
   point, with `set_operational_limits()`. Give it evidence (a `FlodeEvidence`,
   a plain table, or the output of `read_gaugings()`) and it fits a rating

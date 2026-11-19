@@ -26,8 +26,8 @@ What \code{\link[=validate_gaugings]{validate_gaugings()}} returns, and what \co
 holds one row per check, and does not know what was checked: the same
 class serves evidence now and a fitted rating later.
 
-Each check belongs to one of two domains, and the class holds it to that
-domain's rules.
+Each check has a \strong{domain} (what it is about) and a \strong{severity} (what a
+non-pass raises), and the class holds it to its severity.
 \itemize{
 \item \strong{technical} checks can \code{pass}, \code{fail} or be \code{not_assessed}. A
 failure means the data cannot be used as it stands.
@@ -42,8 +42,8 @@ A check that could not run (the information it needs is absent) is
 The check table has these columns:\tabular{ll}{
    column \tab meaning \cr
    \code{check_id} \tab a stable short name, unique within the assessment \cr
-   \code{domain} \tab \code{technical} or \code{hydrometric} \cr
-   \code{severity} \tab what a non-pass raises: \code{error} for technical, \code{warning} for hydrometric \cr
+   \code{domain} \tab \code{technical} or \code{hydrometric} (the checks on gaugings and equations), or \code{data}, \code{numerical}, \code{statistical}, \code{hydraulic}, \code{operational} or \code{provenance} (the six domains of \code{assess_rating()}) \cr
+   \code{severity} \tab what a non-pass raises: \code{error} (the check can \code{fail}) or \code{warning} (it can only warn). Fixed for \code{technical} and \code{hydrometric} checks \cr
    \code{status} \tab \code{pass}, \code{warning}, \code{fail} or \code{not_assessed} \cr
    \code{message} \tab what was found, in a sentence \cr
    \code{affected_evidence} \tab list column; the \code{evidence_id}s concerned, empty when none \cr

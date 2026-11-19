@@ -13,7 +13,11 @@
 # ---------------------------------------------------------------------------
 
 .assessment_statuses <- c("pass", "warning", "fail", "not_assessed")
-.assessment_domains <- c("technical", "hydrometric")
+# `technical` and `hydrometric` are the two domains of validate_gaugings() and
+# rating_invariants(). The rest are the domains of assess_rating().
+.assessment_domains <- c("technical", "hydrometric", "data", "numerical", "statistical",
+                         "hydraulic", "operational", "provenance")
+.assessment_severities <- c("error", "warning")
 
 # The columns of a check table, in order, with the class each must have.
 .assessment_columns <- c(
@@ -45,8 +49,8 @@
 #' holds one row per check, and does not know what was checked: the same
 #' class serves evidence now and a fitted rating later.
 #'
-#' Each check belongs to one of two domains, and the class holds it to that
-#' domain's rules.
+#' Each check has a **domain** (what it is about) and a **severity** (what a
+#' non-pass raises), and the class holds it to its severity.
 #'
 #' * **technical** checks can `pass`, `fail` or be `not_assessed`. A
 #'   failure means the data cannot be used as it stands.
@@ -62,8 +66,8 @@
 #' | column | meaning |
 #' |---|---|
 #' | `check_id` | a stable short name, unique within the assessment |
-#' | `domain` | `technical` or `hydrometric` |
-#' | `severity` | what a non-pass raises: `error` for technical, `warning` for hydrometric |
+#' | `domain` | `technical` or `hydrometric` (the checks on gaugings and equations), or `data`, `numerical`, `statistical`, `hydraulic`, `operational` or `provenance` (the six domains of `assess_rating()`) |
+#' | `severity` | what a non-pass raises: `error` (the check can `fail`) or `warning` (it can only warn). Fixed for `technical` and `hydrometric` checks |
 #' | `status` | `pass`, `warning`, `fail` or `not_assessed` |
 #' | `message` | what was found, in a sentence |
 #' | `affected_evidence` | list column; the `evidence_id`s concerned, empty when none |
@@ -124,14 +128,20 @@ FlodeAssessment <- new_class(
     if (!all(chk$status %in% .assessment_statuses)) {
       return(sprintf("status must be one of: %s", paste(.assessment_statuses, collapse = ", ")))
     }
-    if (any(chk$domain == "technical" & chk$status == "warning")) {
-      return("a technical check can pass or fail but not warn; a warning belongs to a hydrometric check")
+    if (!all(chk$severity %in% .assessment_severities)) {
+      return("severity must be 'error' or 'warning'")
     }
-    if (any(chk$domain == "hydrometric" & chk$status == "fail")) {
-      return("a hydrometric check can warn but not fail; only a technical check fails")
+    # What a check can do follows from its severity, not its domain: one
+    # domain (data, say) can hold checks that fail and checks that warn.
+    if (any(chk$severity == "error" & chk$status == "warning")) {
+      return("a check with severity 'error' can pass or fail but not warn; a warning belongs to a check with severity 'warning'")
     }
-    expected_severity <- ifelse(chk$domain == "technical", "error", "warning")
-    if (!identical(chk$severity, expected_severity)) {
+    if (any(chk$severity == "warning" & chk$status == "fail")) {
+      return("a check with severity 'warning' can warn but not fail; only a check with severity 'error' fails")
+    }
+    # The two original domains keep their fixed severity.
+    if (any(chk$domain == "technical" & chk$severity != "error") ||
+        any(chk$domain == "hydrometric" & chk$severity != "warning")) {
       return("severity must be 'error' for a technical check and 'warning' for a hydrometric one")
     }
     if (!all(vapply(chk$affected_evidence, is.character, logical(1)))) {
@@ -143,11 +153,12 @@ FlodeAssessment <- new_class(
 
 # One check row. The severity follows from the domain.
 .check_row <- function(check_id, domain, status, message, recommendation = NA_character_,
-                       affected = character(0), stage = numeric(0)) {
+                       affected = character(0), stage = numeric(0), severity = NULL) {
+  if (is.null(severity)) severity <- if (domain == "technical") "error" else "warning"
   stage <- stage[is.finite(stage)]
   data.table(
     check_id = check_id, domain = domain,
-    severity = if (domain == "technical") "error" else "warning",
+    severity = severity,
     status = status, message = message,
     affected_evidence = list(as.character(affected)),
     affected_stage_min_m = if (length(stage)) min(stage) else NA_real_,
@@ -234,6 +245,14 @@ method(print, FlodeAssessment) <- function(x, ...) {
     "  %d pass, %d warning, %d fail, %d not assessed\n",
     counts[["pass"]], counts[["warning"]], counts[["fail"]], counts[["not_assessed"]]
   ))
+  # With more than the two original domains, show where the findings are.
+  if (length(unique(chk$domain)) > 2L) {
+    for (d in .assessment_domains[.assessment_domains %in% chk$domain]) {
+      s <- chk$status[chk$domain == d]
+      cat(sprintf("  %-12s %d pass, %d warning, %d fail, %d not assessed\n", paste0(d, ":"),
+                  sum(s == "pass"), sum(s == "warning"), sum(s == "fail"), sum(s == "not_assessed")))
+    }
+  }
   shown <- chk[chk$status != "pass"]
   if (nrow(shown)) {
     shown <- shown[order(match(shown$status, c("fail", "warning", "not_assessed")))]
