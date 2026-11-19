@@ -22,6 +22,8 @@ library(data.table)
 library(ggplot2)
 ```
 
+**Audience:** practitioner. How the pieces of the package fit together, as a tour with diagrams.
+
 This package started as one function, `rate_optimise()`, and one vignette.
 It is now five ways to build a rating, several ways to check one, and half
 a dozen ways to use one once you have it -- each with its own vignette

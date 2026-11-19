@@ -21,6 +21,8 @@ library(reach.rate)
 library(data.table)
 ```
 
+**Audience:** novice. A worked example from gaugings to an applied rating, written to be followed step by step.
+
 # What this vignette is
 
 `vignette("rating_curves_guide")` is the theory-and-reference guide, and

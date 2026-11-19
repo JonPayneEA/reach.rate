@@ -2,6 +2,14 @@ url: https://jonpayneea.github.io/reach.rate/
 
 template:
   bootstrap: 5
+  # Mermaid renders the workflow diagrams on this site. In an installed
+  # vignette, without it, each diagram shows as its readable source text.
+  includes:
+    in_header: |
+      <script type="module">
+        import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+        mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+      </script>
   # pkgdown 2.1+ defaults to MathML conversion, which needs the katex R
   # package; without it equations are left as raw $$...$$ text. MathJax
   # renders in the browser and needs nothing on the build machine.
@@ -15,6 +23,16 @@ development:
   mode: auto
 
 articles:
+- title: Start here
+  navbar: Start here
+  desc: >
+    New to the package? Start with the first article, which takes one file of
+    gaugings to a rating. Each article says who it is written for: novice,
+    practitioner, technical or specialist.
+  contents:
+  - start_here
+  - glossary
+
 - title: Guides
   navbar: Guides
   contents:
@@ -148,9 +166,16 @@ reference:
   - plot_rating_interval
 
 - title: Plotting
+  desc: >
+    autoplot() and plot() draw any rating with one grammar and return a
+    ggplot2 object; they also work on an assessment and a sensitivity
+    analysis. rating_plot() is superseded by them. plot_rating_curves()
+    overlays several ratings.
   contents:
-  - rating_plot
+  - autoplot.FlodeRating
+  - reexports
   - plot_rating_curves
+  - rating_plot
 
 - title: Specialist hydraulics
   desc: >

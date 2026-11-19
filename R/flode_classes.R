@@ -475,6 +475,14 @@ method(print, FlodeRatingTable) <- function(x, ...) {
 #' Plot a fitted rating curve (S7 generic)
 #'
 #' @description
+#' **Superseded by [autoplot()] and `plot()`**, which draw every rating class
+#' with one grammar and always return a ggplot2 object: gaugings shaped by
+#' source type with excluded ones muted, a bootstrap band, the stage ranges the
+#' rating rests on, units on the axes and the rating's status in the caption
+#' (see [autoplot.FlodeRating]). `rating_plot()` still works and is unchanged,
+#' but draws a [FlodeRating] in base graphics and offers none of that. It will
+#' warn in a later release and then be removed.
+#'
 #' Draws a rating with discharge on the horizontal axis and stage on the
 #' vertical. Dispatches on the class of `fit`, so the same call works
 #' whichever model produced the rating:

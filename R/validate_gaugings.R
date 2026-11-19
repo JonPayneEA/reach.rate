@@ -255,8 +255,8 @@ validate_gaugings <- function(x, min_gaugings = 10L, inversion_tolerance = 0.2, 
         sprintf("More than %d usable gaugings: the pairwise inversion check is skipped.", .inversion_max_rows),
         "Validate one station at a time; a rating is built from one station's gaugings.")
   } else add("stage_discharge_inversion", hydro, if (any(inv)) "warning" else "pass",
-      if (any(inv)) sprintf("%d %s in a stage-discharge inversion: a discharge more than %g%% below that of a gauging at a lower stage.", sum(inv),
-                            plural(sum(inv), "gauging has", "gaugings have"), 100 * inversion_tolerance)
+      if (any(inv)) sprintf("%d %s part of a stage-discharge inversion: a discharge more than %g%% below that of a gauging at a lower stage.", sum(inv),
+                            plural(sum(inv), "gauging is", "gaugings are"), 100 * inversion_tolerance)
       else "Discharge rises with stage throughout, within tolerance.",
       if (any(inv)) "Check for a shift, backwater, hysteresis on a rising or falling flood, or a wrong stage." else NA_character_,
       id[inv], stage[inv])

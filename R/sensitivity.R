@@ -412,7 +412,7 @@ method(print, FlodeSensitivity) <- function(x, ...) {
 #' @param y,... Unused.
 #' @return A ggplot object.
 #' @noRd
-method(plot, FlodeSensitivity) <- function(x, y, ...) {
+.plot_sensitivity <- function(x) {
   d <- x@results[is.finite(change_pct)]
   if (!nrow(d)) stop("there is nothing to plot: no variant could be compared", call. = FALSE)
   worst <- x@summary[is.finite(max_abs_change_pct), .SD[which.max(max_abs_change_pct)], by = test]
@@ -428,3 +428,9 @@ method(plot, FlodeSensitivity) <- function(x, y, ...) {
          subtitle = "Each line is one variant; the largest change in each test is drawn heavier.") +
     theme_minimal(base_size = 11)
 }
+
+#' @noRd
+method(plot, FlodeSensitivity) <- function(x, y, ...) .plot_sensitivity(x)
+
+#' @noRd
+method(autoplot, FlodeSensitivity) <- function(object, ...) .plot_sensitivity(object)

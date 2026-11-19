@@ -5,6 +5,8 @@
 [![test-coverage](https://github.com/JonPayneEA/reach.rate/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JonPayneEA/reach.rate/actions/workflows/test-coverage.yaml)
 <!-- badges: end -->
 
+**New here?** Start with `vignette("start_here")`, which takes one file of gaugings to a rating, or read it [on the website](https://jonpayneea.github.io/reach.rate/articles/start_here.html). The words used are in `vignette("glossary")`.
+
 Tools for fitting, diagnosing, and applying hydrometric rating curves: multi-limb power-law fitting by nonlinear least squares, junction-gap detection and resolution between independently-fitted limbs, a segmented joint-model alternative (Hodson et al. 2024), bootstrap and closed-form coefficient uncertainty, leverage/influence diagnostics, opt-in age-based recency weighting, versioned ratings, and rating-amendment comparison. Beyond gauging-based fitting: a Manning's-equation rating from a surveyed cross-section alone, and standard weir/flume discharge equations (rectangular, V-notch, Cipoletti, Parshall flume) with GUM-style propagated uncertainty.
 
 Fitted ratings are represented as [S7](https://rconsortium.github.io/S7/) classes (`FlodeRating`, `FlodeSegmentedRating`, `FlodeRatingTable`) that carry their own gaugings, fitting bookkeeping, and provenance, so a rating is never separated from the data and assumptions that produced it.
@@ -71,7 +73,7 @@ The toolkit represents its results as three [S7](https://rconsortium.github.io/S
 - `FlodeSegmentedRating` is the result of `rate_optimise_segmented()`, a structurally different joint model with no junction gap to reconcile (see the full guide).
 - `FlodeRatingTable` is the equation-table representation used for gap checking and application: `lower_level`, `upper_level`, `C`, `a`, `n` per limb, the same equation and sign convention as a `FlodeRating`. An amended table keeps the exact object it was amended from, and `rating_history()` lists the chain -- an audit trail by construction, not by discipline.
 
-Three shared generics work across the classes: `rating_plot()` draws whichever fit you hand it, `apply_rating()` converts stage to discharge with whichever representation you hold, and `as_rating_table()` converts a fit to the table form. The class system chooses the right implementation; you use one name.
+Three shared generics work across the classes: `autoplot()` (or `plot()`) draws whichever rating you hand it, `apply_rating()` converts stage to discharge with whichever representation you hold, and `as_rating_table()` converts a fit to the table form. The class system chooses the right implementation; you use one name.
 
 A fit remembers its own gaugings deliberately: every diagnostic, residual plot, and bootstrap in this toolkit needs the original data, and a rating separated from its gaugings is a rating you can no longer question.
 
@@ -108,7 +110,7 @@ discharge_cms <- true_coefs$C[true_limb] *
 fit <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2))
 rating_limbs(fit, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared)]
 
-rating_plot(fit)
+autoplot(fit)            # a ggplot2 object; plot(fit) gives the same
 
 # Independently-fitted limbs rarely meet exactly at their junctions --
 # detect the resulting discharge gap

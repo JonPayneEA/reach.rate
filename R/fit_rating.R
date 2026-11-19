@@ -275,7 +275,12 @@ fit_rating <- function(evidence, controls = NULL, breakpoint_origin = "user_judg
   for (col in carried) set(kept, j = col, value = fit_g[[col]])
   fit@gaugings <- kept
 
-  excluded <- data.table(evidence_id = ev$evidence_id[!is.na(reason)], reason = reason[!is.na(reason)])
+  # The values of the rows left out are kept with the reason, so they can be
+  # shown (muted) on a plot and checked later; they are no longer in @gaugings.
+  left_out <- !is.na(reason)
+  excluded <- data.table(evidence_id = ev$evidence_id[left_out], reason = reason[left_out],
+                         stage_m = ev$stage_m[left_out], discharge_cms = ev$discharge_cms[left_out],
+                         source_type = ev$source_type[left_out])
   limits <- if (is.null(operational_limits)) NULL else list(
     lower_stage_m = operational_limits[1L], upper_stage_m = operational_limits[2L], basis = operational_basis
   )
