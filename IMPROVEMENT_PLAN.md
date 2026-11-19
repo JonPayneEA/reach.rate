@@ -275,8 +275,7 @@ and `FlodeAssessment`** (#41). Introduce the check-table schema here:
 hydrometric checks warn and never exclude.
 [`print()`](https://rdrr.io/r/base/print.html) and
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods. *Done
-when* each check has its own pass and fail test, and
-[`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md)
+when* each check has its own pass and fail test, and `assess_rating()`
 can reuse the class unchanged.
 
 **A7. Mathematical contract** (#42). New vignette
@@ -329,12 +328,10 @@ One limb by default. Multiple limbs only with explicit `controls` or
 objective by default. Stores the call, the seed and every attempted fit.
 Operational limits required before unrestricted application.
 
-**B2.
-[`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md)**
-(#46). Five domains (data, numerical, statistical, hydraulic,
-operational) plus provenance, built on A6 and A8. No summary score.
-Closes the segmented-fit diagnostic gap so both fit classes assess
-alike.
+**B2. `assess_rating()`** (#46). Five domains (data, numerical,
+statistical, hydraulic, operational) plus provenance, built on A6 and
+A8. No summary score. Closes the segmented-fit diagnostic gap so both
+fit classes assess alike.
 
 **B3. Support and extrapolation** (#47).
 [`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md)

@@ -48,14 +48,17 @@ target is six functions:
 | Import your gaugings | [`read_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/read_gaugings.md) | available |
 | Check them | [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md) | available |
 | Fit a candidate rating | [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md) | available |
-| Assess it | [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md) | available |
+| Assess it | `assess_rating()` | planned |
 | Compare with the current rating | [`compare_ratings()`](https://jonpayneea.github.io/reach.rate/reference/compare_ratings.md) | available |
 | Export it | `export_rating()` | planned |
 
-Until `export_rating()` lands, assess a fit with
-[`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md),
-which reports on six domains (data, numerical, statistical, hydraulic,
-operational and provenance) without giving a score, then apply it with
+Until `assess_rating()` and `export_rating()` land, diagnose a fit with
+[`rating_invariants()`](https://jonpayneea.github.io/reach.rate/reference/rating_invariants.md),
+[`plot_rating_residuals()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_residuals.md),
+[`flag_extrapolated_limbs()`](https://jonpayneea.github.io/reach.rate/reference/flag_extrapolated_limbs.md)
+and
+[`flag_influential_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/flag_influential_gaugings.md),
+then apply it with
 [`apply_rating()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating.md).
 A rating made by
 [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)
@@ -432,8 +435,6 @@ apply_rating() from using one that cannot give a meaningful discharge.
 
 - [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md)
   : Check a set of gaugings
-- [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md)
-  : Assess a fitted rating
 - [`rating_invariants()`](https://jonpayneea.github.io/reach.rate/reference/rating_invariants.md)
   : Post-fit invariants of a rating
 - [`FlodeAssessment()`](https://jonpayneea.github.io/reach.rate/reference/FlodeAssessment.md)

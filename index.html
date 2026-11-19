@@ -120,8 +120,8 @@
 </tr>
 <tr>
 <td>Assess it</td>
-<td><code><a href="reference/assess_rating.html">assess_rating()</a></code></td>
-<td>available</td>
+<td><code>assess_rating()</code></td>
+<td>planned</td>
 </tr>
 <tr>
 <td>Compare with the current rating</td>
@@ -135,7 +135,7 @@
 </tr>
 </tbody>
 </table>
-<p>Until <code>export_rating()</code> lands, assess a fit with <code><a href="reference/assess_rating.html">assess_rating()</a></code>, which reports on six domains (data, numerical, statistical, hydraulic, operational and provenance) without giving a score, then apply it with <code><a href="reference/apply_rating.html">apply_rating()</a></code>. A rating made by <code><a href="reference/fit_rating.html">fit_rating()</a></code> is applied only within the range it was gauged over until you state the range it may be used over with <code><a href="reference/set_operational_limits.html">set_operational_limits()</a></code>. Anyone who wants direct control can fit with <code><a href="reference/rate_optimise.html">rate_optimise()</a></code> instead. That route stays available afterwards for anyone who needs direct control. The <a href="https://jonpayneea.github.io/reach.rate/reference/">function reference</a> groups every export by the job it does.</p>
+<p>Until <code>assess_rating()</code> and <code>export_rating()</code> land, diagnose a fit with <code><a href="reference/rating_invariants.html">rating_invariants()</a></code>, <code><a href="reference/plot_rating_residuals.html">plot_rating_residuals()</a></code>, <code><a href="reference/flag_extrapolated_limbs.html">flag_extrapolated_limbs()</a></code> and <code><a href="reference/flag_influential_gaugings.html">flag_influential_gaugings()</a></code>, then apply it with <code><a href="reference/apply_rating.html">apply_rating()</a></code>. A rating made by <code><a href="reference/fit_rating.html">fit_rating()</a></code> is applied only within the range it was gauged over until you state the range it may be used over with <code><a href="reference/set_operational_limits.html">set_operational_limits()</a></code>. Anyone who wants direct control can fit with <code><a href="reference/rate_optimise.html">rate_optimise()</a></code> instead. That route stays available afterwards for anyone who needs direct control. The <a href="https://jonpayneea.github.io/reach.rate/reference/">function reference</a> groups every export by the job it does.</p>
 </div>
 <div class="section level2">
 <h2 id="rating-curve-essentials">Rating curve essentials<a class="anchor" aria-label="anchor" href="#rating-curve-essentials"></a>

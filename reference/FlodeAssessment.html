@@ -8,8 +8,8 @@
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="The outcome of a set of checks (S7) — FlodeAssessment"><meta name="description" content="What validate_gaugings() returns, and what assess_rating() will. It
 holds one row per check, and does not know what was checked: the same
 class serves evidence now and a fitted rating later.
-Each check has a domain (what it is about) and a severity (what a
-non-pass raises), and the class holds it to its severity.
+Each check belongs to one of two domains, and the class holds it to that
+domain's rules.
 technical checks can pass, fail or be not_assessed. A
 failure means the data cannot be used as it stands.
 hydrometric checks can pass, raise a warning or be
@@ -22,8 +22,8 @@ not_assessed, never pass.
 The check table has these columns:
 columnmeaning
 check_ida stable short name, unique within the assessment
-domaintechnical or hydrometric (the checks on gaugings and equations), or data, numerical, statistical, hydraulic, operational or provenance (the six domains of assess_rating())
-severitywhat a non-pass raises: error (the check can fail) or warning (it can only warn). Fixed for technical and hydrometric checks
+domaintechnical or hydrometric
+severitywhat a non-pass raises: error for technical, warning for hydrometric
 statuspass, warning, fail or not_assessed
 messagewhat was found, in a sentence
 affected_evidencelist column; the evidence_ids concerned, empty when none
@@ -38,8 +38,8 @@ assessment_status(). print() lists what did not pass, and plot()
 draws every check by status."><meta property="og:description" content="What validate_gaugings() returns, and what assess_rating() will. It
 holds one row per check, and does not know what was checked: the same
 class serves evidence now and a fitted rating later.
-Each check has a domain (what it is about) and a severity (what a
-non-pass raises), and the class holds it to its severity.
+Each check belongs to one of two domains, and the class holds it to that
+domain's rules.
 technical checks can pass, fail or be not_assessed. A
 failure means the data cannot be used as it stands.
 hydrometric checks can pass, raise a warning or be
@@ -52,8 +52,8 @@ not_assessed, never pass.
 The check table has these columns:
 columnmeaning
 check_ida stable short name, unique within the assessment
-domaintechnical or hydrometric (the checks on gaugings and equations), or data, numerical, statistical, hydraulic, operational or provenance (the six domains of assess_rating())
-severitywhat a non-pass raises: error (the check can fail) or warning (it can only warn). Fixed for technical and hydrometric checks
+domaintechnical or hydrometric
+severitywhat a non-pass raises: error for technical, warning for hydrometric
 statuspass, warning, fail or not_assessed
 messagewhat was found, in a sentence
 affected_evidencelist column; the evidence_ids concerned, empty when none
@@ -117,18 +117,18 @@ draws every check by status."></head><body>
     </div>
 
     <div class="ref-description section level2">
-    <p>What <code><a href="validate_gaugings.html">validate_gaugings()</a></code> returns, and what <code><a href="assess_rating.html">assess_rating()</a></code> will. It
+    <p>What <code><a href="validate_gaugings.html">validate_gaugings()</a></code> returns, and what <code>assess_rating()</code> will. It
 holds one row per check, and does not know what was checked: the same
 class serves evidence now and a fitted rating later.</p>
-<p>Each check has a <strong>domain</strong> (what it is about) and a <strong>severity</strong> (what a
-non-pass raises), and the class holds it to its severity.</p><ul><li><p><strong>technical</strong> checks can <code>pass</code>, <code>fail</code> or be <code>not_assessed</code>. A
+<p>Each check belongs to one of two domains, and the class holds it to that
+domain's rules.</p><ul><li><p><strong>technical</strong> checks can <code>pass</code>, <code>fail</code> or be <code>not_assessed</code>. A
 failure means the data cannot be used as it stands.</p></li>
 <li><p><strong>hydrometric</strong> checks can <code>pass</code>, raise a <code>warning</code> or be
 <code>not_assessed</code>. A warning is a judgement for a person to make. No check
 ever removes or changes a row.</p></li>
 </ul><p>A check that could not run (the information it needs is absent) is
 <code>not_assessed</code>, never <code>pass</code>.</p>
-<p>The check table has these columns:</p><table class="table table"><tr><td>column</td><td>meaning</td></tr><tr><td><code>check_id</code></td><td>a stable short name, unique within the assessment</td></tr><tr><td><code>domain</code></td><td><code>technical</code> or <code>hydrometric</code> (the checks on gaugings and equations), or <code>data</code>, <code>numerical</code>, <code>statistical</code>, <code>hydraulic</code>, <code>operational</code> or <code>provenance</code> (the six domains of <code><a href="assess_rating.html">assess_rating()</a></code>)</td></tr><tr><td><code>severity</code></td><td>what a non-pass raises: <code>error</code> (the check can <code>fail</code>) or <code>warning</code> (it can only warn). Fixed for <code>technical</code> and <code>hydrometric</code> checks</td></tr><tr><td><code>status</code></td><td><code>pass</code>, <code>warning</code>, <code>fail</code> or <code>not_assessed</code></td></tr><tr><td><code>message</code></td><td>what was found, in a sentence</td></tr><tr><td><code>affected_evidence</code></td><td>list column; the <code>evidence_id</code>s concerned, empty when none</td></tr><tr><td><code>affected_stage_min_m</code>, <code>affected_stage_max_m</code></td><td>the stage range concerned, <code>NA</code> when none</td></tr><tr><td><code>recommendation</code></td><td>what to look at next</td></tr></table><p>Read it with <code><a href="assessment_checks.html">assessment_checks()</a></code> and summarise it with
+<p>The check table has these columns:</p><table class="table table"><tr><td>column</td><td>meaning</td></tr><tr><td><code>check_id</code></td><td>a stable short name, unique within the assessment</td></tr><tr><td><code>domain</code></td><td><code>technical</code> or <code>hydrometric</code></td></tr><tr><td><code>severity</code></td><td>what a non-pass raises: <code>error</code> for technical, <code>warning</code> for hydrometric</td></tr><tr><td><code>status</code></td><td><code>pass</code>, <code>warning</code>, <code>fail</code> or <code>not_assessed</code></td></tr><tr><td><code>message</code></td><td>what was found, in a sentence</td></tr><tr><td><code>affected_evidence</code></td><td>list column; the <code>evidence_id</code>s concerned, empty when none</td></tr><tr><td><code>affected_stage_min_m</code>, <code>affected_stage_max_m</code></td><td>the stage range concerned, <code>NA</code> when none</td></tr><tr><td><code>recommendation</code></td><td>what to look at next</td></tr></table><p>Read it with <code><a href="assessment_checks.html">assessment_checks()</a></code> and summarise it with
 <code><a href="assessment_status.html">assessment_status()</a></code>. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> lists what did not pass, and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>
 draws every check by status.</p>
     </div>
