@@ -1,5 +1,23 @@
 # reach.rate (development)
 
+* Tranche B8 of the improvement plan: the documentation, rebuilt around a
+  reader. **`vignette("start_here")`** opens with a file, not with the
+  package: it reads a CSV of gaugings (a synthetic station in the layout of an
+  Environment Agency export, shipped as `inst/extdata/example_gaugings.csv`,
+  with faults put in on purpose), checks it, fits a rating, draws it, assesses
+  it, applies it with support classes and operational limits, and tests how
+  much it depends on the highest gaugings. It uses the six-function workflow
+  and says what is not built yet. **`vignette("glossary")`** explains the words.
+  **Every vignette now declares its audience** (novice, practitioner,
+  technical or specialist) on its first line, and a test holds that. The
+  reference site has a new "Start here" group, and the workflow diagram is
+  drawn with Mermaid on the site (in an installed vignette, without the
+  script, it shows as readable source text).
+
+  `station_gaugings` is relabelled **teaching data**, with a note that it is not
+  to be used to build an operational rating, and the README leads with the
+  starting point.
+
 * Tranche B7 of the improvement plan: one plot grammar. **`autoplot()` and
   `plot()`** now draw a `FlodeRating`, `FlodeSegmentedRating` or
   `FlodeRatingTable` and return a ggplot2 object, so the plot can be added to,

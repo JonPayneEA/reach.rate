@@ -1,0 +1,122 @@
+---
+title: "Glossary"
+author: "Jonathan Payne, Environment Agency Flood Forecasting"
+date: "November 2026"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Glossary}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, echo = TRUE, collapse = TRUE, comment = "#>")
+library(reach.rate)
+```
+
+**Audience:** novice. The words used across the package and its guides, in plain
+terms, with where to look for more.
+
+# The river and the measurement
+
+**Stage.** The height of the water surface above a fixed reference at a gauge,
+in metres. Easy to measure all the time.
+
+**Discharge.** The volume of water passing a point per second, in cubic metres
+per second (cumecs). Hard to measure continuously, which is the reason for a
+rating.
+
+**Gauging.** One measurement of discharge, made by a person or an instrument,
+with the stage noted at the same time. Also called a spot gauging.
+
+**Control.** The feature of the channel that fixes the relationship between
+stage and discharge: a weir crest, a riffle, a constriction, the channel itself
+at high flow. When the control changes, the rating changes.
+
+# The rating
+
+**Rating curve.** The relationship between stage and discharge at a station, so
+that a stage record can be turned into a discharge record.
+
+**Limb.** One part of a rating, over one range of stage, with its own equation. A
+rating with one control has one limb.
+
+**Breakpoint.** The stage where one limb ends and the next begins, usually where
+the control changes.
+
+**The rating equation.** $Q = C\,(H - a)^n$ for each limb. See
+`vignette("mathematical_contract")`.
+
+**Zero-flow stage ($a$).** The stage at which flow stops. Below it the equation
+gives no discharge.
+
+**Exponent ($n$).** How steeply discharge rises with stage. A wide channel
+control is near 1.5 and a steep V-notch near 2.5.
+
+**Coefficient ($C$).** A scale factor that depends on the channel and on $n$.
+
+**Interpolation and extrapolation.** Interpolation is giving a discharge for a
+stage among the gaugings. Extrapolation is giving one beyond them, which rests on
+the equation and not on measurement.
+
+# Fitting
+
+**Objective.** What the fit tries to make small. The **absolute** objective
+minimises error in discharge; the **relative** objective minimises error in the
+logarithm of discharge, which suits errors that scale with the reading.
+
+**Converged.** The optimiser reported that it had settled on an answer. It is a
+statement about the search, not about whether the answer is any good.
+
+**Multi-start.** Fitting from several starting guesses and keeping the best, to
+avoid a poor local answer.
+
+**Bootstrap.** Refitting to many resamples of the gaugings to see how much the
+answer would have varied. It shows the effect of having only these gaugings, not
+every source of uncertainty.
+
+**Residual.** The difference between a gauging and the fitted curve.
+
+**Leverage and influence.** How much a single gauging pulls on the fit. A
+gauging far from the others in stage has high leverage.
+
+# What the package records
+
+**Evidence.** The observations a rating rests on, with a stable id for each row,
+its source, and whether it was used. See `FlodeEvidence`.
+
+**Source type.** What kind of evidence a row is: a `gauging` (a measurement), or
+modelled, cross-section, structure-equation or operational-rating evidence, which
+are not measurements.
+
+**Provenance.** How a rating was made: the call, the seed, what was left out and
+why, the version of the software.
+
+**Fit origin.** How a rating came to be: fitted directly, or changed since
+(aligned, extended, grafted).
+
+**Lifecycle.** Where a rating stands in review: `draft`, `under_review`,
+`approved`, `superseded` or `withdrawn`. The package never sets `approved`.
+
+**Operational limits.** The stage range a rating may be used over, a decision with
+a stated basis.
+
+**Support.** What a stage rests on: the gaugings, modelled evidence, the equation
+alone, or an extrapolation. See `rating_support()`.
+
+# Checking
+
+**Invariant.** A property a rating's equations must have to be usable, such as
+finite positive coefficients or discharge that does not fall as stage rises. A
+rating that fails one is not applied.
+
+**Fail and warning.** A *fail* means the data or equations cannot be used as they
+stand. A *warning* is a judgement for a person.
+
+**Not assessed.** A check that could not be run because the information it needs
+is absent. It is never reported as a pass.
+
+**Sensitivity.** How much the discharge changes if the evidence or a choice is
+changed, such as leaving a gauging out or moving a breakpoint.

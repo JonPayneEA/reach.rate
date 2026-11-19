@@ -3,7 +3,7 @@
 \docType{data}
 \name{station_gaugings}
 \alias{station_gaugings}
-\title{Spot gaugings for a real UK gauging station}
+\title{Teaching data: spot gaugings from a UK gauging station}
 \format{
 A \link[data.table:data.table]{data.table::data.table} with 223 rows and 3 columns:
 \describe{
@@ -20,10 +20,14 @@ station.
 station_gaugings
 }
 \description{
-A real spot-gauging record spanning 1974 to 2024, provided as an example
-of the messiness of an actual station history: irregular gauging
-intervals, decades-long gaps, a handful of high-flow gaugings among many
-low-flow ones, and one gauging recorded at zero stage.
+\strong{Teaching data, for learning the package and for the examples. Do not
+use it to build a rating for operational use.} It is a spot-gauging
+record spanning 1974 to 2024, provided as an example of the messiness of an
+actual station history: irregular gauging intervals, decades-long gaps, a
+handful of high-flow gaugings among many low-flow ones, and one gauging
+recorded at zero stage. For a file to read from disk, see the synthetic
+\code{example_gaugings.csv} in \code{system.file("extdata", package = "reach.rate")}
+and \code{vignette("start_here")}.
 }
 \details{
 One gauging (17 November 1976) was recorded at \code{stage_m = 0} with a
@@ -37,7 +41,7 @@ example below rather than passed to \code{\link[=rate_optimise]{rate_optimise()}
 dt <- station_gaugings[station_gaugings$stage_m > 0, ]
 fit <- rate_optimise(dt$discharge_cms, dt$stage_m)
 fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
-rating_plot(fit)
+autoplot(fit)
 
 }
 \keyword{datasets}

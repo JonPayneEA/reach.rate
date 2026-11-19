@@ -5,6 +5,8 @@
 [![test-coverage](https://github.com/JonPayneEA/reach.rate/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/JonPayneEA/reach.rate/actions/workflows/test-coverage.yaml)
 <!-- badges: end -->
 
+**New here?** Start with `vignette("start_here")`, which takes one file of gaugings to a rating, or read it [on the website](https://jonpayneea.github.io/reach.rate/articles/start_here.html). The words used are in `vignette("glossary")`.
+
 Tools for fitting, diagnosing, and applying hydrometric rating curves: multi-limb power-law fitting by nonlinear least squares, junction-gap detection and resolution between independently-fitted limbs, a segmented joint-model alternative (Hodson et al. 2024), bootstrap and closed-form coefficient uncertainty, leverage/influence diagnostics, opt-in age-based recency weighting, versioned ratings, and rating-amendment comparison. Beyond gauging-based fitting: a Manning's-equation rating from a surveyed cross-section alone, and standard weir/flume discharge equations (rectangular, V-notch, Cipoletti, Parshall flume) with GUM-style propagated uncertainty.
 
 Fitted ratings are represented as [S7](https://rconsortium.github.io/S7/) classes (`FlodeRating`, `FlodeSegmentedRating`, `FlodeRatingTable`) that carry their own gaugings, fitting bookkeeping, and provenance, so a rating is never separated from the data and assumptions that produced it.
