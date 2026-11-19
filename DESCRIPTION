@@ -25,6 +25,7 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Collate:
+    's7_external.R'
     'flode_evidence.R'
     'flode_classes.R'
     'accessors.R'

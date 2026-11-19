@@ -234,7 +234,7 @@ assessment_status <- function(x) {
 #' @param x A [FlodeAssessment].
 #' @param ... Unused.
 #' @noRd
-method(print, FlodeAssessment) <- function(x, ...) {
+method(.s7_print, FlodeAssessment) <- function(x, ...) {
   chk <- x@checks
   counts <- vapply(.assessment_statuses, function(s) sum(chk$status == s), integer(1))
   cat(sprintf(
@@ -296,7 +296,7 @@ method(print, FlodeAssessment) <- function(x, ...) {
 }
 
 #' @noRd
-method(plot, FlodeAssessment) <- function(x, y, ...) .plot_assessment(x)
+method(.s7_plot, FlodeAssessment) <- function(x, y, ...) .plot_assessment(x)
 
 #' @noRd
-method(autoplot, FlodeAssessment) <- function(object, ...) .plot_assessment(object)
+method(.s7_autoplot, FlodeAssessment) <- function(object, ...) .plot_assessment(object)

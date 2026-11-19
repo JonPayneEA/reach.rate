@@ -238,15 +238,15 @@ ggplot2::autoplot
 NULL
 
 #' @noRd
-method(autoplot, FlodeRating) <- function(object, n_points = 200L, band = TRUE, support = TRUE, ...) .plot_rating(object, n_points, band, support)
+method(.s7_autoplot, FlodeRating) <- function(object, n_points = 200L, band = TRUE, support = TRUE, ...) .plot_rating(object, n_points, band, support)
 #' @noRd
-method(autoplot, FlodeSegmentedRating) <- function(object, n_points = 200L, band = TRUE, support = TRUE, ...) .plot_rating(object, n_points, band, support)
+method(.s7_autoplot, FlodeSegmentedRating) <- function(object, n_points = 200L, band = TRUE, support = TRUE, ...) .plot_rating(object, n_points, band, support)
 #' @noRd
-method(autoplot, FlodeRatingTable) <- function(object, n_points = 200L, band = TRUE, support = TRUE, ...) .plot_rating(object, n_points, band, support)
+method(.s7_autoplot, FlodeRatingTable) <- function(object, n_points = 200L, band = TRUE, support = TRUE, ...) .plot_rating(object, n_points, band, support)
 
 #' @noRd
-method(plot, FlodeRating) <- function(x, y, n_points = 200L, band = TRUE, support = TRUE, ...) .plot_rating(x, n_points, band, support)
+method(.s7_plot, FlodeRating) <- function(x, y, n_points = 200L, band = TRUE, support = TRUE, ...) .plot_rating(x, n_points, band, support)
 #' @noRd
-method(plot, FlodeSegmentedRating) <- function(x, y, n_points = 200L, band = TRUE, support = TRUE, ...) .plot_rating(x, n_points, band, support)
+method(.s7_plot, FlodeSegmentedRating) <- function(x, y, n_points = 200L, band = TRUE, support = TRUE, ...) .plot_rating(x, n_points, band, support)
 #' @noRd
-method(plot, FlodeRatingTable) <- function(x, y, n_points = 200L, band = TRUE, support = TRUE, ...) .plot_rating(x, n_points, band, support)
+method(.s7_plot, FlodeRatingTable) <- function(x, y, n_points = 200L, band = TRUE, support = TRUE, ...) .plot_rating(x, n_points, band, support)

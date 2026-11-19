@@ -1,5 +1,13 @@
 # reach.rate (development)
 
+* **Fix: `autoplot()` under S7 1.0.0.** Registering S7 methods with
+  `method(autoplot, Class) <- fn` assigns its result back to `autoplot`, and
+  under S7 1.0.0 that result is a placeholder, which replaced the real
+  function and left the exported `autoplot()` unusable (`print` and `plot`
+  were replaced inside the namespace in the same way). Methods are now
+  registered against separate handles in `R/s7_external.R`, which works on
+  every S7 version. A test holds that the real functions stay in place.
+
 * Tranche B8 of the improvement plan: the documentation, rebuilt around a
   reader. **`vignette("start_here")`** opens with a file, not with the
   package: it reads a CSV of gaugings (a synthetic station in the layout of an
