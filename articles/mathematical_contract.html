@@ -200,6 +200,57 @@ discharge or <code>NA</code> gives <code>NA</code> stage, because zero
 discharge corresponds to every stage at or below <span class="math inline">\(a\)</span> and has no single answer. The inverse
 is only defined where discharge rises across the limbs; it refuses a
 rating where it does not.</p>
+<div class="section level3">
+<h3 id="how-well-a-stage-is-supported">How well a stage is supported<a class="anchor" aria-label="anchor" href="#how-well-a-stage-is-supported"></a>
+</h3>
+<p><code><a href="../reference/apply_rating.html">apply_rating()</a></code> does not only compute a discharge. It
+says what the stage rests on, in a <code>support</code> column, by
+comparing it with five stage ranges (<code><a href="../reference/rating_support.html">rating_support()</a></code>): the
+range of the <strong>gaugings</strong>, the range of any
+<strong>modelled</strong> evidence, the range the equations are
+<strong>fitted</strong> over, the <strong>operational</strong> range if
+one has been stated, and the <strong>numerical</strong> range where the
+equations give a finite number.</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th><code>support</code></th>
+<th>the stage is</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>interpolation_observed</code></td>
+<td>inside the range of the gaugings</td>
+</tr>
+<tr class="even">
+<td><code>interpolation_mixed</code></td>
+<td>inside the range of all the evidence, but outside the gaugings</td>
+</tr>
+<tr class="odd">
+<td><code>model_supported</code></td>
+<td>inside the fitted range, with no evidence there</td>
+</tr>
+<tr class="even">
+<td><code>extrapolation</code></td>
+<td>beyond the fitted range</td>
+</tr>
+<tr class="odd">
+<td><code>outside_operational_range</code></td>
+<td>beyond the stated operational limits (this outranks the rest)</td>
+</tr>
+</tbody>
+</table>
+<p>Only gaugings count as observation. A modelled value, a cross-section
+or structure computation, and a point read off another rating are
+evidence that shapes a rating, and are kept apart from measurements. A
+stage beyond the numerical range is an error, since the discharge would
+not be a number. Support is a statement about the evidence, not the fit
+statistics: a limb that fits its gaugings very closely is still an
+extrapolation above the highest of them.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="the-two-objectives">The two objectives<a class="anchor" aria-label="anchor" href="#the-two-objectives"></a>

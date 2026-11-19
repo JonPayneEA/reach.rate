@@ -108,10 +108,26 @@ one-column table named by <code>stage_col</code>.</p></li>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p><code>stage_dt</code> as a data.table (or, for a vector input, a table
-holding the stage values) with two columns added: <code>out_col</code> (the
-computed discharge) and <code>extrapolated</code> (logical; <code>TRUE</code> where the
-stage fell outside the range the rating covers, as defined for each
-class above).</p>
+holding the stage values) with three columns added: <code>out_col</code> (the
+computed discharge), <code>extrapolated</code> (logical; <code>TRUE</code> where the stage
+fell outside the range the rating covers, as defined for each class
+above) and <code>support</code>, which says how well supported that stage is:</p><ul><li><p><code>"interpolation_observed"</code>: inside the stage range of the gaugings;</p></li>
+<li><p><code>"interpolation_mixed"</code>: inside the range of all the evidence but
+outside the gaugings, so it rests on modelled evidence (a modelled
+value, a cross-section or structure computation, a point read off
+another rating);</p></li>
+<li><p><code>"model_supported"</code>: inside the range the equations are declared over
+but with no evidence there, as after <code><a href="extend_rating_low.html">extend_rating_low()</a></code> or
+<code><a href="graft_rating.html">graft_rating()</a></code>; also what a table, which holds equations only, gives
+within its range;</p></li>
+<li><p><code>"extrapolation"</code>: beyond the range the equations are declared over;</p></li>
+<li><p><code>"outside_operational_range"</code>: beyond the operational limits, if
+stated. It outranks the others.</p></li>
+</ul><p><code>NA</code> where the stage is <code>NA</code>. A stage beyond the numerical range of the
+rating (where its top limb's equation overflows) is an error, because
+the result would not be a number. See <code><a href="rating_support.html">rating_support()</a></code> for the ranges.</p>
+<p>A rating made by <code><a href="fit_rating.html">fit_rating()</a></code> is stricter: it refuses stages outside
+its operational limits, or outside its gauged range if none are stated.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -169,16 +185,16 @@ highest gauged stage is flagged <code>extrapolated = TRUE</code>.</p>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">flow_dt</span> <span class="op">&lt;-</span> <span class="fu">apply_rating</span><span class="op">(</span><span class="va">my_fit</span>, <span class="va">stage_dt</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 05:05:26] apply_rating(): 35 of 193 stage value(s) fell outside the rating and were extrapolated.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 05:27:33] apply_rating(): 35 of 193 stage value(s) fell outside the rating and were extrapolated.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">flow_dt</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               datetime     stage discharge extrapolated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 &lt;POSc&gt;     &lt;num&gt;     &lt;num&gt;       &lt;lgcl&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1: 2026-01-10 00:00:00 0.2779512 0.1136983         TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2: 2026-01-10 00:15:00 0.2940671 0.1306158         TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3: 2026-01-10 00:30:00 0.3104096 0.1486543        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4: 2026-01-10 00:45:00 0.3268280 0.1676437        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5: 2026-01-10 01:00:00 0.3431807 0.1873955        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6: 2026-01-10 01:15:00 0.3593381 0.2077105        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               datetime     stage discharge extrapolated         support</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 &lt;POSc&gt;     &lt;num&gt;     &lt;num&gt;       &lt;lgcl&gt;          &lt;char&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1: 2026-01-10 00:00:00 0.2779512 0.1136983         TRUE   extrapolation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2: 2026-01-10 00:15:00 0.2940671 0.1306158         TRUE   extrapolation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3: 2026-01-10 00:30:00 0.3104096 0.1486543        FALSE model_supported</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4: 2026-01-10 00:45:00 0.3268280 0.1676437        FALSE model_supported</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5: 2026-01-10 01:00:00 0.3431807 0.1873955        FALSE model_supported</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6: 2026-01-10 01:15:00 0.3593381 0.2077105        FALSE model_supported</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># How much of the record fell outside the rating's range?</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">flow_dt</span><span class="op">$</span><span class="va">extrapolated</span><span class="op">)</span></span></span>
@@ -232,19 +248,19 @@ highest gauged stage is flagged <code>extrapolated = TRUE</code>.</p>
 <span class="r-in"><span><span class="co"># A plain vector of stage values works too, and a fit from</span></span></span>
 <span class="r-in"><span><span class="co"># rate_optimise() can be used directly</span></span></span>
 <span class="r-in"><span><span class="fu">apply_rating</span><span class="op">(</span><span class="va">my_fit</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">1.5</span>, <span class="fl">3.0</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    stage  discharge extrapolated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;num&gt;      &lt;num&gt;       &lt;lgcl&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1:   0.5  0.4154976        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2:   1.5  4.3632457        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3:   3.0 19.3162711        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    stage  discharge extrapolated         support</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;num&gt;      &lt;num&gt;       &lt;lgcl&gt;          &lt;char&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:   0.5  0.4154976        FALSE model_supported</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:   1.5  4.3632457        FALSE model_supported</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:   3.0 19.3162711        FALSE model_supported</span>
 <span class="r-in"><span><span class="va">gaugings</span> <span class="op">&lt;-</span> <span class="va">station_gaugings</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">gaugings</span><span class="op">$</span><span class="va">discharge_cms</span>, <span class="va">gaugings</span><span class="op">$</span><span class="va">stage_m</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">apply_rating</span><span class="op">(</span><span class="va">fit</span>, <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">gaugings</span><span class="op">$</span><span class="va">stage_m</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    stage discharge extrapolated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;num&gt;     &lt;num&gt;       &lt;lgcl&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1: 0.179 0.4909471        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2: 0.211 0.6250359        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3: 0.289 0.9919259        FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    stage discharge extrapolated                support</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;num&gt;     &lt;num&gt;       &lt;lgcl&gt;                 &lt;char&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1: 0.179 0.4909471        FALSE interpolation_observed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2: 0.211 0.6250359        FALSE interpolation_observed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3: 0.289 0.9919259        FALSE interpolation_observed</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

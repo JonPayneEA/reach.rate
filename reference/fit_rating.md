@@ -180,20 +180,20 @@ fit
 
 # The rating can be applied within the range it was gauged over.
 apply_rating(fit, c(0.8, 1.5, 2.5))
-#>    stage discharge extrapolated
-#>    <num>     <num>       <lgcl>
-#> 1:   0.8  2.248384        FALSE
-#> 2:   1.5  6.174183        FALSE
-#> 3:   2.5 13.972011        FALSE
+#>    stage discharge extrapolated                support
+#>    <num>     <num>       <lgcl>                 <char>
+#> 1:   0.8  2.248384        FALSE interpolation_observed
+#> 2:   1.5  6.174183        FALSE interpolation_observed
+#> 3:   2.5 13.972011        FALSE interpolation_observed
 
 # To apply it more widely, state the range and why.
 wider <- set_operational_limits(fit, 0.2, 3.5, basis = "channel control confirmed to 3.5 m")
 apply_rating(wider, c(0.3, 3.4))
-#> INFO [2026-11-19 05:05:31] apply_rating(): 2 of 2 stage value(s) fell outside the rating and were extrapolated.
-#>    stage  discharge extrapolated
-#>    <num>      <num>       <lgcl>
-#> 1:   0.3  0.4536877         TRUE
-#> 2:   3.4 22.8178884         TRUE
+#> INFO [2026-11-19 05:27:39] apply_rating(): 2 of 2 stage value(s) fell outside the rating and were extrapolated.
+#>    stage  discharge extrapolated       support
+#>    <num>      <num>       <lgcl>        <char>
+#> 1:   0.3  0.4536877         TRUE extrapolation
+#> 2:   3.4 22.8178884         TRUE extrapolation
 
 # What the fit recorded.
 str(rating_provenance(fit)$fit_rating[c("call", "model", "objective", "n_used")])

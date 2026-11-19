@@ -69,11 +69,11 @@ rating_table
 #> 1:         0.0         1.2 2.500000     0   1.5
 #> 2:         1.2         3.0 2.410481     0   1.7
 apply_rating(rating_table, c(0.5, 1.5, 2.5))
-#>    stage  discharge extrapolated
-#>    <num>      <num>       <lgcl>
-#> 1:   0.5  0.8838835        FALSE
-#> 2:   1.5  4.8024058        FALSE
-#> 3:   2.5 11.4446292        FALSE
+#>    stage  discharge extrapolated         support
+#>    <num>      <num>       <lgcl>          <char>
+#> 1:   0.5  0.8838835        FALSE model_supported
+#> 2:   1.5  4.8024058        FALSE model_supported
+#> 3:   2.5 11.4446292        FALSE model_supported
 rating_history(rating_table)
 #>     step            class           fit_origin lifecycle n_limbs   note
 #>    <int>           <char>               <char>    <char>   <int> <char>

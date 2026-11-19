@@ -73,8 +73,8 @@ stage_dt <- data.table::data.table(
   stage = c(1.5, 1.5)
 )
 apply_rating_versioned(stage_dt, rating_history_dt)
-#>      datetime stage version discharge extrapolated
-#>        <POSc> <num>  <char>     <num>       <lgcl>
-#> 1: 2024-06-01   1.5      v1  5.739410        FALSE
-#> 2: 2025-12-01   1.5      v2  6.504665        FALSE
+#>      datetime stage version discharge extrapolated         support
+#>        <POSc> <num>  <char>     <num>       <lgcl>          <char>
+#> 1: 2024-06-01   1.5      v1  5.739410        FALSE model_supported
+#> 2: 2025-12-01   1.5      v2  6.504665        FALSE model_supported
 ```

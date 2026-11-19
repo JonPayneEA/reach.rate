@@ -48,6 +48,8 @@ apply_rating() from using one that cannot give a meaningful discharge.
 
 - [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md)
   : Check a set of gaugings
+- [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md)
+  : Assess a fitted rating
 - [`rating_invariants()`](https://jonpayneea.github.io/reach.rate/reference/rating_invariants.md)
   : Post-fit invariants of a rating
 - [`FlodeAssessment()`](https://jonpayneea.github.io/reach.rate/reference/FlodeAssessment.md)
@@ -89,7 +91,7 @@ a class does not hold it.
 - [`rating_diagnostics()`](https://jonpayneea.github.io/reach.rate/reference/rating_diagnostics.md)
   : Fit diagnostics of a rating
 - [`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md)
-  : Gauged support for a rating
+  : What a rating rests on
 - [`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md)
   : Bootstrap draws of a rating
 - [`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md)

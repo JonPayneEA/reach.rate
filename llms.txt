@@ -48,17 +48,14 @@ target is six functions:
 | Import your gaugings | [`read_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/read_gaugings.md) | available |
 | Check them | [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md) | available |
 | Fit a candidate rating | [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md) | available |
-| Assess it | `assess_rating()` | planned |
+| Assess it | [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md) | available |
 | Compare with the current rating | [`compare_ratings()`](https://jonpayneea.github.io/reach.rate/reference/compare_ratings.md) | available |
 | Export it | `export_rating()` | planned |
 
-Until `assess_rating()` and `export_rating()` land, diagnose a fit with
-[`rating_invariants()`](https://jonpayneea.github.io/reach.rate/reference/rating_invariants.md),
-[`plot_rating_residuals()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_residuals.md),
-[`flag_extrapolated_limbs()`](https://jonpayneea.github.io/reach.rate/reference/flag_extrapolated_limbs.md)
-and
-[`flag_influential_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/flag_influential_gaugings.md),
-then apply it with
+Until `export_rating()` lands, assess a fit with
+[`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md),
+which reports on six domains (data, numerical, statistical, hydraulic,
+operational and provenance) without giving a score, then apply it with
 [`apply_rating()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating.md).
 A rating made by
 [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)
@@ -161,7 +158,8 @@ numbers.
   [`rating_evidence()`](https://jonpayneea.github.io/reach.rate/reference/rating_evidence.md)
   the gaugings it was fitted to,
   [`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md)
-  how much of each limb rests on gaugings,
+  the stage ranges it rests on (gauged, modelled, fitted, operational,
+  numerical),
   [`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md)
   the bootstrap draws when produced,
   [`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md)
@@ -435,6 +433,8 @@ apply_rating() from using one that cannot give a meaningful discharge.
 
 - [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md)
   : Check a set of gaugings
+- [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md)
+  : Assess a fitted rating
 - [`rating_invariants()`](https://jonpayneea.github.io/reach.rate/reference/rating_invariants.md)
   : Post-fit invariants of a rating
 - [`FlodeAssessment()`](https://jonpayneea.github.io/reach.rate/reference/FlodeAssessment.md)
@@ -476,7 +476,7 @@ a class does not hold it.
 - [`rating_diagnostics()`](https://jonpayneea.github.io/reach.rate/reference/rating_diagnostics.md)
   : Fit diagnostics of a rating
 - [`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md)
-  : Gauged support for a rating
+  : What a rating rests on
 - [`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md)
   : Bootstrap draws of a rating
 - [`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md)

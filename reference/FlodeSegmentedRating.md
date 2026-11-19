@@ -129,9 +129,9 @@ rating_coefficients(fit)[, c("parameter", "estimate", "unit")]
 #> 6:       bp3  2.4000000            m
 #> 7:        n3  1.0517028            1
 apply_rating(fit, c(0.5, 1.5, 3))
-#>    stage discharge extrapolated
-#>    <num>     <num>       <lgcl>
-#> 1:   0.5  1.139443        FALSE
-#> 2:   1.5  6.748761        FALSE
-#> 3:   3.0 77.106058        FALSE
+#>    stage discharge extrapolated                support
+#>    <num>     <num>       <lgcl>                 <char>
+#> 1:   0.5  1.139443        FALSE interpolation_observed
+#> 2:   1.5  6.748761        FALSE interpolation_observed
+#> 3:   3.0 77.106058        FALSE interpolation_observed
 ```

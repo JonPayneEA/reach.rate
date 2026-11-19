@@ -47,9 +47,40 @@ apply_rating(fit, ...)
 ## Value
 
 `stage_dt` as a data.table (or, for a vector input, a table holding the
-stage values) with two columns added: `out_col` (the computed discharge)
-and `extrapolated` (logical; `TRUE` where the stage fell outside the
-range the rating covers, as defined for each class above).
+stage values) with three columns added: `out_col` (the computed
+discharge), `extrapolated` (logical; `TRUE` where the stage fell outside
+the range the rating covers, as defined for each class above) and
+`support`, which says how well supported that stage is:
+
+- `"interpolation_observed"`: inside the stage range of the gaugings;
+
+- `"interpolation_mixed"`: inside the range of all the evidence but
+  outside the gaugings, so it rests on modelled evidence (a modelled
+  value, a cross-section or structure computation, a point read off
+  another rating);
+
+- `"model_supported"`: inside the range the equations are declared over
+  but with no evidence there, as after
+  [`extend_rating_low()`](https://jonpayneea.github.io/reach.rate/reference/extend_rating_low.md)
+  or
+  [`graft_rating()`](https://jonpayneea.github.io/reach.rate/reference/graft_rating.md);
+  also what a table, which holds equations only, gives within its range;
+
+- `"extrapolation"`: beyond the range the equations are declared over;
+
+- `"outside_operational_range"`: beyond the operational limits, if
+  stated. It outranks the others.
+
+`NA` where the stage is `NA`. A stage beyond the numerical range of the
+rating (where its top limb's equation overflows) is an error, because
+the result would not be a number. See
+[`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md)
+for the ranges.
+
+A rating made by
+[`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md)
+is stricter: it refuses stages outside its operational limits, or
+outside its gauged range if none are stated.
 
 ## Details
 
@@ -120,16 +151,16 @@ stage_dt <- data.table::data.table(
 )
 
 flow_dt <- apply_rating(my_fit, stage_dt)
-#> INFO [2026-11-19 05:05:26] apply_rating(): 35 of 193 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-19 05:27:33] apply_rating(): 35 of 193 stage value(s) fell outside the rating and were extrapolated.
 head(flow_dt)
-#>               datetime     stage discharge extrapolated
-#>                 <POSc>     <num>     <num>       <lgcl>
-#> 1: 2026-01-10 00:00:00 0.2779512 0.1136983         TRUE
-#> 2: 2026-01-10 00:15:00 0.2940671 0.1306158         TRUE
-#> 3: 2026-01-10 00:30:00 0.3104096 0.1486543        FALSE
-#> 4: 2026-01-10 00:45:00 0.3268280 0.1676437        FALSE
-#> 5: 2026-01-10 01:00:00 0.3431807 0.1873955        FALSE
-#> 6: 2026-01-10 01:15:00 0.3593381 0.2077105        FALSE
+#>               datetime     stage discharge extrapolated         support
+#>                 <POSc>     <num>     <num>       <lgcl>          <char>
+#> 1: 2026-01-10 00:00:00 0.2779512 0.1136983         TRUE   extrapolation
+#> 2: 2026-01-10 00:15:00 0.2940671 0.1306158         TRUE   extrapolation
+#> 3: 2026-01-10 00:30:00 0.3104096 0.1486543        FALSE model_supported
+#> 4: 2026-01-10 00:45:00 0.3268280 0.1676437        FALSE model_supported
+#> 5: 2026-01-10 01:00:00 0.3431807 0.1873955        FALSE model_supported
+#> 6: 2026-01-10 01:15:00 0.3593381 0.2077105        FALSE model_supported
 
 # How much of the record fell outside the rating's range?
 table(flow_dt$extrapolated)
@@ -183,17 +214,17 @@ ggplot(long_dt, aes(datetime, value)) +
 # A plain vector of stage values works too, and a fit from
 # rate_optimise() can be used directly
 apply_rating(my_fit, c(0.5, 1.5, 3.0))
-#>    stage  discharge extrapolated
-#>    <num>      <num>       <lgcl>
-#> 1:   0.5  0.4154976        FALSE
-#> 2:   1.5  4.3632457        FALSE
-#> 3:   3.0 19.3162711        FALSE
+#>    stage  discharge extrapolated         support
+#>    <num>      <num>       <lgcl>          <char>
+#> 1:   0.5  0.4154976        FALSE model_supported
+#> 2:   1.5  4.3632457        FALSE model_supported
+#> 3:   3.0 19.3162711        FALSE model_supported
 gaugings <- station_gaugings
 fit <- rate_optimise(gaugings$discharge_cms, gaugings$stage_m)
 apply_rating(fit, quantile(gaugings$stage_m, c(0.25, 0.5, 0.75)))
-#>    stage discharge extrapolated
-#>    <num>     <num>       <lgcl>
-#> 1: 0.179 0.4909471        FALSE
-#> 2: 0.211 0.6250359        FALSE
-#> 3: 0.289 0.9919259        FALSE
+#>    stage discharge extrapolated                support
+#>    <num>     <num>       <lgcl>                 <char>
+#> 1: 0.179 0.4909471        FALSE interpolation_observed
+#> 2: 0.211 0.6250359        FALSE interpolation_observed
+#> 3: 0.289 0.9919259        FALSE interpolation_observed
 ```

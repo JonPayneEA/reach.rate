@@ -76,22 +76,27 @@ rating_diagnostics(fit)           # how well it fits
 #>               <num>
 #> 1:         49.30585
 rating_support(fit)               # how much rests on gaugings
-#>     limb lower_stage_m upper_stage_m n_gaugings gauged_min_stage_m
-#>    <int>         <num>         <num>      <int>              <num>
-#> 1:     1           0.3             3         46                0.3
-#>    gauged_max_stage_m lower_unsupported_m upper_unsupported_m
-#>                 <num>               <num>               <num>
-#> 1:                  3                   0                   0
-#>    lower_unsupported_frac upper_unsupported_frac
-#>                     <num>                  <num>
-#> 1:                      0                      0
+#>          range lower_stage_m upper_stage_m n_evidence
+#>         <char>         <num>         <num>      <int>
+#> 1:    observed           0.3  3.000000e+00         46
+#> 2:    modelled            NA            NA          0
+#> 3:      fitted           0.3  3.000000e+00         NA
+#> 4: operational            NA            NA         NA
+#> 5:   numerical          -Inf 5.745029e+193         NA
+#>                                                                                                  basis
+#>                                                                                                 <char>
+#> 1:                                                         gaugings: evidence of source type 'gauging'
+#> 2: evidence of any other source type (modelled, cross-section, structure equation, operational rating)
+#> 3:                                                     the stage range the equations are declared over
+#> 4:                                                            not stated; see set_operational_limits()
+#> 5:                         where the equations give a finite discharge; beyond it apply_rating() fails
 
 apply_rating(fit, c(0.8, 1.6, 2.4))
-#>    stage discharge extrapolated
-#>    <num>     <num>       <lgcl>
-#> 1:   0.8  2.258455        FALSE
-#> 2:   1.6  6.812454        FALSE
-#> 3:   2.4 12.985022        FALSE
+#>    stage discharge extrapolated                support
+#>    <num>     <num>       <lgcl>                 <char>
+#> 1:   0.8  2.258455        FALSE interpolation_observed
+#> 2:   1.6  6.812454        FALSE interpolation_observed
+#> 3:   2.4 12.985022        FALSE interpolation_observed
 rating_plot(fit)
 
 ```

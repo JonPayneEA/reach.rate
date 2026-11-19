@@ -94,7 +94,8 @@ how well each limb fits,
 [`rating_evidence()`](https://jonpayneea.github.io/reach.rate/reference/rating_evidence.md)
 the gaugings it was fitted to,
 [`rating_support()`](https://jonpayneea.github.io/reach.rate/reference/rating_support.md)
-how much of each limb rests on gaugings,
+the stage ranges it rests on (gauged, modelled, fitted, operational,
+numerical),
 [`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md)
 the bootstrap draws when produced,
 [`rating_history()`](https://jonpayneea.github.io/reach.rate/reference/rating_history.md)
@@ -500,7 +501,7 @@ steps into flow records and forecast inputs.
 rating_table <- as_rating_table(fit)
 rc_raw_dt <- expand_rating_table(rating_table, step = 0.01)
 gaps_dt <- detect_rc_gaps(rc_raw_dt)
-#> INFO [2026-11-19 05:06:09] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-19 05:28:18] Checked 2 junction(s): 2 gap(s) flagged.
 gaps_dt
 #>    junction limb_lower limb_upper stage_break stage_lower_end stage_upper_start
 #>       <int>     <char>     <char>       <num>           <num>             <num>
@@ -551,11 +552,11 @@ boundary.
 ``` r
 
 rc_fixed_dt <- resolve_rc_gaps(rc_raw_dt, method = "midpoint")
-#> INFO [2026-11-19 05:06:09] Checked 2 junction(s): 2 gap(s) flagged.
-#> INFO [2026-11-19 05:06:09] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -> 11.42 | agreed Q = 8.6042
-#> INFO [2026-11-19 05:06:09] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -> 34.81 | agreed Q = 27.2512
+#> INFO [2026-11-19 05:28:18] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-19 05:28:18] Junction 1 (limbs 1/2, stage 1.6): gap 5.78 -> 11.42 | agreed Q = 8.6042
+#> INFO [2026-11-19 05:28:18] Junction 2 (limbs 2/3, stage 2.2): gap 19.69 -> 34.81 | agreed Q = 27.2512
 plot_rc_gaps(rc_raw_dt, rc_fixed_dt)
-#> INFO [2026-11-19 05:06:09] Checked 2 junction(s): 2 gap(s) flagged.
+#> INFO [2026-11-19 05:28:18] Checked 2 junction(s): 2 gap(s) flagged.
 ```
 
 ![](rating_curves_guide_files/figure-html/resolve-gaps-1.png)
@@ -802,11 +803,11 @@ points](rating_curves_guide_files/figure-html/segmented-fit-1.png)
 ``` r
 
 apply_rating(fit_seg, data.table(stage = c(0.5, 1.5, 3.0)))
-#>    stage  discharge extrapolated
-#>    <num>      <num>       <lgcl>
-#> 1:   0.5  0.9189104        FALSE
-#> 2:   1.5  6.8163567        FALSE
-#> 3:   3.0 76.7313788        FALSE
+#>    stage  discharge extrapolated                support
+#>    <num>      <num>       <lgcl>                 <char>
+#> 1:   0.5  0.9189104        FALSE interpolation_observed
+#> 2:   1.5  6.8163567        FALSE interpolation_observed
+#> 3:   3.0 76.7313788        FALSE interpolation_observed
 ```
 
 What this implementation deliberately does not reproduce: Hodson et
@@ -914,17 +915,17 @@ hydrograph_dt <- data.table(
 )
 
 flow_dt <- apply_rating(rating_table, hydrograph_dt, stage_col = "stage", out_col = "discharge_cms")
-#> INFO [2026-11-19 05:06:12] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-19 05:28:20] apply_rating(): 4 of 40 stage value(s) fell outside the rating and were extrapolated.
 sum(flow_dt$extrapolated) # stage values above the gauged range
 #> [1] 4
 flow_dt[c(1, 10, 20, 30, 40)]
-#>      datetime    stage discharge_cms extrapolated
-#>        <POSc>    <num>         <num>       <lgcl>
-#> 1: 2024-06-01 0.800000      2.205652        FALSE
-#> 2: 2026-08-20 2.221053     35.477817        FALSE
-#> 3: 2029-02-05 3.800000    100.283874         TRUE
-#> 4: 2031-07-25 2.378947     40.629287        FALSE
-#> 5: 2034-01-10 0.800000      2.205652        FALSE
+#>      datetime    stage discharge_cms extrapolated         support
+#>        <POSc>    <num>         <num>       <lgcl>          <char>
+#> 1: 2024-06-01 0.800000      2.205652        FALSE model_supported
+#> 2: 2026-08-20 2.221053     35.477817        FALSE model_supported
+#> 3: 2029-02-05 3.800000    100.283874         TRUE   extrapolation
+#> 4: 2031-07-25 2.378947     40.629287        FALSE model_supported
+#> 5: 2034-01-10 0.800000      2.205652        FALSE model_supported
 ```
 
 The step everything else builds towards: stage record in, discharge
@@ -955,7 +956,7 @@ already produced above.
 
 target_flows_dt <- data.table(discharge = c(5, 20, 60))
 apply_rating_inverse(aligned_result, target_flows_dt, discharge_col = "discharge", out_col = "stage_m")
-#> INFO [2026-11-19 05:06:12] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-19 05:28:20] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.
 #>    discharge  stage_m extrapolated
 #>        <num>    <num>       <lgcl>
 #> 1:         5 1.442813        FALSE
@@ -1001,15 +1002,15 @@ rating_history_dt <- data.table(
 )
 
 versioned_flow_dt <- apply_rating_versioned(hydrograph_dt, rating_history_dt)
-#> INFO [2026-11-19 05:06:12] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-19 05:28:21] apply_rating(): 4 of 35 stage value(s) fell outside the rating and were extrapolated.
 versioned_flow_dt[c(1, 10, 20, 30, 40)]
-#>      datetime    stage   version discharge extrapolated
-#>        <POSc>    <num>    <char>     <num>       <lgcl>
-#> 1: 2024-06-01 0.800000  pre-2025  2.799007        FALSE
-#> 2: 2026-08-20 2.221053 post-2025 16.491190        FALSE
-#> 3: 2029-02-05 3.800000 post-2025 38.941402         TRUE
-#> 4: 2031-07-25 2.378947 post-2025 18.406600        FALSE
-#> 5: 2034-01-10 0.800000 post-2025  3.218858        FALSE
+#>      datetime    stage   version discharge extrapolated         support
+#>        <POSc>    <num>    <char>     <num>       <lgcl>          <char>
+#> 1: 2024-06-01 0.800000  pre-2025  2.799007        FALSE model_supported
+#> 2: 2026-08-20 2.221053 post-2025 16.491190        FALSE model_supported
+#> 3: 2029-02-05 3.800000 post-2025 38.941402         TRUE   extrapolation
+#> 4: 2031-07-25 2.378947 post-2025 18.406600        FALSE model_supported
+#> 5: 2034-01-10 0.800000 post-2025  3.218858        FALSE model_supported
 ```
 
 Riverbeds erode and deposit, vegetation grows and is cleared, channels

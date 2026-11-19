@@ -2,12 +2,13 @@
 
 What
 [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md)
-returns, and what `assess_rating()` will. It holds one row per check,
-and does not know what was checked: the same class serves evidence now
-and a fitted rating later.
+returns, and what
+[`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md)
+will. It holds one row per check, and does not know what was checked:
+the same class serves evidence now and a fitted rating later.
 
-Each check belongs to one of two domains, and the class holds it to that
-domain's rules.
+Each check has a **domain** (what it is about) and a **severity** (what
+a non-pass raises), and the class holds it to its severity.
 
 - **technical** checks can `pass`, `fail` or be `not_assessed`. A
   failure means the data cannot be used as it stands.
@@ -25,8 +26,8 @@ The check table has these columns:
 |----|----|
 | column | meaning |
 | `check_id` | a stable short name, unique within the assessment |
-| `domain` | `technical` or `hydrometric` |
-| `severity` | what a non-pass raises: `error` for technical, `warning` for hydrometric |
+| `domain` | `technical` or `hydrometric` (the checks on gaugings and equations), or `data`, `numerical`, `statistical`, `hydraulic`, `operational` or `provenance` (the six domains of [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md)) |
+| `severity` | what a non-pass raises: `error` (the check can `fail`) or `warning` (it can only warn). Fixed for `technical` and `hydrometric` checks |
 | `status` | `pass`, `warning`, `fail` or `not_assessed` |
 | `message` | what was found, in a sentence |
 | `affected_evidence` | list column; the `evidence_id`s concerned, empty when none |
