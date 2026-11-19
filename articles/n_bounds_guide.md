@@ -1,5 +1,8 @@
 # Choosing n_bounds: A Cross-Section Guide
 
+**Audience:** practitioner. You know something about the channel control
+and want to constrain the exponent.
+
 [`vignette("non_standard_optimisation")`](https://jonpayneea.github.io/reach.rate/articles/non_standard_optimisation.md)
 covers `n_bounds` mechanically: what argument to pass, and a
 before/after comparison of the fit it produces. It doesn’t say how to

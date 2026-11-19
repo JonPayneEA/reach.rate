@@ -1,5 +1,8 @@
 # Absolute vs Relative: How the Two Fitting Objectives Actually Work
 
+**Audience:** practitioner. You are choosing between the absolute and
+relative objectives and want to know when they differ.
+
 [`vignette("non_standard_optimisation")`](https://jonpayneea.github.io/reach.rate/articles/non_standard_optimisation.md)
 covers `objective = "relative"` mechanically: what it does to a fit, and
 a worked comparison showing its `C`/`a`/`n` land closer to the truth on

@@ -1,9 +1,14 @@
-# Spot gaugings for a real UK gauging station
+# Teaching data: spot gaugings from a UK gauging station
 
-A real spot-gauging record spanning 1974 to 2024, provided as an example
-of the messiness of an actual station history: irregular gauging
-intervals, decades-long gaps, a handful of high-flow gaugings among many
-low-flow ones, and one gauging recorded at zero stage.
+**Teaching data, for learning the package and for the examples. Do not
+use it to build a rating for operational use.** It is a spot-gauging
+record spanning 1974 to 2024, provided as an example of the messiness of
+an actual station history: irregular gauging intervals, decades-long
+gaps, a handful of high-flow gaugings among many low-flow ones, and one
+gauging recorded at zero stage. For a file to read from disk, see the
+synthetic `example_gaugings.csv` in
+`system.file("extdata", package = "reach.rate")` and
+[`vignette("start_here")`](https://jonpayneea.github.io/reach.rate/articles/start_here.md).
 
 ## Usage
 
@@ -53,6 +58,6 @@ fit@limbs[, .(limb, C, a, n, rmse_cms, r_squared, n_obs)]
 #>     limb        C        a        n  rmse_cms r_squared n_obs
 #>    <int>    <num>    <num>    <num>     <num>     <num> <int>
 #> 1:     1 7.687527 0.116999 1.184888 0.7285289  0.857763   222
-rating_plot(fit)
+autoplot(fit)
 
 ```

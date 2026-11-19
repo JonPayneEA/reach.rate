@@ -1,5 +1,8 @@
 # The Mathematical Contract: What reach.rate Computes, Exactly
 
+**Audience:** technical. You need to know exactly what is computed, to
+check a rating against it or to reimplement it.
+
 This is the document to check a rating against. It states every equation
 the package fits and applies, the units, the rules for awkward values,
 how a fit is chosen, what “converged” means, and what each interval does

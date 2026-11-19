@@ -2,6 +2,7 @@ pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
+  glossary: glossary.html
   leverage_influence_guide: leverage_influence_guide.html
   mathematical_contract: mathematical_contract.html
   n_bounds_guide: n_bounds_guide.html
@@ -13,8 +14,9 @@ articles:
   recency_weighting_guide: recency_weighting_guide.html
   s7_objects_guide: s7_objects_guide.html
   segmented_model_guide: segmented_model_guide.html
+  start_here: start_here.html
   weir_flume_guide: weir_flume_guide.html
-last_built: 2026-11-19T07:46Z
+last_built: 2026-11-19T10:38Z
 urls:
   reference: https://jonpayneea.github.io/reach.rate/reference
   article: https://jonpayneea.github.io/reach.rate/articles

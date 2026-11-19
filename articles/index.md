@@ -1,5 +1,15 @@
 # Articles
 
+### Start here
+
+New to the package? Start with the first article, which takes one file
+of gaugings to a rating. Each article says who it is written for:
+novice, practitioner, technical or specialist.
+
+- [Start Here: From a File of Gaugings to a
+  Rating](https://jonpayneea.github.io/reach.rate/articles/start_here.md):
+- [Glossary](https://jonpayneea.github.io/reach.rate/articles/glossary.md):
+
 ### Guides
 
 - [Rating Curves: Theory, Functions, and

@@ -5,7 +5,14 @@
       fontURL: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/output/chtml/fonts/woff-v2"
     }
   };
-</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Plot a fitted rating curve (S7 generic) — rating_plot"><meta name="description" content="Draws a rating with discharge on the horizontal axis and stage on the
+</script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.4.10/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.4.10/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Plot a fitted rating curve (S7 generic) — rating_plot"><meta name="description" content="Superseded by autoplot() and plot(), which draw every rating class
+with one grammar and always return a ggplot2 object: gaugings shaped by
+source type with excluded ones muted, a bootstrap band, the stage ranges the
+rating rests on, units on the axes and the rating's status in the caption
+(see autoplot.FlodeRating). rating_plot() still works and is unchanged,
+but draws a FlodeRating in base graphics and offers none of that. It will
+warn in a later release and then be removed.
+Draws a rating with discharge on the horizontal axis and stage on the
 vertical. Dispatches on the class of fit, so the same call works
 whichever model produced the rating:
 FlodeRating: the gauged points with each limb's fitted curve drawn
@@ -17,7 +24,14 @@ FlodeRatingTable: each limb's curve in its own colour, so a kink or
 overlap at a junction can be seen, as a ggplot2 figure. A table holds
 no gaugings, so there are no points.
 
-"><meta property="og:description" content="Draws a rating with discharge on the horizontal axis and stage on the
+"><meta property="og:description" content="Superseded by autoplot() and plot(), which draw every rating class
+with one grammar and always return a ggplot2 object: gaugings shaped by
+source type with excluded ones muted, a bootstrap band, the stage ranges the
+rating rests on, units on the axes and the rating's status in the caption
+(see autoplot.FlodeRating). rating_plot() still works and is unchanged,
+but draws a FlodeRating in base graphics and offers none of that. It will
+warn in a later release and then be removed.
+Draws a rating with discharge on the horizontal axis and stage on the
 vertical. Dispatches on the class of fit, so the same call works
 whichever model produced the rating:
 FlodeRating: the gauged points with each limb's fitted curve drawn
@@ -29,7 +43,10 @@ FlodeRatingTable: each limb's curve in its own colour, so a kink or
 overlap at a junction can be seen, as a ggplot2 figure. A table holds
 no gaugings, so there are no points.
 
-"></head><body>
+"><script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -49,6 +66,10 @@ no gaugings, so there are no points.
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Start here</h6></li>
+    <li><a class="dropdown-item" href="../articles/start_here.html">Start Here: From a File of Gaugings to a Rating</a></li>
+    <li><a class="dropdown-item" href="../articles/glossary.html">Glossary</a></li>
+    <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
@@ -81,7 +102,14 @@ no gaugings, so there are no points.
     </div>
 
     <div class="ref-description section level2">
-    <p>Draws a rating with discharge on the horizontal axis and stage on the
+    <p><strong>Superseded by <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code></strong>, which draw every rating class
+with one grammar and always return a ggplot2 object: gaugings shaped by
+source type with excluded ones muted, a bootstrap band, the stage ranges the
+rating rests on, units on the axes and the rating's status in the caption
+(see <a href="autoplot.FlodeRating.html">autoplot.FlodeRating</a>). <code>rating_plot()</code> still works and is unchanged,
+but draws a <a href="FlodeRating.html">FlodeRating</a> in base graphics and offers none of that. It will
+warn in a later release and then be removed.</p>
+<p>Draws a rating with discharge on the horizontal axis and stage on the
 vertical. Dispatches on the class of <code>fit</code>, so the same call works
 whichever model produced the rating:</p><ul><li><p><a href="FlodeRating.html">FlodeRating</a>: the gauged points with each limb's fitted curve drawn
 over them, one colour per limb, in base graphics.</p></li>

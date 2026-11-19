@@ -170,10 +170,23 @@ Bootstrap coefficient draws propagated to a discharge interval.
 
 ## Plotting
 
-- [`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md)
-  : Plot a fitted rating curve (S7 generic)
+autoplot() and plot() draw any rating with one grammar and return a
+ggplot2 object; they also work on an assessment and a sensitivity
+analysis. rating_plot() is superseded by them. plot_rating_curves()
+overlays several ratings.
+
+- [`autoplot.FlodeRating`](https://jonpayneea.github.io/reach.rate/reference/autoplot.FlodeRating.md)
+  [`plot.FlodeRating`](https://jonpayneea.github.io/reach.rate/reference/autoplot.FlodeRating.md)
+  [`autoplot.FlodeSegmentedRating`](https://jonpayneea.github.io/reach.rate/reference/autoplot.FlodeRating.md)
+  [`autoplot.FlodeRatingTable`](https://jonpayneea.github.io/reach.rate/reference/autoplot.FlodeRating.md)
+  : Plot a rating with ggplot2
+- [`reexports`](https://jonpayneea.github.io/reach.rate/reference/reexports.md)
+  [`autoplot`](https://jonpayneea.github.io/reach.rate/reference/reexports.md)
+  : Objects exported from other packages
 - [`plot_rating_curves()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_curves.md)
   : Overlay multiple fitted ratings' curves for quick comparison
+- [`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md)
+  : Plot a fitted rating curve (S7 generic)
 
 ## Specialist hydraulics
 
@@ -251,7 +264,7 @@ building a rating from your own evidence.
 - [`demo_cross_section_rating()`](https://jonpayneea.github.io/reach.rate/reference/demo_cross_section_rating.md)
   : Demonstrate a river cross-section against its rating curve
 - [`station_gaugings`](https://jonpayneea.github.io/reach.rate/reference/station_gaugings.md)
-  : Spot gaugings for a real UK gauging station
+  : Teaching data: spot gaugings from a UK gauging station
 
 ## Deprecated
 

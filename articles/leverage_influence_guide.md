@@ -1,5 +1,8 @@
 # Leverage and Influence: Which Gaugings Are Steering Your Fit
 
+**Audience:** practitioner. You want to find the gaugings that move a
+fit most, and decide what to do about them.
+
 Here’s a question
 [`plot_rating_residuals()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_residuals.md)
 can’t answer: if one particular gauging had never been taken – lost in

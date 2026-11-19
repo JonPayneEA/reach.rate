@@ -5,6 +5,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/LICENSE.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/RATING_METHODS_RESEARCH.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/ROBUST_FITTING.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/articles/glossary.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/index.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/leverage_influence_guide.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/mathematical_contract.html</loc></url>
@@ -17,6 +18,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/recency_weighting_guide.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/s7_objects_guide.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/segmented_model_guide.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/articles/start_here.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/weir_flume_guide.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/authors.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/index.html</loc></url>
@@ -39,6 +41,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/assess_rating.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/assessment_checks.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/assessment_status.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/autoplot.FlodeRating.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/bootstrap_to_table.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/breakpoint_origins.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/check_limb_continuity.html</loc></url>
@@ -87,6 +90,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/read_gaugings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/read_operational_ratings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/read_summary.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/reexports.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/resolve_rc_gaps.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/run_demo.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/sensitivity_results.html</loc></url>

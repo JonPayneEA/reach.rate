@@ -1,5 +1,8 @@
 # Weir and Flume Equations: Structures, GUM Uncertainty, and Worked Examples
 
+**Audience:** specialist. You derive discharge from a structure or a
+surveyed cross-section instead of gaugings.
+
 Everything else in this package fits a rating to gaugings:
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
 estimates `C`/`a`/`n` by nonlinear least squares, and every uncertainty

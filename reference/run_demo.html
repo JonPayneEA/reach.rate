@@ -15,7 +15,10 @@ single pipeline: gaugings go in, a fitted multi-limb rating comes out,
 limbs that extrapolate beyond their own gaugings are flagged doubtful,
 the fit is bridged to a rating table and expanded to stage-discharge
 rows, junction gaps between independently-fitted limbs are detected
-and resolved, and both stages are plotted."></head><body>
+and resolved, and both stages are plotted."><script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -35,6 +38,10 @@ and resolved, and both stages are plotted."></head><body>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Start here</h6></li>
+    <li><a class="dropdown-item" href="../articles/start_here.html">Start Here: From a File of Gaugings to a Rating</a></li>
+    <li><a class="dropdown-item" href="../articles/glossary.html">Glossary</a></li>
+    <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
@@ -100,10 +107,10 @@ side effect. Default <code>TRUE</code>.</p></dd>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">run_demo</span><span class="op">(</span>plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 07:46:50] Checked 2 junction(s): 2 gap(s) flagged.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 07:46:50] Checked 2 junction(s): 2 gap(s) flagged.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 07:46:50] Junction 1 (limbs 1/2, stage 1.6): gap 5.73 -&gt; 11.56 | agreed Q = 8.6452</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 07:46:50] Junction 2 (limbs 2/3, stage 2.2): gap 19.7 -&gt; 34.74 | agreed Q = 27.2196</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 10:38:31] Checked 2 junction(s): 2 gap(s) flagged.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 10:38:31] Checked 2 junction(s): 2 gap(s) flagged.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 10:38:31] Junction 1 (limbs 1/2, stage 1.6): gap 5.73 -&gt; 11.56 | agreed Q = 8.6452</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 10:38:31] Junction 2 (limbs 2/3, stage 2.2): gap 19.7 -&gt; 34.74 | agreed Q = 27.2196</span>
 <span class="r-in"><span><span class="va">result</span><span class="op">$</span><span class="va">gaps</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    junction limb_lower limb_upper stage_break stage_lower_end stage_upper_start</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       &lt;int&gt;     &lt;char&gt;     &lt;char&gt;       &lt;num&gt;           &lt;num&gt;             &lt;num&gt;</span>

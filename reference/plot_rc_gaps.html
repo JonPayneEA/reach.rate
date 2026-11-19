@@ -23,7 +23,10 @@ dots bridge the colour seam where adjacent limbs meet post-resolution.
 Flagged gap junctions are marked with a dotted horizontal line; labels
 are pinned to the right margin and staggered vertically so they never
 overlap the curves or each other. A short segment connects each label
-back to its junction stage line."></head><body>
+back to its junction stage line."><script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -43,6 +46,10 @@ back to its junction stage line."></head><body>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Start here</h6></li>
+    <li><a class="dropdown-item" href="../articles/start_here.html">Start Here: From a File of Gaugings to a Rating</a></li>
+    <li><a class="dropdown-item" href="../articles/glossary.html">Glossary</a></li>
+    <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
@@ -163,10 +170,10 @@ invisibly so it can be further modified or saved with
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rc_raw_dt</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/rbindlist.html" class="external-link">rbindlist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">limb1_dt</span>, <span class="va">limb2_dt</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rc_fixed_dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="resolve_rc_gaps.html">resolve_rc_gaps</a></span><span class="op">(</span><span class="va">rc_raw_dt</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 07:46:43] Checked 1 junction(s): 1 gap(s) flagged.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 07:46:43] Junction 1 (limbs 1/2, stage 10): gap 37.66 -&gt; 32.66 | agreed Q = 35.16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 10:38:26] Checked 1 junction(s): 1 gap(s) flagged.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 10:38:26] Junction 1 (limbs 1/2, stage 10): gap 37.66 -&gt; 32.66 | agreed Q = 35.16</span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu">plot_rc_gaps</span><span class="op">(</span><span class="va">rc_raw_dt</span>, <span class="va">rc_fixed_dt</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 07:46:43] Checked 1 junction(s): 1 gap(s) flagged.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 10:38:26] Checked 1 junction(s): 1 gap(s) flagged.</span>
 <span class="r-plt img"><img src="plot_rc_gaps-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="co"># ggplot2::ggsave("rc_gap_check.png", p, width = 8, height = 6)</span></span></span>
 <span class="r-in"><span></span></span>

@@ -1,5 +1,8 @@
 # Rating Methods: How the Pieces Fit Together
 
+**Audience:** practitioner. How the pieces of the package fit together,
+as a tour with diagrams.
+
 This package started as one function,
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md),
 and one vignette. It is now five ways to build a rating, several ways to

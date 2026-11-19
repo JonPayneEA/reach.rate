@@ -1,5 +1,12 @@
 # reach.rate
 
+**New here?** Start with
+[`vignette("start_here")`](https://jonpayneea.github.io/reach.rate/articles/start_here.md),
+which takes one file of gaugings to a rating, or read it [on the
+website](https://jonpayneea.github.io/reach.rate/articles/start_here.html).
+The words used are in
+[`vignette("glossary")`](https://jonpayneea.github.io/reach.rate/articles/glossary.md).
+
 Tools for fitting, diagnosing, and applying hydrometric rating curves:
 multi-limb power-law fitting by nonlinear least squares, junction-gap
 detection and resolution between independently-fitted limbs, a segmented
@@ -178,8 +185,9 @@ numbers.
   lists the chain – an audit trail by construction, not by discipline.
 
 Three shared generics work across the classes:
-[`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md)
-draws whichever fit you hand it,
+[`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
+(or [`plot()`](https://rdrr.io/r/graphics/plot.default.html)) draws
+whichever rating you hand it,
 [`apply_rating()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating.md)
 converts stage to discharge with whichever representation you hold, and
 [`as_rating_table()`](https://jonpayneea.github.io/reach.rate/reference/as_rating_table.md)
@@ -252,7 +260,7 @@ discharge_cms <- true_coefs$C[true_limb] *
 fit <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2))
 rating_limbs(fit, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared)]
 
-rating_plot(fit)
+autoplot(fit)            # a ggplot2 object; plot(fit) gives the same
 
 # Independently-fitted limbs rarely meet exactly at their junctions --
 # detect the resulting discharge gap
@@ -555,10 +563,23 @@ Bootstrap coefficient draws propagated to a discharge interval.
 
 ## Plotting
 
-- [`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md)
-  : Plot a fitted rating curve (S7 generic)
+autoplot() and plot() draw any rating with one grammar and return a
+ggplot2 object; they also work on an assessment and a sensitivity
+analysis. rating_plot() is superseded by them. plot_rating_curves()
+overlays several ratings.
+
+- [`autoplot.FlodeRating`](https://jonpayneea.github.io/reach.rate/reference/autoplot.FlodeRating.md)
+  [`plot.FlodeRating`](https://jonpayneea.github.io/reach.rate/reference/autoplot.FlodeRating.md)
+  [`autoplot.FlodeSegmentedRating`](https://jonpayneea.github.io/reach.rate/reference/autoplot.FlodeRating.md)
+  [`autoplot.FlodeRatingTable`](https://jonpayneea.github.io/reach.rate/reference/autoplot.FlodeRating.md)
+  : Plot a rating with ggplot2
+- [`reexports`](https://jonpayneea.github.io/reach.rate/reference/reexports.md)
+  [`autoplot`](https://jonpayneea.github.io/reach.rate/reference/reexports.md)
+  : Objects exported from other packages
 - [`plot_rating_curves()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_curves.md)
   : Overlay multiple fitted ratings' curves for quick comparison
+- [`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md)
+  : Plot a fitted rating curve (S7 generic)
 
 ## Specialist hydraulics
 
@@ -636,7 +657,7 @@ building a rating from your own evidence.
 - [`demo_cross_section_rating()`](https://jonpayneea.github.io/reach.rate/reference/demo_cross_section_rating.md)
   : Demonstrate a river cross-section against its rating curve
 - [`station_gaugings`](https://jonpayneea.github.io/reach.rate/reference/station_gaugings.md)
-  : Spot gaugings for a real UK gauging station
+  : Teaching data: spot gaugings from a UK gauging station
 
 ## Deprecated
 
@@ -650,6 +671,16 @@ replacement.
   : Convert a fit's bootstrap draws into apply_rating_interval()'s input
 
 # Articles
+
+### Start here
+
+New to the package? Start with the first article, which takes one file
+of gaugings to a rating. Each article says who it is written for:
+novice, practitioner, technical or specialist.
+
+- [Start Here: From a File of Gaugings to a
+  Rating](https://jonpayneea.github.io/reach.rate/articles/start_here.md):
+- [Glossary](https://jonpayneea.github.io/reach.rate/articles/glossary.md):
 
 ### Guides
 

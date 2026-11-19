@@ -1,5 +1,8 @@
 # Non-Standard Rating Optimisation: When and Why
 
+**Audience:** practitioner. You want to go beyond the defaults: relative
+error, recency weighting and multi-start.
+
 ## Why deviate from the default fit
 
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)’s

@@ -1,5 +1,12 @@
 # reach.rate
 
+**New here?** Start with
+[`vignette("start_here")`](https://jonpayneea.github.io/reach.rate/articles/start_here.md),
+which takes one file of gaugings to a rating, or read it [on the
+website](https://jonpayneea.github.io/reach.rate/articles/start_here.html).
+The words used are in
+[`vignette("glossary")`](https://jonpayneea.github.io/reach.rate/articles/glossary.md).
+
 Tools for fitting, diagnosing, and applying hydrometric rating curves:
 multi-limb power-law fitting by nonlinear least squares, junction-gap
 detection and resolution between independently-fitted limbs, a segmented
@@ -178,8 +185,9 @@ numbers.
   lists the chain – an audit trail by construction, not by discipline.
 
 Three shared generics work across the classes:
-[`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md)
-draws whichever fit you hand it,
+[`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html)
+(or [`plot()`](https://rdrr.io/r/graphics/plot.default.html)) draws
+whichever rating you hand it,
 [`apply_rating()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating.md)
 converts stage to discharge with whichever representation you hold, and
 [`as_rating_table()`](https://jonpayneea.github.io/reach.rate/reference/as_rating_table.md)
@@ -252,7 +260,7 @@ discharge_cms <- true_coefs$C[true_limb] *
 fit <- rate_optimise(discharge_cms, stage_m, control = c(1.6, 2.2))
 rating_limbs(fit, all_columns = TRUE)[, .(limb, C, a, n, rmse_cms, r_squared)]
 
-rating_plot(fit)
+autoplot(fit)            # a ggplot2 object; plot(fit) gives the same
 
 # Independently-fitted limbs rarely meet exactly at their junctions --
 # detect the resulting discharge gap

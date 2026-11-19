@@ -63,7 +63,10 @@ relationship is not single-valued at all; no data available from a
 table alone can detect that condition, so this is a documented
 limitation, not a runtime check. Uncertainty propagation through the
 inverse (via the local derivative dH/dQ = 1/(C n (H-a)^{n-1})) is
-not included in this first version."></head><body>
+not included in this first version."><script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -83,6 +86,10 @@ not included in this first version."></head><body>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Start here</h6></li>
+    <li><a class="dropdown-item" href="../articles/start_here.html">Start Here: From a File of Gaugings to a Rating</a></li>
+    <li><a class="dropdown-item" href="../articles/glossary.html">Glossary</a></li>
+    <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
@@ -213,7 +220,7 @@ for the same junction check with more diagnostic detail.</p></div>
 <span class="r-in"><span><span class="va">rating_table</span> <span class="op">&lt;-</span> <span class="fu"><a href="FlodeRatingTable.html">FlodeRatingTable</a></span><span class="op">(</span>table <span class="op">=</span> <span class="va">rating_dt</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">discharge_dt</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span>discharge <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.0</span>, <span class="fl">5.0</span>, <span class="fl">20.0</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">apply_rating_inverse</span><span class="op">(</span><span class="va">rating_table</span>, <span class="va">discharge_dt</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 07:46:32] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> INFO [2026-11-19 10:38:19] apply_rating_inverse(): 1 of 3 discharge value(s) fell outside the rating and were extrapolated.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    discharge     stage extrapolated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        &lt;num&gt;     &lt;num&gt;       &lt;lgcl&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1:         1 0.5428835        FALSE</span>

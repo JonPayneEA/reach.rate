@@ -1,5 +1,8 @@
 # How the Segmented Model Actually Composes
 
+**Audience:** specialist. You want the joint segmented model of Hodson
+et al. (2024) in place of independent limbs.
+
 [`vignette("rating_curves_guide")`](https://jonpayneea.github.io/reach.rate/articles/rating_curves_guide.md)’s
 section on
 [`rate_optimise_segmented()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise_segmented.md)

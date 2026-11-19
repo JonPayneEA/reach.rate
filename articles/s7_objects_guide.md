@@ -1,5 +1,8 @@
 # Maintaining reach.rate's S7 classes
 
+**Audience:** technical. You maintain or extend the package: how the
+classes are built and how to add an accessor.
+
 **Audience: maintainers and contributors.** If you use the package to
 fit and apply ratings, you do not need this guide: read a rating through
 the accessor functions

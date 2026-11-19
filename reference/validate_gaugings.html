@@ -57,7 +57,10 @@ verdict, and outlier_mad sets how easily it speaks.
 The checks are meant for one station's gaugings, which is what a rating
 is built from. The inversion check compares every pair of gaugings and is
 skipped (not_assessed) beyond 10,000 usable rows; check an archive one
-station at a time."></head><body>
+station at a time."><script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+</script></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -77,6 +80,10 @@ station at a time."></head><body>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Start here</h6></li>
+    <li><a class="dropdown-item" href="../articles/start_here.html">Start Here: From a File of Gaugings to a Rating</a></li>
+    <li><a class="dropdown-item" href="../articles/glossary.html">Glossary</a></li>
+    <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
@@ -240,7 +247,7 @@ Hydrometric: <code>zero_discharge</code>, <code>duplicate_gaugings</code>,
 <span class="r-in"><span><span class="va">assessment</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;FlodeAssessment&gt; gaugings, 15 row(s) assessed. Overall: warning</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   11 pass, 2 warning, 0 fail, 3 not assessed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   [warning] stage_discharge_inversion: 1 gauging has in a stage-discharge inversion: a discharge more than 20% below that of a gauging at a lower stage.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   [warning] stage_discharge_inversion: 1 gauging is part of a stage-discharge inversion: a discharge more than 20% below that of a gauging at a lower stage.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [warning] outliers: 1 gauging lies off the curve of its neighbours in stage.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [not_assessed] read_issues: The table has no read_issue column, so reading problems could not be checked.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [not_assessed] temporal_coverage: No gauging has a date, so recency could not be judged.</span>

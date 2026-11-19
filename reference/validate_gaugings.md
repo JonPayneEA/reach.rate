@@ -144,7 +144,7 @@ assessment <- validate_gaugings(gaugings)
 assessment
 #> <FlodeAssessment> gaugings, 15 row(s) assessed. Overall: warning
 #>   11 pass, 2 warning, 0 fail, 3 not assessed
-#>   [warning] stage_discharge_inversion: 1 gauging has in a stage-discharge inversion: a discharge more than 20% below that of a gauging at a lower stage.
+#>   [warning] stage_discharge_inversion: 1 gauging is part of a stage-discharge inversion: a discharge more than 20% below that of a gauging at a lower stage.
 #>   [warning] outliers: 1 gauging lies off the curve of its neighbours in stage.
 #>   [not_assessed] read_issues: The table has no read_issue column, so reading problems could not be checked.
 #>   [not_assessed] temporal_coverage: No gauging has a date, so recency could not be judged.

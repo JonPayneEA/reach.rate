@@ -20,6 +20,10 @@
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Fit, Diagnose, and Apply Hydrometric Rating Curves">
 <meta name="description" content="Tools for fitting multi-limb power-law stage-discharge rating curves by nonlinear least squares, diagnosing fit quality (including leverage/influence and closed-form or bootstrap coefficient uncertainty), detecting and resolving discontinuities (&quot;junction gaps&quot;) between independently-fitted limbs, converting a fitted rating into a discharge time series, and documenting rating amendments. Includes a segmented joint-model parameterisation after Hodson et al. (2024), opt-in age-based recency weighting for gaugings, and versioned ratings for stations that have been re-rated over time. Beyond gauging-based fitting, also derives a rating from a surveyed cross-section alone via Mannings equation, and computes discharge for standard weir and flume structures (rectangular, V-notch, Cipoletti, Parshall flume) from their own published equations with GUM-style propagated uncertainty. Fitted ratings are represented as S7' classes that carry their own gaugings, fitting bookkeeping, and provenance, so a rating is never separated from the data and assumptions that produced it.">
 <meta property="og:description" content="Tools for fitting multi-limb power-law stage-discharge rating curves by nonlinear least squares, diagnosing fit quality (including leverage/influence and closed-form or bootstrap coefficient uncertainty), detecting and resolving discontinuities (&quot;junction gaps&quot;) between independently-fitted limbs, converting a fitted rating into a discharge time series, and documenting rating amendments. Includes a segmented joint-model parameterisation after Hodson et al. (2024), opt-in age-based recency weighting for gaugings, and versioned ratings for stations that have been re-rated over time. Beyond gauging-based fitting, also derives a rating from a surveyed cross-section alone via Mannings equation, and computes discharge for standard weir and flume structures (rectangular, V-notch, Cipoletti, Parshall flume) from their own published equations with GUM-style propagated uncertainty. Fitted ratings are represented as S7' classes that carry their own gaugings, fitting bookkeeping, and provenance, so a rating is never separated from the data and assumptions that produced it.">
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+</script>
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -43,6 +47,10 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Start here</h6></li>
+    <li><a class="dropdown-item" href="articles/start_here.html">Start Here: From a File of Gaugings to a Rating</a></li>
+    <li><a class="dropdown-item" href="articles/glossary.html">Glossary</a></li>
+    <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
     <li><a class="dropdown-item" href="articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
@@ -77,6 +85,7 @@
 </h1></div>
 <!-- badges: start -->
 
+<p><strong>New here?</strong> Start with <code><a href="articles/start_here.html">vignette("start_here")</a></code>, which takes one file of gaugings to a rating, or read it <a href="https://jonpayneea.github.io/reach.rate/articles/start_here.html">on the website</a>. The words used are in <code><a href="articles/glossary.html">vignette("glossary")</a></code>.</p>
 <p>Tools for fitting, diagnosing, and applying hydrometric rating curves: multi-limb power-law fitting by nonlinear least squares, junction-gap detection and resolution between independently-fitted limbs, a segmented joint-model alternative (Hodson et al. 2024), bootstrap and closed-form coefficient uncertainty, leverage/influence diagnostics, opt-in age-based recency weighting, versioned ratings, and rating-amendment comparison. Beyond gauging-based fitting: a Manning’s-equation rating from a surveyed cross-section alone, and standard weir/flume discharge equations (rectangular, V-notch, Cipoletti, Parshall flume) with GUM-style propagated uncertainty.</p>
 <p>Fitted ratings are represented as <a href="https://rconsortium.github.io/S7/" class="external-link">S7</a> classes (<code>FlodeRating</code>, <code>FlodeSegmentedRating</code>, <code>FlodeRatingTable</code>) that carry their own gaugings, fitting bookkeeping, and provenance, so a rating is never separated from the data and assumptions that produced it.</p>
 <div class="section level2">
@@ -170,7 +179,7 @@
 <li>
 <code>FlodeRatingTable</code> is the equation-table representation used for gap checking and application: <code>lower_level</code>, <code>upper_level</code>, <code>C</code>, <code>a</code>, <code>n</code> per limb, the same equation and sign convention as a <code>FlodeRating</code>. An amended table keeps the exact object it was amended from, and <code><a href="reference/rating_history.html">rating_history()</a></code> lists the chain – an audit trail by construction, not by discipline.</li>
 </ul>
-<p>Three shared generics work across the classes: <code><a href="reference/rating_plot.html">rating_plot()</a></code> draws whichever fit you hand it, <code><a href="reference/apply_rating.html">apply_rating()</a></code> converts stage to discharge with whichever representation you hold, and <code><a href="reference/as_rating_table.html">as_rating_table()</a></code> converts a fit to the table form. The class system chooses the right implementation; you use one name.</p>
+<p>Three shared generics work across the classes: <code><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot()</a></code> (or <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>) draws whichever rating you hand it, <code><a href="reference/apply_rating.html">apply_rating()</a></code> converts stage to discharge with whichever representation you hold, and <code><a href="reference/as_rating_table.html">as_rating_table()</a></code> converts a fit to the table form. The class system chooses the right implementation; you use one name.</p>
 <p>A fit remembers its own gaugings deliberately: every diagnostic, residual plot, and bootstrap in this toolkit needs the original data, and a rating separated from its gaugings is a rating you can no longer question.</p>
 </div>
 <div class="section level3">
@@ -207,7 +216,7 @@
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.6</span>, <span class="fl">2.2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/rating_limbs.html">rating_limbs</a></span><span class="op">(</span><span class="va">fit</span>, all_columns <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">limb</span>, <span class="va">C</span>, <span class="va">a</span>, <span class="va">n</span>, <span class="va">rmse_cms</span>, <span class="va">r_squared</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/rating_plot.html">rating_plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>            <span class="co"># a ggplot2 object; plot(fit) gives the same</span></span>
 <span></span>
 <span><span class="co"># Independently-fitted limbs rarely meet exactly at their junctions --</span></span>
 <span><span class="co"># detect the resulting discharge gap</span></span>

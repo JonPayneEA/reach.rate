@@ -1,5 +1,8 @@
 # Recency Weighting: The Maths Behind age_halflife
 
+**Audience:** specialist. You are weighting recent gaugings more heavily
+and need the derivation and its limits.
+
 A rating fitted from gaugings spanning many years implicitly treats a
 measurement from a decade ago as equally informative about *today’s*
 channel as one from last month. That’s usually wrong: riverbeds erode
