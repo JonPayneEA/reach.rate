@@ -58,6 +58,7 @@ target is six functions:
 | Assess it | [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md) | available |
 | Compare with the current rating | [`compare_ratings()`](https://jonpayneea.github.io/reach.rate/reference/compare_ratings.md) | available |
 | Export it | [`export_rating()`](https://jonpayneea.github.io/reach.rate/reference/export_rating.md), read back with [`import_rating()`](https://jonpayneea.github.io/reach.rate/reference/import_rating.md) | available |
+| Review it | [`rating_report()`](https://jonpayneea.github.io/reach.rate/reference/rating_report.md), one HTML page for a reviewer | available |
 
 Assess a fit with
 [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md),

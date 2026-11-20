@@ -89,6 +89,8 @@ reviewer and read it back exactly.
   : Write a rating and its assessment to a folder for review
 - [`import_rating()`](https://jonpayneea.github.io/reach.rate/reference/import_rating.md)
   : Read back a rating written by export_rating()
+- [`rating_report()`](https://jonpayneea.github.io/reach.rate/reference/rating_report.md)
+  : Write a review report for a rating
 
 ## Accessors
 

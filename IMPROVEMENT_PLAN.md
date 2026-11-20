@@ -392,8 +392,9 @@ valid, requiring review, reviewed and approved.
 
 **Release C: Review and reproducibility (P2), \#53.** Extend
 [`compare_ratings()`](https://jonpayneea.github.io/reach.rate/reference/compare_ratings.md)
-to evidence and support; `rating_report()` through a Quarto or R
-Markdown template regenerated from stored objects;
+to evidence and support;
+[`rating_report()`](https://jonpayneea.github.io/reach.rate/reference/rating_report.md)
+through a Quarto or R Markdown template regenerated from stored objects;
 [`export_rating()`](https://jonpayneea.github.io/reach.rate/reference/export_rating.md)
 and
 [`import_rating()`](https://jonpayneea.github.io/reach.rate/reference/import_rating.md)
