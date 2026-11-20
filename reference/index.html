@@ -225,7 +225,7 @@
       </dl></div><div class="section level2">
       <h2 id="using-a-rating">Using a rating<a class="anchor" aria-label="anchor" href="#using-a-rating"></a></h2>
 
-      <div class="section-desc"><p>Apply a fitted rating to a stage record, invert it, and compare it with the rating it replaces. The guided workflow (read_gaugings(), validate_gaugings(), fit_rating(), assess_rating(), export_rating()) is planned; see IMPROVEMENT_PLAN.md.</p></div>
+      <div class="section-desc"><p>Apply a fitted rating to a stage record, invert it, and compare it with the rating it replaces. The guided workflow (read_gaugings(), validate_gaugings(), fit_rating(), assess_rating(), export_rating()) is complete; export_rating() and import_rating() hand a rating to a reviewer and read it back exactly.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -259,6 +259,20 @@
 
         </dt>
         <dd>Plot a rating comparison: curves and their discharge difference</dd>
+
+        <dt>
+
+          <code><a href="export_rating.html">export_rating()</a></code>
+
+        </dt>
+        <dd>Write a rating and its assessment to a folder for review</dd>
+
+        <dt>
+
+          <code><a href="import_rating.html">import_rating()</a></code>
+
+        </dt>
+        <dd>Read back a rating written by export_rating()</dd>
       </dl></div><div class="section level2">
       <h2 id="accessors">Accessors<a class="anchor" aria-label="anchor" href="#accessors"></a></h2>
 

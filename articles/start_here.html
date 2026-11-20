@@ -358,7 +358,7 @@ a warning:</p>
 <span>  <span class="op">}</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: apply_rating(): 1 of 2 stage value(s) lie beyond the gauged range (0.301 to 2.876 m; stages 2.5 to 3.6 m) and are extrapolated. They are flagged 'extrapolation' in the support column. This rating has no operational limits: state the range it may be used over, and why, with set_operational_limits(x, lower, upper, basis).</span></span>
-<span><span class="co">#&gt; INFO [2026-11-20 07:57:14] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.</span></span>
+<span><span class="co">#&gt; INFO [2026-11-20 08:08:40] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.</span></span>
 <span><span class="va">out</span></span>
 <span><span class="co">#&gt;    stage discharge extrapolated                support</span></span>
 <span><span class="co">#&gt;    &lt;num&gt;     &lt;num&gt;       &lt;lgcl&gt;                 &lt;char&gt;</span></span>
@@ -373,7 +373,7 @@ and say why:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">limited</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/set_operational_limits.html">set_operational_limits</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fl">0.25</span>, <span class="fl">3.6</span>, basis <span class="op">=</span> <span class="st">"control confirmed by survey to 3.6 m"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">limited</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.5</span>, <span class="fl">3.6</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; INFO [2026-11-20 07:57:14] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.</span></span>
+<span><span class="co">#&gt; INFO [2026-11-20 08:08:40] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.</span></span>
 <span><span class="co">#&gt;    stage discharge extrapolated                support</span></span>
 <span><span class="co">#&gt;    &lt;num&gt;     &lt;num&gt;       &lt;lgcl&gt;                 &lt;char&gt;</span></span>
 <span><span class="co">#&gt; 1:   2.5  13.59745        FALSE interpolation_observed</span></span>
@@ -401,15 +401,42 @@ which is what you would expect, since the top is the part with the
 fewest gaugings behind it.</p>
 </div>
 <div class="section level2">
-<h2 id="what-is-not-here-yet">What is not here yet<a class="anchor" aria-label="anchor" href="#what-is-not-here-yet"></a>
+<h2 id="hand-it-on">Hand it on<a class="anchor" aria-label="anchor" href="#hand-it-on"></a>
 </h2>
-<p><code>export_rating()</code>, to write a rating and its assessment
-out for others to review, is planned and not built. Until it is, the
-rating object itself, saved with <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS()</a></code>, carries
-everything: the evidence with its ids, how it was fitted, what was left
-out and why, and its status.</p>
-<p>The lifecycle of every rating starts at <code>draft</code> and the
-package never moves it on. Approval is a decision for a person.</p>
+<p>A rating is only reviewed if someone else can open it.
+<code><a href="../reference/export_rating.html">export_rating()</a></code> writes the rating and its assessment to a
+folder:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">folder</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"example_weir_rating"</span><span class="op">)</span></span>
+<span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/export_rating.html">export_rating</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">assessment</span>, path <span class="op">=</span> <span class="va">folder</span><span class="op">)</span></span>
+<span><span class="va">out</span><span class="op">$</span><span class="va">files</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span><span class="va">file</span>, <span class="va">bytes</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;                     file bytes</span></span>
+<span><span class="co">#&gt;                   &lt;char&gt; &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:            rating.rds 14011</span></span>
+<span><span class="co">#&gt; 2:        assessment.rds  7188</span></span>
+<span><span class="co">#&gt; 3:             limbs.csv   106</span></span>
+<span><span class="co">#&gt; 4:      coefficients.csv   218</span></span>
+<span><span class="co">#&gt; 5:          evidence.csv  7505</span></span>
+<span><span class="co">#&gt; 6:           history.csv    89</span></span>
+<span><span class="co">#&gt; 7:           support.csv   472</span></span>
+<span><span class="co">#&gt; 8: assessment_checks.csv  6782</span></span>
+<span><span class="co">#&gt; 9:            README.txt  1549</span></span></code></pre></div>
+<p>The <code>.csv</code> files are the same content as plain tables, for
+a reviewer with a spreadsheet and no R. The <code>.rds</code> files are
+the record. <code>manifest.csv</code> lists every file with a checksum,
+so that <code><a href="../reference/import_rating.html">import_rating()</a></code> can tell if one was damaged or
+edited since:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">back</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/import_rating.html">import_rating</a></span><span class="op">(</span><span class="va">folder</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Logic.html" class="external-link">isTRUE</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">back</span><span class="op">$</span><span class="va">rating</span>, <span class="va">fit</span>, tolerance <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>That compares every value, with no tolerance. It is not
+<code><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical()</a></code>: no R object survives being written out and
+read back byte for byte, because <code>data.table</code> keeps internal
+pointers that differ each time. The values are the same.</p>
+<p>The lifecycle of every rating starts at <code>draft</code>, and
+neither exporting nor importing moves it on. Approval is a decision for
+a person.</p>
 </div>
 <div class="section level2">
 <h2 id="where-next">Where next<a class="anchor" aria-label="anchor" href="#where-next"></a>

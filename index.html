@@ -107,6 +107,11 @@
 </h2>
 <p>A rating should be built from evidence, checked, and only then applied. The package is being reorganised around that sequence (<a href="IMPROVEMENT_PLAN.html">improvement plan</a>). The target is six functions:</p>
 <table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
 <thead><tr>
 <th>Step</th>
 <th>Function</th>
@@ -140,12 +145,14 @@
 </tr>
 <tr>
 <td>Export it</td>
-<td><code>export_rating()</code></td>
-<td>planned</td>
+<td>
+<code><a href="reference/export_rating.html">export_rating()</a></code>, read back with <code><a href="reference/import_rating.html">import_rating()</a></code>
+</td>
+<td>available</td>
 </tr>
 </tbody>
 </table>
-<p>Until <code>export_rating()</code> lands, assess a fit with <code><a href="reference/assess_rating.html">assess_rating()</a></code>, which reports on six domains (data, numerical, statistical, hydraulic, operational and provenance) without giving a score, then apply it with <code><a href="reference/apply_rating.html">apply_rating()</a></code>. A rating made by <code><a href="reference/fit_rating.html">fit_rating()</a></code> extrapolates beyond its gauged range, because forecasting needs that, and flags every such value; state the range it may be used over with <code><a href="reference/set_operational_limits.html">set_operational_limits()</a></code> to make that a boundary. Anyone who wants direct control can fit with <code><a href="reference/rate_optimise.html">rate_optimise()</a></code> instead. That route stays available afterwards for anyone who needs direct control. The <a href="https://jonpayneea.github.io/reach.rate/reference/">function reference</a> groups every export by the job it does.</p>
+<p>Assess a fit with <code><a href="reference/assess_rating.html">assess_rating()</a></code>, which reports on six domains (data, numerical, statistical, hydraulic, operational and provenance) without giving a score, then apply it with <code><a href="reference/apply_rating.html">apply_rating()</a></code>. A rating made by <code><a href="reference/fit_rating.html">fit_rating()</a></code> extrapolates beyond its gauged range, because forecasting needs that, and flags every such value; state the range it may be used over with <code><a href="reference/set_operational_limits.html">set_operational_limits()</a></code> to make that a boundary. Anyone who wants direct control can fit with <code><a href="reference/rate_optimise.html">rate_optimise()</a></code> instead. That route stays available afterwards for anyone who needs direct control. The <a href="https://jonpayneea.github.io/reach.rate/reference/">function reference</a> groups every export by the job it does.</p>
 </div>
 <div class="section level2">
 <h2 id="rating-curve-essentials">Rating curve essentials<a class="anchor" aria-label="anchor" href="#rating-curve-essentials"></a>

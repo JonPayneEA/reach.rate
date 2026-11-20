@@ -57,9 +57,9 @@ target is six functions:
 | Fit a candidate rating | [`fit_rating()`](https://jonpayneea.github.io/reach.rate/reference/fit_rating.md) | available |
 | Assess it | [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md) | available |
 | Compare with the current rating | [`compare_ratings()`](https://jonpayneea.github.io/reach.rate/reference/compare_ratings.md) | available |
-| Export it | `export_rating()` | planned |
+| Export it | [`export_rating()`](https://jonpayneea.github.io/reach.rate/reference/export_rating.md), read back with [`import_rating()`](https://jonpayneea.github.io/reach.rate/reference/import_rating.md) | available |
 
-Until `export_rating()` lands, assess a fit with
+Assess a fit with
 [`assess_rating()`](https://jonpayneea.github.io/reach.rate/reference/assess_rating.md),
 which reports on six domains (data, numerical, statistical, hydraulic,
 operational and provenance) without giving a score, then apply it with

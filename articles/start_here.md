@@ -303,7 +303,7 @@ out <- withCallingHandlers(
   }
 )
 #> Warning: apply_rating(): 1 of 2 stage value(s) lie beyond the gauged range (0.301 to 2.876 m; stages 2.5 to 3.6 m) and are extrapolated. They are flagged 'extrapolation' in the support column. This rating has no operational limits: state the range it may be used over, and why, with set_operational_limits(x, lower, upper, basis).
-#> INFO [2026-11-20 07:57:14] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-20 08:08:40] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
 out
 #>    stage discharge extrapolated                support
 #>    <num>     <num>       <lgcl>                 <char>
@@ -322,7 +322,7 @@ say why:
 
 limited <- set_operational_limits(fit, 0.25, 3.6, basis = "control confirmed by survey to 3.6 m")
 apply_rating(limited, c(2.5, 3.6))
-#> INFO [2026-11-20 07:57:14] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-20 08:08:40] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
 #>    stage discharge extrapolated                support
 #>    <num>     <num>       <lgcl>                 <char>
 #> 1:   2.5  13.59745        FALSE interpolation_observed
@@ -354,16 +354,51 @@ Leaving out the highest gaugings moves the top of the curve most, which
 is what you would expect, since the top is the part with the fewest
 gaugings behind it.
 
-## What is not here yet
+## Hand it on
 
-`export_rating()`, to write a rating and its assessment out for others
-to review, is planned and not built. Until it is, the rating object
-itself, saved with [`saveRDS()`](https://rdrr.io/r/base/readRDS.html),
-carries everything: the evidence with its ids, how it was fitted, what
-was left out and why, and its status.
+A rating is only reviewed if someone else can open it.
+[`export_rating()`](https://jonpayneea.github.io/reach.rate/reference/export_rating.md)
+writes the rating and its assessment to a folder:
 
-The lifecycle of every rating starts at `draft` and the package never
-moves it on. Approval is a decision for a person.
+``` r
+
+folder <- file.path(tempdir(), "example_weir_rating")
+out <- export_rating(fit, assessment, path = folder)
+out$files[, .(file, bytes)]
+#>                     file bytes
+#>                   <char> <num>
+#> 1:            rating.rds 14011
+#> 2:        assessment.rds  7188
+#> 3:             limbs.csv   106
+#> 4:      coefficients.csv   218
+#> 5:          evidence.csv  7505
+#> 6:           history.csv    89
+#> 7:           support.csv   472
+#> 8: assessment_checks.csv  6782
+#> 9:            README.txt  1549
+```
+
+The `.csv` files are the same content as plain tables, for a reviewer
+with a spreadsheet and no R. The `.rds` files are the record.
+`manifest.csv` lists every file with a checksum, so that
+[`import_rating()`](https://jonpayneea.github.io/reach.rate/reference/import_rating.md)
+can tell if one was damaged or edited since:
+
+``` r
+
+back <- import_rating(folder)
+isTRUE(all.equal(back$rating, fit, tolerance = 0))
+#> [1] TRUE
+```
+
+That compares every value, with no tolerance. It is not
+[`identical()`](https://rdrr.io/r/base/identical.html): no R object
+survives being written out and read back byte for byte, because
+`data.table` keeps internal pointers that differ each time. The values
+are the same.
+
+The lifecycle of every rating starts at `draft`, and neither exporting
+nor importing moves it on. Approval is a decision for a person.
 
 ## Where next
 

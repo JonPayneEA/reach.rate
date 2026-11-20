@@ -74,7 +74,8 @@ apply_rating() from using one that cannot give a meaningful discharge.
 Apply a fitted rating to a stage record, invert it, and compare it with
 the rating it replaces. The guided workflow (read_gaugings(),
 validate_gaugings(), fit_rating(), assess_rating(), export_rating()) is
-planned; see IMPROVEMENT_PLAN.md.
+complete; export_rating() and import_rating() hand a rating to a
+reviewer and read it back exactly.
 
 - [`apply_rating()`](https://jonpayneea.github.io/reach.rate/reference/apply_rating.md)
   : Apply a fitted rating to a stage series (S7 generic)
@@ -84,6 +85,10 @@ planned; see IMPROVEMENT_PLAN.md.
   : Compare two rating equation tables
 - [`plot_rating_comparison()`](https://jonpayneea.github.io/reach.rate/reference/plot_rating_comparison.md)
   : Plot a rating comparison: curves and their discharge difference
+- [`export_rating()`](https://jonpayneea.github.io/reach.rate/reference/export_rating.md)
+  : Write a rating and its assessment to a folder for review
+- [`import_rating()`](https://jonpayneea.github.io/reach.rate/reference/import_rating.md)
+  : Read back a rating written by export_rating()
 
 ## Accessors
 

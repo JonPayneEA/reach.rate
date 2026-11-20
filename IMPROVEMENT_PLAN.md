@@ -393,12 +393,15 @@ valid, requiring review, reviewed and approved.
 **Release C: Review and reproducibility (P2), \#53.** Extend
 [`compare_ratings()`](https://jonpayneea.github.io/reach.rate/reference/compare_ratings.md)
 to evidence and support; `rating_report()` through a Quarto or R
-Markdown template regenerated from stored objects; `export_rating()` and
-`import_rating()` with round-trip tests; lifecycle metadata fields; a
-reference-case suite of the ten cases in P2.1 of the brief, tested on
-prediction envelopes rather than exact coefficients; schema migration; a
-release and deprecation policy. *Gate:* a competent analyst reproduces
-and reviews a rating without asking the author.
+Markdown template regenerated from stored objects;
+[`export_rating()`](https://jonpayneea.github.io/reach.rate/reference/export_rating.md)
+and
+[`import_rating()`](https://jonpayneea.github.io/reach.rate/reference/import_rating.md)
+with round-trip tests; lifecycle metadata fields; a reference-case suite
+of the ten cases in P2.1 of the brief, tested on prediction envelopes
+rather than exact coefficients; schema migration; a release and
+deprecation policy. *Gate:* a competent analyst reproduces and reviews a
+rating without asking the author.
 
 **Release D: Operational readiness (P2), \#54.** Mostly documents, not
 code: ownership, dependency inventory, limitations register, runbook,
