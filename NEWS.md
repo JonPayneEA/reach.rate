@@ -1,5 +1,20 @@
 # reach.rate (development)
 
+* Release C: **`compare_ratings()` now compares evidence and support**, so it can
+  answer "is the new rating better supported, or only different?" and not only
+  "how far did the coefficients move". It accepts fits (`FlodeRating`) as well as
+  tables. Two new elements join `coefficients` and `discharge`, which are
+  unchanged: **`support`**, old against new for each stage range (observed,
+  modelled, fitted, operational, numerical), with how far each bound moved and how
+  many observations lie in each; and, when both inputs are fits, **`evidence`**,
+  the observations matched by `evidence_id` and checked against their values, as
+  `shared`, `changed`, `added` or `removed`, with a one-row summary. Ids from a
+  converted plain table are positional, so two unrelated datasets can share ids;
+  such rows read as `changed`, not `shared`. A `FlodeSegmentedRating` is refused
+  with the reason, since its joint equation has no per-limb coefficients. The
+  column names used in `data.table` code from this and earlier tranches are now
+  declared, which removes the "no visible binding" note from `R CMD check`.
+
 * Release C: **`vignette("release_policy")`**, a proposed release and deprecation
   policy, marked as a proposal for the owner to accept or change. It sets out
   what counts as a breaking change (including a default that changes a result,
