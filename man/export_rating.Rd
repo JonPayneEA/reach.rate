@@ -33,7 +33,9 @@ The folder holds:
 \item \code{rating.rds} and, if given, \code{assessment.rds}. These are the record.
 \code{\link[=import_rating]{import_rating()}} reads them back exactly.
 \item \code{limbs.csv}, \code{coefficients.csv}, \code{evidence.csv}, \code{history.csv},
-\code{support.csv} and, with an assessment, \code{assessment_checks.csv}. The same
+\code{support.csv}, \code{lifecycle.csv} (only if someone has recorded a lifecycle
+change with \code{\link[=set_lifecycle]{set_lifecycle()}}) and, with an assessment,
+\code{assessment_checks.csv}. The same
 content as plain tables, for people, spreadsheets and other software. A
 column that holds a list (evidence \code{metadata}) is left out of the CSV and
 stays in the \code{.rds}. A table that does not apply to this class (a
