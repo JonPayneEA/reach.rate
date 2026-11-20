@@ -83,6 +83,7 @@ rating_history(rating_table)
 try(FlodeRatingTable(table = data.table::data.table(
   lower_level = c(0, 1.5), upper_level = c(1.2, 3), C = 2, a = 0, n = 1.5
 )))
-#> Error : <reach.rate::FlodeRatingTable> object is invalid:
+#> Error in FlodeRatingTable(table = data.table::data.table(lower_level = c(0,  : 
+#>   <reach.rate::FlodeRatingTable> object is invalid:
 #> - limbs must be contiguous (upper_level[i] == lower_level[i+1])
 ```

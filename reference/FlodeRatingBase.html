@@ -48,6 +48,7 @@ FlodeRating and FlodeSegmentedRating."><script type="module">
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
+    <li><a class="dropdown-item" href="../articles/thresholds.html">Thresholds: What the Checks Flag, and Why</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
     <li><a class="dropdown-item" href="../articles/mathematical_contract.html">The Mathematical Contract: What reach.rate Computes, Exactly</a></li>
     <li><a class="dropdown-item" href="../articles/s7_objects_guide.html">Maintaining reach.rate's S7 classes</a></li>
@@ -155,7 +156,7 @@ history – an independently-fitted result, for instance. Mirrors
 <span class="r-in"><span><span class="co"># FlodeSegmentedRating have in common, and is never built directly.</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu">FlodeRatingBase</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Error in S7::new_object(S7::S7_object(), gaugings = gaugings, fit_starts = fit_starts,  : </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Can't construct an object from abstract class &lt;FlodeRatingBase&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Can't construct an object from abstract class &lt;FlodeRatingBase&gt;.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Every fit is one underneath.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>

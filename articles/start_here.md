@@ -303,7 +303,7 @@ out <- withCallingHandlers(
   }
 )
 #> Warning: apply_rating(): 1 of 2 stage value(s) lie beyond the gauged range (0.301 to 2.876 m; stages 2.5 to 3.6 m) and are extrapolated. They are flagged 'extrapolation' in the support column. This rating has no operational limits: state the range it may be used over, and why, with set_operational_limits(x, lower, upper, basis).
-#> INFO [2026-11-19 21:35:11] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-20 07:57:14] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
 out
 #>    stage discharge extrapolated                support
 #>    <num>     <num>       <lgcl>                 <char>
@@ -322,7 +322,7 @@ say why:
 
 limited <- set_operational_limits(fit, 0.25, 3.6, basis = "control confirmed by survey to 3.6 m")
 apply_rating(limited, c(2.5, 3.6))
-#> INFO [2026-11-19 21:35:11] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-20 07:57:14] apply_rating(): 1 of 2 stage value(s) fell outside the rating and were extrapolated.
 #>    stage discharge extrapolated                support
 #>    <num>     <num>       <lgcl>                 <char>
 #> 1:   2.5  13.59745        FALSE interpolation_observed

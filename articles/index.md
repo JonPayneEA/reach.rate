@@ -14,6 +14,8 @@ novice, practitioner, technical or specialist.
 
 - [Rating Curves: Theory, Functions, and
   Guidance](https://jonpayneea.github.io/reach.rate/articles/rating_curves_guide.md):
+- [Thresholds: What the Checks Flag, and
+  Why](https://jonpayneea.github.io/reach.rate/articles/thresholds.md):
 - [Rating Methods: How the Pieces Fit
   Together](https://jonpayneea.github.io/reach.rate/articles/rating_methods_overview.md):
 - [The Mathematical Contract: What reach.rate Computes,

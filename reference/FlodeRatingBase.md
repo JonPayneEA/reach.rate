@@ -85,7 +85,7 @@ FlodeRatingBase(
 # FlodeSegmentedRating have in common, and is never built directly.
 try(FlodeRatingBase())
 #> Error in S7::new_object(S7::S7_object(), gaugings = gaugings, fit_starts = fit_starts,  : 
-#>   Can't construct an object from abstract class <FlodeRatingBase>
+#>   Can't construct an object from abstract class <FlodeRatingBase>.
 
 # Every fit is one underneath.
 set.seed(1)

@@ -44,6 +44,7 @@ in place and relying on a column someone has to remember to check."><script type
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
+    <li><a class="dropdown-item" href="../articles/thresholds.html">Thresholds: What the Checks Flag, and Why</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
     <li><a class="dropdown-item" href="../articles/mathematical_contract.html">The Mathematical Contract: What reach.rate Computes, Exactly</a></li>
     <li><a class="dropdown-item" href="../articles/s7_objects_guide.html">Maintaining reach.rate's S7 classes</a></li>
@@ -156,7 +157,8 @@ was built from, or <code>NULL</code> if it has no such prior identity.</p></dd>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu">FlodeRatingTable</span><span class="op">(</span>table <span class="op">=</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/data.table/man/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  lower_level <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1.5</span><span class="op">)</span>, upper_level <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.2</span>, <span class="fl">3</span><span class="op">)</span>, C <span class="op">=</span> <span class="fl">2</span>, a <span class="op">=</span> <span class="fl">0</span>, n <span class="op">=</span> <span class="fl">1.5</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Error : &lt;reach.rate::FlodeRatingTable&gt; object is invalid:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Error in FlodeRatingTable(table = data.table::data.table(lower_level = c(0,  : </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;reach.rate::FlodeRatingTable&gt; object is invalid:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - limbs must be contiguous (upper_level[i] == lower_level[i+1])</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
