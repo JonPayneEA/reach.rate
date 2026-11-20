@@ -1,0 +1,185 @@
+---
+title: "`r params$title`"
+output:
+  html_document:
+    toc: true
+    toc_float: false
+    number_sections: true
+    self_contained: true
+params:
+  rating: NULL
+  assessment: NULL
+  title: "Rating report"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, comment = NA, results = "asis")
+library(data.table)
+rating <- params$rating
+assessment <- params$assessment
+`%||%` <- function(a, b) if (is.null(a)) b else a
+got <- function(expr) tryCatch(expr, error = function(e) NULL)
+tbl <- function(x, ...) {
+  if (is.null(x) || !nrow(x)) { cat("Nothing to show.\n"); return(invisible(NULL)) }
+  x <- as.data.table(copy(x))
+  for (j in names(x)) {
+    v <- x[[j]]
+    x[[j]] <- if (is.numeric(v)) {
+      vapply(v, function(e) if (is.na(e)) "" else format(signif(e, 5), trim = TRUE, scientific = FALSE), "")
+    } else { v <- as.character(v); v[is.na(v)] <- ""; v }
+  }
+  print(knitr::kable(x, align = "l", ...))
+}
+
+has_fit <- !inherits(rating, "reach.rate::FlodeRatingTable")
+prov <- got(reach.rate::rating_provenance(rating))
+guided <- prov$fit_rating
+```
+
+# Read this first
+
+This report describes a rating. It does not approve it. The lifecycle below is
+recorded as it stands, and moving a rating from draft to approved is a decision
+for a person. Every figure and table here is read from the stored rating and
+assessment; nothing was refitted to make it.
+
+```{r status}
+conv <- if (has_fit) got(rating@limbs$converged) else NULL
+st <- data.table(
+  Item = c("Lifecycle", "Fit origin", "Schema version", "reach.rate version used to make it",
+           "reach.rate version making this report", "Assessment overall"),
+  Value = c(
+    got(rating@lifecycle) %||% "not recorded",
+    got(rating@fit_origin) %||% "not recorded",
+    as.character(got(rating@schema_version) %||% "not recorded"),
+    sub("^reach\\.rate ", "", as.character(prov$tool_version %||% "not recorded")),
+    as.character(utils::packageVersion("reach.rate")),
+    if (is.null(assessment)) "no assessment supplied" else reach.rate::assessment_status(assessment)
+  )
+)
+tbl(st)
+```
+
+# The rating
+
+```{r limbs}
+tbl(reach.rate::rating_limbs(rating))
+```
+
+The equation for each limb is Q = C &times; (H &minus; a)<sup>n</sup>, with Q in
+cubic metres per second and H in metres. See `vignette("mathematical_contract")`
+for what is computed.
+
+```{r breakpoints, results="asis"}
+bp <- guided$breakpoints
+if (!is.null(bp) && length(bp$stages)) {
+  cat(sprintf("Breakpoints at %s m. Origin: %s. %s\n",
+              paste(format(bp$stages, digits = 4), collapse = ", "),
+              paste(unique(bp$origin), collapse = ", "),
+              if (isTRUE(bp$advisory)) "They were suggested by the software and are advisory: they need review." else ""))
+} else if (has_fit) {
+  cat("One limb, so no breakpoints.\n")
+}
+```
+
+```{r plot, fig.width=7, fig.height=5}
+print(reach.rate::autoplot(rating))
+```
+
+# The evidence
+
+```{r evidence, results="asis"}
+ev <- got(reach.rate::rating_evidence(rating))
+if (is.null(ev)) {
+  cat("This rating is an equation table and holds no gaugings, so there is no evidence to show.\n")
+} else {
+  total <- guided$n_evidence %||% nrow(ev)
+  used <- guided$n_used %||% sum(ev$included, na.rm = TRUE)
+  cat(sprintf("%d observations read; %d used in the fit; %d left out.\n\n", total, used, total - used))
+  tbl(ev[, .(`Rows in the fit` = .N), by = .(`Source type` = source_type)])
+  cat("\n")
+  if (!is.null(guided$excluded) && nrow(guided$excluded)) {
+    cat("Left out of the fit, and why:\n\n")
+    tbl(guided$excluded[, intersect(c("evidence_id", "stage_m", "discharge_cms", "source_type", "reason"), names(guided$excluded)), with = FALSE])
+  } else {
+    cat("Every observation was used.\n")
+  }
+}
+```
+
+# The assessment
+
+```{r assessment, results="asis"}
+if (is.null(assessment)) {
+  cat("No assessment was supplied. Run `assess_rating()` and pass it to `rating_report()`.\n")
+} else {
+  ck <- reach.rate::assessment_checks(assessment)
+  cat(sprintf("%d checks: %d pass, %d warning, %d fail, %d not assessed.\n\n",
+              nrow(ck), sum(ck$status == "pass"), sum(ck$status == "warning"),
+              sum(ck$status == "fail"), sum(ck$status == "not_assessed")))
+  open <- ck[status != "pass", .(Domain = domain, Check = check_id, Status = status, Finding = message, `What to look at` = recommendation)]
+  if (nrow(open)) {
+    cat("Everything that did not pass:\n\n")
+    tbl(open)
+  } else {
+    cat("Every check passed.\n")
+  }
+  cat("\nThere is no overall score. A warning is a prompt to look, not a verdict, and a pass does not make a rating right.\n",
+      "The limits behind these checks are best-endeavours defaults, not Environment Agency policy: see `vignette(\"thresholds\")`.\n",
+      "The assessment does not record which limits were used; if they were changed, that should be written down alongside this report.\n", sep = "")
+}
+```
+
+# What each stage range rests on
+
+```{r support}
+sup <- got(reach.rate::rating_support(rating))
+if (!is.null(sup)) {
+  sup <- copy(sup)
+  nice <- function(v) vapply(v, function(e) if (is.na(e)) "" else if (abs(e) > 1e6) "no practical limit" else format(round(e, 4), trim = TRUE, scientific = FALSE), "")
+  sup[, `:=`(lower_stage_m = nice(lower_stage_m), upper_stage_m = nice(upper_stage_m))]
+}
+tbl(sup)
+```
+
+# How it was made
+
+```{r provenance, results="asis"}
+if (!is.null(guided)) {
+  p <- data.table(
+    Item = c("Call", "Model", "Objective", "Seed", "Observations", "Used"),
+    Value = c(if (is.character(guided$call)) paste(guided$call, collapse = " ") else paste(deparse(guided$call), collapse = " "), as.character(guided$model),
+              as.character(guided$objective), as.character(guided$seed %||% "none"),
+              as.character(guided$n_evidence), as.character(guided$n_used))
+  )
+  tbl(p)
+} else {
+  cat("This rating was not made by `fit_rating()`, so it has no guided provenance record.\n")
+}
+```
+
+What has been done to it since, in order:
+
+```{r history}
+tbl(got(reach.rate::rating_history(rating)))
+```
+
+# For the reviewer
+
+Questions, not answers. This report cannot settle them.
+
+- Do the gaugings cover the stage range the rating will be used over, and which
+  parts are extrapolation?
+- Is each warning above understood, and is the reason for accepting it written down?
+- If the evidence includes anything that is not a gauging, is its source trusted?
+- Were the assessment limits the right ones for this station, and were any changed?
+- Is anything about the site, such as a weir, weed growth or a bypass, missing from the record?
+
+# Reproducing this report
+
+```r
+imported <- reach.rate::import_rating("path/to/exported/folder")
+reach.rate::rating_report(imported$rating, imported$assessment, path = "rating_report.html")
+```
+
+Made with R `r getRversion()` and reach.rate `r utils::packageVersion("reach.rate")`.

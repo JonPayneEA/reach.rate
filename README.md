@@ -36,6 +36,7 @@ A rating should be built from evidence, checked, and only then applied. The pack
 | Assess it | `assess_rating()` | available |
 | Compare with the current rating | `compare_ratings()` | available |
 | Export it | `export_rating()`, read back with `import_rating()` | available |
+| Review it | `rating_report()`, one HTML page for a reviewer | available |
 
 Assess a fit with `assess_rating()`, which reports on six domains (data, numerical, statistical, hydraulic, operational and provenance) without giving a score, then apply it with `apply_rating()`. A rating made by `fit_rating()` extrapolates beyond its gauged range, because forecasting needs that, and flags every such value; state the range it may be used over with `set_operational_limits()` to make that a boundary. Anyone who wants direct control can fit with `rate_optimise()` instead. That route stays available afterwards for anyone who needs direct control. The [function reference](https://jonpayneea.github.io/reach.rate/reference/) groups every export by the job it does.
 

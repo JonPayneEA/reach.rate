@@ -1,5 +1,17 @@
 # reach.rate (development)
 
+* Release C: **`rating_report()`**, a self-contained HTML page for a reviewer.
+  It shows the rating's status and lifecycle, its equations and plot, the
+  evidence and what was left out, every assessment check that did not pass with
+  what to look at, what each stage range rests on, how the rating was made and
+  what has been done to it since, and a short list of questions for the reviewer.
+  It is drawn from the stored objects only and never refits, so the same rating
+  gives the same report from the live session or from a folder made by
+  `export_rating()` (tested). It says on its first page that it does not approve
+  the rating, and it never changes the lifecycle. The equation is plain text, not
+  MathJax, so the page needs no network. It uses `rmarkdown`, `knitr` and pandoc,
+  which stay suggested, and says what is missing if they are not there.
+
 * Release C: **`export_rating()` and `import_rating()`**, the sixth step of the
   guided workflow. `export_rating(rating, assessment, path)` writes a folder a
   reviewer can read without R: the rating and assessment as `.rds` (the record),
