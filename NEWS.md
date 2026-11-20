@@ -1,5 +1,16 @@
 # reach.rate (development)
 
+* Release C: **`vignette("release_policy")`**, a proposed release and deprecation
+  policy, marked as a proposal for the owner to accept or change. It sets out
+  what counts as a breaking change (including a default that changes a result,
+  and a mathematical change), the three deprecation stages (superseded, then
+  deprecated with a warning, then removed, each for at least one minor release),
+  a register of what is in which stage now, the rules for bumping the schema
+  version and writing a migration, and a release checklist whose last item a
+  machine cannot do: a person who did not write the change has looked at it. It
+  lists what only the owner can decide. A test keeps the register in step with the
+  "Deprecated" group in the reference index.
+
 * Release C: **`rating_report()`**, a self-contained HTML page for a reviewer.
   It shows the rating's status and lifecycle, its equations and plot, the
   evidence and what was left out, every assessment check that did not pass with

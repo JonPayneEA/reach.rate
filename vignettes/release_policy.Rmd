@@ -1,0 +1,179 @@
+---
+title: "Release and Deprecation Policy"
+author: "Jonathan Payne, Environment Agency Flood Forecasting"
+date: "November 2026"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Release and Deprecation Policy}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, echo = TRUE, collapse = TRUE, comment = "#>")
+library(reach.rate)
+```
+
+**Audience:** technical. You maintain the package, depend on it from other code,
+or review a change to it.
+
+# Status
+
+**This is a proposal, written by the package's author, for its owner to accept or
+change.** It records how changes have been handled so far and what the author
+would hold to from here. Nothing in it has been agreed by the Environment Agency.
+Release D covers the governance questions that need an owner: who may release,
+who reviews, and where the package may run. They are listed at the end.
+
+# What this policy is for
+
+A rating is a record that may be reviewed years after it was fitted. A change to
+the package must not quietly change what an old rating means, and a user should
+never learn about a change by finding that their code stopped working. Three
+rules follow.
+
+1. **Say it.** Every change a user could notice is in `NEWS.md`, and a change
+   that alters behaviour or numbers is marked as such.
+2. **Warn before removing.** Nothing is removed without first being documented as
+   superseded and then warning, each for at least one release.
+3. **Never load what is not understood.** A stored rating from a layout the
+   package does not understand is refused with a reason, not loaded half-read.
+
+# Versions
+
+The package is below 1.0, so the version is `0.minor.patch`.
+
+| Change | Bumps |
+|---|---|
+| A bug fix, a documentation change, a new function that changes nothing existing | patch |
+| A new feature, a deprecation, or a **breaking change** | minor |
+| The first release the owner declares fit for live forecasting, after the Release D gate | 1.0.0 |
+
+Below 1.0, a minor release may break things. That is allowed only if `NEWS.md`
+says so under the entry, in words a user would find. From 1.0, a breaking change
+waits for a major version.
+
+# What counts as breaking
+
+A change is breaking if code or a stored rating that worked before may not work,
+or may give a different answer, after it.
+
+- **An exported function's** name, arguments, argument defaults, or the shape of
+  what it returns: its columns, their names, their order, their types.
+- **A default that changes a result.** Example: `apply_rating()` on a rating
+  from `fit_rating()` used to refuse stages beyond the gauged range, and now
+  returns them flagged. That was a behaviour change and `NEWS.md` says so.
+- **The numbers.** A change to the mathematics, or to a threshold's default, that
+  moves a result by more than rounding. It is flagged as a **mathematical change**,
+  and `vignette("mathematical_contract")` is updated in the same change.
+- **The stored layout** of a rating object. See schema versions below.
+
+These are not breaking, and may change in any release: anything whose name starts
+with a dot, the exact wording of a message or a printed summary, and the
+appearance of a plot. Test for a message's meaning, not its words.
+
+# Deprecation
+
+A function, argument or column goes through three stages. Each stage lasts at
+least one minor release.
+
+| Stage | What happens | What the user sees |
+|---|---|---|
+| 1. Superseded | The replacement exists. The old one is documented as superseded, with its replacement named, and keeps working exactly as before. | The help page and `NEWS.md` |
+| 2. Deprecated | The old one still works but warns, once per call, naming the replacement. | A warning in the console |
+| 3. Removed | It is gone. The removal is in `NEWS.md`. | An error: the function does not exist |
+
+A function is never removed straight from stage 1, and a warning is never added
+in the same release that announces the replacement, except for a function that
+was already wrong.
+
+## The register
+
+What is in the stages now. A test keeps this table in step with the "Deprecated"
+group in the package's reference index.
+
+| Function | Stage | Replacement |
+|---|---|---|
+| `rating_plot()` | 1. Superseded | `autoplot()` |
+| `suggested_breakpoints_vector()` | 2. Deprecated | the `selected` column of `suggest_breakpoints()` |
+| `bootstrap_to_table()` | 2. Deprecated | `rating_bootstrap()` |
+
+`rating_plot()` is held at stage 1 on purpose. It is used in several vignettes
+and the walkthrough script, and a warning now would flood every page. The
+vignettes move to `autoplot()` first, and then it warns.
+
+```{r deprecated-warns}
+fit <- fit_rating(
+  data.frame(stage_m = seq(0.3, 3, length.out = 20),
+             discharge_cms = 3 * seq(0.3, 3, length.out = 20)^1.6),
+  quiet = TRUE
+)
+w <- tryCatch(bootstrap_to_table(fit), warning = function(w) conditionMessage(w))
+cat(strwrap(w, 78), sep = "\n")
+```
+
+# Schema versions
+
+Every rating object carries a `schema_version`, the layout it was made under. It
+is bumped when, and only when, the stored layout changes: a property added,
+removed, renamed or given a different meaning.
+
+When it is bumped:
+
+1. The release must carry a **migration** from the previous version, or say in
+   `NEWS.md` that none exists and why.
+2. A migration is a function from one version to the next, tested on an object
+   saved under the old layout. They chain: version 2 to 3 to 4.
+3. A rating from a version with no migration is **refused with the reason**, and
+   a rating from a newer version than the package knows is refused and told to
+   update the package. Neither is loaded and guessed at.
+
+There are no migrations yet. Version 2 is the first that carries a version, so
+the mechanism in `import_rating()` is in place and tested, with nothing to run.
+
+```{r schema}
+rating_schema_version()
+```
+
+# Releasing
+
+A release is made only when all of these hold. They are what the continuous
+integration checks, plus what no machine can check.
+
+1. The full test suite passes. A new function has tests, and a fix has a test that
+   fails without it.
+2. `R CMD check` has no errors and no warnings on Linux and Windows, on the
+   current and the previous R release. The compiled core is also built and
+   tested with gcc and clang on Linux and with clang on macOS, but the full package
+   check is not run on macOS. Notes are read, not ignored.
+3. Every example runs, and every vignette builds.
+4. `check_man()` and the reference index are clean, and every exported function is
+   in the index.
+5. `NEWS.md` has an entry for every change a user could notice, with breaking and
+   mathematical changes marked.
+6. The deprecation register above matches the code.
+7. The version is bumped as the table says.
+8. A person who did not write the change has looked at it.
+
+The last item is the one a machine cannot do. Passing checks do not stand in for
+a review.
+
+# What the owner needs to decide
+
+These are not mine to decide, and the policy does not pretend otherwise.
+
+- **Who may release**, and who reviews a change before it does. Item 8 above
+  needs a named person.
+- **How long a stage lasts.** One minor release is the least the policy says. If
+  users run the package on a slow upgrade cycle, it should be longer, and the owner
+  knows the cycle.
+- **Where the package is distributed.** Today it is installed from GitHub. If it
+  is to go to an internal repository, the release steps change.
+- **When 1.0.0 is.** The package is classed Tier 3 in its source headers, and the
+  Release D gate must be met before live forecasting use. That gate is mostly
+  documents: ownership, a dependency inventory, a limitations register, a runbook,
+  fallback and rollback, handover, a test on the target machines, and an
+  independent review.

@@ -38,6 +38,7 @@ articles:
   contents:
   - rating_curves_guide
   - thresholds
+  - release_policy
   - rating_methods_overview
   - mathematical_contract
   - s7_objects_guide
