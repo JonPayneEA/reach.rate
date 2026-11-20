@@ -115,6 +115,7 @@ reference:
   - plot_rating_comparison
   - export_rating
   - import_rating
+  - rating_report
 
 - title: Accessors
   desc: >

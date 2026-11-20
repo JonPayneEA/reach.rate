@@ -60,6 +60,7 @@ Collate:
     'rate_optimise_segmented.R'
     'rating_curve_demo.R'
     'rating_curve_explorer_app.R'
+    'rating_report.R'
     'reach.rate-package.R'
     'read_gaugings.R'
     'sensitivity.R'
