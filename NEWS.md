@@ -8,12 +8,11 @@
   `rating_history()`; the earlier version is kept. `rating_lifecycle()` returns
   the record. Nothing in the package moves a lifecycle by itself, and nothing
   sets `approved` except this function called by a named person, who must give a
-  reason for every change. **Approval has three conditions:** it must come from
-  `under_review`; it is refused for a rating that fails its own validity checks;
-  and it must be by someone other than the person who put it under review,
-  unless `allow_self_approval = TRUE`, which is written into the record. That
-  last rule is a proposal, and whether it should exist is for the owner of the
-  process. Superseded and withdrawn are final. Amending a rating still makes a
+  reason for every change. **Approval has conditions:** it must come from
+  `under_review`, and it is refused for a rating that fails its own validity
+  checks. The person who put a rating under review may approve it too, which is
+  the default, but the record says so; `allow_self_approval = FALSE` requires a
+  second person. Superseded and withdrawn are final. Amending a rating still makes a
   new draft, which shows in the history. The printed rating says who last moved
   its lifecycle, `export_rating()` writes a `lifecycle.csv` when there are
   records, and `rating_report()` lists them. A `FlodeRatingTable` has nowhere to

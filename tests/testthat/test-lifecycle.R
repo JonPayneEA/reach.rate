@@ -56,17 +56,23 @@ test_that("approval must follow a review", {
                "draft cannot go to approved.*under_review")
 })
 
-test_that("the person who put a rating under review cannot approve it, however the name is written", {
+test_that("a second person can be required, and the name is matched however it is written", {
   r <- to_review(lc_fit(), by = "A. Analyst")
-  expect_error(set_lifecycle(r, "approved", by = "A. Analyst", reason = "ok"), "cannot also approve it")
-  expect_error(set_lifecycle(r, "approved", by = "  a. analyst ", reason = "ok"), "cannot also approve it")
+  expect_error(set_lifecycle(r, "approved", by = "A. Analyst", reason = "ok", allow_self_approval = FALSE),
+               "cannot also approve it")
+  expect_error(set_lifecycle(r, "approved", by = "  a. analyst ", reason = "ok", allow_self_approval = FALSE),
+               "cannot also approve it")
+  expect_equal(set_lifecycle(r, "approved", by = "B. Reviewer", reason = "ok", allow_self_approval = FALSE)@lifecycle,
+               "approved")
 })
 
-test_that("self-approval can be allowed, and is then written into the record", {
+test_that("self-approval is allowed by default, and is written into the record", {
   r <- to_review(lc_fit(), by = "A. Analyst")
-  a <- set_lifecycle(r, "approved", by = "A. Analyst", reason = "only person available", allow_self_approval = TRUE)
+  a <- set_lifecycle(r, "approved", by = "A. Analyst", reason = "only person available")
   expect_equal(a@lifecycle, "approved")
-  expect_match(rating_lifecycle(a)$reason[2L], "self-approval allowed")
+  expect_match(rating_lifecycle(a)$reason[2L], "self-approval: the same person put it under review")
+  same_case <- set_lifecycle(r, "approved", by = " a. analyst ", reason = "ok")
+  expect_match(rating_lifecycle(same_case)$reason[2L], "self-approval")
   # a different person needs no such note
   b <- set_lifecycle(r, "approved", by = "B. Reviewer", reason = "ok")
   expect_no_match(rating_lifecycle(b)$reason[2L], "self-approval")

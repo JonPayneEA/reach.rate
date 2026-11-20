@@ -64,13 +64,12 @@ NULL
 #' | `approved` | `under_review` (re-review), `superseded`, `withdrawn` |
 #' | `superseded`, `withdrawn` | nowhere: make a new rating |
 #'
-#' **Approval has three extra conditions.** It must come from `under_review`,
-#' so no rating is approved without having been put up for review. It is refused
-#' for a rating that fails its own validity checks ([rating_invariants()]). And
-#' it must be by someone other than the person who put it under review, unless
-#' you set `allow_self_approval = TRUE`, in which case that is recorded in the
-#' reason. The last rule is a proposal, not a decision made for you: whether
-#' self-approval should ever be allowed is for the owner of the process to say.
+#' **Approval has its own conditions.** It must come from `under_review`, so no
+#' rating is approved without having been put up for review. It is refused for a
+#' rating that fails its own validity checks ([rating_invariants()]). The person
+#' who put a rating under review **may approve it too**, which is the default, but
+#' that is written into the reason so that a reader of the record can see it. Set
+#' `allow_self_approval = FALSE` to require a second person.
 #'
 #' Amending a rating (setting its operational limits, aligning its limbs)
 #' makes a new draft, because what was reviewed is no longer what exists. That
@@ -83,9 +82,10 @@ NULL
 #' @param by Character. Who is making the change. A name, not a role.
 #' @param reason Character. Why. Required for every change.
 #' @param at The time of the change. Default now.
-#' @param allow_self_approval Logical. If `FALSE` (default), the person who put
-#'   a rating under review cannot also approve it. Names are compared ignoring
-#'   case and surrounding spaces.
+#' @param allow_self_approval Logical. If `TRUE` (default), the person who put a
+#'   rating under review may also approve it, and the record says so. If `FALSE`,
+#'   a second person must approve. Names are compared ignoring case and
+#'   surrounding spaces.
 #'
 #' @return A new rating with its lifecycle changed. The original is not altered.
 #'
@@ -106,7 +106,7 @@ NULL
 #' rating_lifecycle(approved)[, c("from", "to", "by")]
 #' rating_history(approved)[, c("step", "lifecycle", "note")]
 #' @export
-set_lifecycle <- function(x, to, by, reason, at = Sys.time(), allow_self_approval = FALSE) {
+set_lifecycle <- function(x, to, by, reason, at = Sys.time(), allow_self_approval = TRUE) {
   fn <- "set_lifecycle()"
   if (S7_inherits(x, FlodeRatingTable)) {
     stop(fn, ": a FlodeRatingTable has nowhere to record who changed its lifecycle, when and why. ",
@@ -150,11 +150,10 @@ set_lifecycle <- function(x, to, by, reason, at = Sys.time(), allow_self_approva
     submitter <- if (nrow(submitted)) submitted$by[nrow(submitted)] else NA_character_
     if (!allow_self_approval && !is.na(submitter) && identical(tolower(trimws(submitter)), tolower(by))) {
       stop(fn, ": ", submitter, " put this rating under review, so cannot also approve it. ",
-           "Another person must. If self-approval is acceptable here, set allow_self_approval = TRUE; ",
-           "it will be recorded.", call. = FALSE)
+           "Another person must, because allow_self_approval is FALSE.", call. = FALSE)
     }
     if (allow_self_approval && !is.na(submitter) && identical(tolower(trimws(submitter)), tolower(by))) {
-      reason <- paste0(reason, " [self-approval allowed: the same person put it under review]")
+      reason <- paste0(reason, " [self-approval: the same person put it under review]")
     }
   }
 

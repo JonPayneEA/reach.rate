@@ -4,7 +4,7 @@
 \alias{set_lifecycle}
 \title{Record a change to a rating's lifecycle}
 \usage{
-set_lifecycle(x, to, by, reason, at = Sys.time(), allow_self_approval = FALSE)
+set_lifecycle(x, to, by, reason, at = Sys.time(), allow_self_approval = TRUE)
 }
 \arguments{
 \item{x}{A \link{FlodeRating} or \link{FlodeSegmentedRating}. A \link{FlodeRatingTable}
@@ -19,9 +19,10 @@ has nowhere to keep who, when and why, and is refused.}
 
 \item{at}{The time of the change. Default now.}
 
-\item{allow_self_approval}{Logical. If \code{FALSE} (default), the person who put
-a rating under review cannot also approve it. Names are compared ignoring
-case and surrounding spaces.}
+\item{allow_self_approval}{Logical. If \code{TRUE} (default), the person who put a
+rating under review may also approve it, and the record says so. If \code{FALSE},
+a second person must approve. Names are compared ignoring case and
+surrounding spaces.}
 }
 \value{
 A new rating with its lifecycle changed. The original is not altered.
@@ -43,13 +44,12 @@ The states and where each may go next:\tabular{ll}{
 }
 
 
-\strong{Approval has three extra conditions.} It must come from \code{under_review},
-so no rating is approved without having been put up for review. It is refused
-for a rating that fails its own validity checks (\code{\link[=rating_invariants]{rating_invariants()}}). And
-it must be by someone other than the person who put it under review, unless
-you set \code{allow_self_approval = TRUE}, in which case that is recorded in the
-reason. The last rule is a proposal, not a decision made for you: whether
-self-approval should ever be allowed is for the owner of the process to say.
+\strong{Approval has its own conditions.} It must come from \code{under_review}, so no
+rating is approved without having been put up for review. It is refused for a
+rating that fails its own validity checks (\code{\link[=rating_invariants]{rating_invariants()}}). The person
+who put a rating under review \strong{may approve it too}, which is the default, but
+that is written into the reason so that a reader of the record can see it. Set
+\code{allow_self_approval = FALSE} to require a second person.
 
 Amending a rating (setting its operational limits, aligning its limbs)
 makes a new draft, because what was reviewed is no longer what exists. That
