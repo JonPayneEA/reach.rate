@@ -106,12 +106,15 @@ reference:
     Apply a fitted rating to a stage record, invert it, and compare it
     with the rating it replaces. The guided workflow (read_gaugings(),
     validate_gaugings(), fit_rating(), assess_rating(), export_rating())
-    is planned; see IMPROVEMENT_PLAN.md.
+    is complete; export_rating() and import_rating() hand a rating to a
+    reviewer and read it back exactly.
   contents:
   - apply_rating
   - apply_rating_inverse
   - compare_ratings
   - plot_rating_comparison
+  - export_rating
+  - import_rating
 
 - title: Accessors
   desc: >

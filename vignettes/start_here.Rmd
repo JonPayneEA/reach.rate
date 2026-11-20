@@ -201,15 +201,34 @@ sens
 Leaving out the highest gaugings moves the top of the curve most, which is what
 you would expect, since the top is the part with the fewest gaugings behind it.
 
-# What is not here yet
+# Hand it on
 
-`export_rating()`, to write a rating and its assessment out for others to review,
-is planned and not built. Until it is, the rating object itself, saved with
-`saveRDS()`, carries everything: the evidence with its ids, how it was fitted,
-what was left out and why, and its status.
+A rating is only reviewed if someone else can open it. `export_rating()` writes
+the rating and its assessment to a folder:
 
-The lifecycle of every rating starts at `draft` and the package never moves it
-on. Approval is a decision for a person.
+```{r export}
+folder <- file.path(tempdir(), "example_weir_rating")
+out <- export_rating(fit, assessment, path = folder)
+out$files[, .(file, bytes)]
+```
+
+The `.csv` files are the same content as plain tables, for a reviewer with a
+spreadsheet and no R. The `.rds` files are the record. `manifest.csv` lists
+every file with a checksum, so that `import_rating()` can tell if one was
+damaged or edited since:
+
+```{r import}
+back <- import_rating(folder)
+isTRUE(all.equal(back$rating, fit, tolerance = 0))
+```
+
+That compares every value, with no tolerance. It is not `identical()`: no R
+object survives being written out and read back byte for byte, because
+`data.table` keeps internal pointers that differ each time. The values are the
+same.
+
+The lifecycle of every rating starts at `draft`, and neither exporting nor
+importing moves it on. Approval is a decision for a person.
 
 # Where next
 
