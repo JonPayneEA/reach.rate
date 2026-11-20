@@ -1,5 +1,14 @@
 # reach.rate (development)
 
+* Release C begins with **`vignette("thresholds")`**, a practitioner article
+  on every limit in `validate_gaugings()` and `assess_rating()`: its default
+  (read from the functions when the page is built, so it cannot drift), what it
+  flags, and whether its basis is arithmetic, convention or judgement. It says
+  plainly that **there is no Environment Agency guidance for these limits**, that
+  the values are best endeavours and not policy, and that every one is an
+  argument you can change. A worked example shows a stricter set of limits moving
+  checks from pass to warning.
+
 * **Behaviour change: extrapolation is flagged, not refused.** A rating from
   `fit_rating()` with no operational limits used to refuse any stage beyond
   its gauged range. Flood forecasting needs discharge above the highest
