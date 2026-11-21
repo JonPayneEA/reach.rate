@@ -60,6 +60,14 @@ st <- data.table(
 tbl(st)
 ```
 
+```{r lifecycle-log}
+lg <- got(reach.rate::rating_lifecycle(rating))
+if (!is.null(lg) && nrow(lg)) {
+  cat("\nWho changed the lifecycle, oldest first:\n\n")
+  tbl(lg[, .(When = format(at, "%Y-%m-%d %H:%M UTC"), From = from, To = to, By = by, Why = reason)])
+}
+```
+
 # The rating
 
 ```{r limbs}

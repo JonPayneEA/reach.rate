@@ -36,6 +36,8 @@ NULL
                     make = function() rating_evidence(rating)),
     history = list(file = "history.csv", what = "What was done to this rating, in order.",
                    make = function() rating_history(rating)),
+    lifecycle = list(file = "lifecycle.csv", what = "Who changed the lifecycle, from what to what, when and why. Written only if there are records.",
+                     make = function() { lg <- rating_lifecycle(rating); if (nrow(lg)) lg else NULL }),
     support = list(file = "support.csv", what = "What each stage range rests on: gaugings, modelled evidence, or the equation alone.",
                    make = function() rating_support(rating)),
     assessment_checks = list(file = "assessment_checks.csv", what = "Every assessment check, with its domain, status and what to look at.",
@@ -71,7 +73,9 @@ NULL
 #' * `rating.rds` and, if given, `assessment.rds`. These are the record.
 #'   [import_rating()] reads them back exactly.
 #' * `limbs.csv`, `coefficients.csv`, `evidence.csv`, `history.csv`,
-#'   `support.csv` and, with an assessment, `assessment_checks.csv`. The same
+#'   `support.csv`, `lifecycle.csv` (only if someone has recorded a lifecycle
+#'   change with [set_lifecycle()]) and, with an assessment,
+#'   `assessment_checks.csv`. The same
 #'   content as plain tables, for people, spreadsheets and other software. A
 #'   column that holds a list (evidence `metadata`) is left out of the CSV and
 #'   stays in the `.rds`. A table that does not apply to this class (a
