@@ -17,6 +17,18 @@ review) two ways:
   the question is "how much does this amendment actually change the
   flow", not just "how much did the coefficients move".
 
+- support:
+
+  What each stage range rests on, old against new: how far the observed,
+  fitted and numerical ranges moved, and how many observations lie in
+  each. This answers "is the new rating better supported, or only
+  different?"
+
+- evidence:
+
+  Only when both inputs are fits. The observations behind each, matched
+  by `evidence_id` and checked against their values.
+
 ## Usage
 
 ``` r
@@ -28,10 +40,16 @@ compare_ratings(rating_old_dt, rating_new_dt, step = 0.01)
 - rating_old_dt, rating_new_dt:
 
   A
+  [FlodeRating](https://jonpayneea.github.io/reach.rate/reference/FlodeRating.md),
+  a
   [FlodeRatingTable](https://jonpayneea.github.io/reach.rate/reference/FlodeRatingTable.md),
   or a plain data.frame/data.table with columns `lower_level`,
   `upper_level`, `C`, `a`, `n` – one row per limb. Need not have the
-  same number of limbs.
+  same number of limbs. Pass fits, not tables, to compare their evidence
+  as well. A
+  [FlodeSegmentedRating](https://jonpayneea.github.io/reach.rate/reference/FlodeSegmentedRating.md)
+  is not accepted: its joint equation has no per-limb coefficients to
+  compare.
 
 - step:
 
@@ -51,6 +69,26 @@ A list with elements:
   A `data.table` with `stage`, `discharge_old`, `discharge_new`,
   `discharge_diff`, `discharge_pct_diff`, and the `extrapolated` flag
   from each table, across the overlapping stage range of both ratings.
+
+- support:
+
+  A `data.table`, one row per stage range (`observed`, `modelled`,
+  `fitted`, `operational`, `numerical`): `lower_stage_m_old`,
+  `lower_stage_m_new`, `upper_stage_m_old`, `upper_stage_m_new`,
+  `lower_moved_m`, `upper_moved_m` (new minus old; `NA` where either
+  side is missing or has no practical limit), and `n_evidence_old`,
+  `n_evidence_new`.
+
+- evidence:
+
+  `NULL` unless both inputs are fits. Otherwise a list with `summary`, a
+  one-row `data.table` (`n_old`, `n_new`, `n_shared`, `n_changed`,
+  `n_added`, `n_removed`, the gauged stage range of each and the latest
+  observation of each), and `rows`, one row per observation in either,
+  with `change` one of `"shared"`, `"changed"` (same id, different stage
+  or discharge), `"added"` or `"removed"`. Ids made by converting a
+  plain table are positional, so two different datasets can share ids:
+  such rows show as `"changed"`, not `"shared"`.
 
 ## See also
 
@@ -105,4 +143,34 @@ cmp$discharge
 #> 299:  -0.6399818374          -2.439024
 #> 300:  -0.6436370270          -2.439024
 #> 301:  -0.6473007840          -2.439024
+cmp$support
+#>          range lower_stage_m_old lower_stage_m_new upper_stage_m_old
+#>         <char>             <num>             <num>             <num>
+#> 1:    observed                NA                NA                NA
+#> 2:    modelled                NA                NA                NA
+#> 3:      fitted                 0                 0      3.000000e+00
+#> 4: operational                NA                NA                NA
+#> 5:   numerical              -Inf              -Inf     9.243622e+180
+#>    upper_stage_m_new lower_moved_m upper_moved_m n_evidence_old n_evidence_new
+#>                <num>         <num>         <num>          <int>          <int>
+#> 1:                NA            NA            NA              0              0
+#> 2:                NA            NA            NA              0              0
+#> 3:      3.000000e+00             0             0             NA             NA
+#> 4:                NA            NA            NA             NA             NA
+#> 5:     9.378866e+180            NA            NA             NA             NA
+
+# With fits, the evidence is compared too.
+set.seed(1)
+stage <- seq(0.3, 3, length.out = 25)
+g <- data.frame(stage_m = stage, discharge_cms = 3 * stage^1.6 * exp(rnorm(25, sd = 0.03)))
+old_fit <- fit_rating(g[1:20, ], quiet = TRUE)
+new_fit <- fit_rating(g, quiet = TRUE)
+cmp2 <- compare_ratings(old_fit, new_fit)
+cmp2$evidence$summary
+#>    n_old n_new n_shared n_changed n_added n_removed gauged_min_old_m
+#>    <int> <int>    <int>     <int>   <int>     <int>            <num>
+#> 1:    20    25       20         0       5         0              0.3
+#>    gauged_max_old_m gauged_min_new_m gauged_max_new_m latest_old latest_new
+#>               <num>            <num>            <num>     <POSc>     <POSc>
+#> 1:           2.4375              0.3                3       <NA>       <NA>
 ```

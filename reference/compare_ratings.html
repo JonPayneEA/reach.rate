@@ -21,6 +21,17 @@ counts differ, or when the question is &quot;how much does this
 amendment actually change the flow&quot;, not just &quot;how much did the
 coefficients move&quot;.
 
+support
+What each stage range rests on, old against new: how
+far the observed, fitted and numerical ranges moved, and how many
+observations lie in each. This answers &quot;is the new rating better
+supported, or only different?&quot;
+
+evidence
+Only when both inputs are fits. The observations
+behind each, matched by evidence_id and checked against their
+values.
+
 
 
 "><meta property="og:description" content="Diffs two rating tables (e.g. before/after a limb-alignment or a
@@ -38,6 +49,17 @@ apply_rating(). This is the more useful comparison when limb
 counts differ, or when the question is &quot;how much does this
 amendment actually change the flow&quot;, not just &quot;how much did the
 coefficients move&quot;.
+
+support
+What each stage range rests on, old against new: how
+far the observed, fitted and numerical ranges moved, and how many
+observations lie in each. This answers &quot;is the new rating better
+supported, or only different?&quot;
+
+evidence
+Only when both inputs are fits. The observations
+behind each, matched by evidence_id and checked against their
+values.
 
 
 
@@ -117,6 +139,17 @@ counts differ, or when the question is "how much does this
 amendment actually change the flow", not just "how much did the
 coefficients move".</p></dd>
 
+<dt>support</dt>
+<dd><p>What each stage range rests on, old against new: how
+far the observed, fitted and numerical ranges moved, and how many
+observations lie in each. This answers "is the new rating better
+supported, or only different?"</p></dd>
+
+<dt>evidence</dt>
+<dd><p>Only when both inputs are fits. The observations
+behind each, matched by <code>evidence_id</code> and checked against their
+values.</p></dd>
+
 
 </dl></div>
 
@@ -130,10 +163,12 @@ coefficients move".</p></dd>
 
 
 <dl><dt id="arg-rating-old-dt-rating-new-dt">rating_old_dt, rating_new_dt<a class="anchor" aria-label="anchor" href="#arg-rating-old-dt-rating-new-dt"></a></dt>
-<dd><p>A <a href="FlodeRatingTable.html">FlodeRatingTable</a>, or a plain
-data.frame/data.table with columns <code>lower_level</code>, <code>upper_level</code>,
-<code>C</code>, <code>a</code>, <code>n</code> – one row per limb. Need not have the same number of
-limbs.</p></dd>
+<dd><p>A <a href="FlodeRating.html">FlodeRating</a>, a
+<a href="FlodeRatingTable.html">FlodeRatingTable</a>, or a plain data.frame/data.table with columns
+<code>lower_level</code>, <code>upper_level</code>, <code>C</code>, <code>a</code>, <code>n</code> – one row per limb. Need
+not have the same number of limbs. Pass fits, not tables, to compare
+their evidence as well. A <a href="FlodeSegmentedRating.html">FlodeSegmentedRating</a> is not accepted: its
+joint equation has no per-limb coefficients to compare.</p></dd>
 
 
 <dt id="arg-step">step<a class="anchor" aria-label="anchor" href="#arg-step"></a></dt>
@@ -152,6 +187,25 @@ or <code>NULL</code> if the limb counts differ.</p></dd>
 <code>discharge_new</code>, <code>discharge_diff</code>, <code>discharge_pct_diff</code>, and the
 <code>extrapolated</code> flag from each table, across the overlapping
 stage range of both ratings.</p></dd>
+
+<dt>support</dt>
+<dd><p>A <code>data.table</code>, one row per stage range
+(<code>observed</code>, <code>modelled</code>, <code>fitted</code>, <code>operational</code>, <code>numerical</code>):
+<code>lower_stage_m_old</code>, <code>lower_stage_m_new</code>, <code>upper_stage_m_old</code>,
+<code>upper_stage_m_new</code>, <code>lower_moved_m</code>, <code>upper_moved_m</code> (new minus
+old; <code>NA</code> where either side is missing or has no practical
+limit), and <code>n_evidence_old</code>, <code>n_evidence_new</code>.</p></dd>
+
+<dt>evidence</dt>
+<dd><p><code>NULL</code> unless both inputs are fits. Otherwise a list
+with <code>summary</code>, a one-row <code>data.table</code> (<code>n_old</code>, <code>n_new</code>,
+<code>n_shared</code>, <code>n_changed</code>, <code>n_added</code>, <code>n_removed</code>, the gauged stage
+range of each and the latest observation of each), and <code>rows</code>, one
+row per observation in either, with <code>change</code> one of <code>"shared"</code>,
+<code>"changed"</code> (same id, different stage or discharge), <code>"added"</code> or
+<code>"removed"</code>. Ids made by converting a plain table are positional,
+so two different datasets can share ids: such rows show as
+<code>"changed"</code>, not <code>"shared"</code>.</p></dd>
 
 
 </dl></div>
@@ -207,6 +261,36 @@ stage range of both ratings.</p></dd>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 299:  -0.6399818374          -2.439024</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 300:  -0.6436370270          -2.439024</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 301:  -0.6473007840          -2.439024</span>
+<span class="r-in"><span><span class="va">cmp</span><span class="op">$</span><span class="va">support</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          range lower_stage_m_old lower_stage_m_new upper_stage_m_old</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         &lt;char&gt;             &lt;num&gt;             &lt;num&gt;             &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:    observed                NA                NA                NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:    modelled                NA                NA                NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:      fitted                 0                 0      3.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4: operational                NA                NA                NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5:   numerical              -Inf              -Inf     9.243622e+180</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    upper_stage_m_new lower_moved_m upper_moved_m n_evidence_old n_evidence_new</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                &lt;num&gt;         &lt;num&gt;         &lt;num&gt;          &lt;int&gt;          &lt;int&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:                NA            NA            NA              0              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2:                NA            NA            NA              0              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3:      3.000000e+00             0             0             NA             NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4:                NA            NA            NA             NA             NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5:     9.378866e+180            NA            NA             NA             NA</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># With fits, the evidence is compared too.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">stage</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">3</span>, length.out <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>stage_m <span class="op">=</span> <span class="va">stage</span>, discharge_cms <span class="op">=</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">stage</span><span class="op">^</span><span class="fl">1.6</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">25</span>, sd <span class="op">=</span> <span class="fl">0.03</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">old_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_rating.html">fit_rating</a></span><span class="op">(</span><span class="va">g</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">20</span>, <span class="op">]</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">new_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_rating.html">fit_rating</a></span><span class="op">(</span><span class="va">g</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cmp2</span> <span class="op">&lt;-</span> <span class="fu">compare_ratings</span><span class="op">(</span><span class="va">old_fit</span>, <span class="va">new_fit</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cmp2</span><span class="op">$</span><span class="va">evidence</span><span class="op">$</span><span class="va">summary</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    n_old n_new n_shared n_changed n_added n_removed gauged_min_old_m</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt; &lt;int&gt;    &lt;int&gt;     &lt;int&gt;   &lt;int&gt;     &lt;int&gt;            &lt;num&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:    20    25       20         0       5         0              0.3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    gauged_max_old_m gauged_min_new_m gauged_max_new_m latest_old latest_new</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               &lt;num&gt;            &lt;num&gt;            &lt;num&gt;     &lt;POSc&gt;     &lt;POSc&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1:           2.4375              0.3                3       &lt;NA&gt;       &lt;NA&gt;</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
