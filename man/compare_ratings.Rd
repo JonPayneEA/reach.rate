@@ -7,10 +7,12 @@
 compare_ratings(rating_old_dt, rating_new_dt, step = 0.01)
 }
 \arguments{
-\item{rating_old_dt, rating_new_dt}{A \link{FlodeRatingTable}, or a plain
-data.frame/data.table with columns \code{lower_level}, \code{upper_level},
-\code{C}, \code{a}, \code{n} -- one row per limb. Need not have the same number of
-limbs.}
+\item{rating_old_dt, rating_new_dt}{A \link{FlodeRating}, a
+\link{FlodeRatingTable}, or a plain data.frame/data.table with columns
+\code{lower_level}, \code{upper_level}, \code{C}, \code{a}, \code{n} -- one row per limb. Need
+not have the same number of limbs. Pass fits, not tables, to compare
+their evidence as well. A \link{FlodeSegmentedRating} is not accepted: its
+joint equation has no per-limb coefficients to compare.}
 
 \item{step}{Numeric. Stage increment for the discharge comparison.
 Default \code{0.01}.}
@@ -24,6 +26,21 @@ or \code{NULL} if the limb counts differ.}
 \code{discharge_new}, \code{discharge_diff}, \code{discharge_pct_diff}, and the
 \code{extrapolated} flag from each table, across the overlapping
 stage range of both ratings.}
+\item{support}{A \code{data.table}, one row per stage range
+(\code{observed}, \code{modelled}, \code{fitted}, \code{operational}, \code{numerical}):
+\code{lower_stage_m_old}, \code{lower_stage_m_new}, \code{upper_stage_m_old},
+\code{upper_stage_m_new}, \code{lower_moved_m}, \code{upper_moved_m} (new minus
+old; \code{NA} where either side is missing or has no practical
+limit), and \code{n_evidence_old}, \code{n_evidence_new}.}
+\item{evidence}{\code{NULL} unless both inputs are fits. Otherwise a list
+with \code{summary}, a one-row \code{data.table} (\code{n_old}, \code{n_new},
+\code{n_shared}, \code{n_changed}, \code{n_added}, \code{n_removed}, the gauged stage
+range of each and the latest observation of each), and \code{rows}, one
+row per observation in either, with \code{change} one of \code{"shared"},
+\code{"changed"} (same id, different stage or discharge), \code{"added"} or
+\code{"removed"}. Ids made by converting a plain table are positional,
+so two different datasets can share ids: such rows show as
+\code{"changed"}, not \code{"shared"}.}
 }
 }
 \description{
@@ -40,6 +57,13 @@ stage sequence, computed by running both tables through
 counts differ, or when the question is "how much does this
 amendment actually change the flow", not just "how much did the
 coefficients move".}
+\item{support}{What each stage range rests on, old against new: how
+far the observed, fitted and numerical ranges moved, and how many
+observations lie in each. This answers "is the new rating better
+supported, or only different?"}
+\item{evidence}{Only when both inputs are fits. The observations
+behind each, matched by \code{evidence_id} and checked against their
+values.}
 }
 }
 \examples{
@@ -54,6 +78,16 @@ rating_new_dt <- data.table::data.table(
 cmp <- compare_ratings(rating_old_dt, rating_new_dt)
 cmp$coefficients
 cmp$discharge
+cmp$support
+
+# With fits, the evidence is compared too.
+set.seed(1)
+stage <- seq(0.3, 3, length.out = 25)
+g <- data.frame(stage_m = stage, discharge_cms = 3 * stage^1.6 * exp(rnorm(25, sd = 0.03)))
+old_fit <- fit_rating(g[1:20, ], quiet = TRUE)
+new_fit <- fit_rating(g, quiet = TRUE)
+cmp2 <- compare_ratings(old_fit, new_fit)
+cmp2$evidence$summary
 
 }
 \seealso{

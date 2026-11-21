@@ -22,5 +22,11 @@ globalVariables(c(
   "lower_unsupported_m", "n", "n_new", "n_obs", "n_old", "rating",
   "residual_cms", "score", "selected", "stage_", "stage_break", "stage_m",
   "stage_maod", "success", "upper_level", "upper_stage_m",
-  "upper_unsupported_frac", "upper_unsupported_m", "x", "y", "y_junction"
+  "upper_unsupported_frac", "upper_unsupported_m", "x", "y", "y_junction",
+  # compare_ratings() evidence and support
+  "change", "stage_m_old", "stage_m_new", "discharge_cms_old", "discharge_cms_new", "evidence_id",
+  "source_type_old", "source_type_new", "n_evidence", "lower_stage_m_old", "lower_stage_m_new",
+  "upper_stage_m_old", "upper_stage_m_new",
+  # earlier tranches that were still raising the note on every check
+  "N", "included", "note", "source_type", "test"
 ))
