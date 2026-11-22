@@ -88,7 +88,9 @@ since (aligned, extended, grafted).
 
 **Lifecycle.** Where a rating stands in review: `draft`, `under_review`,
 `approved`, `superseded` or `withdrawn`. The package never sets
-`approved`.
+`approved`: a named person moves a rating on with
+[`set_lifecycle()`](https://jonpayneea.github.io/reach.rate/reference/set_lifecycle.md),
+which records who, when and why.
 
 **Operational limits.** The stage range a rating may be used over, a
 decision with a stated basis.

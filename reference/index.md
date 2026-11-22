@@ -257,6 +257,10 @@ to how they are built.
   : The controlled vocabulary for where evidence came from
 - [`rating_schema_version()`](https://jonpayneea.github.io/reach.rate/reference/rating_schema_version.md)
   : The schema version of rating objects
+- [`set_lifecycle()`](https://jonpayneea.github.io/reach.rate/reference/set_lifecycle.md)
+  : Record a change to a rating's lifecycle
+- [`rating_lifecycle()`](https://jonpayneea.github.io/reach.rate/reference/rating_lifecycle.md)
+  : The record of lifecycle changes for a rating
 
 ## Teaching tools
 

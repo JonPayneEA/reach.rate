@@ -13,11 +13,13 @@ The folder holds:
   reads them back exactly.
 
 - `limbs.csv`, `coefficients.csv`, `evidence.csv`, `history.csv`,
-  `support.csv` and, with an assessment, `assessment_checks.csv`. The
-  same content as plain tables, for people, spreadsheets and other
-  software. A column that holds a list (evidence `metadata`) is left out
-  of the CSV and stays in the `.rds`. A table that does not apply to
-  this class (a
+  `support.csv`, `lifecycle.csv` (only if someone has recorded a
+  lifecycle change with
+  [`set_lifecycle()`](https://jonpayneea.github.io/reach.rate/reference/set_lifecycle.md))
+  and, with an assessment, `assessment_checks.csv`. The same content as
+  plain tables, for people, spreadsheets and other software. A column
+  that holds a list (evidence `metadata`) is left out of the CSV and
+  stays in the `.rds`. A table that does not apply to this class (a
   [FlodeRatingTable](https://jonpayneea.github.io/reach.rate/reference/FlodeRatingTable.md)
   holds no gaugings) is not written, and the README says so.
 
