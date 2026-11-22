@@ -52,6 +52,7 @@
     <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
     <li><a class="dropdown-item" href="../articles/rating_curves_guide.html">Rating Curves: Theory, Functions, and Guidance</a></li>
     <li><a class="dropdown-item" href="../articles/thresholds.html">Thresholds: What the Checks Flag, and Why</a></li>
+    <li><a class="dropdown-item" href="../articles/reference_cases.html">Reference Cases: Ten Stations With a Known Answer</a></li>
     <li><a class="dropdown-item" href="../articles/release_policy.html">Release and Deprecation Policy</a></li>
     <li><a class="dropdown-item" href="../articles/rating_methods_overview.html">Rating Methods: How the Pieces Fit Together</a></li>
     <li><a class="dropdown-item" href="../articles/mathematical_contract.html">The Mathematical Contract: What reach.rate Computes, Exactly</a></li>
@@ -333,7 +334,9 @@ Windows, on the current and the previous R release. The compiled core is
 also built and tested with gcc and clang on Linux and with clang on
 macOS, but the full package check is not run on macOS. Notes are read,
 not ignored.</li>
-<li>Every example runs, and every vignette builds.</li>
+<li>Every example runs, every vignette builds, and
+<code><a href="../reference/check_reference_cases.html">check_reference_cases()</a></code> passes on the machine the release
+is made on.</li>
 <li>
 <code>check_man()</code> and the reference index are clean, and
 every exported function is in the index.</li>

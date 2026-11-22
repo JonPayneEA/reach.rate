@@ -262,6 +262,19 @@ to how they are built.
 - [`rating_lifecycle()`](https://jonpayneea.github.io/reach.rate/reference/rating_lifecycle.md)
   : The record of lifecycle changes for a rating
 
+## Checking an installation
+
+Ten synthetic stations with a known true rating. check_reference_cases()
+fits each, judges it against the truth, and can be run on any machine
+the package is installed on.
+
+- [`reference_cases()`](https://jonpayneea.github.io/reach.rate/reference/reference_cases.md)
+  : The reference cases
+- [`reference_case()`](https://jonpayneea.github.io/reach.rate/reference/reference_case.md)
+  : One reference case: its data and its truth
+- [`check_reference_cases()`](https://jonpayneea.github.io/reach.rate/reference/check_reference_cases.md)
+  : Run the reference cases
+
 ## Teaching tools
 
 Demonstrations on synthetic data, for learning the package rather than

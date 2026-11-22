@@ -155,7 +155,9 @@ continuous integration checks, plus what no machine can check.
     built and tested with gcc and clang on Linux and with clang on
     macOS, but the full package check is not run on macOS. Notes are
     read, not ignored.
-3.  Every example runs, and every vignette builds.
+3.  Every example runs, every vignette builds, and
+    [`check_reference_cases()`](https://jonpayneea.github.io/reach.rate/reference/check_reference_cases.md)
+    passes on the machine the release is made on.
 4.  `check_man()` and the reference index are clean, and every exported
     function is in the index.
 5.  `NEWS.md` has an entry for every change a user could notice, with

@@ -201,7 +201,7 @@ apply_rating(fit, c(0.8, 1.5, 2.5))
 # To apply it more widely, state the range and why.
 wider <- set_operational_limits(fit, 0.2, 3.5, basis = "channel control confirmed to 3.5 m")
 apply_rating(wider, c(0.3, 3.4))
-#> INFO [2026-11-22 11:02:44] apply_rating(): 2 of 2 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-22 13:36:24] apply_rating(): 2 of 2 stage value(s) fell outside the rating and were extrapolated.
 #>    stage  discharge extrapolated       support
 #>    <num>      <num>       <lgcl>        <char>
 #> 1:   0.3  0.4536877         TRUE extrapolation

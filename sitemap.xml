@@ -16,6 +16,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/rating_curves_guide.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/rating_methods_overview.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/recency_weighting_guide.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/articles/reference_cases.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/release_policy.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/s7_objects_guide.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/articles/segmented_model_guide.html</loc></url>
@@ -48,6 +49,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/breakpoint_origins.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/check_limb_continuity.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/check_operational_ratings.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/check_reference_cases.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/compare_gaugings_to_rating.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/compare_ratings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/convert_offset_convention.html</loc></url>
@@ -97,6 +99,8 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/read_operational_ratings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/read_summary.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/reexports.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/reference_case.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/reference_cases.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/resolve_rc_gaps.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/run_demo.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/sensitivity_results.html</loc></url>

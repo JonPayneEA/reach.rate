@@ -16,6 +16,8 @@ novice, practitioner, technical or specialist.
   Guidance](https://jonpayneea.github.io/reach.rate/articles/rating_curves_guide.md):
 - [Thresholds: What the Checks Flag, and
   Why](https://jonpayneea.github.io/reach.rate/articles/thresholds.md):
+- [Reference Cases: Ten Stations With a Known
+  Answer](https://jonpayneea.github.io/reach.rate/articles/reference_cases.md):
 - [Release and Deprecation
   Policy](https://jonpayneea.github.io/reach.rate/articles/release_policy.md):
 - [Rating Methods: How the Pieces Fit
