@@ -84,12 +84,16 @@ each candidate:
   could not be fitted is listed, not dropped, because the stage where
   fits fail can itself be informative;
 
-- `rank` within its round, and `selected`, `TRUE` for the candidate each
-  round put forward. Extract those stages with
-  `sort(result[selected == TRUE, candidate_stage])`. The same stages
-  remain attached as the `"selected_breaks"` attribute for code written
-  against earlier versions, but an attribute can be lost under ordinary
-  data.table operations, so prefer the column.
+- `rank` within its round, and `preferred`, `TRUE` for the candidate
+  each round put forward as the best by the scoring rule. It is a
+  preference, not a finding: see the top of this page. Extract those
+  stages with `sort(result[preferred == TRUE, candidate_stage])`.
+  `selected` holds the same values and is the earlier name for this
+  column, kept for code that already uses it and **superseded**: it will
+  warn in a later release and then go. The same stages remain attached
+  as the `"selected_breaks"` attribute for code written against earlier
+  versions, but an attribute can be lost under ordinary data.table
+  operations, so prefer the column.
 
 ## See also
 
@@ -112,13 +116,13 @@ candidates <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
 
 # The candidate each round put forward, how much it improved the fit, and
 # how many gaugings stand on each side of it
-candidates[selected == TRUE, c("round", "candidate_stage", "improvement", "n_obs_lower", "n_obs_upper")]
+candidates[preferred == TRUE, c("round", "candidate_stage", "improvement", "n_obs_lower", "n_obs_upper")]
 #>    round candidate_stage improvement n_obs_lower n_obs_upper
 #>    <int>           <num>       <num>       <int>       <int>
 #> 1:     1            2.45   0.8679528          44          21
 
 # The stages themselves, ready to pass to rate_optimise()
-breaks <- sort(candidates[selected == TRUE, candidate_stage])
+breaks <- sort(candidates[preferred == TRUE, candidate_stage])
 breaks
 #> [1] 2.45
 fit <- rate_optimise(discharge_cms, stage_m, control = breaks)

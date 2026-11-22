@@ -171,12 +171,15 @@ gaugings crowded at one end is weak however good its score;</p></li>
 <code>failure_reason</code> saying why when it is not <code>"ok"</code>. A candidate that
 could not be fitted is listed, not dropped, because the stage where
 fits fail can itself be informative;</p></li>
-<li><p><code>rank</code> within its round, and <code>selected</code>, <code>TRUE</code> for the candidate each
-round put forward. Extract those stages with
-<code>sort(result[selected == TRUE, candidate_stage])</code>. The same stages
-remain attached as the <code>"selected_breaks"</code> attribute for code written
-against earlier versions, but an attribute can be lost under ordinary
-data.table operations, so prefer the column.</p></li>
+<li><p><code>rank</code> within its round, and <code>preferred</code>, <code>TRUE</code> for the candidate each
+round put forward as the best by the scoring rule. It is a preference,
+not a finding: see the top of this page. Extract those stages with
+<code>sort(result[preferred == TRUE, candidate_stage])</code>. <code>selected</code> holds the
+same values and is the earlier name for this column, kept for code that
+already uses it and <strong>superseded</strong>: it will warn in a later release and
+then go. The same stages remain attached as the <code>"selected_breaks"</code>
+attribute for code written against earlier versions, but an attribute
+can be lost under ordinary data.table operations, so prefer the column.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -196,13 +199,13 @@ record where an adopted breakpoint came from</p></div>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The candidate each round put forward, how much it improved the fit, and</span></span></span>
 <span class="r-in"><span><span class="co"># how many gaugings stand on each side of it</span></span></span>
-<span class="r-in"><span><span class="va">candidates</span><span class="op">[</span><span class="va">selected</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"round"</span>, <span class="st">"candidate_stage"</span>, <span class="st">"improvement"</span>, <span class="st">"n_obs_lower"</span>, <span class="st">"n_obs_upper"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">candidates</span><span class="op">[</span><span class="va">preferred</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"round"</span>, <span class="st">"candidate_stage"</span>, <span class="st">"improvement"</span>, <span class="st">"n_obs_lower"</span>, <span class="st">"n_obs_upper"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    round candidate_stage improvement n_obs_lower n_obs_upper</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    &lt;int&gt;           &lt;num&gt;       &lt;num&gt;       &lt;int&gt;       &lt;int&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1:     1            2.45   0.8679528          44          21</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The stages themselves, ready to pass to rate_optimise()</span></span></span>
-<span class="r-in"><span><span class="va">breaks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">candidates</span><span class="op">[</span><span class="va">selected</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="va">candidate_stage</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">breaks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">candidates</span><span class="op">[</span><span class="va">preferred</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="va">candidate_stage</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">breaks</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.45</span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rate_optimise.html">rate_optimise</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, control <span class="op">=</span> <span class="va">breaks</span><span class="op">)</span></span></span>

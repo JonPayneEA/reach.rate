@@ -6,13 +6,13 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Atkinson_Hyperlegible-0.5.0/font.css" rel="stylesheet"><link href="../deps/JetBrains_Mono-0.5.0/font.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Extract the selected breakpoints from suggest_breakpoints() as a vector — suggested_breakpoints_vector"><meta name="description" content="Deprecated. suggest_breakpoints() now marks the adopted candidates in
-a selected column, which survives data.table operations that can
+a preferred column, which survives data.table operations that can
 drop the attribute this function reads. Use
-sort(candidates_dt[selected == TRUE, candidate_stage]) instead.
+sort(candidates_dt[preferred == TRUE, candidate_stage]) instead.
 This function will be removed in the release after next."><meta property="og:description" content="Deprecated. suggest_breakpoints() now marks the adopted candidates in
-a selected column, which survives data.table operations that can
+a preferred column, which survives data.table operations that can
 drop the attribute this function reads. Use
-sort(candidates_dt[selected == TRUE, candidate_stage]) instead.
+sort(candidates_dt[preferred == TRUE, candidate_stage]) instead.
 This function will be removed in the release after next."><script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
   mermaid.initialize({ startOnLoad: true, theme: "neutral" });
@@ -76,9 +76,9 @@ This function will be removed in the release after next."><script type="module">
 
     <div class="ref-description section level2">
     <p>Deprecated. <code><a href="suggest_breakpoints.html">suggest_breakpoints()</a></code> now marks the adopted candidates in
-a <code>selected</code> column, which survives data.table operations that can
+a <code>preferred</code> column, which survives data.table operations that can
 drop the attribute this function reads. Use
-<code>sort(candidates_dt[selected == TRUE, candidate_stage])</code> instead.
+<code>sort(candidates_dt[preferred == TRUE, candidate_stage])</code> instead.
 This function will be removed in the release after next.</p>
     </div>
 
@@ -108,8 +108,8 @@ This function will be removed in the release after next.</p>
 <span class="r-in"><span>  <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="va">stage_m</span> <span class="op">-</span> <span class="fl">2.4</span>, <span class="fl">0</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">^</span><span class="fl">1.1</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">stage_m</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fl">0.03</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">candidates</span> <span class="op">&lt;-</span> <span class="fu"><a href="suggest_breakpoints.html">suggest_breakpoints</a></span><span class="op">(</span><span class="va">discharge_cms</span>, <span class="va">stage_m</span>, max_breaks <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># The replacement: read the `selected` column.</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">candidates</span><span class="op">[</span><span class="va">selected</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="va">candidate_stage</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># The replacement: read the `preferred` column.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">candidates</span><span class="op">[</span><span class="va">preferred</span> <span class="op">==</span> <span class="cn">TRUE</span>, <span class="va">candidate_stage</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.45</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The deprecated function gives the same stages, with a warning.</span></span></span>

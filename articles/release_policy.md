@@ -91,8 +91,9 @@ What is in the stages now. A test keeps this table in step with the
 | Function | Stage | Replacement |
 |----|----|----|
 | [`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md) | 1\. Superseded | [`autoplot()`](https://ggplot2.tidyverse.org/reference/autoplot.html) |
-| [`suggested_breakpoints_vector()`](https://jonpayneea.github.io/reach.rate/reference/suggested_breakpoints_vector.md) | 2\. Deprecated | the `selected` column of [`suggest_breakpoints()`](https://jonpayneea.github.io/reach.rate/reference/suggest_breakpoints.md) |
+| [`suggested_breakpoints_vector()`](https://jonpayneea.github.io/reach.rate/reference/suggested_breakpoints_vector.md) | 2\. Deprecated | the `preferred` column of [`suggest_breakpoints()`](https://jonpayneea.github.io/reach.rate/reference/suggest_breakpoints.md) |
 | [`bootstrap_to_table()`](https://jonpayneea.github.io/reach.rate/reference/bootstrap_to_table.md) | 2\. Deprecated | [`rating_bootstrap()`](https://jonpayneea.github.io/reach.rate/reference/rating_bootstrap.md) |
+| the `selected` column of [`suggest_breakpoints()`](https://jonpayneea.github.io/reach.rate/reference/suggest_breakpoints.md) | 1\. Superseded | the `preferred` column, same values |
 
 [`rating_plot()`](https://jonpayneea.github.io/reach.rate/reference/rating_plot.md)
 is held at stage 1 on purpose. It is used in several vignettes and the
