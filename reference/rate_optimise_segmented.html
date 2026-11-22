@@ -134,6 +134,9 @@ non-convexity their paper warns about.</p>
 <span>  age_halflife <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  age_min_weight <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  reference_datetime <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  protect_above <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  protect_quantile <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  protect_width <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -183,6 +186,11 @@ existing callers see no change in behaviour.</p></dd>
 <code><a href="rate_optimise.html">rate_optimise()</a></code> – opt-in recency weighting of the single joint
 fit (this model has no per-limb structure to weight separately).
 <code>age_halflife = NULL</code> (default) fits unweighted, exactly as before.</p></dd>
+
+
+<dt id="arg-protect-above-protect-quantile-protect-width">protect_above, protect_quantile, protect_width<a class="anchor" aria-label="anchor" href="#arg-protect-above-protect-quantile-protect-width"></a></dt>
+<dd><p>Opt-in magnitude
+protection, as in <code><a href="rate_optimise.html">rate_optimise()</a></code>. Needs <code>age_halflife</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

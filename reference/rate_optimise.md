@@ -27,6 +27,9 @@ rate_optimise(
   age_halflife = NULL,
   age_min_weight = 0.1,
   reference_datetime = NULL,
+  protect_above = NULL,
+  protect_quantile = NULL,
+  protect_width = 0.05,
   ...
 )
 ```
@@ -132,6 +135,26 @@ rate_optimise(
   measured back from. `NULL` uses `max(gauging_datetime)` – age relative
   to this dataset's own most recent gauging. Ignored if `age_halflife`
   is `NULL`.
+
+- protect_above, protect_quantile:
+
+  `NULL` (default), or one of: a discharge in m3/s (`protect_above`) or
+  a quantile of the gauged discharges between 0 and 1
+  (`protect_quantile`). Opt-in magnitude protection for recency
+  weighting: gaugings at or above the threshold keep their full weight
+  however old they are, and the weight eases back to the age weight
+  below it. The final weight is `p + (1 - p) * w_age`, where `w_age` is
+  the recency weight above and `p` rises smoothly with discharge, so
+  protection never lowers a weight. Needs `age_halflife`. One threshold
+  applies to the whole record, not per limb. A quantile is recorded as
+  the discharge it produced. See
+  [`vignette("recency_weighting_guide")`](https://jonpayneea.github.io/reach.rate/articles/recency_weighting_guide.md).
+
+- protect_width:
+
+  Single positive number. The width of the ramp from unprotected to
+  protected, as a fraction of the discharge range. Default `0.05`.
+  Ignored without `protect_above` or `protect_quantile`.
 
 - ...:
 

@@ -104,6 +104,9 @@ single globally-optimised multi-limb model (see
 <span>  age_halflife <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  age_min_weight <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  reference_datetime <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  protect_above <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  protect_quantile <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  protect_width <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -211,6 +214,26 @@ decay identically. Default <code>0.1</code>. Ignored if <code>age_halflife</code
 "as of" point ages are measured back from. <code>NULL</code> uses
 <code>max(gauging_datetime)</code> – age relative to this dataset's own most
 recent gauging. Ignored if <code>age_halflife</code> is <code>NULL</code>.</p></dd>
+
+
+<dt id="arg-protect-above-protect-quantile">protect_above, protect_quantile<a class="anchor" aria-label="anchor" href="#arg-protect-above-protect-quantile"></a></dt>
+<dd><p><code>NULL</code> (default), or one of: a
+discharge in m3/s (<code>protect_above</code>) or a quantile of the gauged
+discharges between 0 and 1 (<code>protect_quantile</code>). Opt-in magnitude
+protection for recency weighting: gaugings at or above the threshold
+keep their full weight however old they are, and the weight eases back
+to the age weight below it. The final weight is <code>p + (1 - p) * w_age</code>,
+where <code>w_age</code> is the recency weight above and <code>p</code> rises smoothly with
+discharge, so protection never lowers a weight. Needs <code>age_halflife</code>.
+One threshold applies to the whole record, not per limb. A quantile is
+recorded as the discharge it produced. See
+<code><a href="../articles/recency_weighting_guide.html">vignette("recency_weighting_guide")</a></code>.</p></dd>
+
+
+<dt id="arg-protect-width">protect_width<a class="anchor" aria-label="anchor" href="#arg-protect-width"></a></dt>
+<dd><p>Single positive number. The width of the ramp from
+unprotected to protected, as a fraction of the discharge range. Default
+<code>0.05</code>. Ignored without <code>protect_above</code> or <code>protect_quantile</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

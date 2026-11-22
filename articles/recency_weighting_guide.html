@@ -172,9 +172,11 @@ low-flow gauging decay along exactly the same curve; the floor protects
 both equally, not the flood specifically. Building a scheme that
 down-weights by age <em>only among gaugings of similar size</em> – so a
 big old flood keeps more of its influence than a routine old gauging
-does – is a real refinement this doesn’t attempt. <a href="https://github.com/JonPayneEA/reach.rate/issues/9" class="external-link">Issue #9</a>
-tracks that fuller version; what’s built here is the simpler, defensible
-partial answer: nothing is ever fully forgotten.</p>
+does – is a real refinement this doesn’t attempt. The floor is the
+simple answer: nothing is ever fully forgotten.
+<code>protect_above</code> and <code>protect_quantile</code>, described
+under “Protecting large gaugings” below, are the fuller one, and are
+opt-in.</p>
 </div>
 </div>
 <div class="section level2">
@@ -276,6 +278,94 @@ arguments, weighting its single joint fit the same way.
 <code><a href="../reference/rate_optimise_constrained.html">rate_optimise_constrained()</a></code> forwards them through
 <code>...</code> to its own internal <code><a href="../reference/rate_optimise.html">rate_optimise()</a></code> call,
 same as <code>gauging_datetime</code> itself already does.</p>
+</div>
+<div class="section level2">
+<h2 id="protecting-large-gaugings">Protecting large gaugings<a class="anchor" aria-label="anchor" href="#protecting-large-gaugings"></a>
+</h2>
+<p>The floor protects every old gauging equally. Sometimes that is not
+enough. A channel can change at low flow and stay put at high flow,
+because a bank or a bridge controls the top of the curve. The old floods
+are then the best evidence of the top, and age decay throws them
+away.</p>
+<p>Magnitude protection is the opt-in remedy. Name a discharge, or a
+quantile of the gauged discharges, and every gauging at or above it
+keeps its full weight however old it is. Below it, the weight eases back
+to the age weight over a short ramp, so two gaugings of similar size
+never get very different weights.</p>
+<p>With <code>w_age</code> as the weight above and <code>p</code> the
+protection, which rises from 0 to 1 with discharge:</p>
+<pre><code><span><span class="va">w</span> <span class="op">=</span> <span class="va">p</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">p</span><span class="op">)</span> <span class="op">*</span> <span class="va">w_age</span></span></code></pre>
+<p>A protected gauging has <code>p</code> near 1 and weight near 1. An
+unprotected one has <code>p</code> near 0 and keeps <code>w_age</code>.
+The result always lies between <code>w_age</code> and 1, so protection
+never lowers a weight.</p>
+<p>The example below has an old channel below 2 m and today’s channel
+above it. Five floods from 2008 are the only evidence of the top of the
+curve.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">8</span><span class="op">)</span></span>
+<span><span class="va">today</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">h</span><span class="op">)</span> <span class="fl">4</span> <span class="op">*</span> <span class="va">h</span><span class="op">^</span><span class="fl">1.5</span></span>
+<span><span class="va">old</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">h</span><span class="op">)</span> <span class="fl">3</span> <span class="op">*</span> <span class="va">h</span><span class="op">^</span><span class="fl">1.5</span></span>
+<span><span class="va">low</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">1.9</span>, length.out <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<span><span class="va">high</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.2</span>, <span class="fl">2.5</span>, <span class="fl">2.8</span>, <span class="fl">3.1</span>, <span class="fl">3.4</span><span class="op">)</span></span>
+<span><span class="va">recent</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">1.4</span>, length.out <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
+<span><span class="va">gaugings</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>stage_m <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">low</span>, <span class="va">high</span><span class="op">)</span>,</span>
+<span>             discharge_cms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">old</span><span class="op">(</span><span class="va">low</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">12</span>, sd <span class="op">=</span> <span class="fl">0.03</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                               <span class="fu">today</span><span class="op">(</span><span class="va">high</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">5</span>, sd <span class="op">=</span> <span class="fl">0.03</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>             observation_time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="st">"2008-06-01"</span>, tz <span class="op">=</span> <span class="st">"UTC"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>stage_m <span class="op">=</span> <span class="va">recent</span>,</span>
+<span>             discharge_cms <span class="op">=</span> <span class="fu">today</span><span class="op">(</span><span class="va">recent</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">6</span>, sd <span class="op">=</span> <span class="fl">0.10</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>             observation_time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="st">"2024-06-01"</span>, tz <span class="op">=</span> <span class="st">"UTC"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">now</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="st">"2025-01-01"</span>, tz <span class="op">=</span> <span class="st">"UTC"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">age_only</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_rating.html">fit_rating</a></span><span class="op">(</span><span class="va">gaugings</span>, age_halflife <span class="op">=</span> <span class="fl">365</span> <span class="op">*</span> <span class="fl">3</span>, reference_time <span class="op">=</span> <span class="va">now</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">protected</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_rating.html">fit_rating</a></span><span class="op">(</span><span class="va">gaugings</span>, age_halflife <span class="op">=</span> <span class="fl">365</span> <span class="op">*</span> <span class="fl">3</span>, reference_time <span class="op">=</span> <span class="va">now</span>,</span>
+<span>                        protect_above <span class="op">=</span> <span class="fl">10</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">stage</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">3.4</span>, length.out <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
+<span><span class="va">worst</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="../reference/apply_rating.html">apply_rating</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">stage</span><span class="op">)</span><span class="op">$</span><span class="va">discharge</span> <span class="op">/</span> <span class="fu">today</span><span class="op">(</span><span class="va">stage</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>age_weighting_only <span class="op">=</span> <span class="fu">worst</span><span class="op">(</span><span class="va">age_only</span><span class="op">)</span>, with_protection <span class="op">=</span> <span class="fu">worst</span><span class="op">(</span><span class="va">protected</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; age_weighting_only    with_protection </span></span>
+<span><span class="co">#&gt;              0.132              0.037</span></span></code></pre></div>
+<p>Judged against today’s rating, the largest relative error across the
+range is smaller with protection. This is one synthetic station, built
+to show the mechanism. It is not evidence that protection is right at a
+real one.</p>
+<p>What to know before using it:</p>
+<ul>
+<li>
+<strong>It protects by size, not by importance.</strong> A large
+gauging in a bad measurement is protected as well as a good one.
+<code><a href="../reference/validate_gaugings.html">validate_gaugings()</a></code> and the influence checks still
+apply.</li>
+<li>
+<strong>The threshold is a judgement.</strong> Run
+<code><a href="../reference/rating_sensitivity.html">rating_sensitivity()</a></code> across thresholds before approving a
+rating.</li>
+<li>
+<strong>It can raise leverage at the top of the curve.</strong> Read
+the assessment’s influence checks.</li>
+<li>
+<strong>It assumes the old high gaugings are still true.</strong> It
+cannot tell a flood from a changed channel at high stage. That is your
+call.</li>
+<li>
+<strong>One threshold covers the whole record</strong>, not each
+limb. A per-limb threshold would protect the top of a low limb, which is
+not a flood.</li>
+</ul>
+<p><code>protect_above</code> is a discharge in m3/s.
+<code>protect_quantile</code> is a quantile of the gauged discharges,
+such as <code>0.9</code>. The fit records the discharge either produced,
+with the ramp width (<code>protect_width</code>, default 0.05 of the
+discharge range) and the number of gaugings protected, in
+<code><a href="../reference/rating_provenance.html">rating_provenance()</a></code>. Protection needs
+<code>age_halflife</code>. Without it there is no decay to protect
+against, and the call stops with a message saying so. Leave both
+arguments <code>NULL</code>, the default, and the fit is exactly what it
+was.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

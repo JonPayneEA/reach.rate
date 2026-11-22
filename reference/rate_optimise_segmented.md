@@ -37,6 +37,9 @@ rate_optimise_segmented(
   age_halflife = NULL,
   age_min_weight = 0.1,
   reference_datetime = NULL,
+  protect_above = NULL,
+  protect_quantile = NULL,
+  protect_width = 0.05,
   ...
 )
 ```
@@ -90,6 +93,12 @@ rate_optimise_segmented(
   – opt-in recency weighting of the single joint fit (this model has no
   per-limb structure to weight separately). `age_halflife = NULL`
   (default) fits unweighted, exactly as before.
+
+- protect_above, protect_quantile, protect_width:
+
+  Opt-in magnitude protection, as in
+  [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md).
+  Needs `age_halflife`.
 
 - ...:
 

@@ -63,6 +63,9 @@ fit_rating(
   age_halflife = NULL,
   age_min_weight = 0.1,
   reference_time = NULL,
+  protect_above = NULL,
+  protect_quantile = NULL,
+  protect_width = 0.05,
   n_boot = 0L,
   seed = NULL,
   operational_limits = NULL,
@@ -121,6 +124,15 @@ fit_rating(
   a half-life in days, the weight floor, and the time ages are measured
   from (`NULL` is the latest gauging). Needs an `observation_time` on
   every row used.
+
+- protect_above, protect_quantile, protect_width:
+
+  Optional magnitude protection for recency weighting, as in
+  [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md):
+  gaugings at or above a discharge (`protect_above`, m3/s) or a quantile
+  of the gauged discharges (`protect_quantile`) keep their full weight
+  however old they are. Needs `age_halflife`. The threshold is recorded
+  in the provenance.
 
 - n_boot:
 
@@ -201,7 +213,7 @@ apply_rating(fit, c(0.8, 1.5, 2.5))
 # To apply it more widely, state the range and why.
 wider <- set_operational_limits(fit, 0.2, 3.5, basis = "channel control confirmed to 3.5 m")
 apply_rating(wider, c(0.3, 3.4))
-#> INFO [2026-11-22 17:17:12] apply_rating(): 2 of 2 stage value(s) fell outside the rating and were extrapolated.
+#> INFO [2026-11-22 19:07:35] apply_rating(): 2 of 2 stage value(s) fell outside the rating and were extrapolated.
 #>    stage  discharge extrapolated       support
 #>    <num>      <num>       <lgcl>        <char>
 #> 1:   0.3  0.4536877         TRUE extrapolation

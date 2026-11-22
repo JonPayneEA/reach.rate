@@ -83,10 +83,10 @@ gauging decay along exactly the same curve; the floor protects both
 equally, not the flood specifically. Building a scheme that down-weights
 by age *only among gaugings of similar size* – so a big old flood keeps
 more of its influence than a routine old gauging does – is a real
-refinement this doesn’t attempt. [Issue
-\#9](https://github.com/JonPayneEA/reach.rate/issues/9) tracks that
-fuller version; what’s built here is the simpler, defensible partial
-answer: nothing is ever fully forgotten.
+refinement this doesn’t attempt. The floor is the simple answer: nothing
+is ever fully forgotten. `protect_above` and `protect_quantile`,
+described under “Protecting large gaugings” below, are the fuller one,
+and are opt-in.
 
 ## A worked example
 
@@ -204,6 +204,91 @@ way.
 forwards them through `...` to its own internal
 [`rate_optimise()`](https://jonpayneea.github.io/reach.rate/reference/rate_optimise.md)
 call, same as `gauging_datetime` itself already does.
+
+## Protecting large gaugings
+
+The floor protects every old gauging equally. Sometimes that is not
+enough. A channel can change at low flow and stay put at high flow,
+because a bank or a bridge controls the top of the curve. The old floods
+are then the best evidence of the top, and age decay throws them away.
+
+Magnitude protection is the opt-in remedy. Name a discharge, or a
+quantile of the gauged discharges, and every gauging at or above it
+keeps its full weight however old it is. Below it, the weight eases back
+to the age weight over a short ramp, so two gaugings of similar size
+never get very different weights.
+
+With `w_age` as the weight above and `p` the protection, which rises
+from 0 to 1 with discharge:
+
+    w = p + (1 - p) * w_age
+
+A protected gauging has `p` near 1 and weight near 1. An unprotected one
+has `p` near 0 and keeps `w_age`. The result always lies between `w_age`
+and 1, so protection never lowers a weight.
+
+The example below has an old channel below 2 m and today’s channel above
+it. Five floods from 2008 are the only evidence of the top of the curve.
+
+``` r
+
+set.seed(8)
+today <- function(h) 4 * h^1.5
+old <- function(h) 3 * h^1.5
+low <- seq(0.3, 1.9, length.out = 12)
+high <- c(2.2, 2.5, 2.8, 3.1, 3.4)
+recent <- seq(0.3, 1.4, length.out = 6)
+gaugings <- rbind(
+  data.frame(stage_m = c(low, high),
+             discharge_cms = c(old(low) * exp(rnorm(12, sd = 0.03)),
+                               today(high) * exp(rnorm(5, sd = 0.03))),
+             observation_time = as.POSIXct("2008-06-01", tz = "UTC")),
+  data.frame(stage_m = recent,
+             discharge_cms = today(recent) * exp(rnorm(6, sd = 0.10)),
+             observation_time = as.POSIXct("2024-06-01", tz = "UTC"))
+)
+now <- as.POSIXct("2025-01-01", tz = "UTC")
+
+age_only <- fit_rating(gaugings, age_halflife = 365 * 3, reference_time = now, quiet = TRUE)
+protected <- fit_rating(gaugings, age_halflife = 365 * 3, reference_time = now,
+                        protect_above = 10, quiet = TRUE)
+
+stage <- seq(0.3, 3.4, length.out = 200)
+worst <- function(fit) max(abs(apply_rating(fit, stage)$discharge / today(stage) - 1))
+round(c(age_weighting_only = worst(age_only), with_protection = worst(protected)), 3)
+#> age_weighting_only    with_protection 
+#>              0.132              0.037
+```
+
+Judged against today’s rating, the largest relative error across the
+range is smaller with protection. This is one synthetic station, built
+to show the mechanism. It is not evidence that protection is right at a
+real one.
+
+What to know before using it:
+
+- **It protects by size, not by importance.** A large gauging in a bad
+  measurement is protected as well as a good one.
+  [`validate_gaugings()`](https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.md)
+  and the influence checks still apply.
+- **The threshold is a judgement.** Run
+  [`rating_sensitivity()`](https://jonpayneea.github.io/reach.rate/reference/rating_sensitivity.md)
+  across thresholds before approving a rating.
+- **It can raise leverage at the top of the curve.** Read the
+  assessment’s influence checks.
+- **It assumes the old high gaugings are still true.** It cannot tell a
+  flood from a changed channel at high stage. That is your call.
+- **One threshold covers the whole record**, not each limb. A per-limb
+  threshold would protect the top of a low limb, which is not a flood.
+
+`protect_above` is a discharge in m3/s. `protect_quantile` is a quantile
+of the gauged discharges, such as `0.9`. The fit records the discharge
+either produced, with the ramp width (`protect_width`, default 0.05 of
+the discharge range) and the number of gaugings protected, in
+[`rating_provenance()`](https://jonpayneea.github.io/reach.rate/reference/rating_provenance.md).
+Protection needs `age_halflife`. Without it there is no decay to protect
+against, and the call stops with a message saying so. Leave both
+arguments `NULL`, the default, and the fit is exactly what it was.
 
 ## References
 
