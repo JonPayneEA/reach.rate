@@ -23,10 +23,12 @@ there.
 | Medium | Resolve or mitigate; the Steward should know |
 | Low | Record and review |
 
-Five High items stand out: **L01** (no real gauging file has been read), **L11** (an
-approval is a typed name), **L14** (nothing records whether evidence is Gold),
-**L16** (no managed machine has been tested) and **L23** (the package claims a tier
-it does not hold).
+Seven items are High. Five stand out: **L01** (no real gauging file has been read),
+**L11** (an approval is a typed name), **L14** (nothing records whether evidence is
+Gold), **L16** (no managed machine has been tested) and **L23** (the package claims a
+tier it does not hold). Two more need a procedure or a person, not code: **L05**
+(extrapolation is flagged, not blocked, without operational limits) and **L21** (one
+maintainer, and AI-assisted authorship).
 
 ## Register
 
