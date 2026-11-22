@@ -1,5 +1,23 @@
 # reach.rate (development)
 
+* Release C: **lifecycle metadata, `set_lifecycle()` and `rating_lifecycle()`**.
+  Until now a rating's lifecycle was a property with no way for a person to
+  change it. `set_lifecycle(x, to, by, reason)` moves a fit or a segmented fit
+  between `draft`, `under_review`, `approved`, `superseded` and `withdrawn`,
+  recording **who, when and why** in its provenance and as a step in
+  `rating_history()`; the earlier version is kept. `rating_lifecycle()` returns
+  the record. Nothing in the package moves a lifecycle by itself, and nothing
+  sets `approved` except this function called by a named person, who must give a
+  reason for every change. **Approval has conditions:** it must come from
+  `under_review`, and it is refused for a rating that fails its own validity
+  checks. The person who put a rating under review may approve it too, which is
+  the default, but the record says so; `allow_self_approval = FALSE` requires a
+  second person. Superseded and withdrawn are final. Amending a rating still makes a
+  new draft, which shows in the history. The printed rating says who last moved
+  its lifecycle, `export_rating()` writes a `lifecycle.csv` when there are
+  records, and `rating_report()` lists them. A `FlodeRatingTable` has nowhere to
+  keep a record, so it is refused; giving it one would change the stored layout.
+
 * Release C: **`compare_ratings()` now compares evidence and support**, so it can
   answer "is the new rating better supported, or only different?" and not only
   "how far did the coefficients move". It accepts fits (`FlodeRating`) as well as
