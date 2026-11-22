@@ -1,5 +1,16 @@
 # reach.rate (development)
 
+* **`suggest_breakpoints()` output: `preferred` replaces `selected`.** The column
+  marks the candidate each round put forward as best by the scoring rule. The old
+  name suggested a finding, and the function's own documentation says a candidate
+  is not one. `preferred` is now the name to use. **`selected` is kept with
+  identical values** for one more minor release and is documented as superseded,
+  so code written against it, including code that followed the advice in
+  `suggested_breakpoints_vector()`'s deprecation message, keeps working. It will
+  warn in a later release and then go. `fit_rating()`, the documentation, the
+  vignettes and the deprecation message now use `preferred`. The release policy's
+  register lists the column at stage 1.
+
 * Release C: **the reference-case suite**, `reference_cases()`, `reference_case()`
   and `check_reference_cases()`, with `vignette("reference_cases")`. Ten synthetic
   stations, each with a rating the package knows, so that a fit can be judged

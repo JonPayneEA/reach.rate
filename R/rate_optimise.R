@@ -1662,12 +1662,15 @@ plot_rating_leverage <- function(fit, cooks_mult = 4, leverage_mult = 2) {
 #'     `failure_reason` saying why when it is not `"ok"`. A candidate that
 #'     could not be fitted is listed, not dropped, because the stage where
 #'     fits fail can itself be informative;
-#'   * `rank` within its round, and `selected`, `TRUE` for the candidate each
-#'     round put forward. Extract those stages with
-#'     `sort(result[selected == TRUE, candidate_stage])`. The same stages
-#'     remain attached as the `"selected_breaks"` attribute for code written
-#'     against earlier versions, but an attribute can be lost under ordinary
-#'     data.table operations, so prefer the column.
+#'   * `rank` within its round, and `preferred`, `TRUE` for the candidate each
+#'     round put forward as the best by the scoring rule. It is a preference,
+#'     not a finding: see the top of this page. Extract those stages with
+#'     `sort(result[preferred == TRUE, candidate_stage])`. `selected` holds the
+#'     same values and is the earlier name for this column, kept for code that
+#'     already uses it and **superseded**: it will warn in a later release and
+#'     then go. The same stages remain attached as the `"selected_breaks"`
+#'     attribute for code written against earlier versions, but an attribute
+#'     can be lost under ordinary data.table operations, so prefer the column.
 #'
 #' @seealso [rate_optimise()], [fit_rating()] and [breakpoint_origins()] to
 #'   record where an adopted breakpoint came from
@@ -1683,10 +1686,10 @@ plot_rating_leverage <- function(fit, cooks_mult = 4, leverage_mult = 2) {
 #'
 #' # The candidate each round put forward, how much it improved the fit, and
 #' # how many gaugings stand on each side of it
-#' candidates[selected == TRUE, c("round", "candidate_stage", "improvement", "n_obs_lower", "n_obs_upper")]
+#' candidates[preferred == TRUE, c("round", "candidate_stage", "improvement", "n_obs_lower", "n_obs_upper")]
 #'
 #' # The stages themselves, ready to pass to rate_optimise()
-#' breaks <- sort(candidates[selected == TRUE, candidate_stage])
+#' breaks <- sort(candidates[preferred == TRUE, candidate_stage])
 #' breaks
 #' fit <- rate_optimise(discharge_cms, stage_m, control = breaks)
 #' rating_limbs(fit)
@@ -1722,7 +1725,7 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
       candidate_stage = numeric(0), score = numeric(0), improvement = numeric(0),
       n_obs_lower = integer(0), n_obs_upper = integer(0), round = integer(0),
       fit_status = character(0), lower_min_m = numeric(0), lower_max_m = numeric(0), upper_min_m = numeric(0),
-      upper_max_m = numeric(0), failure_reason = character(0), rank = integer(0), selected = logical(0)
+      upper_max_m = numeric(0), failure_reason = character(0), rank = integer(0), selected = logical(0), preferred = logical(0)
     )
   }
 
@@ -1856,6 +1859,9 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
 
   setorder(all_candidates_dt, round, -score)
   all_candidates_dt[, rank := seq_len(.N), by = round]
+  # `preferred` is the name to use. `selected` is the same column under its
+  # earlier name, kept for one more minor release (see vignette("release_policy")).
+  all_candidates_dt[, preferred := selected]
   attr(all_candidates_dt, "selected_breaks") <- selected_breaks
   all_candidates_dt[]
 }
@@ -1864,9 +1870,9 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
 #'
 #' @description
 #' Deprecated. [suggest_breakpoints()] now marks the adopted candidates in
-#' a `selected` column, which survives data.table operations that can
+#' a `preferred` column, which survives data.table operations that can
 #' drop the attribute this function reads. Use
-#' `sort(candidates_dt[selected == TRUE, candidate_stage])` instead.
+#' `sort(candidates_dt[preferred == TRUE, candidate_stage])` instead.
 #' This function will be removed in the release after next.
 #'
 #' @param candidates_dt The data.table returned by [suggest_breakpoints()].
@@ -1878,8 +1884,8 @@ suggest_breakpoints <- function(discharge_cms, stage_m, max_breaks = 2L,
 #'   (pmax(stage_m - 2.4, 0) + 1)^1.1 * exp(rnorm(length(stage_m), sd = 0.03))
 #' candidates <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
 #'
-#' # The replacement: read the `selected` column.
-#' sort(candidates[selected == TRUE, candidate_stage])
+#' # The replacement: read the `preferred` column.
+#' sort(candidates[preferred == TRUE, candidate_stage])
 #'
 #' # The deprecated function gives the same stages, with a warning.
 #' suppressWarnings(suggested_breakpoints_vector(candidates))
@@ -1890,8 +1896,8 @@ suggested_breakpoints_vector <- function(candidates_dt) {
   .Deprecated(
     msg = paste(
       "suggested_breakpoints_vector() is deprecated and will be removed.",
-      "suggest_breakpoints() now returns a `selected` column: use",
-      "sort(candidates_dt[selected == TRUE, candidate_stage]) instead."
+      "suggest_breakpoints() now returns a `preferred` column: use",
+      "sort(candidates_dt[preferred == TRUE, candidate_stage]) instead."
     )
   )
   if (!is.data.table(candidates_dt)) {

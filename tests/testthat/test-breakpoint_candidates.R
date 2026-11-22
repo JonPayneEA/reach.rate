@@ -13,7 +13,7 @@ test_that("each candidate carries the evidence on each side, by hand", {
   g <- bp_data()
   cand <- suggest_breakpoints(g$discharge_cms, g$stage_m, max_breaks = 1L)
   expect_true(all(c("candidate_stage", "score", "improvement", "n_obs_lower", "n_obs_upper", "lower_min_m", "lower_max_m",
-                    "upper_min_m", "upper_max_m", "fit_status", "failure_reason", "round", "rank", "selected") %in% names(cand)))
+                    "upper_min_m", "upper_max_m", "fit_status", "failure_reason", "round", "rank", "selected", "preferred") %in% names(cand)))
   ok <- cand[fit_status == "ok"]
   expect_gt(nrow(ok), 10L)
   for (i in c(1, nrow(ok) %/% 2, nrow(ok))) {
@@ -131,4 +131,26 @@ test_that("the assessment still reports on a rating whose breakpoints have origi
   a <- assess_rating(fit_rating(g, controls = 1.6, breakpoint_origin = "field_evidence", quiet = TRUE),
                      reference_time = as.POSIXct("2026-01-01", tz = "UTC"))
   expect_equal(assessment_checks(a)[check_id == "fit_recorded"]$status, "pass")
+})
+
+test_that("preferred is the column to use, and selected is the same column under its earlier name", {
+  set.seed(3)
+  h <- round(seq(0.3, 3.4, length.out = 40), 3)
+  q <- ifelse(h < 1.6, 3.2 * h^1.6, 3.2 * 1.6^1.6 * (h / 1.6)^2.1) * exp(rnorm(40, sd = 0.03))
+  cand <- suggest_breakpoints(q, h, max_breaks = 2L)
+  expect_type(cand$preferred, "logical")
+  expect_false(anyNA(cand$preferred))
+  expect_identical(cand$preferred, cand$selected)
+  expect_equal(sort(cand[preferred == TRUE, candidate_stage]), sort(attr(cand, "selected_breaks")))
+  empty <- suggest_breakpoints(q[1:8], h[1:8], max_breaks = 1L, min_obs_per_side = 20L)
+  expect_true(all(c("preferred", "selected") %in% names(empty)))
+  expect_equal(nrow(empty[preferred == TRUE]), 0L)
+})
+
+test_that("the deprecated vector function points to preferred", {
+  set.seed(3)
+  h <- round(seq(0.3, 3.4, length.out = 40), 3)
+  q <- ifelse(h < 1.6, 3.2 * h^1.6, 3.2 * 1.6^1.6 * (h / 1.6)^2.1) * exp(rnorm(40, sd = 0.03))
+  cand <- suggest_breakpoints(q, h, max_breaks = 1L)
+  expect_warning(suggested_breakpoints_vector(cand), "preferred")
 })

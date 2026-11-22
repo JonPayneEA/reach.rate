@@ -49,12 +49,15 @@ gaugings crowded at one end is weak however good its score;
 \code{failure_reason} saying why when it is not \code{"ok"}. A candidate that
 could not be fitted is listed, not dropped, because the stage where
 fits fail can itself be informative;
-\item \code{rank} within its round, and \code{selected}, \code{TRUE} for the candidate each
-round put forward. Extract those stages with
-\code{sort(result[selected == TRUE, candidate_stage])}. The same stages
-remain attached as the \code{"selected_breaks"} attribute for code written
-against earlier versions, but an attribute can be lost under ordinary
-data.table operations, so prefer the column.
+\item \code{rank} within its round, and \code{preferred}, \code{TRUE} for the candidate each
+round put forward as the best by the scoring rule. It is a preference,
+not a finding: see the top of this page. Extract those stages with
+\code{sort(result[preferred == TRUE, candidate_stage])}. \code{selected} holds the
+same values and is the earlier name for this column, kept for code that
+already uses it and \strong{superseded}: it will warn in a later release and
+then go. The same stages remain attached as the \code{"selected_breaks"}
+attribute for code written against earlier versions, but an attribute
+can be lost under ordinary data.table operations, so prefer the column.
 }
 }
 \description{
@@ -85,10 +88,10 @@ candidates <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 1L)
 
 # The candidate each round put forward, how much it improved the fit, and
 # how many gaugings stand on each side of it
-candidates[selected == TRUE, c("round", "candidate_stage", "improvement", "n_obs_lower", "n_obs_upper")]
+candidates[preferred == TRUE, c("round", "candidate_stage", "improvement", "n_obs_lower", "n_obs_upper")]
 
 # The stages themselves, ready to pass to rate_optimise()
-breaks <- sort(candidates[selected == TRUE, candidate_stage])
+breaks <- sort(candidates[preferred == TRUE, candidate_stage])
 breaks
 fit <- rate_optimise(discharge_cms, stage_m, control = breaks)
 rating_limbs(fit)

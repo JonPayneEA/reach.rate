@@ -385,10 +385,10 @@ test_that("suggest_breakpoints finds breakpoints near deliberate slope changes",
   expect_true(is.data.table(candidates_dt))
   expect_true(all(c(
     "candidate_stage", "score", "improvement", "n_obs_lower",
-    "n_obs_upper", "round", "fit_status", "rank", "selected"
+    "n_obs_upper", "round", "fit_status", "rank", "selected", "preferred"
   ) %in% names(candidates_dt)))
 
-  breaks <- sort(candidates_dt[selected == TRUE, candidate_stage])
+  breaks <- sort(candidates_dt[preferred == TRUE, candidate_stage])
   expect_true(length(breaks) <= 2L)
   expect_true(is.numeric(breaks))
   expect_equal(breaks, sort(breaks))

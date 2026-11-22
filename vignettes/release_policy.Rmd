@@ -98,8 +98,9 @@ group in the package's reference index.
 | Function | Stage | Replacement |
 |---|---|---|
 | `rating_plot()` | 1. Superseded | `autoplot()` |
-| `suggested_breakpoints_vector()` | 2. Deprecated | the `selected` column of `suggest_breakpoints()` |
+| `suggested_breakpoints_vector()` | 2. Deprecated | the `preferred` column of `suggest_breakpoints()` |
 | `bootstrap_to_table()` | 2. Deprecated | `rating_bootstrap()` |
+| the `selected` column of `suggest_breakpoints()` | 1. Superseded | the `preferred` column, same values |
 
 `rating_plot()` is held at stage 1 on purpose. It is used in several vignettes
 and the walkthrough script, and a warning now would flood every page. The

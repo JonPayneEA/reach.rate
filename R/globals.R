@@ -20,7 +20,7 @@ globalVariables(c(
   "label", "leverage", "limb", "limb_", "limb_f", "limb_width_m",
   "lower_level", "lower_stage_m", "lower_unsupported_frac",
   "lower_unsupported_m", "n", "n_new", "n_obs", "n_old", "rating",
-  "residual_cms", "score", "selected", "stage_", "stage_break", "stage_m",
+  "residual_cms", "score", "selected", "preferred", "stage_", "stage_break", "stage_m",
   "stage_maod", "success", "upper_level", "upper_stage_m",
   "upper_unsupported_frac", "upper_unsupported_m", "x", "y", "y_junction",
   # compare_ratings() evidence and support
