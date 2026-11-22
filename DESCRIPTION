@@ -64,6 +64,7 @@ Collate:
     'rating_report.R'
     'reach.rate-package.R'
     'read_gaugings.R'
+    'reference_cases.R'
     'sensitivity.R'
     'weir_equations.R'
     'zzz.R'

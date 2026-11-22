@@ -38,6 +38,7 @@ articles:
   contents:
   - rating_curves_guide
   - thresholds
+  - reference_cases
   - release_policy
   - rating_methods_overview
   - mathematical_contract
@@ -224,6 +225,16 @@ reference:
   - rating_schema_version
   - set_lifecycle
   - rating_lifecycle
+
+- title: Checking an installation
+  desc: >
+    Ten synthetic stations with a known true rating. check_reference_cases()
+    fits each, judges it against the truth, and can be run on any machine the
+    package is installed on.
+  contents:
+  - reference_cases
+  - reference_case
+  - check_reference_cases
 
 - title: Teaching tools
   desc: >

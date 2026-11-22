@@ -1,5 +1,22 @@
 # reach.rate (development)
 
+* Release C: **the reference-case suite**, `reference_cases()`, `reference_case()`
+  and `check_reference_cases()`, with `vignette("reference_cases")`. Ten synthetic
+  stations, each with a rating the package knows, so that a fit can be judged
+  against the truth, which real gaugings never allow: one limb, two limbs with a
+  real break, heavy scatter, a thin top end, one isolated high gauging, a channel
+  shift needing recency weighting, a zero-flow datum at 0.8 m, steep and wide
+  exponents, and six gaugings. **These ten were written by the package's author,
+  because the brief's list was never supplied**, and passing them is necessary,
+  not sufficient. A case passes when the fitted discharge stays inside a stated
+  **envelope** of the truth (a maximum relative error, not exact coefficients),
+  the fit converged and is valid, any parameter checked is recovered, and the
+  assessment raises the one check the case was built to trigger. Every envelope
+  leaves at least double the error seen. The checker is exported so the same run
+  can be made on any installation, such as a target machine, and it leaves the
+  caller's random seed and every rating's lifecycle as it found them. The release
+  checklist now asks for it to pass.
+
 * Release C: **lifecycle metadata, `set_lifecycle()` and `rating_lifecycle()`**.
   Until now a rating's lifecycle was a property with no way for a person to
   change it. `set_lifecycle(x, to, by, reason)` moves a fit or a segmented fit
