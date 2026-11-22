@@ -1,0 +1,120 @@
+---
+title: "Reference Cases: Ten Stations With a Known Answer"
+author: "Jonathan Payne, Environment Agency Flood Forecasting"
+date: "November 2026"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Reference Cases: Ten Stations With a Known Answer}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, echo = TRUE, collapse = TRUE, comment = "#>")
+library(reach.rate)
+library(data.table)
+```
+
+**Audience:** technical. You are checking that an installation of the package
+behaves as its tests say it should, reviewing what those tests cover, or adding a
+case of your own.
+
+# Why synthetic stations
+
+A real station never tells you the true rating, so a fit to real gaugings can be
+checked for consistency but never for correctness. A synthetic station can. Each
+case below generates gaugings from a rating the package knows, with scatter, fits
+them with the guided workflow, and asks whether the answer comes back.
+
+# Read this first
+
+**These ten cases were written by the package's author.** They are not the cases
+of any external specification: the brief that asked for a reference suite never
+supplied its list, so these are my own choices, covering the situations I think
+matter most. They are a starting point for a reviewer to extend.
+
+**Passing them is necessary, not sufficient.** Ten tidy synthetic stations say
+nothing about a real one. They catch a package that has broken, not a rating that
+is wrong.
+
+**The tests are about envelopes, not coefficients.** A case does not demand that
+`C`, `a` and `n` come back to three decimals. Several triples describe nearly the
+same curve, and a platform's arithmetic can move them in the last places. What
+matters is the discharge a user would read off. So each case states an
+**envelope**, the largest relative error allowed between the fitted curve and the
+truth across the gauged range. Each envelope is set with room to spare: no case
+uses more than half of it.
+
+# The cases
+
+```{r cases}
+cases <- reference_cases()
+knitr::kable(cases[, .(Case = id, `What it tests` = purpose, `What it does not` = not_tested)])
+```
+
+A case passes when four things hold. The fitted curve stays inside its envelope.
+The optimiser converged and the rating is valid. Any parameter the case checks
+(the zero-flow stage, an exponent) is recovered. And the assessment raises the one
+check the case was built to trigger, for the five that have one.
+
+```{r designed}
+knitr::kable(cases[!is.na(designed_check), .(Case = id, `Envelope` = envelope, `Check it must raise` = designed_check)])
+```
+
+# Running them
+
+```{r run}
+res <- check_reference_cases()
+knitr::kable(res[, .(Case = id, `Largest error` = round(max_rel_error, 3), Envelope = envelope,
+                     Converged = converged, Valid = valid, `Check raised` = check_raised, Passed = passed)])
+```
+
+`check_reference_cases()` is exported so that the same run can be made on any
+machine the package is installed on, such as one it is about to be used on. It
+takes a few seconds and changes nothing: it leaves your random seed as it found
+it and moves no rating's lifecycle.
+
+```{r summary}
+cat(sprintf("%d of %d cases passed.\n", sum(res$passed), nrow(res)))
+```
+
+# Looking at one case
+
+```{r one}
+case <- reference_case("two_limbs")
+fit <- do.call(fit_rating, c(list(case$data, quiet = TRUE), case$fit_args))
+stage <- c(0.5, 1.0, 1.5, 2.0, 3.0)
+data.table(stage = stage,
+           truth = round(case$truth(stage), 2),
+           fitted = round(apply_rating(fit, stage)$discharge, 2),
+           relative_error = round(apply_rating(fit, stage)$discharge / case$truth(stage) - 1, 3))
+```
+
+Each case is `reference_case(id)`: its `data`, identical on every call, the
+`truth` as a function of stage, the arguments it is fitted with, and the range and
+envelope it is judged over.
+
+# What a failure would mean
+
+A failing case is a finding about the installation, not a verdict on any rating.
+Which part failed says where to look:
+
+| Fails | Look at |
+|---|---|
+| The envelope | The fitting code or a dependency: the optimiser, `minpack.lm`, a platform's arithmetic |
+| Converged or valid | The same, and `vignette("mathematical_contract")` for what valid means |
+| A parameter | Bounds on the exponent, or the starting values |
+| The designed check | The assessment's limits: `vignette("thresholds")` |
+| The channel-shift contrast | Age weighting: `vignette("recency_weighting_guide")` |
+
+# Adding a case
+
+A case is one entry in the package's list of specifications: a title, a seed, a
+true rating, a way to generate the data, an envelope, and the check it should
+raise if any. The package's tests loop over every case, so a new one is tested
+without further work. Choose the envelope by running the case and leaving at least
+double the error you see, then say plainly in `not_tested` what the case cannot
+show.
