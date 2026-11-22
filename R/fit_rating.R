@@ -140,6 +140,11 @@ breakpoint_origins <- function() .breakpoint_origins
 #'   weighting, as in [rate_optimise()]: a half-life in days, the weight
 #'   floor, and the time ages are measured from (`NULL` is the latest
 #'   gauging). Needs an `observation_time` on every row used.
+#' @param protect_above,protect_quantile,protect_width Optional magnitude
+#'   protection for recency weighting, as in [rate_optimise()]: gaugings at or
+#'   above a discharge (`protect_above`, m3/s) or a quantile of the gauged
+#'   discharges (`protect_quantile`) keep their full weight however old they
+#'   are. Needs `age_halflife`. The threshold is recorded in the provenance.
 #' @param n_boot Number of bootstrap refits per limb for coefficient
 #'   uncertainty. Default 0. Only for `model = "independent"`.
 #' @param seed Integer or `NULL`. Used for the bootstrap, and recorded so a
@@ -180,6 +185,7 @@ breakpoint_origins <- function() .breakpoint_origins
 fit_rating <- function(evidence, controls = NULL, breakpoint_origin = "user_judgement", limbs = c("one", "suggest"),
                        model = c("independent", "segmented"), objective = c("relative", "absolute"),
                        age_halflife = NULL, age_min_weight = 0.1, reference_time = NULL,
+                       protect_above = NULL, protect_quantile = NULL, protect_width = 0.05,
                        n_boot = 0L, seed = NULL, operational_limits = NULL,
                        operational_basis = NA_character_, quiet = FALSE) {
   cl <- match.call()
@@ -255,11 +261,13 @@ fit_rating <- function(evidence, controls = NULL, breakpoint_origin = "user_judg
   fit <- if (model == "independent") {
     rate_optimise(q, h, gauging_datetime = obs_arg, control = ctl, n_boot = n_boot, boot_seed = seed,
                   objective = objective, age_halflife = age_halflife, age_min_weight = age_min_weight,
-                  reference_datetime = reference_time)
+                  reference_datetime = reference_time, protect_above = protect_above,
+                  protect_quantile = protect_quantile, protect_width = protect_width)
   } else {
     rate_optimise_segmented(q, h, gauging_datetime = obs_arg, control = ctl, objective = objective,
                             age_halflife = age_halflife, age_min_weight = age_min_weight,
-                            reference_datetime = reference_time)
+                            reference_datetime = reference_time, protect_above = protect_above,
+                            protect_quantile = protect_quantile, protect_width = protect_width)
   }
 
   # Carry the evidence ids through. The fitter works on bare vectors, in the

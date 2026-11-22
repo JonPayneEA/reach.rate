@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | DEFINITION for approval. No code has been written. |
+| Status | IMPLEMENTED, as amended below. Approved by the maintainer on 22 November 2026 ("Go") |
 | Release | E (advanced capability), issue #9 |
 | Date | 22 November 2026 |
 | Reader | The maintainer, and the reviewer who will assess the method against the Release E gate |
@@ -60,15 +60,16 @@ Properties, each of which needs a test:
 
 ## Interface
 
-Two new arguments on `fit_rating()`, `rate_optimise()` and `rate_optimise_segmented()`:
+Three new arguments on `fit_rating()`, `rate_optimise()` and `rate_optimise_segmented()`:
 
 | Argument | Meaning | Default |
 |---|---|---|
-| `protect_above` | The threshold `q0`. A single number in m3/s, or a quantile written as `quantile(0.9)` | `NULL`: no protection |
+| `protect_above` | The threshold `q0`: a single discharge in m3/s | `NULL`: no protection |
+| `protect_quantile` | The threshold as a quantile of the gauged discharges, strictly between 0 and 1. Give this or `protect_above`, not both | `NULL` |
 | `protect_width` | The ramp width `s`, as a fraction of the discharge range of the evidence | `0.05` |
 
-`protect_above` is the switch, as `age_halflife` is for recency. It requires
-`age_halflife`. Supplying it alone is an error, because there is no age decay to
+`protect_above` and `protect_quantile` are the switch, as `age_halflife` is for
+recency. Either requires `age_halflife`. Supplying one alone is an error, because there is no age decay to
 protect against.
 
 **Where the threshold comes from.** A quantile of the evidence is simple and needs no
@@ -110,17 +111,25 @@ Every message states what failed, why it matters, and what to do next.
 
 ## Reference examples
 
-Two new reference cases, each with an envelope on the recovered coefficients:
+Two examples, each run in `tests/testthat/test-age_weighting.R`:
 
 1. **Old flood, changed channel.** A set where the low-stage relation has shifted since
-   the old gaugings and the high-stage relation has not. Age weighting alone should
-   lose the old high-stage gaugings and misplace the top of the curve. Protection
-   should recover it. The case states what it does not show.
-2. **Nothing to protect.** A set with no old large gaugings, where protection must
-   change nothing. This is the test that the method does no harm.
+   the old gaugings and the high-stage relation has not. Age weighting alone loses the
+   old high-stage gaugings. Protection recovers the top of the curve: the largest
+   relative error is under half that of age weighting alone. The same example is
+   worked in `vignette("recency_weighting_guide")`.
+2. **Nothing to protect.** A set whose large gaugings are all recent. Protection
+   changes predictions by under 1%. This is the test that the method does no harm.
 
-A third check, not a case: with `protect_above = NULL` the output is **identical** to the
-current release on every existing reference case.
+A third check: with both arguments `NULL` the fit is identical to the previous release.
+
+**Amendment.** The definition proposed adding these to `reference_cases()`. They are
+kept out, so that the ten cases, which Release C and the target-environment test
+(document 07 of the governance pack) are written around, stay ten. They are tests and a
+worked example, not catalogue entries. Both examples are one realisation each, chosen
+and tuned by the author, and show the mechanism, not that it is right at a real
+station. On other seeds the gain varies: protection was never worse in eight
+trials, and the error fell by between 3% and 72%.
 
 ## Mathematical changes
 
@@ -141,14 +150,15 @@ compared, and must match to tolerance zero.
   assumes the old high gaugings are still true. That assumption is the user's.
 - It has not been tested on a real station (L01).
 
-## Decisions needed
+## Decisions taken
 
-1. The threshold form: fixed discharge and quantile (proposed), or fixed discharge only.
-2. The default ramp width, `0.05` of the discharge range (proposed).
-3. Whether to keep the floor (proposed) or follow the issue and remove it.
+1. Threshold form: a fixed discharge or a quantile, as two arguments (amended from one).
+2. Default ramp width: `0.05` of the discharge range.
+3. The floor is kept.
 
 ## Version history
 
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 22 November 2026 | First definition |
+| 0.2 | 22 November 2026 | Implemented. Quantile as a separate argument; examples kept as tests, not catalogue cases |

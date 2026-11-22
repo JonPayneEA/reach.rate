@@ -14,6 +14,9 @@ fit_rating(
   age_halflife = NULL,
   age_min_weight = 0.1,
   reference_time = NULL,
+  protect_above = NULL,
+  protect_quantile = NULL,
+  protect_width = 0.05,
   n_boot = 0L,
   seed = NULL,
   operational_limits = NULL,
@@ -49,6 +52,12 @@ marked as advisory. Not allowed together with \code{controls}.}
 weighting, as in \code{\link[=rate_optimise]{rate_optimise()}}: a half-life in days, the weight
 floor, and the time ages are measured from (\code{NULL} is the latest
 gauging). Needs an \code{observation_time} on every row used.}
+
+\item{protect_above, protect_quantile, protect_width}{Optional magnitude
+protection for recency weighting, as in \code{\link[=rate_optimise]{rate_optimise()}}: gaugings at or
+above a discharge (\code{protect_above}, m3/s) or a quantile of the gauged
+discharges (\code{protect_quantile}) keep their full weight however old they
+are. Needs \code{age_halflife}. The threshold is recorded in the provenance.}
 
 \item{n_boot}{Number of bootstrap refits per limb for coefficient
 uncertainty. Default 0. Only for \code{model = "independent"}.}

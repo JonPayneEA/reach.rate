@@ -1,5 +1,18 @@
 # reach.rate (development)
 
+* **Release E, first method: magnitude protection for recency weighting
+  (issue #9).** `fit_rating()`, `rate_optimise()` and `rate_optimise_segmented()`
+  take `protect_above` (a discharge) or `protect_quantile` (a quantile of the
+  gauged discharges), and `protect_width`. Gaugings at or above the threshold
+  keep their full weight however old they are, easing back to the age weight over
+  a short ramp: `w = p + (1 - p) * w_age`. Protection never lowers a weight. It is
+  opt-in and needs `age_halflife`. **No mathematical change to any existing
+  result:** with both arguments `NULL`, the default, every fit is identical to the
+  previous release. The threshold is recorded in the provenance as the discharge
+  it resolved to. The definition, the failure behaviour and the limitations are in
+  `design/E1_magnitude_protection.md`; the method is described in
+  `vignette("recency_weighting_guide")`.
+
 * **`suggest_breakpoints()` output: `preferred` replaces `selected`.** The column
   marks the candidate each round put forward as best by the scoring rule. The old
   name suggested a finding, and the function's own documentation says a candidate
