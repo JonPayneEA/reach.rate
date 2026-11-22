@@ -12,3 +12,4 @@
 ^tests/c$
 ^data-raw$
 ^governance$
+^design$
