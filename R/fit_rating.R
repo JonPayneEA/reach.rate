@@ -246,7 +246,7 @@ fit_rating <- function(evidence, controls = NULL, breakpoint_origin = "user_judg
     }
   } else if (limbs == "suggest") {
     candidates <- suggest_breakpoints(q, h)
-    stages <- sort(candidates[selected == TRUE]$candidate_stage)
+    stages <- sort(candidates[preferred == TRUE]$candidate_stage)
     source <- if (length(stages)) "statistical_candidate" else "none"
     origin <- rep("statistical_candidate", length(stages))
   }

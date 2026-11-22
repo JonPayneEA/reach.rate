@@ -133,7 +133,7 @@ Three points of guidance. First, `r_squared` close to 1 is necessary but weak: a
 
 ```{r suggest-breakpoints}
 candidates_dt <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 2L)
-sort(candidates_dt[selected == TRUE, candidate_stage])
+sort(candidates_dt[preferred == TRUE, candidate_stage])
 ```
 
 ## The trap this function avoids

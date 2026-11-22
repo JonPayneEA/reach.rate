@@ -115,7 +115,7 @@ clears both the AIC test and a minimum RSS improvement.
 ```{r suggest-breaks}
 candidates_dt <- suggest_breakpoints(discharge_cms, stage_m, max_breaks = 2L)
 candidates_dt[fit_status == "ok"]
-breaks <- sort(candidates_dt[selected == TRUE, candidate_stage])
+breaks <- sort(candidates_dt[preferred == TRUE, candidate_stage])
 breaks
 ```
 
