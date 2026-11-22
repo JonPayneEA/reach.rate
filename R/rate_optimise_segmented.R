@@ -220,6 +220,8 @@ NULL
 #' @param gauging_datetime `Date`/`POSIXct` vector or `NULL`, as in
 #'   [rate_optimise()]. Default `NULL`.
 #' @param control Numeric vector or `NULL`. Interior segment breakpoints.
+#' @param protect_above,protect_quantile,protect_width Opt-in magnitude
+#'   protection, as in [rate_optimise()]. Needs `age_halflife`.
 #' @param age_halflife,age_min_weight,reference_datetime As in
 #'   [rate_optimise()] -- opt-in recency weighting of the single joint
 #'   fit (this model has no per-limb structure to weight separately).
@@ -267,7 +269,8 @@ NULL
 rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = NULL, control = NULL,
                                      estimate_breakpoints = FALSE, multi_start = TRUE,
                                      objective = c("absolute", "relative"),
-                                     age_halflife = NULL, age_min_weight = 0.1, reference_datetime = NULL, ...) {
+                                     age_halflife = NULL, age_min_weight = 0.1, reference_datetime = NULL,
+                                     protect_above = NULL, protect_quantile = NULL, protect_width = 0.05, ...) {
   objective <- match.arg(objective)
   .validate_age_weighting(gauging_datetime, age_halflife, age_min_weight, reference_datetime, "rate_optimise_segmented")
   if (!is.numeric(discharge_cms)) stop("discharge_cms must be numeric")
@@ -321,8 +324,10 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = N
   # real data column during fitting (nlsLM() needs it there, not passed
   # as a computed value), defaulting to 1 (unweighted), stripped from
   # the output below when age_halflife wasn't supplied.
+  protection <- .resolve_protection(discharge_cms, protect_above, protect_quantile, protect_width,
+                                    age_halflife, "rate_optimise_segmented")
   gaugings_dt[, age_weight := if (!is.null(age_halflife)) {
-    .age_recency_weight(gauging_datetime, age_halflife, age_min_weight, reference_datetime)
+    .age_recency_weight(gauging_datetime, age_halflife, age_min_weight, reference_datetime, protection)
   } else {
     1
   }]
@@ -476,7 +481,7 @@ rate_optimise_segmented <- function(discharge_cms, stage_m, gauging_datetime = N
         NULL
       },
       tool_version = .tool_version()
-    )
+    ) |> c(.protection_provenance(protection, protect_quantile))
   )
 }
 

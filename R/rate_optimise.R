@@ -64,10 +64,74 @@ NULL
 # of similar size) remains open; see vignette("recency_weighting_guide").
 # Age is clamped at 0, so a gauging dated after reference_datetime (an
 # unusual but valid input) gets full weight 1 rather than > 1.
-.age_recency_weight <- function(gauging_datetime, age_halflife, age_min_weight, reference_datetime) {
+.age_recency_weight <- function(gauging_datetime, age_halflife, age_min_weight, reference_datetime,
+                                protection = NULL) {
   ref <- if (!is.null(reference_datetime)) reference_datetime else max(gauging_datetime)
   age_days <- pmax(as.numeric(difftime(ref, gauging_datetime, units = "days")), 0)
-  age_min_weight + (1 - age_min_weight) * 0.5^(age_days / age_halflife)
+  w_age <- age_min_weight + (1 - age_min_weight) * 0.5^(age_days / age_halflife)
+  if (is.null(protection)) {
+    return(w_age)
+  }
+  # Magnitude protection (E1): a protected gauging returns towards weight 1.
+  # p = 0 leaves the age weight alone; p = 1 ignores age. The result lies
+  # between w_age and 1, so protection never lowers a weight.
+  protection$p + (1 - protection$p) * w_age
+}
+
+# Provenance fields for magnitude protection: empty when it was not used, so
+# a fit made without it carries exactly the provenance it always did.
+.protection_provenance <- function(protection, protect_quantile) {
+  if (is.null(protection)) {
+    return(list())
+  }
+  list(protect_above = protection$q0, protect_quantile = protect_quantile,
+       protect_width = protection$width, n_protected = protection$n_protected)
+}
+
+# Magnitude protection: p_i = logistic((Q_i - q0) / s), where q0 is the
+# threshold and s the ramp width (a fraction of the discharge range). Returns
+# NULL when protection is not requested. `q0` is resolved to a discharge so
+# that a quantile is recorded as the value it produced.
+.resolve_protection <- function(discharge_cms, protect_above, protect_quantile, protect_width,
+                                age_halflife, fn_name) {
+  if (is.null(protect_above) && is.null(protect_quantile)) {
+    return(NULL)
+  }
+  if (is.null(age_halflife)) {
+    stop(fn_name, "(): protect_above and protect_quantile protect large gaugings from age decay, ",
+         "so they need age_halflife. Supply age_halflife, or drop the protection argument.", call. = FALSE)
+  }
+  if (!is.null(protect_above) && !is.null(protect_quantile)) {
+    stop(fn_name, "(): give protect_above (a discharge) or protect_quantile (a quantile), not both.", call. = FALSE)
+  }
+  if (!is.null(protect_above) && (!is.numeric(protect_above) || length(protect_above) != 1L ||
+    !is.finite(protect_above) || protect_above <= 0)) {
+    stop(fn_name, "(): protect_above must be a single positive discharge in m3/s. ",
+         "To use a quantile of the evidence instead, give protect_quantile.", call. = FALSE)
+  }
+  if (!is.null(protect_quantile) && (!is.numeric(protect_quantile) || length(protect_quantile) != 1L ||
+    !is.finite(protect_quantile) || protect_quantile <= 0 || protect_quantile >= 1)) {
+    stop(fn_name, "(): protect_quantile must be a single number strictly between 0 and 1, such as 0.9.", call. = FALSE)
+  }
+  if (!is.numeric(protect_width) || length(protect_width) != 1L || !is.finite(protect_width) || protect_width <= 0) {
+    stop(fn_name, "(): protect_width must be a single positive number: the ramp width as a fraction ",
+         "of the discharge range.", call. = FALSE)
+  }
+  q0 <- if (!is.null(protect_above)) protect_above else unname(stats::quantile(discharge_cms, protect_quantile, type = 7))
+  rng <- diff(range(discharge_cms))
+  s <- protect_width * rng
+  p <- if (s > 0) stats::plogis((discharge_cms - q0) / s) else as.numeric(discharge_cms >= q0)
+  n_above <- sum(discharge_cms >= q0)
+  if (n_above == 0L) {
+    warning(fn_name, "(): no gauging reaches the protection threshold of ", signif(q0, 4),
+            " m3/s, so nothing is protected and the fit equals recency weighting alone. ",
+            "Lower the threshold if you meant to protect the largest gaugings.", call. = FALSE)
+  } else if (n_above == length(discharge_cms)) {
+    warning(fn_name, "(): every gauging reaches the protection threshold of ", signif(q0, 4),
+            " m3/s, so recency weighting has no effect. Raise the threshold if you meant to ",
+            "protect only the largest gaugings.", call. = FALSE)
+  }
+  list(p = p, q0 = q0, width = protect_width, n_protected = sum(p > 0.5))
 }
 
 # Shared validation for the three age-weighting arguments. age_halflife
@@ -430,6 +494,20 @@ NULL
 #'   "as of" point ages are measured back from. `NULL` uses
 #'   `max(gauging_datetime)` -- age relative to this dataset's own most
 #'   recent gauging. Ignored if `age_halflife` is `NULL`.
+#' @param protect_above,protect_quantile `NULL` (default), or one of: a
+#'   discharge in m3/s (`protect_above`) or a quantile of the gauged
+#'   discharges between 0 and 1 (`protect_quantile`). Opt-in magnitude
+#'   protection for recency weighting: gaugings at or above the threshold
+#'   keep their full weight however old they are, and the weight eases back
+#'   to the age weight below it. The final weight is `p + (1 - p) * w_age`,
+#'   where `w_age` is the recency weight above and `p` rises smoothly with
+#'   discharge, so protection never lowers a weight. Needs `age_halflife`.
+#'   One threshold applies to the whole record, not per limb. A quantile is
+#'   recorded as the discharge it produced. See
+#'   `vignette("recency_weighting_guide")`.
+#' @param protect_width Single positive number. The width of the ramp from
+#'   unprotected to protected, as a fraction of the discharge range. Default
+#'   `0.05`. Ignored without `protect_above` or `protect_quantile`.
 #' @param ... Passed to `minpack.lm::nlsLM()` itself for the primary fit
 #'   only, not the bootstrap refits.
 #'
@@ -469,7 +547,8 @@ NULL
 rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, control = NULL,
                            n_boot = 0L, boot_seed = NULL, min_boot_success = 0.8, multi_start = TRUE,
                            n_bounds = NULL, objective = c("absolute", "relative"),
-                           age_halflife = NULL, age_min_weight = 0.1, reference_datetime = NULL, ...) {
+                           age_halflife = NULL, age_min_weight = 0.1, reference_datetime = NULL,
+                           protect_above = NULL, protect_quantile = NULL, protect_width = 0.05, ...) {
   objective <- match.arg(objective)
   .validate_age_weighting(gauging_datetime, age_halflife, age_min_weight, reference_datetime, "rate_optimise")
   if (!is.null(n_bounds)) {
@@ -528,8 +607,10 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
   # as a value is unreliable); it defaults to all-1s (mathematically
   # identical to unweighted) and is stripped from the output below when
   # age_halflife wasn't supplied, so @gaugings looks exactly as before.
+  protection <- .resolve_protection(discharge_cms, protect_above, protect_quantile, protect_width,
+                                    age_halflife, "rate_optimise")
   gaugings_dt[, age_weight := if (!is.null(age_halflife)) {
-    .age_recency_weight(gauging_datetime, age_halflife, age_min_weight, reference_datetime)
+    .age_recency_weight(gauging_datetime, age_halflife, age_min_weight, reference_datetime, protection)
   } else {
     1
   }]
@@ -925,7 +1006,7 @@ rate_optimise <- function(discharge_cms, stage_m, gauging_datetime = NULL, contr
         NULL
       },
       tool_version = .tool_version()
-    )
+    ) |> c(.protection_provenance(protection, protect_quantile))
   )
 }
 

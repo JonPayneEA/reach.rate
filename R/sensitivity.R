@@ -31,6 +31,8 @@ NULL
     multi_start = if (is.null(p$multi_start)) TRUE else p$multi_start,
     age_halflife = p$age_halflife, age_min_weight = if (is.null(p$age_min_weight)) 0.1 else p$age_min_weight,
     reference = p$reference_datetime,
+    protect_above = if (is.null(p$protect_quantile)) p$protect_above else NULL,
+    protect_quantile = p$protect_quantile, protect_width = if (is.null(p$protect_width)) 0.05 else p$protect_width,
     estimate_breakpoints = isTRUE(p$estimate_breakpoints)
   )
 }
@@ -47,12 +49,15 @@ NULL
         rate_optimise_segmented(g$discharge_cms, g$stage_m, gauging_datetime = obs, control = control,
                                 estimate_breakpoints = st$estimate_breakpoints, multi_start = st$multi_start,
                                 objective = st$objective, age_halflife = st$age_halflife,
-                                age_min_weight = st$age_min_weight, reference_datetime = st$reference)
+                                age_min_weight = st$age_min_weight, reference_datetime = st$reference,
+                                protect_above = st$protect_above, protect_quantile = st$protect_quantile,
+                                protect_width = st$protect_width)
       } else {
         rate_optimise(g$discharge_cms, g$stage_m, gauging_datetime = obs, control = control,
                       multi_start = st$multi_start, n_bounds = st$n_bounds, objective = st$objective,
                       age_halflife = st$age_halflife, age_min_weight = st$age_min_weight,
-                      reference_datetime = st$reference)
+                      reference_datetime = st$reference, protect_above = st$protect_above,
+                      protect_quantile = st$protect_quantile, protect_width = st$protect_width)
       }
     ),
     error = function(e) conditionMessage(e)

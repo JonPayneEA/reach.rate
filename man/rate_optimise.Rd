@@ -18,6 +18,9 @@ rate_optimise(
   age_halflife = NULL,
   age_min_weight = 0.1,
   reference_datetime = NULL,
+  protect_above = NULL,
+  protect_quantile = NULL,
+  protect_width = 0.05,
   ...
 )
 }
@@ -96,6 +99,22 @@ decay identically. Default \code{0.1}. Ignored if \code{age_halflife} is
 "as of" point ages are measured back from. \code{NULL} uses
 \code{max(gauging_datetime)} -- age relative to this dataset's own most
 recent gauging. Ignored if \code{age_halflife} is \code{NULL}.}
+
+\item{protect_above, protect_quantile}{\code{NULL} (default), or one of: a
+discharge in m3/s (\code{protect_above}) or a quantile of the gauged
+discharges between 0 and 1 (\code{protect_quantile}). Opt-in magnitude
+protection for recency weighting: gaugings at or above the threshold
+keep their full weight however old they are, and the weight eases back
+to the age weight below it. The final weight is \code{p + (1 - p) * w_age},
+where \code{w_age} is the recency weight above and \code{p} rises smoothly with
+discharge, so protection never lowers a weight. Needs \code{age_halflife}.
+One threshold applies to the whole record, not per limb. A quantile is
+recorded as the discharge it produced. See
+\code{vignette("recency_weighting_guide")}.}
+
+\item{protect_width}{Single positive number. The width of the ramp from
+unprotected to protected, as a fraction of the discharge range. Default
+\code{0.05}. Ignored without \code{protect_above} or \code{protect_quantile}.}
 
 \item{...}{Passed to \code{minpack.lm::nlsLM()} itself for the primary fit
 only, not the bootstrap refits.}
