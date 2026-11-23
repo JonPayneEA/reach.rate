@@ -40,8 +40,9 @@ NULL
 # Refit from a subset of the gaugings used (row positions in `x@gaugings`),
 # with the same settings and, if given, different breakpoints. Returns the
 # fit, or a character string saying why it could not be made.
-.sens_refit <- function(x, rows, st, control) {
+.sens_refit <- function(x, rows, st, control, discharge = NULL) {
   g <- as.data.table(x@gaugings)[rows]
+  if (!is.null(discharge)) set(g, j = "discharge_cms", value = discharge)
   obs <- if (!is.null(st$age_halflife)) g$observation_time else NULL
   fit <- tryCatch(
     suppressWarnings(
