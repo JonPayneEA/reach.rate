@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | DEFINITION for approval. No code has been written. |
+| Status | IMPLEMENTED, as amended in section "Amendments after testing". Decisions taken 23 November 2026. |
 | Release | E (advanced capability) |
 | Date | 22 November 2026 |
 | Reader | The maintainer, and the reviewer who will assess the method against the Release E gate |
@@ -195,8 +195,49 @@ the bootstrap are unchanged, and tests assert it.
 3. Structure as a range only. Proposed: yes, never as an interval.
 4. Whether `FlodeUncertainty` is stored in the export folder. Proposed: not yet.
 
+## Amendments after testing
+
+The four decisions were taken on 23 November 2026: an optional per-gauging column,
+no default uncertainty, structure as a range only, and nothing in the export yet. Three
+points in the definition above did not survive contact with a coverage test, and one
+simplification replaced a schema change. The text above is kept as written, so the
+change is visible.
+
+**1. Independent gauging error is already in the sampling interval.** The definition
+said the sampling interval alone would cover the true curve less than 95% of the time
+because it ignores gauging error, and that adding independent error would bring it to
+about 95%. That is wrong. Independent error is part of the scatter of the gaugings about
+the curve, and case resampling already sees that scatter. A test with 60 simulated
+stations and 5% independent scatter gave 91% coverage from sampling alone, and 98%
+when independent error was added on top. Adding it double counts.
+
+**2. The part of gauging error that adds is the shared part.** A bias every gauging
+has in common, such as one meter reading 5% high, moves the whole curve and leaves no
+trace in the scatter. Resampling cannot see it. So the gauging source is now **shared by
+default**: one error per draw, common to all gaugings from the same `source_name`. An
+`error_structure = "independent"` option remains, for comparison, and is labelled in the
+result as double counting.
+
+**3. The coverage example changed to match.** The example that must be passed is now a
+shared bias, with the independent case reported as the check that the package does not
+overclaim. Results are in `vignette("uncertainty_sources")`.
+
+**4. No schema change.** The optional `discharge_uncertainty` column is an ordinary extra
+column on the evidence, carried through `fit_rating()` like `limb` and `age_weight`. No
+stored property is added or removed, so the schema version stays at 2 and no migration
+is needed. Existing exports and ratings are unaffected.
+
+**5. Structure variants.** They are the other objective, each breakpoint shifted, and the
+other valid starting points, from `rating_sensitivity()`. The definition also named
+"dropped limbs", which that function does not fit. Segmented ratings supply the same
+variants where they apply, so the refusal for segmented ratings was not needed.
+
+**6. Withheld intervals warn.** An interval built from more than 20% failed refits is
+withheld with a warning, as defined.
+
 ## Version history
 
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 22 November 2026 | First definition |
+| 0.2 | 23 November 2026 | Implemented. Gauging error shared by default after a coverage test showed independent error double counts; no schema change |

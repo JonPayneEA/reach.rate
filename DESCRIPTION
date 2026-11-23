@@ -66,6 +66,7 @@ Collate:
     'read_gaugings.R'
     'reference_cases.R'
     'sensitivity.R'
+    'uncertainty.R'
     'weir_equations.R'
     'zzz.R'
 Depends:
