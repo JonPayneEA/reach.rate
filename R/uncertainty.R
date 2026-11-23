@@ -320,6 +320,15 @@ rating_uncertainty <- function(rating, stage = NULL, n_draws = 500L, gauging_unc
 #'
 #' @seealso [rating_uncertainty()], [uncertainty_bands()], [uncertainty_summary()]
 #'
+#' @examples
+#' set.seed(1)
+#' stage_m <- seq(0.4, 3, length.out = 24)
+#' fit <- fit_rating(data.frame(stage_m = stage_m,
+#'                              discharge_cms = 3.2 * stage_m^1.6 * exp(rnorm(24, sd = 0.03))), quiet = TRUE)
+#' u <- rating_uncertainty(fit, stage = c(1, 2), n_draws = 100, sources = "sampling", seed = 1)
+#' class(u)
+#' u@assessed
+#'
 #' @export
 FlodeUncertainty <- new_class(
   "FlodeUncertainty",

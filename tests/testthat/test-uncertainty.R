@@ -139,3 +139,25 @@ test_that("existing fits and the bootstrap are unchanged by this module", {
   expect_false("discharge_uncertainty" %in% names(fit@gaugings))
   expect_identical(rating_schema_version(), 2L)
 })
+
+test_that("a bias every gauging shares is invisible to sampling and caught by the shared source", {
+  skip_on_cran()
+  truth <- function(h) 3.2 * h^1.6
+  stages <- seq(0.5, 2.8, length.out = 20)
+  covered <- function(u, src) {
+    b <- uncertainty_bands(u)[source == src]
+    mean(truth(b$stage_m) >= b$lower & truth(b$stage_m) <= b$upper)
+  }
+  res <- t(vapply(1:6, function(seed) {
+    set.seed(seed)
+    h <- seq(0.3, 3, length.out = 30)
+    q <- truth(h) * exp(rnorm(1, sd = 0.05)) * exp(rnorm(30, sd = 0.02))
+    fit <- fit_rating(data.frame(stage_m = h, discharge_cms = q), quiet = TRUE)
+    u <- suppressWarnings(suppressMessages(rating_uncertainty(
+      fit, stage = stages, n_draws = 100, gauging_uncertainty = 0.05, sources = c("sampling", "gauging"), seed = seed)))
+    c(sampling = covered(u, "sampling"), combined = covered(u, "combined"))
+  }, numeric(2)))
+  expect_lt(mean(res[, "sampling"]), 0.5)
+  expect_gt(mean(res[, "combined"]), 0.7)
+  expect_gt(mean(res[, "combined"]) - mean(res[, "sampling"]), 0.3)
+})

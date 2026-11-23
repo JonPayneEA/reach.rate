@@ -1,5 +1,25 @@
 # reach.rate (development)
 
+* **Release E, second method: separated uncertainty sources.**
+  `rating_uncertainty()` reports where a rating's uncertainty comes from, each
+  source on its own and then combined: `sampling` (resampling the gaugings),
+  `gauging` (how well each was measured) and `structure` (another reasonable
+  fitting choice). Sampling and gauging error are intervals, combined by joint
+  simulation. Structure is a **range**, never an interval. It returns a
+  `FlodeUncertainty`, with `uncertainty_bands()`, `uncertainty_summary()`, a
+  print method that says first which sources were assessed, and `autoplot()`.
+  **The package supplies no measurement uncertainty.** It comes from an optional
+  `discharge_uncertainty` column in the evidence or from `gauging_uncertainty`; with
+  neither, the source is reported as not assessed, never as zero. Gauging error is
+  **shared** by default (one error per draw, common to gaugings from the same
+  `source_name`), because independent error is already in the sampling interval: a
+  test on simulated stations found that adding it double counts. A bias every
+  gauging shares was covered 5% of the time by sampling alone and 91% of the time
+  with the shared source. **No mathematical change to any existing result**, and no
+  schema change: the new column is an ordinary extra evidence column, so the schema
+  version stays at 2. See `vignette("uncertainty_sources")` and
+  `design/E2_separated_uncertainty.md`.
+
 * **Release E, first method: magnitude protection for recency weighting
   (issue #9).** `fit_rating()`, `rate_optimise()` and `rate_optimise_segmented()`
   take `protect_above` (a discharge) or `protect_quantile` (a quantile of the

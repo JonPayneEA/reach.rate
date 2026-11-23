@@ -44,6 +44,16 @@ gauging uncertainty came from.
 curve.
 }
 }
+\examples{
+set.seed(1)
+stage_m <- seq(0.4, 3, length.out = 24)
+fit <- fit_rating(data.frame(stage_m = stage_m,
+                             discharge_cms = 3.2 * stage_m^1.6 * exp(rnorm(24, sd = 0.03))), quiet = TRUE)
+u <- rating_uncertainty(fit, stage = c(1, 2), n_draws = 100, sources = "sampling", seed = 1)
+class(u)
+u@assessed
+
+}
 \seealso{
 \code{\link[=rating_uncertainty]{rating_uncertainty()}}, \code{\link[=uncertainty_bands]{uncertainty_bands()}}, \code{\link[=uncertainty_summary]{uncertainty_summary()}}
 }
