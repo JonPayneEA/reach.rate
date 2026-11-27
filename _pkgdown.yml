@@ -111,6 +111,9 @@ reference:
   - FlodeSensitivity
   - sensitivity_summary
   - sensitivity_results
+  - rating_uncertainty
+  - FlodeUncertainty
+  - uncertainty_bands
   - rating_invariants
   - FlodeAssessment
   - assessment_checks

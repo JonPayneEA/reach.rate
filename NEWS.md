@@ -1,5 +1,21 @@
 # reach.rate (development)
 
+* **Release E, third method: a rating's uncertainty, source by source.** The new
+  `rating_uncertainty()` reports each source on its own and the combination, as a
+  `FlodeUncertainty`: **sampling** (the gaugings resampled and refitted with the
+  rating's own settings), **gauging** error shared between gaugings (a meter or method
+  reading high or low for all; with `group_by`, per group), the two **combined**, and
+  **structure** (the other objective, a limb fewer, a breakpoint moved) as a range with
+  the variant behind each edge, never an interval. The gauging uncertainty comes from an
+  optional per-gauging `discharge_uncertainty` column or from `gauging_uncertainty`; with
+  neither, the source is reported as not assessed, never as zero. `uncertainty_bands()`
+  reads the bands, and `print()` and `autoplot()` show each source on its own and say
+  the result is not a complete budget. On 30 simulated stations with a shared 5% bias,
+  sampling alone covered the true curve 53% of the time and the combined band 94%.
+  **No mathematical change to any existing result:** the function is new, and
+  `fit_rating()`, `rate_optimise()` and the bootstrap are untouched. The definition,
+  amended in building it, is in `design/E2_separated_uncertainty.md`.
+
 * **Fix: `read_operational_ratings()` dropped operational ratings flagged for
   both EA and G2G.** It omitted every row with `G2G` `TRUE`, taking G2G to mean
   the grid-to-grid model's own estimate. A rating flagged `EA` and `G2G` is an
