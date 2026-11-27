@@ -33,6 +33,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/FlodeRatingTable.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/FlodeSegmentedRating.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/FlodeSensitivity.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/FlodeUncertainty.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/align_limb_boundaries.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/align_limb_equations.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/apply_rating.html</loc></url>
@@ -96,6 +97,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rating_schema_version.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rating_sensitivity.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/rating_support.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/rating_uncertainty.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/reach.rate-package.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/read_gaugings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/read_operational_ratings.html</loc></url>
@@ -112,6 +114,7 @@
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/station_gaugings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/suggest_breakpoints.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/suggested_breakpoints_vector.html</loc></url>
+<url><loc>https://jonpayneea.github.io/reach.rate/reference/uncertainty_bands.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/validate_gaugings.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/weir_discharge_cipoletti.html</loc></url>
 <url><loc>https://jonpayneea.github.io/reach.rate/reference/weir_discharge_rectangular.html</loc></url>

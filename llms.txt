@@ -470,6 +470,12 @@ apply_rating() from using one that cannot give a meaningful discharge.
   : The per-variant summary of a sensitivity analysis
 - [`sensitivity_results()`](https://jonpayneea.github.io/reach.rate/reference/sensitivity_results.md)
   : The full results of a sensitivity analysis
+- [`rating_uncertainty()`](https://jonpayneea.github.io/reach.rate/reference/rating_uncertainty.md)
+  : A rating's uncertainty, source by source
+- [`FlodeUncertainty()`](https://jonpayneea.github.io/reach.rate/reference/FlodeUncertainty.md)
+  : A rating's uncertainty, source by source (S7)
+- [`uncertainty_bands()`](https://jonpayneea.github.io/reach.rate/reference/uncertainty_bands.md)
+  : The bands of a rating's uncertainty
 - [`rating_invariants()`](https://jonpayneea.github.io/reach.rate/reference/rating_invariants.md)
   : Post-fit invariants of a rating
 - [`FlodeAssessment()`](https://jonpayneea.github.io/reach.rate/reference/FlodeAssessment.md)
