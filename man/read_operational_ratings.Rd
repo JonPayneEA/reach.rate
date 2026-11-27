@@ -47,8 +47,8 @@ stage range (m).}
 \item{offset, exponent, scale}{Character. Columns holding \code{A}, \code{B} and
 \code{C}. Defaults \code{"A"}, \code{"B"}, \code{"C"}.}
 
-\item{omit_g2g}{Logical. Drop rows where \code{g2g} is \code{TRUE}. Default
-\code{TRUE}.}
+\item{omit_g2g}{Logical. Drop rows where \code{g2g} is \code{TRUE} and \code{ea} is not.
+Default \code{TRUE}.}
 
 \item{open_ended_level}{Numeric. An upper level at or above this marks
 an open-ended limb. Default \code{999}.}
@@ -77,10 +77,13 @@ reinterpreted. As with \code{\link[=read_gaugings]{read_gaugings()}}, everything
 parsed explicitly, and anything that did not parse is noted on its
 row in \code{read_issue} and not dropped.
 
-Ratings flagged as grid-to-grid model output (\code{G2G} is \code{TRUE}) are
-omitted by default, because they are model estimates and not
-operational ratings; the message says how many rows went. Set
-\code{omit_g2g = FALSE} to keep them and filter on the \code{g2g} column. The
+Ratings used only by the grid-to-grid model (\code{G2G} is \code{TRUE} and \code{EA} is
+not) are omitted by default, because they are not operational ratings. A
+rating flagged for both (\code{EA} and \code{G2G} both \code{TRUE}) is an operational
+rating the model also uses, and is kept. Without an \code{EA} column, a \code{G2G}
+row counts as the model's alone. The message says how many rows went and
+how many were kept for both. Set \code{omit_g2g = FALSE} to keep every row and
+filter on the \code{ea} and \code{g2g} columns. The
 export's \code{Flag} is carried through as \code{flag} with no meaning assumed.
 
 The export marks an open-ended top limb with an upper level of \code{999};
@@ -106,7 +109,8 @@ raw <- data.frame(
   LowerLevel = c(0, 0.241, 0.897, 0, 0.314), UpperLevel = c(0.241, 0.897, 999, 0.314, 999),
   A = c(0, 0.1, 0.4, 0, 0.01), B = c(1.254, 1.541, 0.8265, 1.5042, 2.2279),
   C = c(3.114, 10.717, 13.462, 4.711, 11.7052),
-  Flag = c(0, 0, 3, 0, 0), EA = TRUE, G2G = c(FALSE, FALSE, FALSE, TRUE, TRUE)
+  Flag = c(0, 0, 3, 0, 0), EA = c(TRUE, TRUE, TRUE, FALSE, FALSE),
+  G2G = c(FALSE, FALSE, FALSE, TRUE, TRUE)
 )
 limbs <- read_operational_ratings(raw)
 limbs[, c("rating_key", "station_id", "lower_level", "upper_level", "C", "a", "n", "open_ended")]

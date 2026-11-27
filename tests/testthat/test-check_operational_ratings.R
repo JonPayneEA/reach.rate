@@ -166,7 +166,7 @@ test_that("raw files go through every step: read, match, compare", {
     "i1,10250,Bathford,Power,All,01/01/2000 00:00,12/31/1999 12:00:00 AM,c1,s1,0.5,1,0,1.5,2,0,TRUE,FALSE",
     "i1,10250,Bathford,Power,All,01/01/2000 00:00,12/31/1999 12:00:00 AM,c1,s1,1,999,0,1.5,2,3,TRUE,FALSE",
     "i2,065006_TG_802,Pelic,Power,All,01/01/2000 00:00,12/31/1999 12:00:00 AM,c2,s1,0.5,999,0,1.5,2,0,TRUE,FALSE",
-    "i3,77777,Model only,Power,All,01/01/2000 00:00,12/31/1999 12:00:00 AM,c3,s1,0,999,0,1.5,2,0,TRUE,TRUE"
+    "i3,77777,Model only,Power,All,01/01/2000 00:00,12/31/1999 12:00:00 AM,c3,s1,0,999,0,1.5,2,0,FALSE,TRUE"
   ), r_path)
 
   gaugings <- read_gaugings(g_path, quiet = TRUE)
@@ -174,7 +174,7 @@ test_that("raw files go through every step: read, match, compare", {
   cw <- data.frame(FFFSLocID = "065006_TG_802", Reference = "F2405")
   res <- check_operational_ratings(gaugings, ratings, crosswalk = cw, quiet = TRUE)
 
-  expect_equal(res$ratings$rating_key, c("i1/c1", "i2/c2"))      # the G2G rating was omitted
+  expect_equal(res$ratings$rating_key, c("i1/c1", "i2/c2"))      # the G2G-only rating was omitted
   expect_equal(res$ratings$status, c("compared", "compared"))
   expect_equal(res$ratings$n_gaugings, c(3L, 1L))                # the "---" stage row is kept, not dropped
   expect_equal(res$matches$unmatched_gaugings$station_id, "SD999")

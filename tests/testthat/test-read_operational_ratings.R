@@ -12,7 +12,9 @@ ratings_frame <- function() {
     A = c(0, 0.1, 0.4, 0.8, 0.8,   -0.12979, -0.12979, 0.314,   0, 0.01),
     B = c(1.254, 1.541, 0.8265, 0.4962, 0.4962,   3.17347, 3.17347, 0.991336,   1.5042, 2.2279),
     C = c(3.114, 10.717, 13.462, 17.5309, 17.5309,   16.2542, 16.2542, 20.2019,   4.711, 11.7052),
-    Flag = c(0, 0, 0, 0, 3,   3, 0, 0,   0, 0), EA = TRUE,
+    # r2 is the grid-to-grid model's alone: G2G and not EA.
+    Flag = c(0, 0, 0, 0, 3,   3, 0, 0,   0, 0),
+    EA = c(rep(TRUE, 5), rep(FALSE, 3), rep(TRUE, 2)),
     G2G = c(rep(FALSE, 5), rep(TRUE, 3), rep(FALSE, 2)),
     stringsAsFactors = FALSE
   )
@@ -31,14 +33,31 @@ test_that("coefficients are renamed to the package's own and nothing is reinterp
   expect_equal(out$rating_key[c(1, 6, 9)], c("r1/c1", "r2/c2", "r3/c3"))
 })
 
-test_that("G2G ratings are omitted by default and reported", {
-  expect_message(out <- read_operational_ratings(ratings_frame()), "G2G rows omitted: 3")
+test_that("ratings for the G2G model alone are omitted by default and reported", {
+  expect_message(out <- read_operational_ratings(ratings_frame()), "G2G-only rows omitted: 3")
   expect_equal(nrow(out), 7L)
   expect_false(any(out$g2g))
   expect_false("r2/c2" %in% out$rating_key)
 
   kept <- read_operational_ratings(ratings_frame(), omit_g2g = FALSE, quiet = TRUE)
   expect_equal(sum(kept$g2g), 3L)
+})
+
+# Regression: a rating flagged for both EA and G2G is operational and was dropped with the
+# G2G-only ones. With r2 flagged for both, none of its three rows may go; without an EA
+# column, a G2G row counts as the model's alone and goes, as before.
+test_that("a rating flagged for both EA and G2G is kept", {
+  both <- ratings_frame()
+  both$EA <- TRUE
+  expect_message(out <- read_operational_ratings(both),
+                 "G2G-only rows omitted: 0. Rows for both EA and G2G kept: 3")
+  expect_equal(nrow(out), 10L)
+  expect_true("r2/c2" %in% out$rating_key)
+  no_ea <- ratings_frame()
+  no_ea$EA <- NULL
+  out <- read_operational_ratings(no_ea, quiet = TRUE)
+  expect_equal(nrow(out), 7L)
+  expect_false("r2/c2" %in% out$rating_key)
 })
 
 test_that("open-ended top limbs are marked and the level is left alone", {

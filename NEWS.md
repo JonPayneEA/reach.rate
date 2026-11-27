@@ -1,5 +1,14 @@
 # reach.rate (development)
 
+* **Fix: `read_operational_ratings()` dropped operational ratings flagged for
+  both EA and G2G.** It omitted every row with `G2G` `TRUE`, taking G2G to mean
+  the grid-to-grid model's own estimate. A rating flagged `EA` and `G2G` is an
+  operational rating the model also uses, and is now kept; only rows for G2G
+  alone (`G2G` `TRUE`, `EA` not) are omitted. Without an `EA` column a `G2G` row
+  still counts as the model's alone. The message now gives both counts. **This
+  changes what is read** from an export with rows flagged for both: they were
+  dropped and are now kept. `omit_g2g = FALSE` keeps every row, as before.
+
 * **Release E, second method: rating checks from the flow record.** The new
   `check_flow_record()` reads the applied rating back from an archived record of
   stage and flow, period by period, and returns a `FlodeAssessment` with the tables
