@@ -23,7 +23,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Collate:
     's7_external.R'
     'flode_evidence.R'
@@ -37,6 +37,7 @@ Collate:
     'assess_rating.R'
     'support.R'
     'autoplot.R'
+    'check_flow_record.R'
     'gap_check.R'
     'check_limb_continuity.R'
     'read_helpers.R'

@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Status | DEFINITION for approval. No code has been written. |
+| Status | IMPLEMENTED, as amended below. Approved by the maintainer on 27 November 2026 ("Go") |
 | Release | E (advanced capability) |
-| Date | 26 November 2026 |
+| Date | 26 November 2026; implemented 27 November 2026 |
 | Reader | The maintainer, and the reviewer who will assess the method against the Release E gate |
 | Closes | Nothing in the register. It adds a check where none exists |
 
@@ -217,6 +217,42 @@ construction:
   archive will show as departures.
 - **Dry means what the caller says.** The check cannot tell a weed rise from rain
   missed by the dry mask.
+
+## Amendments made in building it
+
+Each is a change from the definition above, made because the definition could not be
+built as written, or would have failed on real records.
+
+1. **Curves are tables, not `FlodeRatingTable`.** A `FlodeRatingTable` holds power-law
+   limbs. A curve read back is a table of points, so `curves` holds data.tables of
+   `stage_m` and `discharge_cms`. Matching to a known rating sets those points beside
+   its limbs.
+2. **Gaps in time are allowed.** Real downloads drop missing steps. Times must still
+   increase, by whole multiples of the shortest step; a gap is filled as missing steps
+   and counted. A step that is not a whole multiple is the error.
+3. **A coverage check, `record_tested`.** "The assessment says how few they are" is
+   made a check of its own, in the `data` domain: it warns when under half the steps
+   could be tested.
+4. **Dry-weather rises have a threshold.** "Rises on average" would flag the noise of
+   millimetre rounding on a flat recession. `record_dry_rises` warns above
+   `dry_rise_m_per_day = 0.001` (1 mm a day), an argument. A pair of steps belongs to
+   the month of its first step.
+5. **Fitting a known rating has a threshold.** A period fits a known rating when at
+   most `known_fit_share = 0.05` of its steps depart from it, an argument.
+6. **A stage shift needs 95% of the shared stages.** "To within the tolerance, over
+   the shared stages" is taken as at least 95% of them, so a few rounding departures
+   at the curve's ends do not turn a shift into a change of shape.
+7. **Steps are tested twice.** The pass a day at a time uses the first flow seen at
+   each stage, which is fast. Once every period is closed, each step is tested again
+   against its period's finished curve, the median at each stage, and that second
+   test is what `off_curve` and the counts report.
+8. **The reference example for infill.** A day of flow linearly interpolated across a
+   gap stays close to the curve at both ends of the day, so "exactly those steps" was
+   not a fair test. The example sets a day's flow 20% high, marked Estimated: every
+   step of it departs, and that is what is tested.
+
+One limitation added: **infill at a stage the period has seen nowhere else cannot be
+told from the rating**, since the curve at that stage is made from the infill itself.
 
 ## Not in scope
 

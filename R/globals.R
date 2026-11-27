@@ -30,3 +30,13 @@ globalVariables(c(
   # earlier tranches that were still raising the note on every check
   "N", "included", "note", "source_type", "test"
 ))
+
+# check_flow_record()
+globalVariables(c(
+  "day", "row", "skey", "period", "tested", "departs", "curve_cms", "quality", "dry", "run",
+  "volume_m3", "volume_share", "start", "end", "steps", "assessed", "known_departing_share",
+  "known_rating", "year", "base", "raised", "lowered", "change_raised_m3",
+  "change_lowered_m3", "share_raised", "share_lowered", "month", "stage_change_m_per_day",
+  "dh", "dq", "Period", "limit", "peak_time", "peak_stage_m", "peak_discharge_cms", "q",
+  "v", "time", "stage_min_m", "stage_max_m"
+))
