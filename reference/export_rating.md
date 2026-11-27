@@ -94,7 +94,7 @@ out <- export_rating(fit, assessment, path = folder)
 out$files[, c("file", "bytes")]
 #>                     file bytes
 #>                   <char> <num>
-#> 1:            rating.rds 12195
+#> 1:            rating.rds 12194
 #> 2:        assessment.rds  6931
 #> 3:             limbs.csv   100
 #> 4:      coefficients.csv   220

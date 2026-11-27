@@ -39,9 +39,9 @@ sensitivity_summary(rating_sensitivity(fit, tests = "leave_high_out", stages = c
 #> 3: leave_high_out without the highest 4 (top 25.0%) G016,G015,G014,G013     ok
 #>    max_abs_change_cms max_abs_change_pct stage_at_max_m leverage cooks_distance
 #>                 <num>              <num>          <num>    <num>          <num>
-#> 1:         0.02523195          0.1368095              3       NA             NA
-#> 2:         0.36440412          1.9758261              3       NA             NA
-#> 3:         0.59699813          3.2369681              3       NA             NA
+#> 1:         0.02523206          0.1368101              3       NA             NA
+#> 2:         0.36440423          1.9758267              3       NA             NA
+#> 3:         0.59699802          3.2369675              3       NA             NA
 #>      note
 #>    <char>
 #> 1:   <NA>

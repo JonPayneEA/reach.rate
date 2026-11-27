@@ -417,6 +417,22 @@ read_summary() reports what it found as a table.
 - [`check_operational_ratings()`](https://jonpayneea.github.io/reach.rate/reference/check_operational_ratings.md)
   : Check every operational rating against its gaugings
 
+## Checking the flow record
+
+Archived flow is stage passed through the rating applied at the time, so
+the record carries that rating. check_flow_record() reads it back from
+stage and flow, period by period, and reports when it was revised, where
+the record departs from it, how much flow came from above its top or
+above bankfull, how far a stage error moves the flow, and whether stage
+rose in dry weather. It needs no gaugings, and tests the rating as
+applied, not as true: compare_gaugings_to_rating() does that.
+
+- [`check_flow_record()`](https://jonpayneea.github.io/reach.rate/reference/check_flow_record.md)
+  : Check a rating from the flow record
+- [`autoplot(`*`<flode_record_check>`*`)`](https://jonpayneea.github.io/reach.rate/reference/autoplot.flode_record_check.md)
+  [`plot(`*`<flode_record_check>`*`)`](https://jonpayneea.github.io/reach.rate/reference/autoplot.flode_record_check.md)
+  : Plot a flow record check
+
 ## Fitting a rating
 
 The guided way to a rating. fit_rating() takes evidence and fits one

@@ -97,11 +97,11 @@ fit <- rate_optimise(discharge_cms, stage_m)
 rating_support(fit)
 #>          range lower_stage_m upper_stage_m n_evidence
 #>         <char>         <num>         <num>      <int>
-#> 1:    observed           0.5  2.500000e+00         41
+#> 1:    observed           0.5    2.5000e+00         41
 #> 2:    modelled            NA            NA          0
-#> 3:      fitted           0.5  2.500000e+00         NA
+#> 3:      fitted           0.5    2.5000e+00         NA
 #> 4: operational            NA            NA         NA
-#> 5:   numerical          -Inf 1.302886e+192         NA
+#> 5:   numerical          -Inf   1.3029e+192         NA
 #>                                                                                                  basis
 #>                                                                                                 <char>
 #> 1:                                                         gaugings: evidence of source type 'gauging'

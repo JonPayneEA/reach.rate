@@ -114,6 +114,6 @@ rating_history(approved)[, c("step", "lifecycle", "note")]
 #>                                                                                                                   note
 #>                                                                                                                 <char>
 #> 1:                                                                                                                <NA>
-#> 2:      lifecycle: draft to under_review by A. Analyst on 2026-11-22 (Fitted from the 2024 gaugings; ready for review)
-#> 3: lifecycle: under_review to approved by B. Reviewer on 2026-11-22 (Checked the assessment and the sensitivity tests)
+#> 2:      lifecycle: draft to under_review by A. Analyst on 2026-11-27 (Fitted from the 2024 gaugings; ready for review)
+#> 3: lifecycle: under_review to approved by B. Reviewer on 2026-11-27 (Checked the assessment and the sensitivity tests)
 ```

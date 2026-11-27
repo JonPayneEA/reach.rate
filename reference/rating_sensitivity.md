@@ -130,7 +130,7 @@ sens
 #> <FlodeSensitivity> 28 variant(s) over 4 stage(s), tests: leave_one_out, leave_high_out, starting_values, boundary_shift
 #>   leave_one_out:   20 variant(s); worst: without G014 changes discharge by 1.05% (0.196 m3/s) at 3 m
 #>   leave_high_out:  3 variant(s); worst: without the highest 4 (top 20.0%) changes discharge by 2.54% (0.476 m3/s) at 3 m
-#>   starting_values: 5 variant(s); worst: limb 1, start 2 changes discharge by 0.00% (3.76e-07 m3/s) at 3 m
+#>   starting_values: 5 variant(s); worst: limb 1, start 6 changes discharge by 0.00% (1.05e-06 m3/s) at 3 m
 #>   boundary_shift:  nothing to test
 sensitivity_summary(sens)[test == "leave_one_out"][order(-max_abs_change_pct)][1:3]
 #>             test      variant evidence_ids status max_abs_change_cms
