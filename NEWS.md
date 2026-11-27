@@ -1,5 +1,20 @@
 # reach.rate (development)
 
+* **Release E, second method: rating checks from the flow record.** The new
+  `check_flow_record()` reads the applied rating back from an archived record of
+  stage and flow, period by period, and returns a `FlodeAssessment` with the tables
+  behind it. It dates each revision of the applied rating and classes it as a stage
+  shift (with its size) or a change of shape; finds runs of flow off the curve, with
+  their quality codes; reports the share of flow above the top of the rating and
+  above bankfull; passes a systematic stage offset through each period's curve, by
+  year and flow band; finds months where stage rose in dry weather; and matches each
+  period to a known rating, such as an operational ratings export. Every input a
+  check needs that is not given is reported as not assessed, never assumed.
+  `autoplot()` and `plot()` draw the pairs, the curves read back and the limits. It
+  needs no gaugings, and tests the rating as applied, not as true. **No mathematical
+  change to any existing result:** no existing function is touched. The definition,
+  failure behaviour and limitations are in `design/E3_record_checks.md`.
+
 * **Release E, first method: magnitude protection for recency weighting
   (issue #9).** `fit_rating()`, `rate_optimise()` and `rate_optimise_segmented()`
   take `protect_above` (a discharge) or `protect_quantile` (a quantile of the
