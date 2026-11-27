@@ -64,7 +64,9 @@ NULL
 #'   Enables `record_stage_error`.
 #' @param dry Logical, one per row of `record`: `TRUE` where the caller judges
 #'   no rain has fallen on the catchment long enough to matter. Enables
-#'   `record_dry_rises`.
+#'   `record_dry_rises`. On a permeable catchment, flow can go on rising for
+#'   days after rain as the groundwater answers it: weed grows in summer, so a
+#'   rise in a winter month is more likely the catchment than the channel.
 #' @param ratings Known ratings: a named list of [FlodeRating] or
 #'   [FlodeRatingTable], or the output of [operational_rating_tables()].
 #'   Enables `record_known_ratings`.

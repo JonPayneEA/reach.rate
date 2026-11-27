@@ -216,7 +216,10 @@ construction:
 - **A single-valued rating is assumed.** Hysteresis or a looped rating applied in the
   archive will show as departures.
 - **Dry means what the caller says.** The check cannot tell a weed rise from rain
-  missed by the dry mask.
+  missed by the dry mask. Nor from groundwater: on a permeable catchment, flow can go on
+  rising for days after rain as the aquifer answers it, so a dry mask of a day or two
+  flags winter months that have no weed in them. Weed grows in summer; a winter rise is
+  more likely the catchment than the channel.
 
 ## Amendments made in building it
 

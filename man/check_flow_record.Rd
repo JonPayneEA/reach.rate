@@ -41,7 +41,9 @@ Enables \code{record_stage_error}.}
 
 \item{dry}{Logical, one per row of \code{record}: \code{TRUE} where the caller judges
 no rain has fallen on the catchment long enough to matter. Enables
-\code{record_dry_rises}.}
+\code{record_dry_rises}. On a permeable catchment, flow can go on rising for
+days after rain as the groundwater answers it: weed grows in summer, so a
+rise in a winter month is more likely the catchment than the channel.}
 
 \item{ratings}{Known ratings: a named list of \link{FlodeRating} or
 \link{FlodeRatingTable}, or the output of \code{\link[=operational_rating_tables]{operational_rating_tables()}}.
