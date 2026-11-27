@@ -63,10 +63,11 @@ Collate:
     'rating_curve_demo.R'
     'rating_curve_explorer_app.R'
     'rating_report.R'
+    'sensitivity.R'
+    'rating_uncertainty.R'
     'reach.rate-package.R'
     'read_gaugings.R'
     'reference_cases.R'
-    'sensitivity.R'
     'weir_equations.R'
     'zzz.R'
 Depends:

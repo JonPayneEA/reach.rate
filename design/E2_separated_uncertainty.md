@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | DEFINITION for approval. No code has been written. |
+| Status | IMPLEMENTED, as amended below. Approved by the maintainer on 27 November 2026 ("Go for E2"); the amendment to the gauging source approved the same day |
 | Release | E (advanced capability) |
 | Date | 22 November 2026 |
 | Reader | The maintainer, and the reviewer who will assess the method against the Release E gate |
@@ -159,9 +159,9 @@ the bootstrap are unchanged, and tests assert it.
 
 ## Limitations
 
-- **Gauging error is assumed independent between gaugings and log-normal.** Gaugings
-  made with one meter or one method share errors. Independence understates the
-  uncertainty when they do.
+- **Shared gauging error is assumed log-normal, the same for every gauging in a group,
+  and independent between groups** (amendment 1). Gaugings that share a meter but are
+  grouped apart, or a group whose members do not truly share an error, misstate it.
 - **The result is only as good as `u_i`.** The package propagates a number it is
   given. A poor `u_i` gives a confident wrong band. The analyst takes the figure from
   the gauging record or the method (for example the stated uncertainty of the
@@ -195,8 +195,50 @@ the bootstrap are unchanged, and tests assert it.
 3. Structure as a range only. Proposed: yes, never as an interval.
 4. Whether `FlodeUncertainty` is stored in the export folder. Proposed: not yet.
 
+## Amendments made in building it
+
+1. **The gauging source is error shared between gaugings, not independent per gauging.**
+   As defined, each draw perturbed every gauging independently, on top of resampling.
+   Random error in each gauging is already the scatter of the gaugings about the curve,
+   which resampling carries into the band, so this counted it twice. A simulation of 12
+   stations with 5% random error showed it: the combined band covered the true curve
+   99.2% of the time, against 91.6% for sampling alone (40 stations). What resampling
+   cannot see is error **shared** between gaugings, a meter or method reading high or low
+   for all of them, which leaves no scatter. Each draw now moves every gauging in a group
+   by one shared factor `exp(e)`, `e ~ Normal(0, u^2)`; `group_by` names the column (a
+   method, a meter) whose values share an error, and without it every gauging shares one.
+   A group's `u` is the median of its gaugings' `discharge_uncertainty`, or
+   `gauging_uncertainty`. Approved by the maintainer before any code was written.
+2. **Reference example 1 is amended to match.** Stations carry 5% random scatter and a
+   shared bias from `Normal(0, 0.05^2)`, with `u = 0.05` stated. Over 30 stations, 100
+   draws each, the 95% bands covered the true curve: sampling 0.525, gauging 0.913,
+   combined 0.938. With no shared bias and `u = 0.001` (10 stations): sampling 0.866,
+   gauging 0.138 (a band of about +-0.2%, as it should be), combined 0.910. The test
+   runs the first 12 of the 30, with the same seeds.
+3. **One group needs no refits for the gauging source.** A shared factor `k` on every
+   discharge scales the fitted `C` by exactly `k` and leaves `a` and `n` as they were,
+   under either objective, so the curve is multiplied by `k`. With groups, or with
+   `protect_above` (a threshold in discharge, which scaling moves gaugings across), every
+   draw is refitted. A test asserts the scaling on a refit.
+4. **The structural variants are built here.** `rating_sensitivity()` fits shifted
+   breakpoints but not the other objective or a limb fewer, which the definition said it
+   already covered. `rating_uncertainty()` fits all three: the other objective, each
+   breakpoint dropped, and each moved by 5% of the gauged range either way.
+5. **No schema change was needed** (decision 1). Evidence already keeps columns beyond the
+   canonical ones, and a fit keeps them in its gaugings, so `discharge_uncertainty` is
+   read where present. The schema version stays 2.
+6. **A segmented rating's structure is reported not assessed**, not refused with an error,
+   so the default `sources` work on every fit.
+
+Decisions 2 to 4 were taken as proposed: no default `u`, structure as a range only, and
+nothing stored in the export folder yet.
+
+One limitation is sharpened: **random gauging error is in the sampling source**, and a
+`u` that includes it double counts; state the shared part only.
+
 ## Version history
 
 | Version | Date | Change |
 |---|---|---|
 | 0.1 | 22 November 2026 | First definition |
+| 0.2 | 27 November 2026 | Implemented; the gauging source amended to shared error |

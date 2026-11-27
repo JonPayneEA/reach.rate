@@ -40,3 +40,6 @@ globalVariables(c(
   "dh", "dq", "Period", "limit", "peak_time", "peak_stage_m", "peak_discharge_cms", "q",
   "v", "time", "stage_min_m", "stage_max_m"
 ))
+
+# rating_uncertainty()
+globalVariables(c("rating_cms", "support", "source"))
