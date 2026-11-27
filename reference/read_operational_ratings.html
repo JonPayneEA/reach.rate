@@ -12,10 +12,13 @@ flow), B becomes n (the exponent) and C stays C. Nothing is
 reinterpreted. As with read_gaugings(), everything is read as text,
 parsed explicitly, and anything that did not parse is noted on its
 row in read_issue and not dropped.
-Ratings flagged as grid-to-grid model output (G2G is TRUE) are
-omitted by default, because they are model estimates and not
-operational ratings; the message says how many rows went. Set
-omit_g2g = FALSE to keep them and filter on the g2g column. The
+Ratings used only by the grid-to-grid model (G2G is TRUE and EA is
+not) are omitted by default, because they are not operational ratings. A
+rating flagged for both (EA and G2G both TRUE) is an operational
+rating the model also uses, and is kept. Without an EA column, a G2G
+row counts as the model's alone. The message says how many rows went and
+how many were kept for both. Set omit_g2g = FALSE to keep every row and
+filter on the ea and g2g columns. The
 export's Flag is carried through as flag with no meaning assumed.
 The export marks an open-ended top limb with an upper level of 999;
 open_ended is TRUE for those rows and the level itself is left as
@@ -26,10 +29,13 @@ flow), B becomes n (the exponent) and C stays C. Nothing is
 reinterpreted. As with read_gaugings(), everything is read as text,
 parsed explicitly, and anything that did not parse is noted on its
 row in read_issue and not dropped.
-Ratings flagged as grid-to-grid model output (G2G is TRUE) are
-omitted by default, because they are model estimates and not
-operational ratings; the message says how many rows went. Set
-omit_g2g = FALSE to keep them and filter on the g2g column. The
+Ratings used only by the grid-to-grid model (G2G is TRUE and EA is
+not) are omitted by default, because they are not operational ratings. A
+rating flagged for both (EA and G2G both TRUE) is an operational
+rating the model also uses, and is kept. Without an EA column, a G2G
+row counts as the model's alone. The message says how many rows went and
+how many were kept for both. Set omit_g2g = FALSE to keep every row and
+filter on the ea and g2g columns. The
 export's Flag is carried through as flag with no meaning assumed.
 The export marks an open-ended top limb with an upper level of 999;
 open_ended is TRUE for those rows and the level itself is left as
@@ -102,10 +108,13 @@ flow), <code>B</code> becomes <code>n</code> (the exponent) and <code>C</code> s
 reinterpreted. As with <code><a href="read_gaugings.html">read_gaugings()</a></code>, everything is read as text,
 parsed explicitly, and anything that did not parse is noted on its
 row in <code>read_issue</code> and not dropped.</p>
-<p>Ratings flagged as grid-to-grid model output (<code>G2G</code> is <code>TRUE</code>) are
-omitted by default, because they are model estimates and not
-operational ratings; the message says how many rows went. Set
-<code>omit_g2g = FALSE</code> to keep them and filter on the <code>g2g</code> column. The
+<p>Ratings used only by the grid-to-grid model (<code>G2G</code> is <code>TRUE</code> and <code>EA</code> is
+not) are omitted by default, because they are not operational ratings. A
+rating flagged for both (<code>EA</code> and <code>G2G</code> both <code>TRUE</code>) is an operational
+rating the model also uses, and is kept. Without an <code>EA</code> column, a <code>G2G</code>
+row counts as the model's alone. The message says how many rows went and
+how many were kept for both. Set <code>omit_g2g = FALSE</code> to keep every row and
+filter on the <code>ea</code> and <code>g2g</code> columns. The
 export's <code>Flag</code> is carried through as <code>flag</code> with no meaning assumed.</p>
 <p>The export marks an open-ended top limb with an upper level of <code>999</code>;
 <code>open_ended</code> is <code>TRUE</code> for those rows and the level itself is left as
@@ -172,8 +181,8 @@ stage range (m).</p></dd>
 
 
 <dt id="arg-omit-g-g">omit_g2g<a class="anchor" aria-label="anchor" href="#arg-omit-g-g"></a></dt>
-<dd><p>Logical. Drop rows where <code>g2g</code> is <code>TRUE</code>. Default
-<code>TRUE</code>.</p></dd>
+<dd><p>Logical. Drop rows where <code>g2g</code> is <code>TRUE</code> and <code>ea</code> is not.
+Default <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-open-ended-level">open_ended_level<a class="anchor" aria-label="anchor" href="#arg-open-ended-level"></a></dt>
@@ -228,11 +237,12 @@ tables; <code><a href="read_gaugings.html">read_gaugings()</a></code>.</p></div>
 <span class="r-in"><span>  LowerLevel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.241</span>, <span class="fl">0.897</span>, <span class="fl">0</span>, <span class="fl">0.314</span><span class="op">)</span>, UpperLevel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.241</span>, <span class="fl">0.897</span>, <span class="fl">999</span>, <span class="fl">0.314</span>, <span class="fl">999</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  A <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.1</span>, <span class="fl">0.4</span>, <span class="fl">0</span>, <span class="fl">0.01</span><span class="op">)</span>, B <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.254</span>, <span class="fl">1.541</span>, <span class="fl">0.8265</span>, <span class="fl">1.5042</span>, <span class="fl">2.2279</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  C <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3.114</span>, <span class="fl">10.717</span>, <span class="fl">13.462</span>, <span class="fl">4.711</span>, <span class="fl">11.7052</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  Flag <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">3</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, EA <span class="op">=</span> <span class="cn">TRUE</span>, G2G <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">FALSE</span>, <span class="cn">FALSE</span>, <span class="cn">FALSE</span>, <span class="cn">TRUE</span>, <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  Flag <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">3</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, EA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">TRUE</span>, <span class="cn">TRUE</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>, <span class="cn">FALSE</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  G2G <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">FALSE</span>, <span class="cn">FALSE</span>, <span class="cn">FALSE</span>, <span class="cn">TRUE</span>, <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">limbs</span> <span class="op">&lt;-</span> <span class="fu">read_operational_ratings</span><span class="op">(</span><span class="va">raw</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> read_operational_ratings(): 3 limbs in 1 ratings at 1 stations.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   G2G rows omitted: 2. Rows with a note: 0. Most common: none.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>   G2G-only rows omitted: 2. Rows for both EA and G2G kept: 0. Rows with a note: 0. Most common: none.</span>
 <span class="r-in"><span><span class="va">limbs</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rating_key"</span>, <span class="st">"station_id"</span>, <span class="st">"lower_level"</span>, <span class="st">"upper_level"</span>, <span class="st">"C"</span>, <span class="st">"a"</span>, <span class="st">"n"</span>, <span class="st">"open_ended"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    rating_key station_id lower_level upper_level      C     a      n open_ended</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        &lt;char&gt;     &lt;char&gt;       &lt;num&gt;       &lt;num&gt;  &lt;num&gt; &lt;num&gt;  &lt;num&gt;     &lt;lgcl&gt;</span>

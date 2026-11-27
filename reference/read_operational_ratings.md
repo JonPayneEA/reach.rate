@@ -9,10 +9,13 @@ reinterpreted. As with
 everything is read as text, parsed explicitly, and anything that did not
 parse is noted on its row in `read_issue` and not dropped.
 
-Ratings flagged as grid-to-grid model output (`G2G` is `TRUE`) are
-omitted by default, because they are model estimates and not operational
-ratings; the message says how many rows went. Set `omit_g2g = FALSE` to
-keep them and filter on the `g2g` column. The export's `Flag` is carried
+Ratings used only by the grid-to-grid model (`G2G` is `TRUE` and `EA` is
+not) are omitted by default, because they are not operational ratings. A
+rating flagged for both (`EA` and `G2G` both `TRUE`) is an operational
+rating the model also uses, and is kept. Without an `EA` column, a `G2G`
+row counts as the model's alone. The message says how many rows went and
+how many were kept for both. Set `omit_g2g = FALSE` to keep every row
+and filter on the `ea` and `g2g` columns. The export's `Flag` is carried
 through as `flag` with no meaning assumed.
 
 The export marks an open-ended top limb with an upper level of `999`;
@@ -78,7 +81,8 @@ read_operational_ratings(
 
 - omit_g2g:
 
-  Logical. Drop rows where `g2g` is `TRUE`. Default `TRUE`.
+  Logical. Drop rows where `g2g` is `TRUE` and `ea` is not. Default
+  `TRUE`.
 
 - open_ended_level:
 
@@ -130,11 +134,12 @@ raw <- data.frame(
   LowerLevel = c(0, 0.241, 0.897, 0, 0.314), UpperLevel = c(0.241, 0.897, 999, 0.314, 999),
   A = c(0, 0.1, 0.4, 0, 0.01), B = c(1.254, 1.541, 0.8265, 1.5042, 2.2279),
   C = c(3.114, 10.717, 13.462, 4.711, 11.7052),
-  Flag = c(0, 0, 3, 0, 0), EA = TRUE, G2G = c(FALSE, FALSE, FALSE, TRUE, TRUE)
+  Flag = c(0, 0, 3, 0, 0), EA = c(TRUE, TRUE, TRUE, FALSE, FALSE),
+  G2G = c(FALSE, FALSE, FALSE, TRUE, TRUE)
 )
 limbs <- read_operational_ratings(raw)
 #> read_operational_ratings(): 3 limbs in 1 ratings at 1 stations.
-#>   G2G rows omitted: 2. Rows with a note: 0. Most common: none.
+#>   G2G-only rows omitted: 2. Rows for both EA and G2G kept: 0. Rows with a note: 0. Most common: none.
 limbs[, c("rating_key", "station_id", "lower_level", "upper_level", "C", "a", "n", "open_ended")]
 #>    rating_key station_id lower_level upper_level      C     a      n open_ended
 #>        <char>     <char>       <num>       <num>  <num> <num>  <num>     <lgcl>
